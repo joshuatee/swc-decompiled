@@ -1,0 +1,20 @@
+using StaRTS.Externals.Manimal.TransferObjects.Request;
+using StaRTS.Main.Models.Player;
+using StaRTS.Utils.Core;
+using System;
+
+namespace StaRTS.Main.Models.Commands.Crates
+{
+	public class CheckDailyCrateRequest : PlayerIdRequest
+	{
+		public CheckDailyCrateRequest()
+		{
+			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
+			base.PlayerId = currentPlayer.PlayerId;
+		}
+
+		protected internal CheckDailyCrateRequest(UIntPtr dummy) : base(dummy)
+		{
+		}
+	}
+}

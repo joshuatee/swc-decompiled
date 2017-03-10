@@ -1,0 +1,93 @@
+using Net.RichardLord.Ash.Core;
+using StaRTS.Main.Models.Entities;
+using StaRTS.Main.Models.Entities.Components;
+using StaRTS.Main.Models.Entities.Nodes;
+using StaRTS.Main.Models.Entities.Shared;
+using StaRTS.Main.Views.Entities;
+using StaRTS.Utils.Core;
+using System;
+using UnityEngine;
+using WinRTBridge;
+
+namespace StaRTS.Main.Controllers.Entities.Systems
+{
+	public class EntityRenderSystem : ViewSystemBase
+	{
+		private NodeList<EntityRenderNode> nodeList;
+
+		private EntityRenderController entityRenderController;
+
+		public override void AddToGame(IGame game)
+		{
+			this.entityRenderController = Service.Get<EntityRenderController>();
+			this.nodeList = Service.Get<EntityController>().GetNodeList<EntityRenderNode>();
+		}
+
+		public override void RemoveFromGame(IGame game)
+		{
+			this.entityRenderController = null;
+			this.nodeList = null;
+		}
+
+		protected override void Update(float dt)
+		{
+			Vector3 zero = Vector3.zero;
+			for (EntityRenderNode entityRenderNode = this.nodeList.Head; entityRenderNode != null; entityRenderNode = entityRenderNode.Next)
+			{
+				Vector3 vector = zero;
+				SmartEntity smartEntity = (SmartEntity)entityRenderNode.Entity;
+				GameObjectViewComponent gameObjectViewComp = smartEntity.GameObjectViewComp;
+				StateComponent stateComp = smartEntity.StateComp;
+				EntityState rawState = stateComp.RawState;
+				if (rawState == EntityState.Moving)
+				{
+					PathView pathView = smartEntity.PathingComp.PathView;
+					if (pathView != null)
+					{
+						pathView.TimeOnPathSegment += dt;
+						vector = this.entityRenderController.MoveGameObject(gameObjectViewComp, pathView, smartEntity.SizeComp.Width);
+					}
+				}
+				if (rawState != EntityState.Dying)
+				{
+					this.entityRenderController.RotateGameObject(smartEntity, vector.x, vector.z, dt);
+				}
+				else if (smartEntity.TroopComp != null)
+				{
+					gameObjectViewComp.UpdateAllAttachments();
+				}
+				if (smartEntity.TroopComp != null || smartEntity.DroidComp != null)
+				{
+					bool isAbilityModeActive = smartEntity.TroopComp != null && smartEntity.TroopComp.IsAbilityModeActive;
+					this.entityRenderController.UpdateAnimationState(gameObjectViewComp, stateComp, isAbilityModeActive);
+				}
+			}
+		}
+
+		public EntityRenderSystem()
+		{
+		}
+
+		protected internal EntityRenderSystem(UIntPtr dummy) : base(dummy)
+		{
+		}
+
+		public unsafe static long $Invoke0(long instance, long* args)
+		{
+			((EntityRenderSystem)GCHandledObjects.GCHandleToObject(instance)).AddToGame((IGame)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke1(long instance, long* args)
+		{
+			((EntityRenderSystem)GCHandledObjects.GCHandleToObject(instance)).RemoveFromGame((IGame)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke2(long instance, long* args)
+		{
+			((EntityRenderSystem)GCHandledObjects.GCHandleToObject(instance)).Update(*(float*)args);
+			return -1L;
+		}
+	}
+}

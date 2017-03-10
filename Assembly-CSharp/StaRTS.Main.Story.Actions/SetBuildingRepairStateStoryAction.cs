@@ -1,0 +1,102 @@
+using Net.RichardLord.Ash.Core;
+using StaRTS.Main.Controllers;
+using StaRTS.Main.Controllers.Entities.Systems;
+using StaRTS.Main.Models;
+using StaRTS.Main.Models.Entities.Components;
+using StaRTS.Main.Models.ValueObjects;
+using StaRTS.Utils;
+using StaRTS.Utils.Core;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using UnityEngine;
+using WinRTBridge;
+
+namespace StaRTS.Main.Story.Actions
+{
+	public class SetBuildingRepairStateStoryAction : AbstractStoryAction
+	{
+		private const int ARG_REPAIR_PERCENT = 0;
+
+		private const int ARG_BUILDING_TYPE = 1;
+
+		private const int ARG_AREA_X = 2;
+
+		private const int ARG_AREA_Z = 3;
+
+		private const int ARG_AREA_W = 4;
+
+		private const int ARG_AREA_H = 5;
+
+		private float repairPercent;
+
+		private Rect area;
+
+		private BuildingType type;
+
+		public SetBuildingRepairStateStoryAction(StoryActionVO vo, IStoryReactor parent) : base(vo, parent)
+		{
+		}
+
+		public override void Prepare()
+		{
+			base.VerifyArgumentCount(new int[]
+			{
+				1,
+				2,
+				6
+			});
+			this.repairPercent = (float)Convert.ToInt32(this.prepareArgs[0], CultureInfo.InvariantCulture) / 100f;
+			if (this.prepareArgs.Length >= 2)
+			{
+				this.type = StringUtils.ParseEnum<BuildingType>(this.prepareArgs[1]);
+			}
+			else
+			{
+				this.type = BuildingType.Any;
+			}
+			if (this.prepareArgs.Length >= 6)
+			{
+				this.area = new Rect((float)Convert.ToInt32(this.prepareArgs[2], CultureInfo.InvariantCulture), (float)Convert.ToInt32(this.prepareArgs[3], CultureInfo.InvariantCulture), (float)Convert.ToInt32(this.prepareArgs[4], CultureInfo.InvariantCulture), (float)Convert.ToInt32(this.prepareArgs[5], CultureInfo.InvariantCulture));
+			}
+			else
+			{
+				this.area = new Rect(-21f, -21f, 42f, 42f);
+			}
+			this.parent.ChildPrepared(this);
+		}
+
+		public override void Execute()
+		{
+			base.Execute();
+			List<Entity> buildingListByType = Service.Get<BuildingLookupController>().GetBuildingListByType(this.type);
+			PostBattleRepairController postBattleRepairController = Service.Get<PostBattleRepairController>();
+			for (int i = 0; i < buildingListByType.Count; i++)
+			{
+				BuildingComponent buildingComponent = buildingListByType[i].Get<BuildingComponent>();
+				if (this.area.Contains(new Vector2((float)buildingComponent.BuildingTO.X, (float)buildingComponent.BuildingTO.Z)))
+				{
+					postBattleRepairController.ForceRepairOnBuilding(buildingComponent.Entity, this.repairPercent);
+				}
+			}
+			Service.Get<EntityController>().GetViewSystem<HealthRenderSystem>().ForceUpdate();
+			this.parent.ChildComplete(this);
+		}
+
+		protected internal SetBuildingRepairStateStoryAction(UIntPtr dummy) : base(dummy)
+		{
+		}
+
+		public unsafe static long $Invoke0(long instance, long* args)
+		{
+			((SetBuildingRepairStateStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke1(long instance, long* args)
+		{
+			((SetBuildingRepairStateStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
+			return -1L;
+		}
+	}
+}

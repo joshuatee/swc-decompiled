@@ -1,0 +1,158 @@
+using StaRTS.Main.Models.ValueObjects;
+using System;
+
+namespace UnityEngine.Internal.Types
+{
+	public sealed class $UnityType1898 : $UnityType
+	{
+		public unsafe $UnityType1898()
+		{
+			IntPtr data = UnityEngine.Internal.$Metadata.data;
+			*(data + 722956) = ldftn($Invoke0);
+			*(data + 722984) = ldftn($Invoke1);
+			*(data + 723012) = ldftn($Invoke2);
+			*(data + 723040) = ldftn($Invoke3);
+			*(data + 723068) = ldftn($Invoke4);
+			*(data + 723096) = ldftn($Invoke5);
+			*(data + 723124) = ldftn($Invoke6);
+			*(data + 723152) = ldftn($Invoke7);
+			*(data + 723180) = ldftn($Invoke8);
+			*(data + 723208) = ldftn($Invoke9);
+			*(data + 723236) = ldftn($Invoke10);
+			*(data + 723264) = ldftn($Invoke11);
+			*(data + 723292) = ldftn($Invoke12);
+			*(data + 723320) = ldftn($Invoke13);
+			*(data + 723348) = ldftn($Invoke14);
+			*(data + 723376) = ldftn($Invoke15);
+			*(data + 723404) = ldftn($Invoke16);
+			*(data + 723432) = ldftn($Invoke17);
+			*(data + 723460) = ldftn($Invoke18);
+			*(data + 723488) = ldftn($Invoke19);
+			*(data + 723516) = ldftn($Invoke20);
+			*(data + 723544) = ldftn($Invoke21);
+			*(data + 723572) = ldftn($Invoke22);
+			*(data + 723600) = ldftn($Invoke23);
+			*(data + 723628) = ldftn($Invoke24);
+			*(data + 723656) = ldftn($Invoke25);
+			*(data + 723684) = ldftn($Invoke26);
+			*(data + 723712) = ldftn($Invoke27);
+			*(data + 723740) = ldftn($Invoke28);
+			*(data + 723768) = ldftn($Invoke29);
+			*(data + 723796) = ldftn($Invoke30);
+			*(data + 723824) = ldftn($Invoke31);
+			*(data + 723852) = ldftn($Invoke32);
+			*(data + 723880) = ldftn($Invoke33);
+			*(data + 723908) = ldftn($Invoke34);
+			*(data + 723936) = ldftn($Invoke35);
+			*(data + 723964) = ldftn($Invoke36);
+			*(data + 723992) = ldftn($Invoke37);
+			*(data + 724020) = ldftn($Invoke38);
+			*(data + 724048) = ldftn($Invoke39);
+			*(data + 724076) = ldftn($Invoke40);
+			*(data + 724104) = ldftn($Invoke41);
+			*(data + 724132) = ldftn($Invoke42);
+			*(data + 724160) = ldftn($Invoke43);
+			*(data + 724188) = ldftn($Invoke44);
+			*(data + 724216) = ldftn($Invoke45);
+			*(data + 724244) = ldftn($Invoke46);
+			*(data + 724272) = ldftn($Invoke47);
+			*(data + 724300) = ldftn($Invoke48);
+			*(data + 724328) = ldftn($Invoke49);
+			*(data + 724356) = ldftn($Invoke50);
+			*(data + 724384) = ldftn($Invoke51);
+			*(data + 724412) = ldftn($Invoke52);
+			*(data + 724440) = ldftn($Invoke53);
+			*(data + 724468) = ldftn($Invoke54);
+			*(data + 724496) = ldftn($Invoke55);
+			*(data + 724524) = ldftn($Invoke56);
+			*(data + 724552) = ldftn($Invoke57);
+			*(data + 724580) = ldftn($Invoke58);
+			*(data + 724608) = ldftn($Invoke59);
+			*(data + 724636) = ldftn($Invoke60);
+			*(data + 724664) = ldftn($Invoke61);
+			*(data + 724692) = ldftn($Invoke62);
+			*(data + 724720) = ldftn($Invoke63);
+			*(data + 724748) = ldftn($Invoke64);
+			*(data + 724776) = ldftn($Invoke65);
+			*(data + 724804) = ldftn($Invoke66);
+			*(data + 724832) = ldftn($Invoke67);
+			*(data + 724860) = ldftn($Invoke68);
+			*(data + 724888) = ldftn($Invoke69);
+			*(data + 724916) = ldftn($Invoke70);
+			*(data + 724944) = ldftn($Invoke71);
+			*(data + 724972) = ldftn($Invoke72);
+			*(data + 725000) = ldftn($Invoke73);
+			*(data + 725028) = ldftn($Invoke74);
+			*(data + 725056) = ldftn($Invoke75);
+			*(data + 725084) = ldftn($Invoke76);
+			*(data + 725112) = ldftn($Invoke77);
+			*(data + 725140) = ldftn($Invoke78);
+			*(data + 725168) = ldftn($Invoke79);
+			*(data + 725196) = ldftn($Invoke80);
+			*(data + 725224) = ldftn($Invoke81);
+			*(data + 725252) = ldftn($Invoke82);
+			*(data + 725280) = ldftn($Invoke83);
+			*(data + 725308) = ldftn($Invoke84);
+			*(data + 725336) = ldftn($Invoke85);
+			*(data + 725364) = ldftn($Invoke86);
+			*(data + 725392) = ldftn($Invoke87);
+			*(data + 725420) = ldftn($Invoke88);
+			*(data + 725448) = ldftn($Invoke89);
+			*(data + 725476) = ldftn($Invoke90);
+			*(data + 725504) = ldftn($Invoke91);
+			*(data + 725532) = ldftn($Invoke92);
+			*(data + 725560) = ldftn($Invoke93);
+			*(data + 725588) = ldftn($Invoke94);
+			*(data + 725616) = ldftn($Invoke95);
+			*(data + 725644) = ldftn($Invoke96);
+			*(data + 725672) = ldftn($Invoke97);
+			*(data + 725700) = ldftn($Invoke98);
+			*(data + 725728) = ldftn($Invoke99);
+			*(data + 725756) = ldftn($Invoke100);
+			*(data + 725784) = ldftn($Invoke101);
+			*(data + 725812) = ldftn($Invoke102);
+			*(data + 725840) = ldftn($Invoke103);
+			*(data + 725868) = ldftn($Invoke104);
+			*(data + 725896) = ldftn($Invoke105);
+			*(data + 725924) = ldftn($Invoke106);
+			*(data + 725952) = ldftn($Invoke107);
+			*(data + 725980) = ldftn($Invoke108);
+			*(data + 726008) = ldftn($Invoke109);
+			*(data + 726036) = ldftn($Invoke110);
+			*(data + 726064) = ldftn($Invoke111);
+			*(data + 726092) = ldftn($Invoke112);
+			*(data + 726120) = ldftn($Invoke113);
+			*(data + 726148) = ldftn($Invoke114);
+			*(data + 726176) = ldftn($Invoke115);
+			*(data + 726204) = ldftn($Invoke116);
+			*(data + 726232) = ldftn($Invoke117);
+			*(data + 726260) = ldftn($Invoke118);
+			*(data + 726288) = ldftn($Invoke119);
+			*(data + 726316) = ldftn($Invoke120);
+			*(data + 726344) = ldftn($Invoke121);
+			*(data + 726372) = ldftn($Invoke122);
+			*(data + 726400) = ldftn($Invoke123);
+			*(data + 726428) = ldftn($Invoke124);
+			*(data + 726456) = ldftn($Invoke125);
+			*(data + 726484) = ldftn($Invoke126);
+			*(data + 726512) = ldftn($Invoke127);
+			*(data + 726540) = ldftn($Invoke128);
+			*(data + 726568) = ldftn($Invoke129);
+			*(data + 726596) = ldftn($Invoke130);
+			*(data + 726624) = ldftn($Invoke131);
+			*(data + 726652) = ldftn($Invoke132);
+			*(data + 726680) = ldftn($Invoke133);
+			*(data + 726708) = ldftn($Invoke134);
+			*(data + 726736) = ldftn($Invoke135);
+			*(data + 726764) = ldftn($Invoke136);
+			*(data + 726792) = ldftn($Invoke137);
+			*(data + 726820) = ldftn($Invoke138);
+			*(data + 726848) = ldftn($Invoke139);
+		}
+
+		public override object CreateInstance()
+		{
+			return new CampaignMissionVO((UIntPtr)0);
+		}
+	}
+}

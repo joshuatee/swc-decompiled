@@ -1,0 +1,118 @@
+using StaRTS.Main.Models.ValueObjects;
+using StaRTS.Utils;
+using StaRTS.Utils.Core;
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using WinRTBridge;
+
+namespace StaRTS.Main.Controllers
+{
+	public class ProfanityController
+	{
+		private List<string> profaneWordsLoose;
+
+		private List<string> profaneWordsStrict;
+
+		private List<string> reservedWords;
+
+		public static readonly char[] SPECIAL_CHARS = new char[]
+		{
+			' ',
+			'_',
+			'.',
+			'-',
+			':',
+			','
+		};
+
+		private const string META_RESERVED_UID = "reserved";
+
+		private const string META_EN_UID = "en";
+
+		public ProfanityController()
+		{
+			Service.Set<ProfanityController>(this);
+			this.profaneWordsLoose = new List<string>();
+			this.profaneWordsStrict = new List<string>();
+			this.reservedWords = new List<string>();
+			string text = Service.Get<Lang>().ExtractLanguageFromLocale();
+			IDataController dataController = Service.Get<IDataController>();
+			foreach (ProfanityVO current in dataController.GetAll<ProfanityVO>())
+			{
+				string[] words = current.Words;
+				if (current.Uid == "reserved")
+				{
+					this.reservedWords.AddRange(words);
+				}
+				else if (current.Uid == text || current.Uid == "en")
+				{
+					this.profaneWordsLoose.AddRange(words);
+				}
+				else
+				{
+					this.profaneWordsStrict.AddRange(words);
+				}
+			}
+			for (int i = 0; i < this.profaneWordsLoose.Count; i++)
+			{
+				this.profaneWordsLoose[i] = this.profaneWordsLoose[i].ToLower();
+			}
+			for (int j = 0; j < this.profaneWordsStrict.Count; j++)
+			{
+				this.profaneWordsStrict[j] = this.profaneWordsStrict[j].ToLower();
+			}
+			dataController.Unload<ProfanityVO>();
+		}
+
+		public bool IsValid(string input, bool checkReservedWords)
+		{
+			string text = input.ToLower();
+			if (this.profaneWordsStrict.Contains(text))
+			{
+				return false;
+			}
+			string text2 = text;
+			int i = 0;
+			int num = ProfanityController.SPECIAL_CHARS.Length;
+			while (i < num)
+			{
+				text2 = text2.Replace(ProfanityController.SPECIAL_CHARS[i].ToString(), "");
+				i++;
+			}
+			int j = 0;
+			int count = this.profaneWordsLoose.Count;
+			while (j < count)
+			{
+				if (text.Contains(this.profaneWordsLoose[j]) || text2.Contains(this.profaneWordsLoose[j]))
+				{
+					return false;
+				}
+				j++;
+			}
+			if (checkReservedWords)
+			{
+				int k = 0;
+				int count2 = this.reservedWords.Count;
+				while (k < count2)
+				{
+					if (text.Contains(this.reservedWords[k]) || text2.Contains(this.reservedWords[k]))
+					{
+						return false;
+					}
+					k++;
+				}
+			}
+			return true;
+		}
+
+		protected internal ProfanityController(UIntPtr dummy)
+		{
+		}
+
+		public unsafe static long $Invoke0(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((ProfanityController)GCHandledObjects.GCHandleToObject(instance)).IsValid(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0));
+		}
+	}
+}

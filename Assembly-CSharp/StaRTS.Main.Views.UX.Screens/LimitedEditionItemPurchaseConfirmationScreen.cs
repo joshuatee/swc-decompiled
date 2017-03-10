@@ -1,0 +1,81 @@
+using StaRTS.Main.Controllers;
+using StaRTS.Main.Models.ValueObjects;
+using StaRTS.Main.Utils;
+using StaRTS.Main.Views.UX.Elements;
+using StaRTS.Utils.Core;
+using System;
+using WinRTBridge;
+
+namespace StaRTS.Main.Views.UX.Screens
+{
+	public class LimitedEditionItemPurchaseConfirmationScreen : AlertScreen
+	{
+		private const string SECONDARY_BUTTON = "CANCEL";
+
+		private const string PURCHASE_LEI = "PURCHASE_LEI";
+
+		public LimitedEditionItemVO LeiVO;
+
+		private LimitedEditionItemPurchaseConfirmationScreen() : base(false, null, null, null, false)
+		{
+		}
+
+		public static AlertScreen ShowModal(LimitedEditionItemVO leiVO, OnScreenModalResult onModalResult, object modalResultCookie)
+		{
+			LimitedEditionItemPurchaseConfirmationScreen limitedEditionItemPurchaseConfirmationScreen = new LimitedEditionItemPurchaseConfirmationScreen();
+			limitedEditionItemPurchaseConfirmationScreen.LeiVO = leiVO;
+			limitedEditionItemPurchaseConfirmationScreen.geometry = leiVO;
+			limitedEditionItemPurchaseConfirmationScreen.title = LangUtils.GetLEIDisplayName(leiVO.Uid);
+			limitedEditionItemPurchaseConfirmationScreen.message = limitedEditionItemPurchaseConfirmationScreen.lang.Get("PURCHASE_LEI", new object[]
+			{
+				limitedEditionItemPurchaseConfirmationScreen.title
+			});
+			limitedEditionItemPurchaseConfirmationScreen.OnModalResult = onModalResult;
+			limitedEditionItemPurchaseConfirmationScreen.ModalResultCookie = modalResultCookie;
+			limitedEditionItemPurchaseConfirmationScreen.IsAlwaysOnTop = true;
+			Service.Get<ScreenController>().AddScreen(limitedEditionItemPurchaseConfirmationScreen);
+			return limitedEditionItemPurchaseConfirmationScreen;
+		}
+
+		protected override void SetupControls()
+		{
+			base.SetupControls();
+			this.primaryButton.Visible = false;
+			this.payRightLabel.Visible = false;
+			this.payRightButton.OnClicked = new UXButtonClickedDelegate(base.OnPrimaryButtonClicked);
+			this.secondary2Option.Text = this.lang.Get("CANCEL", new object[0]);
+			this.secondary2OptionButton.OnClicked = new UXButtonClickedDelegate(this.OnSecondButtonClicked);
+			this.CloseButton.OnClicked = new UXButtonClickedDelegate(this.OnSecondButtonClicked);
+			this.payRightButton.Visible = true;
+			this.secondary2Option.Visible = true;
+			this.secondary2OptionButton.Visible = true;
+			UXUtils.SetupCostElements(this, "CostOptionPay2", null, this.LeiVO.Credits, this.LeiVO.Materials, this.LeiVO.Contraband, this.LeiVO.Crystals, false, null);
+		}
+
+		private void OnSecondButtonClicked(UXButton cancelButton)
+		{
+			this.OnCloseButtonClicked(cancelButton);
+		}
+
+		protected internal LimitedEditionItemPurchaseConfirmationScreen(UIntPtr dummy) : base(dummy)
+		{
+		}
+
+		public unsafe static long $Invoke0(long instance, long* args)
+		{
+			((LimitedEditionItemPurchaseConfirmationScreen)GCHandledObjects.GCHandleToObject(instance)).OnSecondButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke1(long instance, long* args)
+		{
+			((LimitedEditionItemPurchaseConfirmationScreen)GCHandledObjects.GCHandleToObject(instance)).SetupControls();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke2(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(LimitedEditionItemPurchaseConfirmationScreen.ShowModal((LimitedEditionItemVO)GCHandledObjects.GCHandleToObject(*args), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2])));
+		}
+	}
+}

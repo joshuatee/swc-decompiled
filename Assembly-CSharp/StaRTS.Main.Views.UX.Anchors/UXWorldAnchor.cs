@@ -1,0 +1,22 @@
+using StaRTS.Main.Views.Cameras;
+using StaRTS.Utils.Core;
+using System;
+using UnityEngine;
+
+namespace StaRTS.Main.Views.UX.Anchors
+{
+	public class UXWorldAnchor : UXAnchor
+	{
+		private const string ANCHOR_NAME = "World";
+
+		public UXWorldAnchor() : base(Service.Get<CameraManager>().UXCamera)
+		{
+			GameObject root = new GameObject("World");
+			base.Init(root, UIAnchor.Side.BottomLeft);
+		}
+
+		protected internal UXWorldAnchor(UIntPtr dummy) : base(dummy)
+		{
+		}
+	}
+}

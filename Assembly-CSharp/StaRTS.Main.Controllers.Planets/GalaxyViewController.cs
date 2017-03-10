@@ -1,0 +1,2000 @@
+using StaRTS.Assets;
+using StaRTS.Main.Controllers.GameStates;
+using StaRTS.Main.Controllers.World;
+using StaRTS.Main.Models;
+using StaRTS.Main.Models.Planets;
+using StaRTS.Main.Models.Player;
+using StaRTS.Main.Models.ValueObjects;
+using StaRTS.Main.Story;
+using StaRTS.Main.Utils.Events;
+using StaRTS.Main.Views.Cameras;
+using StaRTS.Main.Views.Planets;
+using StaRTS.Main.Views.UserInput;
+using StaRTS.Main.Views.UX.Screens;
+using StaRTS.Utils;
+using StaRTS.Utils.Core;
+using StaRTS.Utils.Diagnostics;
+using StaRTS.Utils.Scheduling;
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using UnityEngine;
+using WinRTBridge;
+
+namespace StaRTS.Main.Controllers.Planets
+{
+	public class GalaxyViewController : IEventObserver, IViewFrameTimeObserver
+	{
+		private const float MIN_EASE_DIFF = 0.01f;
+
+		private const float NEAR_CLIP_PLANE = 0.1f;
+
+		private const float FAR_CLIP_PLANE = 5000f;
+
+		private const float DEFAULT_FOV = 10f;
+
+		private const int ROT_EASING_MAX = 60;
+
+		private const float GRID_Z_OFFSET = -8f;
+
+		private const string STAR_CAMERA = "StarCamera";
+
+		private const string BG_STAR = "bgStars";
+
+		private const float MIN_HEIGHT_DIV = 2f;
+
+		private GameObject stars;
+
+		private GameObject bgStars;
+
+		private GameObject spiral;
+
+		private Transform spiralTransform;
+
+		private GameObject galaxyOverlayGrid;
+
+		private float zoomTime;
+
+		private float zoomDist;
+
+		private Vector3 galaxyPosOffset;
+
+		private Vector3 galaxyStarsOffset;
+
+		private Vector3 galaxyToStarAdjust;
+
+		private Vector2 galaxyOffsetScreen;
+
+		private AssetHandle galaxySpiralHandle;
+
+		private AssetHandle galaxyStarsHandle;
+
+		private AssetHandle galaxyGridHandle;
+
+		private bool initialZoomComplete;
+
+		private bool softSnappedToPlanet;
+
+		private bool galaxyBeingDragged;
+
+		private bool galaxyReleased;
+
+		private bool galaxyClosing;
+
+		private bool ignoreSwipes;
+
+		private float easeTargetRotation;
+
+		private float planetStartRotation;
+
+		private float planetTargetRotaion;
+
+		private float easeVelocity;
+
+		private float[] rotationEasing;
+
+		private int easeIndex;
+
+		private float cachedCameraFOV;
+
+		private Vector3 foregroundPos;
+
+		private float cachedWorldNearCliplPlane;
+
+		private float cachedWorldFarClipPlane;
+
+		private Vector3 cachedCameraLookAt;
+
+		private Vector3 planetViewLookPos;
+
+		private float planetViewDist;
+
+		private float objectiveViewDist;
+
+		private Quaternion planetViewLookAtRotation;
+
+		private float foregroundPlateauAngle;
+
+		private float planetViewCameraHeight;
+
+		private float objectiveViewCameraHeight;
+
+		private PlanetDetailsScreen planetScreen;
+
+		private CampaignScreenSection planetSection;
+
+		private string planetViewUID;
+
+		private GalaxyViewState galaxyViewState;
+
+		private float objectiveOffset;
+
+		private bool doesObjectivesNeedUpdate;
+
+		private GalaxyManipulator galaxyManip;
+
+		private GameObject galaxyDataOverrider;
+
+		private CameraManager cameraManager;
+
+		private Vector3 planetLook;
+
+		private Vector3 cameraOffset;
+
+		private bool loadGalaxyGrid;
+
+		private GalaxyTransitionData currentTranstion;
+
+		private float cachedCameraFOV_Galaxy;
+
+		private float newScreenWidth;
+
+		private float newScreenHeight;
+
+		private bool doInstantTransition;
+
+		private bool doRescaleGalaxy;
+
+		private bool bDisableRescale;
+
+		private string PlanetToLoad;
+
+		public GalaxyViewController()
+		{
+			EventManager eventManager = Service.Get<EventManager>();
+			this.doesObjectivesNeedUpdate = false;
+			this.cameraManager = Service.Get<CameraManager>();
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			Service.Set<GalaxyViewController>(this);
+			this.galaxyPosOffset = new Vector3(0f, 10000f, 0f);
+			this.galaxyStarsOffset = new Vector3(10000f, 10000f, 0f);
+			this.galaxyToStarAdjust = new Vector3(10000f, 0f, 0f);
+			this.galaxyOffsetScreen = mainCamera.WorldPositionToScreenPoint(Vector3.zero);
+			eventManager.RegisterObserver(this, EventId.WorldLoadComplete, EventPriority.Default);
+			Service.Get<EventManager>().RegisterObserver(this, EventId.UIAttackScreenSelection, EventPriority.Default);
+			this.galaxySpiralHandle = AssetHandle.Invalid;
+			this.galaxyStarsHandle = AssetHandle.Invalid;
+			this.galaxyGridHandle = AssetHandle.Invalid;
+			this.galaxyViewState = GalaxyViewState.Loading;
+			this.galaxyBeingDragged = false;
+			this.galaxyReleased = false;
+			this.galaxyManip = new GalaxyManipulator();
+			this.planetViewLookAtRotation = Quaternion.identity;
+			this.cachedCameraFOV = 10f;
+			this.rotationEasing = new float[60];
+			this.easeIndex = 0;
+			this.loadGalaxyGrid = false;
+			this.cameraOffset = Vector3.zero;
+			this.planetLook = Vector3.zero;
+			this.currentTranstion = new GalaxyTransitionData();
+			this.currentTranstion.Reset();
+			this.InitForegroundPos();
+		}
+
+		public void UpdateGalaxyConstants()
+		{
+			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
+			if (galaxyPlanetController.AreAllPlanetsLoaded())
+			{
+				MainCamera mainCamera = this.cameraManager.MainCamera;
+				this.InitForegroundPos();
+				this.planetViewCameraHeight = GameConstants.GALAXY_PLANET_VIEW_HEIGHT;
+				float gALAXY_CAMERA_DISTANCE_OFFSET = GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET;
+				float gALAXY_CAMERA_HEIGHT_OFFSET = GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET;
+				this.planetViewLookAtRotation = Quaternion.identity;
+				mainCamera.ResetAndStopRotation();
+				mainCamera.ResetHarness(this.cachedCameraLookAt);
+				mainCamera.ForceCameraMoveFinish();
+				Vector3 a = new Vector3(gALAXY_CAMERA_DISTANCE_OFFSET, gALAXY_CAMERA_HEIGHT_OFFSET, gALAXY_CAMERA_DISTANCE_OFFSET);
+				Vector3 harnessPosition = a - mainCamera.CurrentCameraPosition;
+				mainCamera.SetRotationHarnessPosition(this.galaxyPosOffset);
+				mainCamera.SetHarnessPosition(harnessPosition);
+				mainCamera.SetLookAtPositionImmediately(this.galaxyPosOffset, this.planetViewLookAtRotation);
+				galaxyPlanetController.UpdatePlanetConstants();
+			}
+		}
+
+		private void InitForegroundPos()
+		{
+			this.foregroundPlateauAngle = Mathf.Min(GameConstants.GALAXY_PLANET_FOREGROUND_THRESHOLD, GameConstants.GALAXY_PLANET_FOREGROUND_PLATEAU_THRESHOLD);
+			this.foregroundPos = new Vector3(this.galaxyOffsetScreen.x, this.galaxyOffsetScreen.y + (float)Screen.height / 2f, 0f);
+		}
+
+		private void AdjustCameraPosition(float dist, float height, Vector3 look)
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			this.cameraOffset.Set(dist, height, dist);
+			mainCamera.SetHarnessPosition(this.cameraOffset - mainCamera.CurrentCameraPosition);
+			mainCamera.SetLookAtPositionImmediately(look, this.planetViewLookAtRotation);
+		}
+
+		private void SetupCamera()
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			this.cachedWorldNearCliplPlane = mainCamera.Camera.nearClipPlane;
+			this.cachedWorldFarClipPlane = mainCamera.Camera.farClipPlane;
+			mainCamera.RotateAboutPoint = this.galaxyPosOffset;
+			this.cachedCameraLookAt = mainCamera.CurrentLookatPosition;
+			mainCamera.Camera.clearFlags = CameraClearFlags.Depth;
+			this.cachedCameraFOV = mainCamera.Camera.fieldOfView;
+			mainCamera.SetFov(this.cameraManager.StarsCamera.fieldOfView);
+			this.cachedCameraFOV_Galaxy = mainCamera.Camera.fieldOfView;
+			mainCamera.SetRotationFeel(CameraFeel.Medium);
+			this.planetViewLookAtRotation = Quaternion.identity;
+			float num = GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET + this.zoomDist;
+			float gALAXY_CAMERA_HEIGHT_OFFSET = GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET;
+			Vector3 a = new Vector3(num, gALAXY_CAMERA_HEIGHT_OFFSET, num);
+			Vector3 harnessPosition = a - mainCamera.CurrentCameraPosition;
+			mainCamera.SetRotationHarnessPosition(this.galaxyPosOffset);
+			mainCamera.SetHarnessPosition(harnessPosition);
+			mainCamera.SetLookAtPositionImmediately(this.galaxyPosOffset, this.planetViewLookAtRotation);
+			mainCamera.SetClipPlanes(0.1f, 5000f);
+			mainCamera.GroundOffset = 10000f;
+		}
+
+		private void InitGalaxy(float initialZoomDist)
+		{
+			this.softSnappedToPlanet = false;
+			this.galaxyReleased = false;
+			Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
+			Service.Get<WorldInitializer>().View.ResetCameraImmediate();
+			this.cameraManager.MainCamera.ForceCameraMoveFinish();
+			this.zoomDist = initialZoomDist;
+			this.zoomTime = 0f;
+			this.stars.SetActive(true);
+			this.bgStars.SetActive(true);
+			this.cameraManager.StarsCamera.enabled = true;
+			this.SetupCamera();
+			this.galaxyManip.Enable();
+			Service.Get<GameStateMachine>().SetState(new GalaxyState());
+		}
+
+		public void GoToPlanetView(string planetUID, CampaignScreenSection section)
+		{
+			this.bDisableRescale = false;
+			EventManager eventManager = Service.Get<EventManager>();
+			PlanetVO optional = Service.Get<IDataController>().GetOptional<PlanetVO>(planetUID);
+			if (optional == null)
+			{
+				Service.Get<StaRTSLogger>().Warn("Planet Details Screen: '" + planetUID + "' not found.");
+				return;
+			}
+			if (!optional.PlayerFacing)
+			{
+				Service.Get<StaRTSLogger>().Warn("Planet Details Screen: '" + planetUID + "' PlayerFacing == false");
+				return;
+			}
+			if (this.IsPlanetDetailsScreenOpen())
+			{
+				GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
+				this.SwitchToPlanet(galaxyPlanetController.GetPlanet(planetUID));
+				return;
+			}
+			Service.Get<UserInputInhibitor>().DenyAll();
+			if (this.spiral != null)
+			{
+				this.spiral.SetActive(true);
+			}
+			Service.Get<UXController>().HUD.SetSquadScreenAlwaysOnTop(true);
+			Service.Get<UXController>().MiscElementsManager.HideEventsTickerView();
+			this.planetViewCameraHeight = GameConstants.GALAXY_PLANET_VIEW_HEIGHT;
+			this.galaxyClosing = false;
+			this.planetSection = section;
+			this.planetViewUID = planetUID;
+			this.galaxyViewState = GalaxyViewState.PlanetTransitionInstantStart;
+			Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
+			Service.Get<UXController>().MiscElementsManager.PrepareGalaxyPlanetUI();
+			Service.Get<GalaxyPlanetController>().InitPlanets();
+			Service.Get<UXController>().MiscElementsManager.SetGalaxyCloseButtonVisible(false);
+			eventManager.SendEvent(EventId.GalaxyGoToPlanetView, null);
+		}
+
+		public void GoToGalaxyView()
+		{
+			this.GoToGalaxyView(Service.Get<CurrentPlayer>().Planet.Uid);
+		}
+
+		public void GoToGalaxyView(string planetUID)
+		{
+			EventManager eventManager = Service.Get<EventManager>();
+			if (string.IsNullOrEmpty(planetUID))
+			{
+				planetUID = Service.Get<CurrentPlayer>().Planet.Uid;
+			}
+			PlanetVO optional = Service.Get<IDataController>().GetOptional<PlanetVO>(planetUID);
+			if (optional == null)
+			{
+				Service.Get<StaRTSLogger>().Warn("GoToGalaxyView: '" + planetUID + "' not found.");
+				return;
+			}
+			if (!optional.PlayerFacing)
+			{
+				Service.Get<StaRTSLogger>().Warn("GoToGalaxyView: '" + planetUID + "' PlayerFacing == false");
+				return;
+			}
+			this.bDisableRescale = false;
+			this.initialZoomComplete = false;
+			this.galaxyClosing = false;
+			this.planetScreen = null;
+			this.planetViewUID = "";
+			this.ignoreSwipes = false;
+			this.galaxyViewState = GalaxyViewState.Loading;
+			if (this.spiral != null)
+			{
+				this.spiral.SetActive(true);
+			}
+			this.planetViewCameraHeight = GameConstants.GALAXY_PLANET_VIEW_HEIGHT;
+			Service.Get<GalaxyViewController>().ResetCameraForBase();
+			Service.Get<WorldInitializer>().View.ResetCameraImmediate();
+			this.cameraManager.MainCamera.ForceCameraMoveFinish();
+			this.cameraManager.WipeCamera.StartEllipticalWipe(WipeTransition.FromBaseToGalaxy, 0.5f, 0.5f, null, null);
+			Service.Get<UXController>().MiscElementsManager.SetGalaxyCloseButtonVisible(true);
+			this.InitGalaxy(GameConstants.GALAXY_INITIAL_GALAXY_ZOOM_DIST);
+			Service.Get<UXController>().MiscElementsManager.PrepareGalaxyPlanetUI();
+			Service.Get<GalaxyPlanetController>().InitPlanets(planetUID);
+			this.InitGalaxyGrid();
+			this.InitInitialCameraPos();
+			eventManager.SendEvent(EventId.GalaxyGoToGalaxyView, null);
+		}
+
+		private void InitInitialCameraPos()
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			this.AdjustCameraPosition(GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET, GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET, this.galaxyPosOffset);
+			Vector3 initialPlanetPosition = Service.Get<GalaxyPlanetController>().InitialPlanetPosition;
+			Vector2 galaxyScreenPos = this.GetGalaxyScreenPos(initialPlanetPosition);
+			Vector3 positionOnGalaxyPlane = this.GetPositionOnGalaxyPlane(galaxyScreenPos);
+			Vector3 foregroundPositonOnGalaxyPlane = this.GetForegroundPositonOnGalaxyPlane();
+			float num = this.CalculateGalaxyRotation(positionOnGalaxyPlane, foregroundPositonOnGalaxyPlane);
+			num += mainCamera.RotationSpring.Position.x;
+			mainCamera.UpdateRotationImmediatelyTo(num);
+			this.newScreenWidth = (float)Screen.width;
+			this.newScreenHeight = (float)Screen.height;
+			this.RescaleSpiral();
+			this.RescaleGalaxyPlanets();
+		}
+
+		public void GoToHome()
+		{
+			this.GoToHome(true, null, null);
+		}
+
+		public void GoToHome(bool playWipe, WipeCompleteDelegate completeCallback, object completeCookie)
+		{
+			this.bDisableRescale = false;
+			if (!this.galaxyClosing && Service.Get<GameStateMachine>().CurrentState is GalaxyState)
+			{
+				this.ClearEasing();
+				if (this.planetScreen != null)
+				{
+					this.planetScreen.CloseNoTransition(null);
+				}
+				this.galaxyClosing = true;
+				if (playWipe)
+				{
+					this.cameraManager.WipeCamera.StartEllipticalWipe(WipeTransition.FromGalaxyToBase, 0.5f, 0.5f, completeCallback, completeCookie);
+				}
+				this.UnregisterForPlanetScreenEvents();
+				this.initialZoomComplete = false;
+				this.planetScreen = null;
+				this.planetViewUID = "";
+				this.ignoreSwipes = false;
+				MainCamera mainCamera = this.cameraManager.MainCamera;
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+				this.softSnappedToPlanet = false;
+				mainCamera.GroundOffset = 0f;
+				mainCamera.ResetAndStopRotation();
+				mainCamera.ResetHarness(this.cachedCameraLookAt);
+				mainCamera.ForceCameraMoveFinish();
+				mainCamera.SetClipPlanes(this.cachedWorldNearCliplPlane, this.cachedWorldFarClipPlane);
+				mainCamera.Camera.clearFlags = CameraClearFlags.Color;
+				mainCamera.SetFov(this.cachedCameraFOV);
+				this.stars.SetActive(false);
+				this.galaxyManip.Disable();
+				this.ClearForegroundUI();
+				Service.Get<UXController>().MiscElementsManager.HideGalaxyPlanetUI();
+				HomeState.GoToHomeState(null, false);
+				Service.Get<WorldInitializer>().View.ZoomIn(false);
+				Service.Get<GalaxyPlanetController>().DestroyAllPlanets();
+				Service.Get<UXController>().MiscElementsManager.SetGalaxyCloseButtonVisible(false);
+				this.DestroyGalaxyGrid();
+			}
+		}
+
+		public void ResetCameraForBase()
+		{
+			if (!this.galaxyClosing && this.galaxyViewState != GalaxyViewState.Loading)
+			{
+				this.ClearEasing();
+				MainCamera mainCamera = this.cameraManager.MainCamera;
+				this.galaxyClosing = true;
+				Service.Get<UXController>().HUD.SetSquadScreenAlwaysOnTop(false);
+				this.softSnappedToPlanet = false;
+				this.planetScreen = null;
+				this.planetViewUID = "";
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+				mainCamera.SetFov(this.cachedCameraFOV);
+				this.stars.SetActive(false);
+				this.galaxyManip.Disable();
+				Service.Get<UXController>().MiscElementsManager.HideGalaxyPlanetUI();
+				Service.Get<GalaxyPlanetController>().DestroyAllPlanets();
+				this.DestroyGalaxyGrid();
+				this.ClearForegroundUI();
+			}
+		}
+
+		private bool IsDraggable()
+		{
+			return this.galaxyViewState == GalaxyViewState.ManualRotate;
+		}
+
+		public float UpdateGalaxyRotation(Vector3 curPos, Vector3 prevPos, Vector3 start)
+		{
+			float num = 0f;
+			if (this.IsDraggable())
+			{
+				this.galaxyBeingDragged = true;
+				this.softSnappedToPlanet = false;
+				if (Service.Get<GalaxyPlanetController>().ForegroundedPlanet != null)
+				{
+					this.galaxyViewState = GalaxyViewState.ManualRotate;
+				}
+				num = this.CalculateGalaxyRotation(curPos, prevPos);
+				this.rotationEasing[this.easeIndex] = num;
+				this.easeIndex = (this.easeIndex + 1) % 60;
+				num = this.CalculateGalaxyRotation(curPos, start);
+				this.cameraManager.MainCamera.UpdateRotationImmediatelyBy(num);
+			}
+			return num;
+		}
+
+		private float CalculateGalaxyRotation(Vector3 curPos, Vector3 prevPos)
+		{
+			float num = Mathf.Atan2(curPos.z * prevPos.x - prevPos.z * curPos.x, Vector3.Dot(prevPos, curPos));
+			return 57.2957764f * num;
+		}
+
+		private Vector3 GetPlanetPositionOnGalaxyPlane(Planet planet)
+		{
+			Vector2 planetScreenPos = this.GetPlanetScreenPos(planet);
+			return this.GetPositionOnGalaxyPlane(planetScreenPos);
+		}
+
+		private Vector3 GetPositionOnGalaxyPlane(Vector2 screenPos)
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			Vector3 screenPosition = new Vector3(screenPos.x, screenPos.y, 0f);
+			Vector3 zero = Vector3.zero;
+			mainCamera.GetGroundPosition(screenPosition, ref zero);
+			return zero;
+		}
+
+		private Vector3 GetForegroundPositonOnGalaxyPlane()
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			Vector3 zero = Vector3.zero;
+			mainCamera.GetGroundPosition(this.foregroundPos, ref zero);
+			return zero;
+		}
+
+		private void AttemptSoftSnapToCurrentPlanet()
+		{
+			if (!this.softSnappedToPlanet && !this.galaxyBeingDragged)
+			{
+				MainCamera mainCamera = this.cameraManager.MainCamera;
+				Planet foregroundedPlanet = Service.Get<GalaxyPlanetController>().ForegroundedPlanet;
+				if ((this.galaxyViewState == GalaxyViewState.ManualRotate || this.galaxyViewState == GalaxyViewState.PlanetTransitionInstantStart) && foregroundedPlanet != null)
+				{
+					this.galaxyReleased = false;
+					this.ClearEasing();
+					mainCamera.RotationSpring.StopMoving();
+					this.softSnappedToPlanet = true;
+					this.easeVelocity = 0f;
+					Vector3 planetPositionOnGalaxyPlane = this.GetPlanetPositionOnGalaxyPlane(foregroundedPlanet);
+					Vector3 foregroundPositonOnGalaxyPlane = this.GetForegroundPositonOnGalaxyPlane();
+					this.easeTargetRotation = this.CalculateGalaxyRotation(planetPositionOnGalaxyPlane, foregroundPositonOnGalaxyPlane);
+					this.easeTargetRotation += mainCamera.RotationSpring.Position.x;
+				}
+			}
+		}
+
+		private void ClearEasing()
+		{
+			for (int i = 0; i < 60; i++)
+			{
+				this.rotationEasing[i] = 0f;
+			}
+			this.easeIndex = 0;
+		}
+
+		public void OnTouchReleased(GalaxySwipeType type)
+		{
+			if (!this.ignoreSwipes)
+			{
+				if (type != GalaxySwipeType.SwipeRight)
+				{
+					if (type == GalaxySwipeType.SwipeLeft)
+					{
+						this.TransitionToNextPlanet();
+					}
+				}
+				else
+				{
+					this.TransitionToPrevPlanet();
+				}
+			}
+			this.ignoreSwipes = false;
+			this.galaxyReleased = true;
+		}
+
+		private void ActivateGrid()
+		{
+			if (this.galaxyOverlayGrid != null)
+			{
+				this.galaxyOverlayGrid.SetActive(true);
+			}
+		}
+
+		private void DeactivateGrid()
+		{
+			if (this.galaxyOverlayGrid != null)
+			{
+				this.galaxyOverlayGrid.SetActive(false);
+			}
+		}
+
+		private void RegisterForPlanetScreenEvents()
+		{
+			Service.Get<EventManager>().RegisterObserver(this, EventId.InventoryCrateCollectionClosed, EventPriority.Default);
+		}
+
+		private void UnregisterForPlanetScreenEvents()
+		{
+			Service.Get<EventManager>().UnregisterObserver(this, EventId.InventoryCrateCollectionClosed);
+		}
+
+		public void TranstionPlanetToGalaxy()
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			this.newScreenWidth = (float)Screen.width;
+			this.newScreenHeight = (float)Screen.height;
+			this.RescaleSpiral();
+			this.RescaleGalaxyPlanets();
+			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
+			this.UnregisterForPlanetScreenEvents();
+			this.zoomTime = 0f;
+			this.planetTargetRotaion = 0f;
+			this.planetStartRotation = 0f;
+			this.planetScreen = null;
+			this.bgStars.SetActive(true);
+			this.spiral.SetActive(true);
+			this.ActivateGrid();
+			this.planetViewLookAtRotation = Quaternion.identity;
+			galaxyPlanetController.ActivateAllPlanetRings();
+			this.ShowPlanetLockedUI();
+			Service.Get<GalaxyPlanetController>().ClearForegroundedPlanet();
+			this.currentTranstion.Reset();
+			this.currentTranstion.TransitionDuration = GameConstants.GALAXY_PLANET_GALAXY_ZOOM_TIME;
+			Vector3 startlook = Vector3.zero;
+			if (this.galaxyViewState == GalaxyViewState.LeftView)
+			{
+				this.galaxyViewState = GalaxyViewState.PlanetTransitionFromLeftTowardGalaxy;
+				this.currentTranstion.SetTransitionDistance(this.objectiveViewDist, GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET);
+				this.currentTranstion.SetTransitionHeight(this.objectiveViewCameraHeight, GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET);
+				startlook = this.GetObjectiveDetailOffset(mainCamera, 0f);
+			}
+			else
+			{
+				this.galaxyViewState = GalaxyViewState.PlanetTransitionTowardGalaxy;
+				this.currentTranstion.SetTransitionDistance(this.planetViewDist, GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET);
+				this.currentTranstion.SetTransitionHeight(this.planetViewCameraHeight, GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET);
+				startlook = this.planetViewLookPos;
+			}
+			this.currentTranstion.SetTransitionLookAt(startlook, this.galaxyPosOffset);
+			Service.Get<UXController>().MiscElementsManager.SetGalaxyCloseButtonVisible(true);
+			Service.Get<UXController>().MiscElementsManager.ShowEventsTickerView();
+		}
+
+		private bool IsDoingInitialZoom()
+		{
+			return this.zoomDist > 0f;
+		}
+
+		private void UpdateStarCamera()
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			if (this.cameraManager.StarsCamera == null)
+			{
+				return;
+			}
+			Transform transform = this.cameraManager.StarsCamera.transform;
+			if (transform == null)
+			{
+				return;
+			}
+			transform.position = mainCamera.Camera.transform.position + this.galaxyToStarAdjust;
+			transform.LookAt(this.galaxyStarsOffset);
+		}
+
+		private void UpdateSpiral(float dt)
+		{
+			if (this.spiralTransform != null)
+			{
+				this.spiralTransform.Rotate(Vector3.up, dt * GameConstants.GALAXY_AUTO_ROTATE_SPEED);
+			}
+		}
+
+		private void SetObjectivesVariables()
+		{
+			this.objectiveViewDist = this.planetViewDist - 5f;
+			this.objectiveViewCameraHeight = this.planetViewCameraHeight - 4f;
+		}
+
+		private Vector3 GetObjectiveDetailOffset(MainCamera camera, float rotation)
+		{
+			Transform transform = camera.Camera.transform;
+			Vector3 vector = transform.right * 2f + transform.up * 0.5f;
+			if (rotation != 0f)
+			{
+				vector = Quaternion.AngleAxis(rotation, Vector3.up) * vector;
+			}
+			return this.planetViewLookPos + vector;
+		}
+
+		public void OnViewFrameTime(float dt)
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
+			galaxyPlanetController.UpdatePlanets();
+			this.UpdateSpiral(dt);
+			this.UpdateStarCamera();
+			if (this.IsDoingInitialZoom())
+			{
+				if (!mainCamera.IsStillMoving())
+				{
+					this.zoomTime += dt;
+					this.zoomDist = Mathf.Lerp(GameConstants.GALAXY_INITIAL_GALAXY_ZOOM_DIST, 0f, this.zoomTime / GameConstants.GALAXY_INITIAL_GALAXY_ZOOM_TIME);
+					this.AdjustCameraPosition(GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET + this.zoomDist, GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET, this.galaxyPosOffset);
+				}
+			}
+			else
+			{
+				if (!this.initialZoomComplete)
+				{
+					this.initialZoomComplete = true;
+					Service.Get<EventManager>().SendEvent(EventId.GalaxyViewMapOpenComplete, null);
+				}
+				if (this.galaxyReleased)
+				{
+					this.galaxyReleased = false;
+					this.galaxyBeingDragged = false;
+				}
+				switch (this.galaxyViewState)
+				{
+				case GalaxyViewState.Loading:
+					if (galaxyPlanetController.AreAllPlanetsLoaded())
+					{
+						this.galaxyViewState = GalaxyViewState.ManualRotate;
+					}
+					break;
+				case GalaxyViewState.ManualRotate:
+					this.AttemptSoftSnapToCurrentPlanet();
+					if (this.doRescaleGalaxy)
+					{
+						this.RescaleSpiral();
+						this.RescaleGalaxyPlanets();
+						this.doRescaleGalaxy = false;
+					}
+					break;
+				case GalaxyViewState.PlanetTransitionWithinGalaxy:
+				{
+					this.zoomTime += dt;
+					float num = this.zoomTime / GameConstants.GALAXY_PLANET_SWIPE_TIME;
+					num = Mathf.Min(num, 1f);
+					num = Mathf.Sin(num * 3.14159274f * 0.5f);
+					float rotation = Mathf.LerpAngle(this.planetStartRotation, this.planetTargetRotaion, num);
+					mainCamera.UpdateRotationImmediatelyTo(rotation);
+					if (num >= 1f)
+					{
+						this.galaxyViewState = GalaxyViewState.ManualRotate;
+					}
+					break;
+				}
+				case GalaxyViewState.PlanetTransitionTowardCamera:
+					if (this.planetScreen != null && this.planetScreen.IsLoaded())
+					{
+						bool flag;
+						if (this.doInstantTransition)
+						{
+							flag = this.InterpolatePlanetCamera(this.currentTranstion.TransitionDuration, this.currentTranstion);
+							this.doInstantTransition = false;
+						}
+						else
+						{
+							flag = this.InterpolatePlanetCamera(dt, this.currentTranstion);
+						}
+						if (flag)
+						{
+							this.planetScreen.UpdateCurrentPlanet(galaxyPlanetController.ForegroundedPlanet);
+							this.galaxyViewState = GalaxyViewState.PlanetView;
+						}
+					}
+					break;
+				case GalaxyViewState.PlanetTransitionTowardGalaxy:
+				{
+					bool flag2 = this.InterpolatePlanetCamera(dt, this.currentTranstion);
+					if (flag2)
+					{
+						this.galaxyViewState = GalaxyViewState.ManualRotate;
+						Service.Get<EventManager>().SendEvent(EventId.ReturnToGalaxyViewMapComplete, null);
+					}
+					break;
+				}
+				case GalaxyViewState.PlanetTransitionTowardLeft:
+					if (this.planetScreen != null && this.planetScreen.IsLoaded())
+					{
+						bool flag3 = this.InterpolatePlanetCamera(dt, this.currentTranstion);
+						if (flag3)
+						{
+							this.galaxyViewState = GalaxyViewState.LeftView;
+							if (this.doesObjectivesNeedUpdate)
+							{
+								this.doesObjectivesNeedUpdate = false;
+								this.planetScreen.UpdateCurrentPlanet(galaxyPlanetController.ForegroundedPlanet);
+							}
+						}
+					}
+					break;
+				case GalaxyViewState.PlanetTransitionFromLeftTowardGalaxy:
+				{
+					bool flag4 = this.InterpolatePlanetCamera(dt, this.currentTranstion);
+					if (flag4)
+					{
+						this.galaxyViewState = GalaxyViewState.ManualRotate;
+						Service.Get<EventManager>().SendEvent(EventId.ReturnToGalaxyViewMapComplete, null);
+					}
+					break;
+				}
+				case GalaxyViewState.PlanetTransitionTowardCenter:
+					if (this.planetScreen != null && this.planetScreen.IsLoaded())
+					{
+						bool flag5 = this.InterpolatePlanetCamera(dt, this.currentTranstion);
+						if (flag5)
+						{
+							this.galaxyViewState = GalaxyViewState.PlanetView;
+						}
+					}
+					break;
+				case GalaxyViewState.PlanetTransitionInstantStart:
+					if (galaxyPlanetController.AreAllPlanetsLoaded() && this.planetScreen == null)
+					{
+						galaxyPlanetController.SetForegroundedPlanet(this.planetViewUID);
+						this.planetScreen = new PlanetDetailsScreen(galaxyPlanetController.ForegroundedPlanet, false);
+						this.planetScreen.currentSection = this.planetSection;
+						Service.Get<ScreenController>().AddScreen(this.planetScreen, true, false);
+						this.RegisterForPlanetScreenEvents();
+					}
+					if (this.planetScreen != null && this.planetScreen.IsLoaded() && !this.softSnappedToPlanet)
+					{
+						this.InstantlySetCameraForPlanetView();
+						this.planetScreen.Transition();
+						this.AdjustCameraPosition(this.planetViewDist, this.planetViewCameraHeight, this.planetViewLookPos);
+						this.galaxyViewState = GalaxyViewState.PlanetView;
+						galaxyPlanetController.DeactivatePlanetRings(galaxyPlanetController.ForegroundedPlanet);
+						if (!Service.Get<CurrentPlayer>().CampaignProgress.FueInProgress)
+						{
+							Service.Get<UserInputInhibitor>().AllowAll();
+						}
+					}
+					break;
+				}
+				if (galaxyPlanetController.AreAllPlanetsLoaded())
+				{
+					this.UpdatePlanetUI(dt);
+				}
+				if (this.CanRotatePlanetToFront())
+				{
+					float totalTime = GameConstants.GALAXY_EASE_ROTATION_TIME;
+					if (this.galaxyViewState == GalaxyViewState.PlanetTransitionPanTo)
+					{
+						totalTime = GameConstants.GALAXY_EASE_ROTATION_TRANSITION_TIME;
+					}
+					this.EaseGalaxyRotation(dt, totalTime);
+					if (this.IsEaseDone() && this.galaxyViewState == GalaxyViewState.PlanetTransitionPanTo)
+					{
+						this.galaxyViewState = GalaxyViewState.ManualRotate;
+						Service.Get<EventManager>().SendEvent(EventId.GalaxyStatePanToPlanetComplete, galaxyPlanetController.ForegroundedPlanet.VO.Uid);
+					}
+				}
+			}
+			galaxyPlanetController.UpdatePlanets();
+		}
+
+		private bool InterpolatePlanetCamera(float dt, GalaxyTransitionData transitionData)
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			this.zoomTime += dt;
+			float num = this.zoomTime / transitionData.TransitionDuration;
+			num = Mathf.Min(num, 1f);
+			num = Mathf.Sin(num * 3.14159274f * 0.5f);
+			if (transitionData.Instant)
+			{
+				num = 1f;
+			}
+			float dist = Mathf.Lerp(transitionData.StartViewDistance, transitionData.EndViewDistance, num);
+			float height = Mathf.Lerp(transitionData.StartViewHeight, transitionData.EndViewHeight, num);
+			this.planetLook = Vector3.Lerp(transitionData.StartViewLookAt, transitionData.EndViewLookAt, num);
+			if (transitionData.StartViewRotation != transitionData.EndViewRotation)
+			{
+				float rotation = Mathf.LerpAngle(transitionData.StartViewRotation, transitionData.EndViewRotation, num);
+				mainCamera.UpdateRotationImmediatelyTo(rotation);
+			}
+			this.AdjustCameraPosition(dist, height, this.planetLook);
+			return num >= 1f;
+		}
+
+		private void InitFinalPlanetPositions()
+		{
+			Planet foregroundedPlanet = Service.Get<GalaxyPlanetController>().ForegroundedPlanet;
+			if (foregroundedPlanet != null)
+			{
+				MainCamera mainCamera = this.cameraManager.MainCamera;
+				this.ClearEasing();
+				this.easeVelocity = 0f;
+				Vector3 planetPositionOnGalaxyPlane = this.GetPlanetPositionOnGalaxyPlane(foregroundedPlanet);
+				Vector3 foregroundPositonOnGalaxyPlane = this.GetForegroundPositonOnGalaxyPlane();
+				float num = this.CalculateGalaxyRotation(planetPositionOnGalaxyPlane, foregroundPositonOnGalaxyPlane);
+				num += mainCamera.RotationSpring.Position.x;
+				mainCamera.UpdateRotationImmediatelyTo(num);
+			}
+		}
+
+		private void InstantlySetCameraForPlanetView()
+		{
+			this.InitGalaxy(0f);
+			this.InitGalaxyGrid();
+			this.InitFinalPlanetPositions();
+			this.planetViewLookAtRotation = this.planetScreen.GetTransitionLookOffset();
+		}
+
+		private bool CanRotatePlanetToFront()
+		{
+			return this.softSnappedToPlanet;
+		}
+
+		private bool IsEaseDone()
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			float num = Mathf.Abs(this.easeTargetRotation - mainCamera.RotationSpring.Position.x);
+			return num <= 0.01f;
+		}
+
+		public bool IsPlanetDetailsScreenOpen()
+		{
+			return Service.Get<GameStateMachine>().CurrentState is GalaxyState && (this.galaxyViewState == GalaxyViewState.PlanetView || this.galaxyViewState == GalaxyViewState.PlanetTransitionInstantStart);
+		}
+
+		public bool IsPlanetDetailsScreenOpeningOrOpen()
+		{
+			return Service.Get<GameStateMachine>().CurrentState is GalaxyState || this.galaxyViewState == GalaxyViewState.PlanetTransitionInstantStart;
+		}
+
+		private void EaseGalaxyRotation(float dt, float totalTime)
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			float rotation = Mathf.SmoothDampAngle(mainCamera.RotationSpring.Position.x, this.easeTargetRotation, ref this.easeVelocity, totalTime);
+			mainCamera.UpdateRotationImmediatelyTo(rotation);
+		}
+
+		public void OnGalaxyObjectClicked(GameObject galaxyObject)
+		{
+			PlanetRef component = galaxyObject.GetComponent<PlanetRef>();
+			if (component != null && !this.IsDoingInitialZoom() && this.IsDraggable())
+			{
+				string uid = component.Planet.VO.Uid;
+				if (PlanetIntroStoryUtil.ShouldPlanetIntroStoryBePlayed(uid))
+				{
+					PlanetIntroStoryUtil.PlayPlanetIntroStoryChain(uid);
+					return;
+				}
+				this.HandlePlanetClicked(component.Planet);
+			}
+		}
+
+		public float GetPlanetScaleFactor(Planet planet)
+		{
+			float result = 1f;
+			if (planet != null)
+			{
+				float num = this.CalculateGalaxyRotation(this.GetPlanetPositionOnGalaxyPlane(planet), this.GetForegroundPositonOnGalaxyPlane());
+				num = Mathf.Abs(num);
+				num -= this.foregroundPlateauAngle * (1f - Mathf.Min(num / this.foregroundPlateauAngle, 1f));
+				result = 1f - num / GameConstants.GALAXY_PLANET_FOREGROUND_THRESHOLD;
+			}
+			return result;
+		}
+
+		private void ClearForegroundUI()
+		{
+			Service.Get<UXController>().MiscElementsManager.ClearPlanetFrontUI();
+		}
+
+		private void AttachForegroundUIToPlanet(Planet planet)
+		{
+			Service.Get<UXController>().MiscElementsManager.AttachPlanetFrontUI(planet);
+		}
+
+		private void ShowForegroundPlanetUI(Planet planet)
+		{
+			Service.Get<UXController>().MiscElementsManager.ShowPlanetFrontUI(planet);
+		}
+
+		public void HideBackgroundPlanetUI(Planet planet)
+		{
+			Service.Get<UXController>().MiscElementsManager.HidePlanetBackUI(planet);
+		}
+
+		public void ShowBackgroundPlanetUI(Planet planet)
+		{
+			Service.Get<UXController>().MiscElementsManager.ShowPlanetBackUI(planet);
+		}
+
+		private Vector2 GetGalaxyScreenPos(Vector3 pos)
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			pos = mainCamera.WorldPositionToScreenPoint(new Vector3(pos.x, this.galaxyPosOffset.y, pos.z));
+			Vector2 result = new Vector2(pos.x, (float)Screen.height - pos.y);
+			return result;
+		}
+
+		private Vector2 GetPlanetScreenPos(Planet planet)
+		{
+			Vector3 position = planet.PlanetGameObject.transform.position;
+			return this.GetGalaxyScreenPos(position);
+		}
+
+		private bool IsPlanetForegrounded(Planet planet)
+		{
+			float f = this.CalculateGalaxyRotation(this.GetPlanetPositionOnGalaxyPlane(planet), this.GetForegroundPositonOnGalaxyPlane());
+			return Mathf.Abs(f) <= GameConstants.GALAXY_PLANET_FOREGROUND_THRESHOLD;
+		}
+
+		private bool IsPlanetUIForegrounded(Planet planet)
+		{
+			float f = this.CalculateGalaxyRotation(this.GetPlanetPositionOnGalaxyPlane(planet), this.GetForegroundPositonOnGalaxyPlane());
+			return Mathf.Abs(f) <= GameConstants.GALAXY_PLANET_FOREGROUND_UI_THRESHOLD;
+		}
+
+		private float GetPlanetDistToForeground(Planet planet)
+		{
+			float f = this.CalculateGalaxyRotation(this.GetPlanetPositionOnGalaxyPlane(planet), this.GetForegroundPositonOnGalaxyPlane());
+			return Mathf.Abs(f);
+		}
+
+		private bool Transitioning()
+		{
+			return this.galaxyViewState == GalaxyViewState.PlanetTransitionTowardCamera || this.galaxyViewState == GalaxyViewState.PlanetTransitionTowardGalaxy || this.galaxyViewState == GalaxyViewState.PlanetTransitionInstantStart || this.galaxyViewState == GalaxyViewState.PlanetView || this.galaxyViewState == GalaxyViewState.PlanetTransitionFromLeftTowardGalaxy || this.galaxyViewState == GalaxyViewState.PlanetTransitionTowardLeft || this.galaxyViewState == GalaxyViewState.PlanetTransitionTowardCenter || this.galaxyViewState == GalaxyViewState.LeftView;
+		}
+
+		private void UpdatePlanetUI(float dt)
+		{
+			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
+			Planet planet = galaxyPlanetController.ForegroundedPlanet;
+			Planet planet2 = planet;
+			Planet planet3 = null;
+			List<Planet> list = new List<Planet>();
+			galaxyPlanetController.ClearForegroundPlanetStatus();
+			galaxyPlanetController.BuildPlanetList(new GalaxyPlanetController.PlanetBooleanDelegate(this.IsPlanetForegrounded), ref list);
+			if (!this.Transitioning())
+			{
+				planet = null;
+				if (list.Count == 1)
+				{
+					planet = list[0];
+					planet.IsForegrounded = true;
+				}
+				else if (list.Count > 1)
+				{
+					planet = list[0];
+					planet.IsForegrounded = true;
+					float num = this.GetPlanetDistToForeground(list[0]);
+					int count = list.Count;
+					for (int i = 1; i < count; i++)
+					{
+						Planet planet4 = list[i];
+						planet4.IsForegrounded = true;
+						float planetDistToForeground = this.GetPlanetDistToForeground(planet4);
+						if (num > planetDistToForeground)
+						{
+							num = planetDistToForeground;
+							planet = planet4;
+						}
+					}
+				}
+				galaxyPlanetController.ForegroundedPlanet = planet;
+			}
+			if (planet != null)
+			{
+				if (this.galaxyViewState == GalaxyViewState.PlanetTransitionTowardCamera)
+				{
+					this.ClearForegroundUI();
+				}
+				else if (!this.Transitioning())
+				{
+					if (this.IsPlanetUIForegrounded(planet))
+					{
+						planet3 = planet;
+						this.ShowForegroundPlanetUI(planet);
+						this.AttachForegroundUIToPlanet(planet);
+					}
+					else
+					{
+						Service.Get<UXController>().MiscElementsManager.PanBetweenPlanets();
+					}
+				}
+				planet.UpdateThrashingPopulation(dt);
+			}
+			else
+			{
+				this.ClearForegroundUI();
+			}
+			if (planet2 != planet && this.galaxyBeingDragged)
+			{
+				this.ignoreSwipes = true;
+			}
+			int count2 = galaxyPlanetController.PlanetsWithActiveEvents.Count;
+			for (int j = 0; j < count2; j++)
+			{
+				Planet planet5 = galaxyPlanetController.PlanetsWithActiveEvents[j];
+				if (planet3 != planet5 && !this.Transitioning())
+				{
+					this.ShowBackgroundPlanetUI(planet5);
+				}
+				else
+				{
+					this.HideBackgroundPlanetUI(planet5);
+				}
+			}
+		}
+
+		public void SwitchToObjectiveDetails(bool newPlanet)
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			this.bDisableRescale = false;
+			mainCamera.SetFov(this.cachedCameraFOV_Galaxy);
+			this.zoomTime = 0f;
+			Service.Get<UXController>().MiscElementsManager.HideEventsTickerView();
+			this.galaxyViewState = GalaxyViewState.PlanetTransitionTowardLeft;
+			this.spiral.SetActive(false);
+			this.currentTranstion.Reset();
+			this.currentTranstion.TransitionDuration = GameConstants.GALAXY_PLANET_GALAXY_ZOOM_TIME;
+			this.currentTranstion.SetTransitionDistance(this.planetViewDist, this.objectiveViewDist);
+			this.currentTranstion.SetTransitionHeight(this.planetViewCameraHeight, this.objectiveViewCameraHeight);
+			float rotation = 0f;
+			if (newPlanet)
+			{
+				this.doesObjectivesNeedUpdate = true;
+				rotation = this.planetTargetRotaion - this.planetStartRotation;
+				this.currentTranstion.SetTransitionRotation(this.planetStartRotation, this.planetTargetRotaion);
+			}
+			this.currentTranstion.SetTransitionLookAt(this.planetViewLookPos, this.GetObjectiveDetailOffset(mainCamera, rotation));
+			if (newPlanet)
+			{
+				float prevAngle = this.PrepareCameraForDistanceCalculation(this.planetViewLookPos);
+				this.planetViewLookAtRotation = this.planetScreen.GetTransitionLookOffset();
+				this.ResetCameraAfterDistanceCalculation(prevAngle);
+			}
+		}
+
+		public void SwitchFromObjectiveDetails()
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			this.zoomTime = 0f;
+			Service.Get<UXController>().MiscElementsManager.HideEventsTickerView();
+			this.galaxyViewState = GalaxyViewState.PlanetTransitionTowardCenter;
+			this.spiral.SetActive(true);
+			this.currentTranstion.Reset();
+			this.currentTranstion.TransitionDuration = GameConstants.GALAXY_PLANET_GALAXY_ZOOM_TIME;
+			this.currentTranstion.SetTransitionDistance(this.objectiveViewDist, this.planetViewDist);
+			this.currentTranstion.SetTransitionHeight(this.objectiveViewCameraHeight, this.planetViewCameraHeight);
+			this.currentTranstion.SetTransitionLookAt(this.GetObjectiveDetailOffset(mainCamera, 0f), this.planetViewLookPos);
+		}
+
+		private void SwitchToPlanet(Planet planet)
+		{
+			this.SwitchToPlanet(planet, false);
+		}
+
+		public bool IsInPlanetScreen()
+		{
+			return this.planetScreen != null;
+		}
+
+		private void SwitchToPlanet(Planet planet, bool instant)
+		{
+			bool flag = this.planetScreen != null;
+			this.zoomTime = 0f;
+			this.planetViewLookAtRotation = Quaternion.identity;
+			this.AdjustCameraPosition(GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET, GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET, this.galaxyPosOffset);
+			Service.Get<GalaxyPlanetController>().UpdatePlanets();
+			this.RotatePlanetToForeground(planet, false);
+			this.currentTranstion.Reset();
+			if (flag)
+			{
+				if (!this.InObjectivesState())
+				{
+					this.galaxyViewState = GalaxyViewState.PlanetTransitionTowardCamera;
+					this.planetScreen.Transition();
+				}
+				else
+				{
+					this.planetScreen.Transition();
+					this.SwitchToObjectiveDetails(true);
+				}
+			}
+			else
+			{
+				this.ClearForegroundUI();
+				this.galaxyViewState = GalaxyViewState.PlanetTransitionWithinGalaxy;
+			}
+			this.currentTranstion.Instant = instant;
+		}
+
+		private bool InObjectivesState()
+		{
+			return this.galaxyViewState == GalaxyViewState.LeftView || this.galaxyViewState == GalaxyViewState.PlanetTransitionFromLeftTowardGalaxy || this.galaxyViewState == GalaxyViewState.PlanetTransitionTowardCenter || this.galaxyViewState == GalaxyViewState.PlanetTransitionTowardLeft;
+		}
+
+		private void SetupTransitionTowardCamera()
+		{
+			this.currentTranstion.TransitionDuration = GameConstants.GALAXY_PLANET_GALAXY_ZOOM_TIME;
+			this.currentTranstion.SetTransitionDistance(GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET, this.planetViewDist);
+			this.currentTranstion.SetTransitionHeight(GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET, this.planetViewCameraHeight);
+			this.currentTranstion.SetTransitionRotation(this.planetStartRotation, this.planetTargetRotaion);
+			this.currentTranstion.SetTransitionLookAt(this.galaxyPosOffset, this.planetViewLookPos);
+		}
+
+		public Planet TransitionToNextPlanet()
+		{
+			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
+			Planet planet = galaxyPlanetController.TransitionToPlanet(true);
+			this.SwitchToPlanet(planet);
+			return planet;
+		}
+
+		public void TransitionToPlanet(Planet planet, bool instant)
+		{
+			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
+			galaxyPlanetController.ForegroundedPlanet = planet;
+			this.SwitchToPlanet(planet, instant);
+			if (instant)
+			{
+				this.OnViewFrameTime(0f);
+			}
+		}
+
+		public Planet TransitionToPrevPlanet()
+		{
+			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
+			Planet planet = galaxyPlanetController.TransitionToPlanet(false);
+			this.SwitchToPlanet(planet);
+			return planet;
+		}
+
+		public void PanToPlanet(Planet planet)
+		{
+			this.galaxyViewState = GalaxyViewState.PlanetTransitionPanTo;
+			this.RotatePlanetToForeground(planet, true);
+		}
+
+		public void RotatePlanetToForeground(Planet planet, bool soft)
+		{
+			if (planet != null)
+			{
+				Service.Get<GalaxyPlanetController>().ForegroundedPlanet = planet;
+				this.softSnappedToPlanet = soft;
+				MainCamera mainCamera = this.cameraManager.MainCamera;
+				this.ClearEasing();
+				mainCamera.RotationSpring.StopMoving();
+				float num = this.CalculateGalaxyRotation(this.GetPlanetPositionOnGalaxyPlane(planet), this.GetForegroundPositonOnGalaxyPlane()) + mainCamera.RotationSpring.Position.x;
+				if (soft)
+				{
+					this.easeTargetRotation = num;
+					this.easeVelocity = 0f;
+					return;
+				}
+				this.planetStartRotation = mainCamera.RotationSpring.Position.x;
+				this.planetTargetRotaion = num;
+			}
+		}
+
+		public bool ShouldAnimateCurrent(Planet planet)
+		{
+			bool result = false;
+			if (planet != null)
+			{
+				result = (planet.IsCurrentAndNeedsAnim() && !this.Transitioning());
+			}
+			return result;
+		}
+
+		public void ReturnPlanetScreenToMainSelect()
+		{
+			if (this.planetScreen != null && this.planetScreen.IsLoaded())
+			{
+				this.planetScreen.CloseSubScreenAndReturnToMainSelect();
+			}
+		}
+
+		public void StartPlanetTransition()
+		{
+			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
+			this.zoomTime = 0f;
+			if (this.galaxyViewState != GalaxyViewState.PlanetTransitionInstantStart)
+			{
+				this.DeactivateGrid();
+				galaxyPlanetController.DeactivatePlanetRings(galaxyPlanetController.ForegroundedPlanet);
+			}
+			this.HidePlanetLockedUI();
+			this.planetViewLookPos = galaxyPlanetController.GetCurrentPlanetPosition();
+			float prevAngle = this.PrepareCameraForDistanceCalculation(this.planetViewLookPos);
+			float planetFrustumDistance = this.planetScreen.GetPlanetFrustumDistance(galaxyPlanetController.ForegroundedPlanet.ObjectExtents.y);
+			this.planetViewDist = planetFrustumDistance + galaxyPlanetController.ForegroundedPlanet.VO.Radius;
+			float num = this.planetViewDist / 2f;
+			if (this.planetViewCameraHeight > num)
+			{
+				this.planetViewCameraHeight = num;
+			}
+			else if (this.planetViewCameraHeight < -num)
+			{
+				this.planetViewCameraHeight = -num;
+			}
+			this.planetViewDist = Mathf.Sqrt(this.planetViewDist * this.planetViewDist - this.planetViewCameraHeight * this.planetViewCameraHeight);
+			this.SetObjectivesVariables();
+			if (this.galaxyViewState == GalaxyViewState.PlanetTransitionTowardCamera)
+			{
+				this.currentTranstion.Reset();
+				this.SetupTransitionTowardCamera();
+				this.planetViewLookAtRotation = this.planetScreen.GetTransitionLookOffset();
+			}
+			this.ResetCameraAfterDistanceCalculation(prevAngle);
+		}
+
+		private void ResetCameraAfterDistanceCalculation(float prevAngle)
+		{
+			this.cameraManager.MainCamera.UpdateRotationImmediatelyTo(prevAngle);
+		}
+
+		private float PrepareCameraForDistanceCalculation(Vector3 planetPos)
+		{
+			float x = this.cameraManager.MainCamera.RotationSpring.Position.x;
+			Vector2 galaxyScreenPos = this.GetGalaxyScreenPos(planetPos);
+			Vector3 positionOnGalaxyPlane = this.GetPositionOnGalaxyPlane(galaxyScreenPos);
+			Vector3 foregroundPositonOnGalaxyPlane = this.GetForegroundPositonOnGalaxyPlane();
+			float num = this.CalculateGalaxyRotation(positionOnGalaxyPlane, foregroundPositonOnGalaxyPlane);
+			num += x;
+			this.cameraManager.MainCamera.UpdateRotationImmediatelyTo(num);
+			return x;
+		}
+
+		private void GoToPlanetScreen()
+		{
+			this.bDisableRescale = false;
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			mainCamera.SetFov(this.cachedCameraFOV_Galaxy);
+			this.ClearForegroundUI();
+			Service.Get<UXController>().MiscElementsManager.HideEventsTickerView();
+			PlanetDetailsScreen screen = new PlanetDetailsScreen(Service.Get<GalaxyPlanetController>().ForegroundedPlanet, true);
+			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
+			this.planetScreen = screen;
+			PlanetVO vO = this.planetScreen.CurrentPlanet.VO;
+			Service.Get<ScreenController>().AddScreen(screen, true, false);
+			this.RegisterForPlanetScreenEvents();
+			string cookie = vO.PlanetBIName.ToLower() + " | " + currentPlayer.GetPlanetStatus(vO.Uid);
+			Service.Get<EventManager>().SendEvent(EventId.GalaxyPlanetTapped, cookie);
+		}
+
+		public void OpenPlanetDetailsForPlanet(string planetUID)
+		{
+			Planet planet = Service.Get<GalaxyPlanetController>().GetPlanet(planetUID);
+			if (planet == null)
+			{
+				return;
+			}
+			this.HandlePlanetClicked(planet);
+		}
+
+		private void HidePlanetLockedUI()
+		{
+			Service.Get<UXController>().MiscElementsManager.HidePlanetLockedUI();
+		}
+
+		private void ShowPlanetLockedUI()
+		{
+			Service.Get<UXController>().MiscElementsManager.ShowPlanetLockedUI();
+		}
+
+		private void HandlePlanetClicked(Planet clickedPlanet)
+		{
+			this.ClearForegroundUI();
+			Service.Get<UXController>().MiscElementsManager.SetGalaxyCloseButtonVisible(false);
+			this.galaxyBeingDragged = false;
+			this.RotatePlanetToForeground(clickedPlanet, false);
+			this.galaxyViewState = GalaxyViewState.PlanetTransitionTowardCamera;
+			if (this.planetScreen == null)
+			{
+				this.GoToPlanetScreen();
+			}
+		}
+
+		private void InitGalaxyView()
+		{
+			Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldLoadComplete);
+			Service.Get<AssetManager>().Load(ref this.galaxyStarsHandle, "planets_starfield", new AssetSuccessDelegate(this.OnStarsLoaded), null, null);
+			Service.Get<AssetManager>().Load(ref this.galaxySpiralHandle, "planets_galaxy", new AssetSuccessDelegate(this.OnSpiralLoaded), null, null);
+		}
+
+		private void InitGalaxyGrid()
+		{
+			if (this.loadGalaxyGrid)
+			{
+				Service.Get<AssetManager>().Load(ref this.galaxyGridHandle, "planets_galaxygrid", new AssetSuccessDelegate(this.OnGridLoaded), null, null);
+			}
+		}
+
+		private void OnGridLoaded(object asset, object cookie)
+		{
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			this.galaxyOverlayGrid = (GameObject)asset;
+			Transform transform = this.galaxyOverlayGrid.transform;
+			transform.SetParent(mainCamera.MainRotCameraHarness.transform);
+			Vector3 eulerAngles = mainCamera.Camera.transform.rotation.eulerAngles;
+			transform.rotation = Quaternion.Euler(0f, eulerAngles.y, 0f);
+			transform.position = this.galaxyPosOffset;
+			transform.localPosition += new Vector3(0f, 0f, -8f);
+			GalaxyViewState galaxyViewState = this.galaxyViewState;
+			if (galaxyViewState == GalaxyViewState.PlanetTransitionInstantStart || galaxyViewState == GalaxyViewState.PlanetView)
+			{
+				this.DeactivateGrid();
+				return;
+			}
+			this.ActivateGrid();
+		}
+
+		private void DestroyGalaxyGrid()
+		{
+			if (this.galaxyOverlayGrid != null)
+			{
+				UnityEngine.Object.Destroy(this.galaxyOverlayGrid);
+				this.galaxyOverlayGrid = null;
+			}
+			if (this.galaxyGridHandle != AssetHandle.Invalid)
+			{
+				Service.Get<AssetManager>().Unload(this.galaxyGridHandle);
+				this.galaxyGridHandle = AssetHandle.Invalid;
+			}
+		}
+
+		private void OnGalaxyStarsSpiralLoaded()
+		{
+			this.spiralTransform.parent = this.stars.transform;
+			this.spiralTransform.localPosition = Vector3.zero;
+		}
+
+		private void OnSpiralLoaded(object asset, object cookie)
+		{
+			this.spiral = (GameObject)asset;
+			if (this.spiral != null)
+			{
+				this.spiralTransform = this.spiral.transform;
+				if (this.stars != null)
+				{
+					this.OnGalaxyStarsSpiralLoaded();
+				}
+			}
+		}
+
+		private void OnStarsLoaded(object asset, object cookie)
+		{
+			this.stars = UnityEngine.Object.Instantiate<GameObject>(asset as GameObject);
+			Transform transform = this.stars.transform;
+			transform.position = this.galaxyStarsOffset;
+			this.cameraManager.StarsCamera = transform.FindChild("StarCamera").GetComponent<Camera>();
+			this.bgStars = transform.FindChild("bgStars").gameObject;
+			this.stars.SetActive(false);
+			if (this.stars != null && this.spiral != null)
+			{
+				this.OnGalaxyStarsSpiralLoaded();
+			}
+		}
+
+		public EatResponse OnEvent(EventId id, object cookie)
+		{
+			if (id != EventId.WorldLoadComplete)
+			{
+				if (id != EventId.UIAttackScreenSelection)
+				{
+					if (id == EventId.InventoryCrateCollectionClosed)
+					{
+						this.GoToHome();
+					}
+				}
+				else
+				{
+					this.bDisableRescale = true;
+				}
+			}
+			else
+			{
+				this.InitGalaxyView();
+			}
+			return EatResponse.NotEaten;
+		}
+
+		private void RescalePlanetView()
+		{
+			if (this.bDisableRescale || this.planetScreen == null || this.planetScreen.currentSection == CampaignScreenSection.Campaign)
+			{
+				return;
+			}
+			Planet currentPlanet = this.planetScreen.CurrentPlanet;
+			this.zoomTime = 0f;
+			this.planetViewLookAtRotation = Quaternion.identity;
+			this.AdjustCameraPosition(GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET, GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET, this.galaxyPosOffset);
+			Service.Get<GalaxyPlanetController>().UpdatePlanets();
+			this.RotatePlanetToForeground(currentPlanet, false);
+			this.doInstantTransition = true;
+			this.galaxyViewState = GalaxyViewState.PlanetTransitionTowardCamera;
+			this.planetScreen.UpdateCurrentPlanet(currentPlanet);
+		}
+
+		private void RescaleSpiral()
+		{
+			float num = 1.77777779f;
+			float num2 = this.newScreenWidth / this.newScreenHeight;
+			float d = num / num2;
+			this.spiral.transform.localScale = Vector3.one / d;
+		}
+
+		private void RescaleGalaxyPlanets()
+		{
+			float num = 1.77777779f;
+			float num2 = this.newScreenWidth / this.newScreenHeight;
+			float num3 = num / num2;
+			MainCamera mainCamera = this.cameraManager.MainCamera;
+			mainCamera.SetFov(this.cachedCameraFOV_Galaxy * num3);
+		}
+
+		public void OnScreenSizeChanged(int w, int h)
+		{
+			this.newScreenWidth = (float)w;
+			this.newScreenHeight = (float)h;
+			this.doRescaleGalaxy = true;
+		}
+
+		protected internal GalaxyViewController(UIntPtr dummy)
+		{
+		}
+
+		public unsafe static long $Invoke0(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ActivateGrid();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke1(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).AdjustCameraPosition(*(float*)args, *(float*)(args + 1), *(*(IntPtr*)(args + 2)));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke2(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).AttachForegroundUIToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke3(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).AttemptSoftSnapToCurrentPlanet();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke4(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).CalculateGalaxyRotation(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1))));
+		}
+
+		public unsafe static long $Invoke5(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).CanRotatePlanetToFront());
+		}
+
+		public unsafe static long $Invoke6(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ClearEasing();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke7(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ClearForegroundUI();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke8(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).DeactivateGrid();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke9(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).DestroyGalaxyGrid();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke10(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).EaseGalaxyRotation(*(float*)args, *(float*)(args + 1));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke11(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetForegroundPositonOnGalaxyPlane());
+		}
+
+		public unsafe static long $Invoke12(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetGalaxyScreenPos(*(*(IntPtr*)args)));
+		}
+
+		public unsafe static long $Invoke13(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetObjectiveDetailOffset((MainCamera)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1)));
+		}
+
+		public unsafe static long $Invoke14(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetDistToForeground((Planet)GCHandledObjects.GCHandleToObject(*args)));
+		}
+
+		public unsafe static long $Invoke15(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetPositionOnGalaxyPlane((Planet)GCHandledObjects.GCHandleToObject(*args)));
+		}
+
+		public unsafe static long $Invoke16(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetScaleFactor((Planet)GCHandledObjects.GCHandleToObject(*args)));
+		}
+
+		public unsafe static long $Invoke17(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetScreenPos((Planet)GCHandledObjects.GCHandleToObject(*args)));
+		}
+
+		public unsafe static long $Invoke18(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPositionOnGalaxyPlane(*(*(IntPtr*)args)));
+		}
+
+		public unsafe static long $Invoke19(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToGalaxyView();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke20(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToGalaxyView(Marshal.PtrToStringUni(*(IntPtr*)args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke21(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToHome();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke22(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToHome(*(sbyte*)args != 0, (WipeCompleteDelegate)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke23(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToPlanetScreen();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke24(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToPlanetView(Marshal.PtrToStringUni(*(IntPtr*)args), (CampaignScreenSection)(*(int*)(args + 1)));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke25(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).HandlePlanetClicked((Planet)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke26(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).HideBackgroundPlanetUI((Planet)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke27(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).HidePlanetLockedUI();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke28(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitFinalPlanetPositions();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke29(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitForegroundPos();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke30(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitGalaxy(*(float*)args);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke31(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitGalaxyGrid();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke32(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitGalaxyView();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke33(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitInitialCameraPos();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke34(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InObjectivesState());
+		}
+
+		public unsafe static long $Invoke35(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InstantlySetCameraForPlanetView();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke36(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InterpolatePlanetCamera(*(float*)args, (GalaxyTransitionData)GCHandledObjects.GCHandleToObject(args[1])));
+		}
+
+		public unsafe static long $Invoke37(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsDoingInitialZoom());
+		}
+
+		public unsafe static long $Invoke38(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsDraggable());
+		}
+
+		public unsafe static long $Invoke39(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsEaseDone());
+		}
+
+		public unsafe static long $Invoke40(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsInPlanetScreen());
+		}
+
+		public unsafe static long $Invoke41(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsPlanetDetailsScreenOpen());
+		}
+
+		public unsafe static long $Invoke42(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsPlanetDetailsScreenOpeningOrOpen());
+		}
+
+		public unsafe static long $Invoke43(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsPlanetForegrounded((Planet)GCHandledObjects.GCHandleToObject(*args)));
+		}
+
+		public unsafe static long $Invoke44(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsPlanetUIForegrounded((Planet)GCHandledObjects.GCHandleToObject(*args)));
+		}
+
+		public unsafe static long $Invoke45(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
+		}
+
+		public unsafe static long $Invoke46(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnGalaxyObjectClicked((GameObject)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke47(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnGalaxyStarsSpiralLoaded();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke48(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnGridLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke49(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnScreenSizeChanged(*(int*)args, *(int*)(args + 1));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke50(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnSpiralLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke51(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnStarsLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke52(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnTouchReleased((GalaxySwipeType)(*(int*)args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke53(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke54(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OpenPlanetDetailsForPlanet(Marshal.PtrToStringUni(*(IntPtr*)args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke55(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).PanToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke56(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).PrepareCameraForDistanceCalculation(*(*(IntPtr*)args)));
+		}
+
+		public unsafe static long $Invoke57(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RegisterForPlanetScreenEvents();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke58(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RescaleGalaxyPlanets();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke59(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RescalePlanetView();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke60(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RescaleSpiral();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke61(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ResetCameraAfterDistanceCalculation(*(float*)args);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke62(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ResetCameraForBase();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke63(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ReturnPlanetScreenToMainSelect();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke64(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RotatePlanetToForeground((Planet)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke65(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SetObjectivesVariables();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke66(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SetupCamera();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke67(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SetupTransitionTowardCamera();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke68(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ShouldAnimateCurrent((Planet)GCHandledObjects.GCHandleToObject(*args)));
+		}
+
+		public unsafe static long $Invoke69(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ShowBackgroundPlanetUI((Planet)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke70(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ShowForegroundPlanetUI((Planet)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke71(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ShowPlanetLockedUI();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke72(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).StartPlanetTransition();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke73(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SwitchFromObjectiveDetails();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke74(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SwitchToObjectiveDetails(*(sbyte*)args != 0);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke75(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SwitchToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke76(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SwitchToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke77(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).Transitioning());
+		}
+
+		public unsafe static long $Invoke78(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).TransitionToNextPlanet());
+		}
+
+		public unsafe static long $Invoke79(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).TransitionToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke80(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).TransitionToPrevPlanet());
+		}
+
+		public unsafe static long $Invoke81(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).TranstionPlanetToGalaxy();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke82(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UnregisterForPlanetScreenEvents();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke83(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateGalaxyConstants();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke84(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateGalaxyRotation(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2))));
+		}
+
+		public unsafe static long $Invoke85(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetUI(*(float*)args);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke86(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateSpiral(*(float*)args);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke87(long instance, long* args)
+		{
+			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateStarCamera();
+			return -1L;
+		}
+	}
+}

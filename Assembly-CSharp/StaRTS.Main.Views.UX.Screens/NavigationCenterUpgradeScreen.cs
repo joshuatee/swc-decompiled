@@ -1,0 +1,584 @@
+using Net.RichardLord.Ash.Core;
+using StaRTS.Externals.Manimal;
+using StaRTS.Main.Controllers;
+using StaRTS.Main.Controllers.Planets;
+using StaRTS.Main.Models;
+using StaRTS.Main.Models.Commands.Player.Building.Contracts;
+using StaRTS.Main.Models.Commands.Player.Building.Upgrade;
+using StaRTS.Main.Models.Player;
+using StaRTS.Main.Models.ValueObjects;
+using StaRTS.Main.Utils;
+using StaRTS.Main.Utils.Events;
+using StaRTS.Main.Views.UX.Elements;
+using StaRTS.Utils.Core;
+using StaRTS.Utils.Scheduling;
+using System;
+using System.Collections.Generic;
+using WinRTBridge;
+
+namespace StaRTS.Main.Views.UX.Screens
+{
+	public class NavigationCenterUpgradeScreen : BuildingInfoScreen, IViewFrameTimeObserver
+	{
+		protected PlanetVO selectedPlanet;
+
+		protected bool tutorialMode;
+
+		protected UXLabel labelTutorialConfirm;
+
+		protected OnScreenModalResult callback;
+
+		protected UXLabel labelUnlockPlanetTimer;
+
+		protected UXButton buttonTutorialConfirm;
+
+		private List<UXCheckbox> unlockablePlanetList;
+
+		public NavigationCenterUpgradeScreen(Entity selectedBuilding)
+		{
+			this.unlockablePlanetList = new List<UXCheckbox>();
+			base..ctor(selectedBuilding);
+			this.tutorialMode = false;
+			this.useUpgradeGroup = true;
+		}
+
+		public NavigationCenterUpgradeScreen(Entity selectedBuilding, BuildingTypeVO buildingTypeVO, OnScreenModalResult callback)
+		{
+			this.unlockablePlanetList = new List<UXCheckbox>();
+			base..ctor(selectedBuilding);
+			this.buildingInfo = buildingTypeVO;
+			this.callback = callback;
+			this.tutorialMode = true;
+			this.useUpgradeGroup = false;
+		}
+
+		protected override void InitGroups()
+		{
+			base.InitGroups();
+			base.GetElement<UXElement>("NavigationCenter").Visible = true;
+			Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
+		}
+
+		protected override void InitLabels()
+		{
+			base.InitLabels();
+			this.labelViewGalaxyMap.Text = this.lang.Get("s_ViewGalaxyMap", new object[0]);
+			base.GetElement<UXElement>("LabelInfo").Visible = false;
+			base.GetElement<UXElement>("LowLayoutGroup").Visible = false;
+			base.GetElement<UXLabel>("LabelUpgradeUnlockPlanet").Text = "";
+			this.labelUpgradeUnlockPlanet = base.GetElement<UXLabel>("LabelUpgradeUnlockPlanet");
+			if (this.tutorialMode)
+			{
+				base.GetElement<UXLabel>("LabelSelectPlanet").Text = this.lang.Get("PLANETS_GNC_SELECT_UNLOCK", new object[0]);
+			}
+			else if (this.reqMet)
+			{
+				base.GetElement<UXLabel>("LabelSelectPlanet").Text = this.lang.Get("PLANETS_GNC_SELECT_UPGRADE", new object[0]);
+			}
+			else
+			{
+				base.GetElement<UXLabel>("LabelSelectPlanet").Text = this.lang.Get("PLANETS_GNC_HQ_UPGRADE_REQUIRED", new object[]
+				{
+					this.reqBuildingInfo.Lvl
+				});
+				this.labelHQUpgradeDesc.Visible = false;
+			}
+			base.GetElement<UXLabel>("LabelUpgradeTime").Text = GameUtils.GetTimeLabelFromSeconds(this.tutorialMode ? this.buildingInfo.Time : this.nextBuildingInfo.Time);
+			base.GetElement<UXElement>("UpgradeTime").Visible = true;
+			base.GetElement<UXLabel>("LabelUpgrade").Text = this.lang.Get("PLANETS_GNC_CONSTR_TIME", new object[0]);
+			this.buttonPrimaryAction.Enabled = false;
+			base.GetElement<UXLabel>("CostLabelConfirm").Text = this.lang.Get("PLANETS_GNC_UNLOCK_MODAL_BUTTON_CONFIRM", new object[0]);
+			this.labelUnlockPlanetTimer = base.GetElement<UXLabel>("LabelUnlockPlanetTimer");
+			this.labelUnlockPlanetTimer.Text = "";
+		}
+
+		protected override void InitButtons()
+		{
+			base.InitButtons();
+			base.CurrentBackDelegate = new UXButtonClickedDelegate(this.HandleClose);
+			this.buttonTutorialConfirm = base.GetElement<UXButton>("ButtonTutorialConfirm");
+			this.labelTutorialConfirm = base.GetElement<UXLabel>("CostLabelConfirm");
+			if (this.tutorialMode)
+			{
+				this.buttonTutorialConfirm.OnClicked = new UXButtonClickedDelegate(this.OnTutorialConfirmClicked);
+				this.buttonTutorialConfirm.Enabled = false;
+				this.labelTutorialConfirm.TextColor = UXUtils.COLOR_LABEL_DISABLED;
+				this.buttonViewGalaxyMap.Enabled = false;
+			}
+			else
+			{
+				this.buttonTutorialConfirm.Visible = false;
+				this.buttonTutorialConfirm.Enabled = false;
+				this.buttonViewGalaxyMap.Enabled = true;
+				this.buttonViewGalaxyMap.OnClicked = new UXButtonClickedDelegate(this.ViewGalaxyMapClicked);
+			}
+			this.buttonInstantBuy.Enabled = false;
+		}
+
+		protected void ViewGalaxyMapClicked(UXButton button)
+		{
+			base.CloseNoTransition(null);
+			GameUtils.ExitEditState();
+			Service.Get<GalaxyViewController>().GoToGalaxyView();
+			Service.Get<EventManager>().SendEvent(EventId.GalaxyOpenByInfoScreen, null);
+		}
+
+		protected override void OnLoaded()
+		{
+			base.GetElement<UXSprite>("SpriteHighlightPlanetPanel").Visible = false;
+			base.InitControls(2);
+			this.InitPlanetSlots();
+			this.InitUpgradePlanetSlider(1);
+			bool useUpgradeGroup = this.useUpgradeGroup;
+			this.useUpgradeGroup = true;
+			this.InitHitpoints(0);
+			this.useUpgradeGroup = useUpgradeGroup;
+		}
+
+		protected void InitUpgradePlanetSlider(int sliderIndex)
+		{
+			float num = (float)this.maxBuildingInfo.Lvl + 1f;
+			this.sliders[sliderIndex].DescLabel.Visible = true;
+			this.sliders[sliderIndex].DescLabel.Text = this.lang.Get("PLANETS_GNC_SLOTS", new object[0]);
+			this.sliders[sliderIndex].NextLabel.Visible = true;
+			this.sliders[sliderIndex].NextLabel.Text = this.lang.Get("PLUS", new object[]
+			{
+				"1"
+			});
+			this.sliders[sliderIndex].NextSlider.Visible = true;
+			this.sliders[sliderIndex].CurrentSlider.Visible = true;
+			this.sliders[sliderIndex].CurrentLabel.Visible = true;
+			if (this.tutorialMode)
+			{
+				this.sliders[sliderIndex].NextSlider.Value = (float)(1 + this.buildingInfo.Lvl) / num;
+				this.sliders[sliderIndex].CurrentSlider.Value = (float)this.buildingInfo.Lvl / num;
+				this.sliders[sliderIndex].CurrentLabel.Text = this.buildingInfo.Lvl.ToString();
+				return;
+			}
+			this.sliders[sliderIndex].NextSlider.Value = (float)(1 + this.buildingInfo.Lvl + 1) / num;
+			this.sliders[sliderIndex].CurrentSlider.Value = (float)(this.buildingInfo.Lvl + 1) / num;
+			this.sliders[sliderIndex].CurrentLabel.Text = (this.buildingInfo.Lvl + 1).ToString();
+		}
+
+		protected void InitPlanetSlots()
+		{
+			this.selectPlanetGrid = base.GetElement<UXGrid>("SelectPlanetGrid");
+			UXElement element = base.GetElement<UXElement>("SelectPlanetTemplate");
+			element.Visible = true;
+			this.selectPlanetGrid.SetTemplateItem("SelectPlanetCard");
+			element.Visible = false;
+			this.unlockablePlanetList.Clear();
+			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
+			foreach (PlanetVO current in Service.Get<IDataController>().GetAll<PlanetVO>())
+			{
+				if (current.PlayerFacing && !currentPlayer.UnlockedPlanets.Contains(current.Uid) && currentPlayer.Map.Planet.Uid != current.Uid)
+				{
+					UXCheckbox uXCheckbox = (UXCheckbox)this.selectPlanetGrid.CloneTemplateItem(current.Uid);
+					UXLabel subElement = this.selectPlanetGrid.GetSubElement<UXLabel>(current.Uid, "LabelSelectPlanetName");
+					if (!this.reqMet && !this.tutorialMode)
+					{
+						uXCheckbox.RadioGroup = 0;
+						uXCheckbox.SetSelectable(false);
+						uXCheckbox.Selected = false;
+					}
+					uXCheckbox.OnSelected = new UXCheckboxSelectedDelegate(this.PlanetSelected);
+					UXTexture subElement2 = this.selectPlanetGrid.GetSubElement<UXTexture>(current.Uid, "SpriteSelectPlanetImagePlanet");
+					subElement2.LoadTexture("PlanetEnvIcon-" + current.Abbreviation);
+					subElement.Text = LangUtils.GetPlanetDisplayName(current);
+					uXCheckbox.Tag = current;
+					uXCheckbox.RadioGroup = 0;
+					uXCheckbox.DelayedSelect(false);
+					this.selectPlanetGrid.AddItem(uXCheckbox, current.Order);
+					this.unlockablePlanetList.Add(uXCheckbox);
+				}
+			}
+			if (this.unlockablePlanetList.Count == 0)
+			{
+				base.GetElement<UXElement>("ButtonPrimary").Visible = false;
+				base.GetElement<UXElement>("BtnInstantBuy").Visible = false;
+				this.buttonTutorialConfirm.Visible = false;
+			}
+			this.selectPlanetGrid.RepositionItems();
+			this.selectPlanetGrid.IsScrollable = true;
+			this.selectPlanetGrid.ScrollToItem(0);
+		}
+
+		protected void PlanetSelected(UXCheckbox checkbox, bool selected)
+		{
+			if (selected && (this.reqMet || this.tutorialMode))
+			{
+				this.selectedPlanet = (PlanetVO)checkbox.Tag;
+				string planetDisplayName = LangUtils.GetPlanetDisplayName(this.selectedPlanet);
+				if (this.tutorialMode)
+				{
+					this.labelUpgradeUnlockPlanet.Text = this.lang.Get("PLANETS_GNC_TUT_UNLOCK_MODAL_TITLE", new object[]
+					{
+						planetDisplayName
+					});
+					this.buttonTutorialConfirm.Enabled = true;
+					this.labelTutorialConfirm.TextColor = UXUtils.COLOR_ENABLED;
+				}
+				else
+				{
+					this.labelUpgradeUnlockPlanet.Text = this.lang.Get("PLANETS_GNC_UPGRADE_MODAL_DESC", new object[]
+					{
+						planetDisplayName
+					});
+					this.buttonPrimaryAction.Enabled = true;
+					this.buttonInstantBuy.Enabled = true;
+				}
+				for (int i = 0; i < this.unlockablePlanetList.Count; i++)
+				{
+					this.unlockablePlanetList[i].RadioGroup = 55;
+				}
+			}
+		}
+
+		public void OnViewFrameTime(float dt)
+		{
+			if (this.selectedPlanet == null)
+			{
+				return;
+			}
+			TournamentVO activeTournamentOnPlanet = TournamentController.GetActiveTournamentOnPlanet(this.selectedPlanet.Uid);
+			if (activeTournamentOnPlanet == null)
+			{
+				this.labelUnlockPlanetTimer.Text = "";
+				return;
+			}
+			TimedEventState state = TimedEventUtils.GetState(activeTournamentOnPlanet);
+			if (state == TimedEventState.Live)
+			{
+				int secondsRemaining = TimedEventUtils.GetSecondsRemaining(activeTournamentOnPlanet);
+				string text = LangUtils.FormatTime((long)secondsRemaining);
+				this.labelUnlockPlanetTimer.Text = this.lang.Get("PLANETS_GNC_UPGRADE_CONFLICT_ENDS", new object[]
+				{
+					text
+				});
+				return;
+			}
+			if (state == TimedEventState.Upcoming)
+			{
+				int secondsRemaining2 = TimedEventUtils.GetSecondsRemaining(activeTournamentOnPlanet);
+				string text2 = LangUtils.FormatTime((long)secondsRemaining2);
+				this.labelUnlockPlanetTimer.Text = this.lang.Get("PLANETS_GNC_UPGRADE_NEXT_CONFLICT_BEGINS", new object[]
+				{
+					text2
+				});
+				return;
+			}
+			this.labelUnlockPlanetTimer.Text = "";
+		}
+
+		protected override void HandleClose(UXButton button)
+		{
+			if (!this.allowClose)
+			{
+				return;
+			}
+			if (this.tutorialMode && this.callback != null)
+			{
+				this.callback(null, null);
+				this.callback = null;
+			}
+			this.Close(null);
+		}
+
+		private void OnTutorialConfirmClicked(UXButton button)
+		{
+			string planetDisplayName = LangUtils.GetPlanetDisplayName(this.selectedPlanet);
+			string planetDisplayNameKey = LangUtils.GetPlanetDisplayNameKey(this.selectedPlanet.Uid);
+			Service.Get<SharedPlayerPrefs>().SetPref("1stPlaName", planetDisplayNameKey);
+			Service.Get<SharedPlayerPrefs>().SetPref("1stPlaUid", this.selectedPlanet.Uid);
+			AlertScreen alertScreen = AlertScreen.ShowModal(false, this.lang.Get("PLANETS_GNC_UNLOCK_MODAL_TITLE", new object[0]), this.lang.Get("PLANETS_GNC_TUTORIAL_MESSAGE", new object[]
+			{
+				planetDisplayName
+			}), new OnScreenModalResult(this.OnConfirmation), this.selectedPlanet);
+			alertScreen.AllowFUEBackButton = true;
+			alertScreen.Tag = "Tutorial";
+			alertScreen.SetPrimaryLabelText(this.lang.Get("s_Confirm", new object[0]));
+			alertScreen.SetTextureInset("PlanetEnvIcon-" + this.selectedPlanet.Abbreviation);
+		}
+
+		private void OnConfirmation(object result, object cookie)
+		{
+			bool flag = result != null;
+			if (flag)
+			{
+				string uid = ((PlanetVO)cookie).Uid;
+				if (this.callback != null)
+				{
+					this.callback(flag, cookie);
+				}
+				if (this.useUpgradeGroup)
+				{
+					this.ConfirmUpgrade();
+				}
+				if (this.tutorialMode)
+				{
+					Service.Get<CurrentPlayer>().AddUnlockedPlanet(uid);
+				}
+				Service.Get<EventManager>().SendEvent(EventId.PlanetScoutingStart, uid);
+				this.Close(null);
+			}
+		}
+
+		protected override void ConfirmUpgrade()
+		{
+			Service.Get<ISupportController>().StartBuildingUpgrade(this.nextBuildingInfo, this.selectedBuilding, false, this.selectedPlanet.Uid);
+			if (this.nextBuildingInfo.Time > 0)
+			{
+				Service.Get<BuildingController>().EnsureDeselectSelectedBuilding();
+				Service.Get<BuildingController>().SelectedBuilding = this.selectedBuilding;
+			}
+			this.Close(this.selectedBuilding.ID);
+		}
+
+		public override void OnDestroyElement()
+		{
+			if (this.selectPlanetGrid != null)
+			{
+				this.selectPlanetGrid.Clear();
+			}
+			this.unlockablePlanetList.Clear();
+			if (!this.tutorialMode)
+			{
+				this.buttonViewGalaxyMap.OnClicked = null;
+			}
+			this.DeactivateHighlight();
+			this.selectedPlanet = null;
+			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			this.buttonViewGalaxyMap.OnClicked = null;
+			base.OnDestroyElement();
+		}
+
+		protected override void OnPayMeForCurrencyResult(object result, object cookie)
+		{
+			if (GameUtils.HandleSoftCurrencyFlow(result, cookie) && !PayMeScreen.ShowIfNoFreeDroids(new OnScreenModalResult(this.OnPayMeForDroidResult), null))
+			{
+				this.OnUpgradeButtonClicked(null);
+			}
+		}
+
+		protected override void OnPayMeForDroidResult(object result, object cookie)
+		{
+			if (result != null)
+			{
+				this.OnUpgradeButtonClicked(null);
+			}
+		}
+
+		protected void OnUpgradeButtonClickedRetry(object result, object cookie)
+		{
+			bool flag = result != null;
+			if (flag)
+			{
+				this.OnUpgradeButtonClicked(null);
+			}
+		}
+
+		protected override void OnUpgradeButtonClicked(UXButton button)
+		{
+			int upgradeCredits = this.nextBuildingInfo.UpgradeCredits;
+			int upgradeMaterials = this.nextBuildingInfo.UpgradeMaterials;
+			int upgradeContraband = this.nextBuildingInfo.UpgradeContraband;
+			string buildingPurchaseContext = GameUtils.GetBuildingPurchaseContext(this.nextBuildingInfo, this.buildingInfo, true, false, this.selectedPlanet);
+			if (PayMeScreen.ShowIfNotEnoughCurrency(upgradeCredits, upgradeMaterials, upgradeContraband, buildingPurchaseContext, new OnScreenModalResult(this.OnPayMeForCurrencyResult)))
+			{
+				return;
+			}
+			if (PayMeScreen.ShowIfNoFreeDroids(new OnScreenModalResult(this.OnPayMeForDroidResult), null))
+			{
+				return;
+			}
+			string planetDisplayName = LangUtils.GetPlanetDisplayName(this.selectedPlanet);
+			AlertScreen alertScreen = AlertScreen.ShowModal(false, this.lang.Get("PLANETS_GNC_UNLOCK_MODAL_TITLE", new object[0]), this.lang.Get("PLANETS_GNC_UNLOCK_MODAL_DESC", new object[]
+			{
+				planetDisplayName
+			}), new OnScreenModalResult(this.OnConfirmation), this.selectedPlanet);
+			alertScreen.SetPrimaryLabelText(this.lang.Get("s_Confirm", new object[0]));
+			alertScreen.SetTextureInset("PlanetEnvIcon-" + this.selectedPlanet.Abbreviation);
+		}
+
+		protected override void OnInstantUpgradeButtonClicked(UXButton button)
+		{
+			if (!base.HasEnoughResourceCapacityToUpgrade(this.nextBuildingInfo))
+			{
+				CurrencyType currencyType = GameUtils.GetCurrencyType(this.nextBuildingInfo.UpgradeCredits, this.nextBuildingInfo.UpgradeMaterials, this.nextBuildingInfo.UpgradeContraband);
+				Service.Get<ICurrencyController>().HandleUnableToCollect(currencyType);
+				return;
+			}
+			int num = GameUtils.CrystalCostToInstantUpgrade(this.nextBuildingInfo);
+			string planetDisplayName = LangUtils.GetPlanetDisplayName(this.selectedPlanet);
+			string text = this.lang.ThousandsSeparated(num);
+			FinishNowScreen finishNowScreen = FinishNowScreen.ShowModalWithNoContract(this.selectedBuilding, new OnScreenModalResult(base.ConfirmInstantUpgrade), null, num, this.lang.Get("PLANETS_GNC_UNLOCK_MODAL_TITLE", new object[0]), this.lang.Get("PLANETS_GNC_INSTANT_MODAL_DESC", new object[]
+			{
+				text,
+				planetDisplayName
+			}), true);
+			finishNowScreen.SetTextureInset("PlanetEnvIcon-" + this.selectedPlanet.Abbreviation);
+		}
+
+		protected override void HandleInstantUpgradeRequest()
+		{
+			if (this.instantUpgradeBuildingKey != null && this.instantUpgradeBuildingUid != null && this.selectedPlanet != null)
+			{
+				Service.Get<CurrentPlayer>().AddUnlockedPlanet(this.selectedPlanet.Uid);
+				BuildingInstantUpgradeRequest request = new BuildingInstantUpgradeRequest(this.instantUpgradeBuildingKey, this.instantUpgradeBuildingUid, this.selectedPlanet.Uid);
+				BuildingInstantUpgradeCommand command = new BuildingInstantUpgradeCommand(request);
+				Service.Get<ServerAPI>().Enqueue(command);
+				this.instantUpgradeBuildingKey = null;
+				this.instantUpgradeBuildingUid = null;
+			}
+		}
+
+		public void ActivateHighlight()
+		{
+			base.GetElement<UXSprite>("SpriteHighlightPlanetPanel").Visible = true;
+			UXElement element = base.GetElement<UXElement>("SelectPlanetArrowPlaceholder");
+			Service.Get<UXController>().MiscElementsManager.AlignArrow(element.Position);
+		}
+
+		public void DeactivateHighlight()
+		{
+			base.GetElement<UXSprite>("SpriteHighlightPlanetPanel").Visible = false;
+			Service.Get<UXController>().MiscElementsManager.HideArrow();
+		}
+
+		protected internal NavigationCenterUpgradeScreen(UIntPtr dummy) : base(dummy)
+		{
+		}
+
+		public unsafe static long $Invoke0(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).ActivateHighlight();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke1(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).ConfirmUpgrade();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke2(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).DeactivateHighlight();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke3(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).HandleClose((UXButton)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke4(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).HandleInstantUpgradeRequest();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke5(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke6(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitGroups();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke7(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke8(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitPlanetSlots();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke9(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitUpgradePlanetSlider(*(int*)args);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke10(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnConfirmation(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke11(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke12(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnInstantUpgradeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke13(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke14(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke15(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForDroidResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke16(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnTutorialConfirmClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke17(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnUpgradeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke18(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnUpgradeButtonClickedRetry(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke19(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke20(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).PlanetSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
+			return -1L;
+		}
+
+		public unsafe static long $Invoke21(long instance, long* args)
+		{
+			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).ViewGalaxyMapClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+	}
+}

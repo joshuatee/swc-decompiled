@@ -1,0 +1,81 @@
+using Net.RichardLord.Ash.Core;
+using StaRTS.Main.Controllers;
+using StaRTS.Main.Models.Entities;
+using StaRTS.Main.Models.Entities.Nodes;
+using StaRTS.Main.Models.ValueObjects;
+using StaRTS.Utils.Core;
+using System;
+using WinRTBridge;
+
+namespace StaRTS.Main.Story.Actions
+{
+	public class ShowBuildingTooltipsStoryAction : AbstractStoryAction
+	{
+		private bool show;
+
+		public ShowBuildingTooltipsStoryAction(StoryActionVO vo, IStoryReactor parent, bool show) : base(vo, parent)
+		{
+			this.show = show;
+		}
+
+		public override void Prepare()
+		{
+			this.parent.ChildPrepared(this);
+		}
+
+		public override void Execute()
+		{
+			base.Execute();
+			EntityController entityController = Service.Get<EntityController>();
+			NodeList<HealthViewNode> nodeList = entityController.GetNodeList<HealthViewNode>();
+			for (HealthViewNode healthViewNode = nodeList.Head; healthViewNode != null; healthViewNode = healthViewNode.Next)
+			{
+				healthViewNode.HealthView.SetEnabled(this.show);
+				if (this.show)
+				{
+					Service.Get<BuildingTooltipController>().EnsureBuildingTooltip((SmartEntity)healthViewNode.Entity);
+				}
+			}
+			NodeList<SupportViewNode> nodeList2 = Service.Get<EntityController>().GetNodeList<SupportViewNode>();
+			for (SupportViewNode supportViewNode = nodeList2.Head; supportViewNode != null; supportViewNode = supportViewNode.Next)
+			{
+				supportViewNode.SupportView.SetEnabled(this.show);
+				if (this.show)
+				{
+					Service.Get<BuildingTooltipController>().EnsureBuildingTooltip((SmartEntity)supportViewNode.Entity);
+				}
+			}
+			NodeList<GeneratorViewNode> nodeList3 = Service.Get<EntityController>().GetNodeList<GeneratorViewNode>();
+			for (GeneratorViewNode generatorViewNode = nodeList3.Head; generatorViewNode != null; generatorViewNode = generatorViewNode.Next)
+			{
+				if (this.show)
+				{
+					generatorViewNode.GeneratorView.SetEnabled(this.show);
+					Service.Get<ICurrencyController>().UpdateGeneratorAccruedCurrency((SmartEntity)generatorViewNode.Entity);
+				}
+				else
+				{
+					generatorViewNode.GeneratorView.ShowCollectButton(false);
+					generatorViewNode.GeneratorView.SetEnabled(this.show);
+				}
+			}
+			this.parent.ChildComplete(this);
+		}
+
+		protected internal ShowBuildingTooltipsStoryAction(UIntPtr dummy) : base(dummy)
+		{
+		}
+
+		public unsafe static long $Invoke0(long instance, long* args)
+		{
+			((ShowBuildingTooltipsStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke1(long instance, long* args)
+		{
+			((ShowBuildingTooltipsStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
+			return -1L;
+		}
+	}
+}

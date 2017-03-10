@@ -1,0 +1,326 @@
+using Net.RichardLord.Ash.Core;
+using StaRTS.Assets;
+using StaRTS.Main.Controllers;
+using StaRTS.Main.Models;
+using StaRTS.Main.Models.Entities.Nodes;
+using StaRTS.Main.Models.Player;
+using StaRTS.Main.Models.ValueObjects;
+using StaRTS.Utils;
+using StaRTS.Utils.Core;
+using StaRTS.Utils.Diagnostics;
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using UnityEngine;
+using WinRTBridge;
+
+namespace StaRTS.FX
+{
+	public class CurrencyEffects
+	{
+		public const string SETUP_TYPE_LOOTING = "setupTypeLooting";
+
+		public const string SETUP_TYPE_COLLECTION = "setupTypeCollection";
+
+		private const string FX_LOOT_CREDITS_ACTIVE = "effect24";
+
+		private const string FX_LOOT_CREDITS_PASSIVE = "effect25";
+
+		private const string FX_LOOT_MATERIALS_ACTIVE = "effect26";
+
+		private const string FX_LOOT_MATERIALS_PASSIVE = "effect27";
+
+		private const string FX_LOOT_CONTRABAND_ACTIVE = "fx_contralooting_active";
+
+		private const string FX_LOOT_CONTRABAND_PASSIVE = "fx_contralooting_passive";
+
+		private const string PARTICLE_SYSTEM_ICON = "icon";
+
+		private const int NUM_ICONS_PER_HIT = 1;
+
+		private const int MAX_NUM_ICONS_PER_EMITTER = 10;
+
+		private GameObject[] loadedAssets;
+
+		private Dictionary<Entity, CurrencyEffectData> effects;
+
+		private IDataController sdc;
+
+		private string currentSetupType;
+
+		public CurrencyEffects()
+		{
+			Service.Set<CurrencyEffects>(this);
+			this.sdc = Service.Get<IDataController>();
+			this.effects = new Dictionary<Entity, CurrencyEffectData>();
+		}
+
+		public void InitializeEffects(string setupType)
+		{
+			int num = 6;
+			this.loadedAssets = new GameObject[num];
+			for (int i = 0; i < num; i++)
+			{
+				this.loadedAssets[i] = null;
+			}
+			List<string> list = new List<string>();
+			List<object> list2 = new List<object>();
+			List<AssetHandle> list3 = new List<AssetHandle>();
+			if (setupType == "setupTypeCollection")
+			{
+				list.Add(this.GetAssetType("effect24").AssetName);
+				list.Add(this.GetAssetType("effect26").AssetName);
+				list.Add(this.GetAssetType("fx_contralooting_active").AssetName);
+			}
+			else
+			{
+				if (!(setupType == "setupTypeLooting"))
+				{
+					throw new Exception(setupType + " is not a valid setup type");
+				}
+				list.Add(this.GetAssetType("effect25").AssetName);
+				list.Add(this.GetAssetType("effect27").AssetName);
+				list.Add(this.GetAssetType("fx_contralooting_passive").AssetName);
+			}
+			list2.Add(CurrencyType.Credits);
+			list2.Add(CurrencyType.Materials);
+			list2.Add(CurrencyType.Contraband);
+			list3.Add(AssetHandle.Invalid);
+			list3.Add(AssetHandle.Invalid);
+			list3.Add(AssetHandle.Invalid);
+			Service.Get<AssetManager>().MultiLoad(list3, list, new AssetSuccessDelegate(this.OnEffectLoaded), null, list2, new AssetsCompleteDelegate(this.OnAllEffectsLoaded), setupType);
+		}
+
+		private void OnEffectLoaded(object asset, object cookie)
+		{
+			this.loadedAssets[(int)((CurrencyType)cookie)] = (asset as GameObject);
+		}
+
+		private void OnAllEffectsLoaded(object cookie)
+		{
+			this.currentSetupType = cookie.ToString();
+			this.PlaceEffects();
+		}
+
+		public void PlaceEffects()
+		{
+			this.Cleanup();
+			EntityController entityController = Service.Get<EntityController>();
+			NodeList<LootNode> nodeList = entityController.GetNodeList<LootNode>();
+			LootNode lootNode = nodeList.Head;
+			while (lootNode != null)
+			{
+				BuildingTypeVO buildingType = lootNode.BuildingComp.BuildingType;
+				if (this.currentSetupType == "setupTypeCollection")
+				{
+					if (buildingType.Type == BuildingType.Resource)
+					{
+						goto IL_69;
+					}
+				}
+				else if (!(this.currentSetupType == "setupTypeLooting") || buildingType.IsLootable)
+				{
+					goto IL_69;
+				}
+				IL_F4:
+				lootNode = lootNode.Next;
+				continue;
+				IL_69:
+				Bounds gameObjectBounds = UnityUtils.GetGameObjectBounds(lootNode.View.MainGameObject);
+				Vector3 position = lootNode.View.MainTransform.position;
+				position.y = gameObjectBounds.center.y;
+				CurrencyType currency = buildingType.Currency;
+				if (buildingType.Type == BuildingType.HQ || currency == CurrencyType.None)
+				{
+					this.CreateEffect(lootNode.Entity, CurrencyType.Credits, position);
+					this.CreateEffect(lootNode.Entity, CurrencyType.Materials, position);
+					this.CreateEffect(lootNode.Entity, CurrencyType.Contraband, position);
+					goto IL_F4;
+				}
+				this.CreateEffect(lootNode.Entity, currency, position);
+				goto IL_F4;
+			}
+		}
+
+		private void CreateEffect(Entity building, CurrencyType currencyType, Vector3 fxPosition)
+		{
+			if (this.loadedAssets[(int)currencyType] == null)
+			{
+				Service.Get<StaRTSLogger>().Error("Cannot create effect for " + currencyType);
+				return;
+			}
+			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.loadedAssets[(int)currencyType]);
+			gameObject.transform.position = fxPosition;
+			gameObject.SetActive(true);
+			if (!this.effects.ContainsKey(building))
+			{
+				this.effects[building] = new CurrencyEffectData();
+			}
+			for (int i = 0; i < gameObject.transform.childCount; i++)
+			{
+				ParticleSystem component = gameObject.transform.GetChild(i).GetComponent<ParticleSystem>();
+				if (component.name == "icon")
+				{
+					component.maxParticles = 10;
+				}
+				this.effects[building].Add(currencyType, component);
+			}
+		}
+
+		public void PlayEffect(Entity building, CurrencyType currency, int amountGained)
+		{
+			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
+			switch (currency)
+			{
+			case CurrencyType.Credits:
+				amountGained = currentPlayer.MaxCreditsAmount - currentPlayer.CurrentCreditsAmount - amountGained;
+				break;
+			case CurrencyType.Materials:
+				amountGained = currentPlayer.MaxMaterialsAmount - currentPlayer.CurrentMaterialsAmount - amountGained;
+				break;
+			case CurrencyType.Contraband:
+				amountGained = currentPlayer.MaxContrabandAmount - currentPlayer.CurrentContrabandAmount - amountGained;
+				break;
+			}
+			if (amountGained <= 0)
+			{
+				return;
+			}
+			if (this.effects.ContainsKey(building))
+			{
+				List<ParticleSystem> list = this.effects[building].Get(currency);
+				if (list != null)
+				{
+					int i = 0;
+					int count = list.Count;
+					while (i < count)
+					{
+						if (list[i].name == "icon")
+						{
+							list[i].Emit(1);
+						}
+						else
+						{
+							list[i].Play();
+						}
+						i++;
+					}
+				}
+			}
+		}
+
+		public void TransferEffects(Entity oldBuilding, Entity newBuilding)
+		{
+			if (this.effects != null && this.effects.ContainsKey(oldBuilding))
+			{
+				this.effects.Add(newBuilding, this.effects[oldBuilding]);
+				this.effects.Remove(oldBuilding);
+			}
+		}
+
+		public void Cleanup()
+		{
+			if (this.effects == null)
+			{
+				return;
+			}
+			foreach (KeyValuePair<Entity, CurrencyEffectData> current in this.effects)
+			{
+				current.get_Value().Destroy();
+			}
+			this.effects.Clear();
+		}
+
+		public List<IAssetVO> GetEffectAssetTypes(string setupType)
+		{
+			List<IAssetVO> list = new List<IAssetVO>();
+			if (setupType == "setupTypeCollection")
+			{
+				list.Add(this.GetAssetType("effect24"));
+				list.Add(this.GetAssetType("effect26"));
+				list.Add(this.GetAssetType("fx_contralooting_active"));
+			}
+			else if (setupType == "setupTypeLooting")
+			{
+				list.Add(this.GetAssetType("effect25"));
+				list.Add(this.GetAssetType("effect27"));
+				list.Add(this.GetAssetType("fx_contralooting_passive"));
+			}
+			else
+			{
+				Service.Get<StaRTSLogger>().WarnFormat("{0} is not a valid setup type.", new object[]
+				{
+					setupType
+				});
+			}
+			return list;
+		}
+
+		private IAssetVO GetAssetType(string uid)
+		{
+			return this.sdc.Get<EffectsTypeVO>(uid);
+		}
+
+		protected internal CurrencyEffects(UIntPtr dummy)
+		{
+		}
+
+		public unsafe static long $Invoke0(long instance, long* args)
+		{
+			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke1(long instance, long* args)
+		{
+			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).CreateEffect((Entity)GCHandledObjects.GCHandleToObject(*args), (CurrencyType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke2(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).GetAssetType(Marshal.PtrToStringUni(*(IntPtr*)args)));
+		}
+
+		public unsafe static long $Invoke3(long instance, long* args)
+		{
+			return GCHandledObjects.ObjectToGCHandle(((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).GetEffectAssetTypes(Marshal.PtrToStringUni(*(IntPtr*)args)));
+		}
+
+		public unsafe static long $Invoke4(long instance, long* args)
+		{
+			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).InitializeEffects(Marshal.PtrToStringUni(*(IntPtr*)args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke5(long instance, long* args)
+		{
+			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).OnAllEffectsLoaded(GCHandledObjects.GCHandleToObject(*args));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke6(long instance, long* args)
+		{
+			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).OnEffectLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke7(long instance, long* args)
+		{
+			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).PlaceEffects();
+			return -1L;
+		}
+
+		public unsafe static long $Invoke8(long instance, long* args)
+		{
+			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).PlayEffect((Entity)GCHandledObjects.GCHandleToObject(*args), (CurrencyType)(*(int*)(args + 1)), *(int*)(args + 2));
+			return -1L;
+		}
+
+		public unsafe static long $Invoke9(long instance, long* args)
+		{
+			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).TransferEffects((Entity)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
+			return -1L;
+		}
+	}
+}
