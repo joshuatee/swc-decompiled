@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public AcceptSquadInviteCommand(SquadIDRequest request) : base("guild.invite.accept", request, new DefaultResponse())
 		{
 		}
-
-		protected internal AcceptSquadInviteCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

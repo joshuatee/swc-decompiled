@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using UnityEngine;
-using WinRTBridge;
 
 public static class NGUIMath
 {
@@ -14,15 +13,7 @@ public static class NGUIMath
 	[DebuggerHidden, DebuggerStepThrough]
 	public static int ClampIndex(int val, int max)
 	{
-		if (val < 0)
-		{
-			return 0;
-		}
-		if (val >= max)
-		{
-			return max - 1;
-		}
-		return val;
+		return (val >= 0) ? ((val >= max) ? (max - 1) : val) : 0;
 	}
 
 	[DebuggerHidden, DebuggerStepThrough]
@@ -95,24 +86,11 @@ public static class NGUIMath
 		case '>':
 		case '?':
 		case '@':
-			return 15;
-		case 'A':
-			break;
-		case 'B':
-			return 11;
-		case 'C':
-			return 12;
-		case 'D':
-			return 13;
-		case 'E':
-			return 14;
-		case 'F':
-			return 15;
-		default:
+			IL_67:
 			switch (ch)
 			{
 			case 'a':
-				break;
+				return 10;
 			case 'b':
 				return 11;
 			case 'c':
@@ -127,8 +105,20 @@ public static class NGUIMath
 				return 15;
 			}
 			break;
+		case 'A':
+			return 10;
+		case 'B':
+			return 11;
+		case 'C':
+			return 12;
+		case 'D':
+			return 13;
+		case 'E':
+			return 14;
+		case 'F':
+			return 15;
 		}
-		return 10;
+		goto IL_67;
 	}
 
 	[DebuggerHidden, DebuggerStepThrough]
@@ -190,7 +180,7 @@ public static class NGUIMath
 	[DebuggerHidden, DebuggerStepThrough]
 	public static string IntToBinary(int val, int bits)
 	{
-		string text = "";
+		string text = string.Empty;
 		int i = bits;
 		while (i > 0)
 		{
@@ -198,7 +188,7 @@ public static class NGUIMath
 			{
 				text += " ";
 			}
-			text += (((val & 1 << --i) != 0) ? '1' : '0').ToString();
+			text += (((val & 1 << --i) == 0) ? '0' : '1');
 		}
 		return text;
 	}
@@ -310,8 +300,8 @@ public static class NGUIMath
 		{
 			return new Bounds(trans.position, Vector3.zero);
 		}
-		Vector3 vector = new Vector3(3.40282347E+38f, 3.40282347E+38f, 3.40282347E+38f);
-		Vector3 vector2 = new Vector3(-3.40282347E+38f, -3.40282347E+38f, -3.40282347E+38f);
+		Vector3 center = new Vector3(3.40282347E+38f, 3.40282347E+38f, 3.40282347E+38f);
+		Vector3 point = new Vector3(-3.40282347E+38f, -3.40282347E+38f, -3.40282347E+38f);
 		int i = 0;
 		int num = componentsInChildren.Length;
 		while (i < num)
@@ -322,37 +312,37 @@ public static class NGUIMath
 				Vector3[] worldCorners = uIWidget.worldCorners;
 				for (int j = 0; j < 4; j++)
 				{
-					Vector3 vector3 = worldCorners[j];
-					if (vector3.x > vector2.x)
+					Vector3 vector = worldCorners[j];
+					if (vector.x > point.x)
 					{
-						vector2.x = vector3.x;
+						point.x = vector.x;
 					}
-					if (vector3.y > vector2.y)
+					if (vector.y > point.y)
 					{
-						vector2.y = vector3.y;
+						point.y = vector.y;
 					}
-					if (vector3.z > vector2.z)
+					if (vector.z > point.z)
 					{
-						vector2.z = vector3.z;
+						point.z = vector.z;
 					}
-					if (vector3.x < vector.x)
+					if (vector.x < center.x)
 					{
-						vector.x = vector3.x;
+						center.x = vector.x;
 					}
-					if (vector3.y < vector.y)
+					if (vector.y < center.y)
 					{
-						vector.y = vector3.y;
+						center.y = vector.y;
 					}
-					if (vector3.z < vector.z)
+					if (vector.z < center.z)
 					{
-						vector.z = vector3.z;
+						center.z = vector.z;
 					}
 				}
 			}
 			i++;
 		}
-		Bounds result = new Bounds(vector, Vector3.zero);
-		result.Encapsulate(vector2);
+		Bounds result = new Bounds(center, Vector3.zero);
+		result.Encapsulate(point);
 		return result;
 	}
 
@@ -401,7 +391,7 @@ public static class NGUIMath
 		{
 			return;
 		}
-		UIPanel uIPanel = isRoot ? null : content.GetComponent<UIPanel>();
+		UIPanel uIPanel = (!isRoot) ? content.GetComponent<UIPanel>() : null;
 		if (uIPanel != null && !uIPanel.enabled)
 		{
 			return;
@@ -438,52 +428,54 @@ public static class NGUIMath
 				}
 				isSet = true;
 			}
-			return;
 		}
-		UIWidget component = content.GetComponent<UIWidget>();
-		if (component != null && component.enabled && !component.skipBoundsCalculations)
+		else
 		{
-			Vector3[] worldCorners2 = component.worldCorners;
-			for (int j = 0; j < 4; j++)
+			UIWidget component = content.GetComponent<UIWidget>();
+			if (component != null && component.enabled && !component.skipBoundsCalculations)
 			{
-				Vector3 vector2 = toLocal.MultiplyPoint3x4(worldCorners2[j]);
-				if (vector2.x > vMax.x)
+				Vector3[] worldCorners2 = component.worldCorners;
+				for (int j = 0; j < 4; j++)
 				{
-					vMax.x = vector2.x;
+					Vector3 vector2 = toLocal.MultiplyPoint3x4(worldCorners2[j]);
+					if (vector2.x > vMax.x)
+					{
+						vMax.x = vector2.x;
+					}
+					if (vector2.y > vMax.y)
+					{
+						vMax.y = vector2.y;
+					}
+					if (vector2.z > vMax.z)
+					{
+						vMax.z = vector2.z;
+					}
+					if (vector2.x < vMin.x)
+					{
+						vMin.x = vector2.x;
+					}
+					if (vector2.y < vMin.y)
+					{
+						vMin.y = vector2.y;
+					}
+					if (vector2.z < vMin.z)
+					{
+						vMin.z = vector2.z;
+					}
+					isSet = true;
 				}
-				if (vector2.y > vMax.y)
+				if (!considerChildren)
 				{
-					vMax.y = vector2.y;
+					return;
 				}
-				if (vector2.z > vMax.z)
-				{
-					vMax.z = vector2.z;
-				}
-				if (vector2.x < vMin.x)
-				{
-					vMin.x = vector2.x;
-				}
-				if (vector2.y < vMin.y)
-				{
-					vMin.y = vector2.y;
-				}
-				if (vector2.z < vMin.z)
-				{
-					vMin.z = vector2.z;
-				}
-				isSet = true;
 			}
-			if (!considerChildren)
+			int k = 0;
+			int childCount = content.childCount;
+			while (k < childCount)
 			{
-				return;
+				NGUIMath.CalculateRelativeWidgetBounds(content.GetChild(k), considerInactive, false, ref toLocal, ref vMin, ref vMax, ref isSet, true);
+				k++;
 			}
-		}
-		int k = 0;
-		int childCount = content.childCount;
-		while (k < childCount)
-		{
-			NGUIMath.CalculateRelativeWidgetBounds(content.GetChild(k), considerInactive, false, ref toLocal, ref vMin, ref vMax, ref isSet, true);
-			k++;
 		}
 	}
 
@@ -762,38 +754,34 @@ public static class NGUIMath
 			}
 			return;
 		}
-		Vector3 vector = new Vector3(x, y);
-		vector = Quaternion.Inverse(w.cachedTransform.localRotation) * vector;
+		Vector3 point = new Vector3(x, y);
+		point = Quaternion.Inverse(w.cachedTransform.localRotation) * point;
 		switch (pivot)
 		{
 		case UIWidget.Pivot.TopLeft:
-			NGUIMath.AdjustWidget(w, vector.x, 0f, 0f, vector.y, minWidth, minHeight, maxWidth, maxHeight);
-			return;
+			NGUIMath.AdjustWidget(w, point.x, 0f, 0f, point.y, minWidth, minHeight, maxWidth, maxHeight);
+			break;
 		case UIWidget.Pivot.Top:
-			NGUIMath.AdjustWidget(w, 0f, 0f, 0f, vector.y, minWidth, minHeight, maxWidth, maxHeight);
-			return;
+			NGUIMath.AdjustWidget(w, 0f, 0f, 0f, point.y, minWidth, minHeight, maxWidth, maxHeight);
+			break;
 		case UIWidget.Pivot.TopRight:
-			NGUIMath.AdjustWidget(w, 0f, 0f, vector.x, vector.y, minWidth, minHeight, maxWidth, maxHeight);
-			return;
+			NGUIMath.AdjustWidget(w, 0f, 0f, point.x, point.y, minWidth, minHeight, maxWidth, maxHeight);
+			break;
 		case UIWidget.Pivot.Left:
-			NGUIMath.AdjustWidget(w, vector.x, 0f, 0f, 0f, minWidth, minHeight, maxWidth, maxHeight);
-			return;
-		case UIWidget.Pivot.Center:
+			NGUIMath.AdjustWidget(w, point.x, 0f, 0f, 0f, minWidth, minHeight, maxWidth, maxHeight);
 			break;
 		case UIWidget.Pivot.Right:
-			NGUIMath.AdjustWidget(w, 0f, 0f, vector.x, 0f, minWidth, minHeight, maxWidth, maxHeight);
-			return;
+			NGUIMath.AdjustWidget(w, 0f, 0f, point.x, 0f, minWidth, minHeight, maxWidth, maxHeight);
+			break;
 		case UIWidget.Pivot.BottomLeft:
-			NGUIMath.AdjustWidget(w, vector.x, vector.y, 0f, 0f, minWidth, minHeight, maxWidth, maxHeight);
-			return;
+			NGUIMath.AdjustWidget(w, point.x, point.y, 0f, 0f, minWidth, minHeight, maxWidth, maxHeight);
+			break;
 		case UIWidget.Pivot.Bottom:
-			NGUIMath.AdjustWidget(w, 0f, vector.y, 0f, 0f, minWidth, minHeight, maxWidth, maxHeight);
+			NGUIMath.AdjustWidget(w, 0f, point.y, 0f, 0f, minWidth, minHeight, maxWidth, maxHeight);
 			break;
 		case UIWidget.Pivot.BottomRight:
-			NGUIMath.AdjustWidget(w, 0f, vector.y, vector.x, 0f, minWidth, minHeight, maxWidth, maxHeight);
-			return;
-		default:
-			return;
+			NGUIMath.AdjustWidget(w, 0f, point.y, point.x, 0f, minWidth, minHeight, maxWidth, maxHeight);
+			break;
 		}
 	}
 
@@ -935,14 +923,14 @@ public static class NGUIMath
 		{
 			num6 = num6 >> 1 << 1;
 		}
-		Vector3 vector9 = transform.localPosition + zero + localRotation * zero2;
-		transform.localPosition = vector9;
+		Vector3 localPosition = transform.localPosition + zero + localRotation * zero2;
+		transform.localPosition = localPosition;
 		w.SetDimensions(num5, num6);
 		if (w.isAnchored)
 		{
 			transform = transform.parent;
-			float num9 = vector9.x - pivotOffset.x * (float)num5;
-			float num10 = vector9.y - pivotOffset.y * (float)num6;
+			float num9 = localPosition.x - pivotOffset.x * (float)num5;
+			float num10 = localPosition.y - pivotOffset.y * (float)num6;
 			if (w.leftAnchor.target)
 			{
 				w.leftAnchor.SetHorizontal(transform, num9);
@@ -968,7 +956,7 @@ public static class NGUIMath
 		RuntimePlatform platform = Application.platform;
 		if (num == 0f)
 		{
-			num = ((platform == RuntimePlatform.Android || platform == RuntimePlatform.IPhonePlayer) ? 160f : 96f);
+			num = ((platform != RuntimePlatform.Android && platform != RuntimePlatform.IPhonePlayer) ? 96f : 160f);
 		}
 		int num2 = Mathf.RoundToInt(height * (96f / num));
 		if ((num2 & 1) == 1)
@@ -984,7 +972,7 @@ public static class NGUIMath
 		Camera camera = NGUITools.FindCameraForLayer(layer);
 		if (camera == null)
 		{
-			Debug.LogWarning("No camera found for layer " + layer);
+			UnityEngine.Debug.LogWarning("No camera found for layer " + layer);
 			return pos;
 		}
 		Vector3 position = camera.ScreenToWorldPoint(pos);
@@ -1001,11 +989,11 @@ public static class NGUIMath
 		Camera camera = NGUITools.FindCameraForLayer(layer);
 		if (camera == null)
 		{
-			Debug.LogWarning("No camera found for layer " + layer);
+			UnityEngine.Debug.LogWarning("No camera found for layer " + layer);
 			return pos;
 		}
 		Vector3 vector = camera.ScreenToWorldPoint(pos);
-		return (relativeTo != null) ? relativeTo.InverseTransformPoint(vector) : vector;
+		return (!(relativeTo != null)) ? vector : relativeTo.InverseTransformPoint(vector);
 	}
 
 	public static Vector3 WorldToLocalPoint(Vector3 worldPos, Camera worldCam, Camera uiCam, Transform relativeTo)
@@ -1029,7 +1017,7 @@ public static class NGUIMath
 		worldPos = worldCam.WorldToViewportPoint(worldPos);
 		worldPos = myCam.ViewportToWorldPoint(worldPos);
 		Transform parent = trans.parent;
-		trans.localPosition = ((parent != null) ? parent.InverseTransformPoint(worldPos) : worldPos);
+		trans.localPosition = ((!(parent != null)) ? worldPos : parent.InverseTransformPoint(worldPos));
 	}
 
 	public static void OverlayPosition(this Transform trans, Vector3 worldPos, Camera worldCam)
@@ -1049,245 +1037,5 @@ public static class NGUIMath
 		{
 			trans.OverlayPosition(target.position, camera2, camera);
 		}
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.AdjustByDPI(*(float*)args));
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		NGUIMath.AdjustWidget((UIWidget)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3), *(float*)(args + 4));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		NGUIMath.AdjustWidget((UIWidget)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3), *(float*)(args + 4), *(int*)(args + 5), *(int*)(args + 6));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		NGUIMath.AdjustWidget((UIWidget)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3), *(float*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(int*)(args + 7), *(int*)(args + 8));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.CalculateAbsoluteWidgetBounds((Transform)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.CalculateRelativeWidgetBounds((Transform)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.CalculateRelativeWidgetBounds((Transform)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.CalculateRelativeWidgetBounds((Transform)GCHandledObjects.GCHandleToObject(*args), (Transform)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.CalculateRelativeWidgetBounds((Transform)GCHandledObjects.GCHandleToObject(*args), (Transform)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0));
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.ClampIndex(*(int*)args, *(int*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.ColorToInt(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.ConstrainRect(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.ConvertToPixels(*(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2), *(sbyte*)(args + 3) != 0));
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.ConvertToTexCoords(*(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2)));
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.DecimalToHex24(*(int*)args));
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.DecimalToHex32(*(int*)args));
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.DecimalToHex8(*(int*)args));
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.DistancePointToLineSegment(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2))));
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.DistanceToRectangle((Vector2[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), *(*(IntPtr*)(args + 1))));
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.DistanceToRectangle((Vector3[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), *(*(IntPtr*)(args + 1)), (Camera)GCHandledObjects.GCHandleToObject(args[2])));
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.GetPivot(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.GetPivotOffset((UIWidget.Pivot)(*(int*)args)));
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.IntToBinary(*(int*)args, *(int*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.IntToColor(*(int*)args));
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.Lerp(*(float*)args, *(float*)(args + 1), *(float*)(args + 2)));
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.MakePixelPerfect(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.MakePixelPerfect(*(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2)));
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		NGUIMath.MoveRect((UIRect)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		NGUIMath.MoveWidget((UIRect)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		((Transform)GCHandledObjects.GCHandleToObject(*args)).OverlayPosition((Transform)GCHandledObjects.GCHandleToObject(args[1]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		((Transform)GCHandledObjects.GCHandleToObject(*args)).OverlayPosition(*(*(IntPtr*)(args + 1)), (Camera)GCHandledObjects.GCHandleToObject(args[2]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		((Transform)GCHandledObjects.GCHandleToObject(*args)).OverlayPosition(*(*(IntPtr*)(args + 1)), (Camera)GCHandledObjects.GCHandleToObject(args[2]), (Camera)GCHandledObjects.GCHandleToObject(args[3]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.RepeatIndex(*(int*)args, *(int*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		NGUIMath.ResizeWidget((UIWidget)GCHandledObjects.GCHandleToObject(*args), (UIWidget.Pivot)(*(int*)(args + 1)), *(float*)(args + 2), *(float*)(args + 3), *(int*)(args + 4), *(int*)(args + 5));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		NGUIMath.ResizeWidget((UIWidget)GCHandledObjects.GCHandleToObject(*args), (UIWidget.Pivot)(*(int*)(args + 1)), *(float*)(args + 2), *(float*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(int*)(args + 7));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.RotateTowards(*(float*)args, *(float*)(args + 1), *(float*)(args + 2)));
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.ScreenToParentPixels(*(*(IntPtr*)args), (Transform)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.ScreenToPixels(*(*(IntPtr*)args), (Transform)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke38(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.SpringLerp(*(float*)args, *(float*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke39(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.SpringLerp(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-	}
-
-	public unsafe static long $Invoke40(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.SpringLerp(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(float*)(args + 2), *(float*)(args + 3)));
-	}
-
-	public unsafe static long $Invoke41(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.SpringLerp(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(float*)(args + 2), *(float*)(args + 3)));
-	}
-
-	public unsafe static long $Invoke42(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.SpringLerp(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(float*)(args + 2), *(float*)(args + 3)));
-	}
-
-	public unsafe static long $Invoke43(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.WorldToLocalPoint(*(*(IntPtr*)args), (Camera)GCHandledObjects.GCHandleToObject(args[1]), (Camera)GCHandledObjects.GCHandleToObject(args[2]), (Transform)GCHandledObjects.GCHandleToObject(args[3])));
-	}
-
-	public unsafe static long $Invoke44(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.Wrap01(*(float*)args));
-	}
-
-	public unsafe static long $Invoke45(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIMath.WrapAngle(*(float*)args));
 	}
 }

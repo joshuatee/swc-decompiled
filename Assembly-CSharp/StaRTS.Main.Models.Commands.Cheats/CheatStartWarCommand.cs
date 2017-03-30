@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatStartWarCommand(CheatStartWarRequest request) : base("cheats.guildWar.start", request, new GetSquadWarStatusResponse())
 		{
 		}
-
-		protected internal CheatStartWarCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

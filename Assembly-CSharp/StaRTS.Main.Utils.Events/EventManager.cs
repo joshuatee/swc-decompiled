@@ -2,7 +2,6 @@ using StaRTS.DataStructures;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils.Events
 {
@@ -13,7 +12,7 @@ namespace StaRTS.Main.Utils.Events
 		public EventManager()
 		{
 			Service.Set<EventManager>(this);
-			int num = 518;
+			int num = 517;
 			this.eventIdToObservers = new EventObservers[num];
 			for (int i = 0; i < num; i++)
 			{
@@ -95,39 +94,6 @@ namespace StaRTS.Main.Utils.Events
 				}
 				iter.Reset();
 			}
-		}
-
-		protected internal EventManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventManager)GCHandledObjects.GCHandleToObject(instance)).IsEventListenerRegistered((IEventObserver)GCHandledObjects.GCHandleToObject(*args), (EventId)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EventManager)GCHandledObjects.GCHandleToObject(instance)).RegisterObserver((IEventObserver)GCHandledObjects.GCHandleToObject(*args), (EventId)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EventManager)GCHandledObjects.GCHandleToObject(instance)).RegisterObserver((IEventObserver)GCHandledObjects.GCHandleToObject(*args), (EventId)(*(int*)(args + 1)), (EventPriority)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((EventManager)GCHandledObjects.GCHandleToObject(instance)).SendEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EventManager)GCHandledObjects.GCHandleToObject(instance)).UnregisterObserver((IEventObserver)GCHandledObjects.GCHandleToObject(*args), (EventId)(*(int*)(args + 1)));
-			return -1L;
 		}
 	}
 }

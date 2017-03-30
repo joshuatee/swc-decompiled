@@ -3,10 +3,8 @@ using StaRTS.Main.Views.Cameras;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Elements
 {
@@ -75,18 +73,18 @@ namespace StaRTS.Main.Views.UX.Elements
 			bool flag = true;
 			bool flag2 = false;
 			int i = 0;
-			int length = s.get_Length();
+			int length = s.Length;
 			while (i < length)
 			{
-				char c = '\0';
-				char c2;
+				char value = '\0';
+				char c;
 				uint u;
-				bool flag3 = this.ParseUTF16(s, i, length, out c2, ref c, out u);
+				bool flag3 = this.ParseUTF16(s, i, length, out c, ref value, out u);
 				if (flag3)
 				{
 					i++;
 				}
-				bool flag4 = (!flag3 && char.IsWhiteSpace(c2)) || this.IsEmoji(u);
+				bool flag4 = (!flag3 && char.IsWhiteSpace(c)) || this.IsEmoji(u);
 				if (flag4)
 				{
 					if (!flag)
@@ -101,10 +99,10 @@ namespace StaRTS.Main.Views.UX.Elements
 						stringBuilder.Append(' ');
 						flag2 = false;
 					}
-					stringBuilder.Append(c2);
+					stringBuilder.Append(c);
 					if (flag3)
 					{
-						stringBuilder.Append(c);
+						stringBuilder.Append(value);
 					}
 				}
 				flag = flag4;
@@ -115,12 +113,12 @@ namespace StaRTS.Main.Views.UX.Elements
 
 		private bool ParseUTF16(string s, int i, int length, out char c, ref char d, out uint u)
 		{
-			c = s.get_Chars(i);
+			c = s[i];
 			ushort num = (ushort)c;
 			u = (uint)num;
 			if (num >= 55296 && num <= 56319 && ++i < length)
 			{
-				ushort num2 = (ushort)s.get_Chars(i);
+				ushort num2 = (ushort)s[i];
 				if (num2 >= 56320 && num2 <= 57343)
 				{
 					d = (char)num2;
@@ -150,59 +148,6 @@ namespace StaRTS.Main.Views.UX.Elements
 				base.GetUIWidget.enabled = false;
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal UXInput(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXInput)GCHandledObjects.GCHandleToObject(instance)).FilterWhitespace(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXInput)GCHandledObjects.GCHandleToObject(instance)).EnableInput);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXInput)GCHandledObjects.GCHandleToObject(instance)).Text);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXInput)GCHandledObjects.GCHandleToObject(instance)).GetUIInputComponent());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((UXInput)GCHandledObjects.GCHandleToObject(instance)).InitText(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((UXInput)GCHandledObjects.GCHandleToObject(instance)).InternalDestroyComponent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXInput)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((UXInput)GCHandledObjects.GCHandleToObject(instance)).EnableInput = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((UXInput)GCHandledObjects.GCHandleToObject(instance)).Text = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatResetSquadLevelCommand(CheatResetSquadLevelRequest request) : base("cheats.player.resetGuildAdv", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatResetSquadLevelCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

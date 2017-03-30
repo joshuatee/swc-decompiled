@@ -3,7 +3,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Entities.Components
 {
@@ -74,33 +73,6 @@ namespace StaRTS.Main.Models.Entities.Components
 		public bool IsActive()
 		{
 			return this.activiated;
-		}
-
-		protected internal TroopShieldComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TroopShieldComponent)GCHandledObjects.GCHandleToObject(instance)).Activiate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TroopShieldComponent)GCHandledObjects.GCHandleToObject(instance)).Deactiviate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopShieldComponent)GCHandledObjects.GCHandleToObject(instance)).IsActive());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TroopShieldComponent)GCHandledObjects.GCHandleToObject(instance)).OnRemove();
-			return -1L;
 		}
 	}
 }

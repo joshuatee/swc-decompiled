@@ -6,9 +6,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Externals.Manimal
 {
@@ -21,6 +19,12 @@ namespace StaRTS.Externals.Manimal
 		private const bool PICKUP_MESSAGES = true;
 
 		private const float QUEUE_DISPATCH_DELAY = 3f;
+
+		private const string DESYNC_COMMAND_MAX_RETRY = "DESYNC_COMMAND_MAX_RETRY";
+
+		private const string DESYNC_CRITICAL_COMMAND_FAIL = "DESYNC_CRITICAL_COMMAND_FAIL";
+
+		private const string DESYNC_RECEIPT_FAILED = "DESYNC_RECEIPT_FAILED";
 
 		private ServerAPI.DesynHandler desyncHandler;
 
@@ -47,12 +51,6 @@ namespace StaRTS.Externals.Manimal
 		private ICommand keepAliveCommand;
 
 		private float keepAliveWaitTime;
-
-		private const string DESYNC_COMMAND_MAX_RETRY = "DESYNC_COMMAND_MAX_RETRY";
-
-		private const string DESYNC_CRITICAL_COMMAND_FAIL = "DESYNC_CRITICAL_COMMAND_FAIL";
-
-		private const string DESYNC_RECEIPT_FAILED = "DESYNC_RECEIPT_FAILED";
 
 		public bool Enabled
 		{
@@ -116,11 +114,8 @@ namespace StaRTS.Externals.Manimal
 
 		public void SetDispatcher(string baseUrl, MonoBehaviour engine)
 		{
-			Service.Get<StaRTSLogger>().Debug("Dispatcher URL set to " + baseUrl);
-			this.dispatcher = new Dispatcher(string.Format(ServerAPI.url, new object[]
-			{
-				baseUrl
-			}), engine, true, this);
+			Service.Get<Logger>().Debug("Dispatcher URL set to " + baseUrl);
+			this.dispatcher = new Dispatcher(string.Format(ServerAPI.url, baseUrl), engine, true, this);
 		}
 
 		public Dispatcher GetDispatcher()
@@ -159,9 +154,8 @@ namespace StaRTS.Externals.Manimal
 					this.Enqueue(this.keepAliveCommand);
 					this.lastKeepAliveTime = this.ServerTime;
 					this.TryDispatchQueue();
-					return;
 				}
-				if (this.ServerTime - this.firstCommandQueuedTime >= 3f)
+				else if (this.ServerTime - this.firstCommandQueuedTime >= 3f)
 				{
 					this.TryDispatchQueue();
 				}
@@ -232,12 +226,8 @@ namespace StaRTS.Externals.Manimal
 			bool flag = this.protocolVersion == protocolVersion;
 			if (!flag)
 			{
-				string message = string.Format("Protocol version mismatch. Client: {0}, Server: {1}", new object[]
-				{
-					this.protocolVersion,
-					protocolVersion
-				});
-				ProtocolResult result = (this.protocolVersion > protocolVersion) ? ProtocolResult.Higher : ProtocolResult.Lower;
+				string message = string.Format("Protocol version mismatch. Client: {0}, Server: {1}", this.protocolVersion, protocolVersion);
+				ProtocolResult result = (this.protocolVersion <= protocolVersion) ? ProtocolResult.Lower : ProtocolResult.Higher;
 				this.desyncHandler(message, 0u, result);
 			}
 			return flag;
@@ -252,137 +242,10 @@ namespace StaRTS.Externals.Manimal
 		{
 			string id = this.desyncMessages[type];
 			string text = LangUtils.ProcessStringWithNewlines(Service.Get<Lang>().Get(id, new object[0]));
-			string text2 = Service.Get<Lang>().Get("DESYNC_STATUS", new object[0]);
-			text = text + "\n\n" + string.Format(text2, new object[]
-			{
-				statusCode
-			}) + "\n\n";
+			string format = Service.Get<Lang>().Get("DESYNC_STATUS", new object[0]);
+			text = text + "\n\n" + string.Format(format, statusCode) + "\n\n";
 			this.desyncHandler(text, statusCode, ProtocolResult.Match);
 			return false;
-		}
-
-		protected internal ServerAPI(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).Async((ICommand)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).Enqueue((ICommand)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).Enabled);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).IsUsingRealAuthentication);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).ServerDateTime);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).SessionId);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).GetDispatcher());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).GetQueue());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).SendMessages((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).Enabled = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).IsUsingRealAuthentication = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).ServerTimePrecise = *(double*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).SessionId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).SetAuth(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).SetDispatcher(Marshal.PtrToStringUni(*(IntPtr*)args), (MonoBehaviour)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).SetKeepAlive((ICommand)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).Sync();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).Sync((ICommand)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).TryDispatchQueue();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((ServerAPI)GCHandledObjects.GCHandleToObject(instance)).UpdateServerTime();
-			return -1L;
 		}
 	}
 }

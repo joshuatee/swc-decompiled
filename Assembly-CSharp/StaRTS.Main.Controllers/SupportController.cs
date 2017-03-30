@@ -33,19 +33,18 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
-	public class SupportController : IEventObserver, ISupportController, IViewFrameTimeObserver
+	public class SupportController : ISupportController, IEventObserver, IViewFrameTimeObserver
 	{
 		private delegate int ProductDeliveryDelegate(Contract contract, Building buildingTO, BuildingTypeVO buildingVO);
 
 		private delegate bool ContractValidationDelegate(Contract contract);
 
 		private delegate void FinishContractOnServerDelegate(string buildingKey, string productUid, int amount);
+
+		public const float UPDATE_TIME_THRESHOLD = 0.1f;
 
 		private Dictionary<DeliveryType, SupportController.ProductDeliveryDelegate> deliveryMethods;
 
@@ -80,8 +79,6 @@ namespace StaRTS.Main.Controllers
 		private Dictionary<string, int> temporaryInventorySizeServerDeltas;
 
 		private float accumulatedUpdateDt;
-
-		public const float UPDATE_TIME_THRESHOLD = 0.1f;
 
 		public SupportController()
 		{
@@ -449,21 +446,13 @@ namespace StaRTS.Main.Controllers
 			{
 				return 1;
 			}
-			if (!flag & flag2)
+			if (!flag && flag2)
 			{
 				return -1;
 			}
 			num = GameUtils.StringHash(a.Uid);
 			num2 = GameUtils.StringHash(b.Uid);
-			if (num > num2)
-			{
-				return 1;
-			}
-			if (num != num2)
-			{
-				return -1;
-			}
-			return 0;
+			return (num <= num2) ? ((num != num2) ? -1 : 0) : 1;
 		}
 
 		public int SortByEndTime(Contract a, Contract b)
@@ -699,12 +688,17 @@ namespace StaRTS.Main.Controllers
 		{
 			if (this.temporaryInventorySizeServerDeltas.ContainsKey(inventoryStorage.Key) && this.temporaryInventorySizeServerDeltas[inventoryStorage.Key] < 0)
 			{
-				Dictionary<string, int> dictionary = this.temporaryInventorySizeServerDeltas;
-				string key = inventoryStorage.Key;
-				dictionary[key] += deployableVO.Size;
-				return;
+				Dictionary<string, int> dictionary;
+				Dictionary<string, int> expr_33 = dictionary = this.temporaryInventorySizeServerDeltas;
+				string key;
+				string expr_3B = key = inventoryStorage.Key;
+				int num = dictionary[key];
+				expr_33[expr_3B] = num + deployableVO.Size;
 			}
-			inventoryStorage.ModifyItemAmount(deployableVO.Uid, 1);
+			else
+			{
+				inventoryStorage.ModifyItemAmount(deployableVO.Uid, 1);
+			}
 		}
 
 		private int DeliverBuilding(Contract contract, Building buildingTO, BuildingTypeVO buildingVO)
@@ -740,18 +734,18 @@ namespace StaRTS.Main.Controllers
 				return;
 			case BuildingType.Housing:
 			case BuildingType.Squad:
-				break;
-			default:
 			{
+				IL_27:
 				if (type != BuildingType.Resource)
 				{
 					return;
 				}
 				bool isConstructionContract = contract.DeliveryType == DeliveryType.Building;
 				Service.Get<ICurrencyController>().UpdateGeneratorAfterFinishedContract(buildingVO, buildingTO, contract.ContractTO.EndTime, isConstructionContract);
-				break;
+				return;
 			}
 			}
+			goto IL_27;
 		}
 
 		private int DeliverUpgradeTroopOrStarship(Contract contract, Building buildingTO, BuildingTypeVO buildingVO)
@@ -898,12 +892,12 @@ namespace StaRTS.Main.Controllers
 
 		public void StartBuildingUpgrade(BuildingTypeVO nextUpgradeType, Entity selectedBuilding, bool isInstant)
 		{
-			this.StartBuildingUpgrade(nextUpgradeType, selectedBuilding, isInstant, "");
+			this.StartBuildingUpgrade(nextUpgradeType, selectedBuilding, isInstant, string.Empty);
 		}
 
 		public void StartBuildingUpgrade(BuildingTypeVO nextUpgradeType, Entity selectedBuilding, bool isInstant, string tag)
 		{
-			int totalTime = isInstant ? 0 : nextUpgradeType.Time;
+			int totalTime = (!isInstant) ? nextUpgradeType.Time : 0;
 			if (!this.StartBuildingContract(nextUpgradeType.Uid, DeliveryType.UpgradeBuilding, totalTime, selectedBuilding, true, tag))
 			{
 				return;
@@ -940,7 +934,7 @@ namespace StaRTS.Main.Controllers
 			BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
 			if (sendBackendCommand)
 			{
-				this.serverAPI.Enqueue(new BuildingUpgradeCommand(new BuildingContractRequest(buildingComponent.BuildingTO.Key, false, "")));
+				this.serverAPI.Enqueue(new BuildingUpgradeCommand(new BuildingContractRequest(buildingComponent.BuildingTO.Key, false, string.Empty)));
 			}
 		}
 
@@ -997,7 +991,7 @@ namespace StaRTS.Main.Controllers
 
 		private void OnEquipmentUpgradeFailure(uint status, object cookie)
 		{
-			Service.Get<StaRTSLogger>().ErrorFormat("StartEquipmentUpgrade equipmentID '{0}' failed!", new object[]
+			Service.Get<Logger>().ErrorFormat("StartEquipmentUpgrade equipmentID '{0}' failed!", new object[]
 			{
 				cookie as string
 			});
@@ -1021,7 +1015,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (deliveryType == DeliveryType.Invalid)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Error adding bad troop train contract: {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Error adding bad troop train contract: {0}", new object[]
 				{
 					troop.Uid
 				});
@@ -1030,7 +1024,7 @@ namespace StaRTS.Main.Controllers
 			Contract contract = this.StartTroopContract(troop.Uid, deliveryType, troop.Size, building);
 			if (contract == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Error Adding contract {0} at {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Error Adding contract {0} at {1}", new object[]
 				{
 					troop.Uid,
 					buildingComponent.BuildingTO.Key
@@ -1050,7 +1044,7 @@ namespace StaRTS.Main.Controllers
 			Contract contract = this.FindLastContractById(key, productUid);
 			if (contract == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("No contract for {0} at {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("No contract for {0} at {1}", new object[]
 				{
 					productUid,
 					key
@@ -1134,7 +1128,7 @@ namespace StaRTS.Main.Controllers
 						string itemType = "unit";
 						string productUid = contract.ProductUid;
 						int itemCount = num2;
-						string type = Service.Get<CurrentPlayer>().CampaignProgress.FueInProgress ? "FUE_speed_up_unit" : "speed_up_unit";
+						string type = (!Service.Get<CurrentPlayer>().CampaignProgress.FueInProgress) ? "speed_up_unit" : "FUE_speed_up_unit";
 						string subType = "consumable";
 						Service.Get<DMOAnalyticsController>().LogInAppCurrencyAction(currencyAmount, itemType, productUid, itemCount, type, subType);
 						flag = true;
@@ -1168,7 +1162,7 @@ namespace StaRTS.Main.Controllers
 
 		private bool StartBuildingContract(string productUid, DeliveryType contractType, int totalTime, Entity building, bool sendBILog)
 		{
-			return this.StartBuildingContract(productUid, contractType, totalTime, building, sendBILog, "");
+			return this.StartBuildingContract(productUid, contractType, totalTime, building, sendBILog, string.Empty);
 		}
 
 		private bool StartBuildingContract(string productUid, DeliveryType contractType, int totalTime, Entity building, bool sendBILog, string tag)
@@ -1285,7 +1279,7 @@ namespace StaRTS.Main.Controllers
 			{
 				buildingComponent.BuildingTO.LastCollectTime = serverTime;
 			}
-			this.serverAPI.Enqueue(new BuildingContractCancelCommand(new BuildingContractRequest(key, true, "")));
+			this.serverAPI.Enqueue(new BuildingContractCancelCommand(new BuildingContractRequest(key, true, string.Empty)));
 			ContractEventData cookie = new ContractEventData(contract, building, false, false);
 			this.eventManager.SendEvent(EventId.BuildingCancelled, cookie);
 		}
@@ -1314,7 +1308,7 @@ namespace StaRTS.Main.Controllers
 			{
 				if (!ContractUtils.IsTroopType(contractType))
 				{
-					Service.Get<StaRTSLogger>().Error("Attempted to refund unsupported contract type: " + contractType.ToString());
+					Service.Get<Logger>().Error("Attempted to refund unsupported contract type: " + contractType.ToString());
 					return;
 				}
 				multiplier = (float)GameConstants.CONTRACT_REFUND_PERCENTAGE_TROOPS / 100f;
@@ -1371,7 +1365,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (entity == null)
 			{
-				Service.Get<StaRTSLogger>().Error("entity is null in FinishCurrentContract");
+				Service.Get<Logger>().Error("entity is null in FinishCurrentContract");
 				return false;
 			}
 			BuildingComponent buildingComponent = entity.Get<BuildingComponent>();
@@ -1383,13 +1377,13 @@ namespace StaRTS.Main.Controllers
 			Building buildingTO = buildingComponent.BuildingTO;
 			if (buildingTO == null)
 			{
-				Service.Get<StaRTSLogger>().Error("buildingTO is null in FinishCurrentContract");
+				Service.Get<Logger>().Error("buildingTO is null in FinishCurrentContract");
 				return false;
 			}
 			string key = buildingTO.Key;
 			if (key == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("buildingTOKey is null in FinishCurrentContract", new object[0]);
+				Service.Get<Logger>().ErrorFormat("buildingTOKey is null in FinishCurrentContract", new object[0]);
 				return false;
 			}
 			Contract contract = this.FindCurrentContract(key);
@@ -1453,10 +1447,10 @@ namespace StaRTS.Main.Controllers
 			}
 			bool flag = contract.DeliveryType == DeliveryType.Champion;
 			uint time = ServerTime.Time;
-			int troopContractShiftTime = flag ? 0 : GameUtils.GetTimeDifferenceSafe(time, contract.ContractTO.EndTime);
+			int troopContractShiftTime = (!flag) ? GameUtils.GetTimeDifferenceSafe(time, contract.ContractTO.EndTime) : 0;
 			contract.ContractTO.EndTime = time;
 			SupportController.FinishContractOnServerDelegate serverDelegate = null;
-			string productUid = flag ? contract.ProductUid : buildingComponent.BuildingTO.Uid;
+			string productUid = (!flag) ? buildingComponent.BuildingTO.Uid : contract.ProductUid;
 			if (sendBackendCommand)
 			{
 				if (contract.DeliveryType == DeliveryType.Champion)
@@ -1477,7 +1471,7 @@ namespace StaRTS.Main.Controllers
 
 		private void BuyoutBuildingOnServer(string buildingKey, string productUid, int amount)
 		{
-			this.serverAPI.Enqueue(new BuildingContractBuyoutCommand(new BuildingContractRequest(buildingKey, true, "")));
+			this.serverAPI.Enqueue(new BuildingContractBuyoutCommand(new BuildingContractRequest(buildingKey, true, string.Empty)));
 		}
 
 		private void SortCurrentContracts()
@@ -1486,9 +1480,11 @@ namespace StaRTS.Main.Controllers
 			{
 				this.currentContracts.Sort(new Comparison<Contract>(this.SortByEndTime));
 				this.needSortCurrentContracts = false;
-				return;
 			}
-			this.needSortCurrentContracts = true;
+			else
+			{
+				this.needSortCurrentContracts = true;
+			}
 		}
 
 		private void IterationBegin()
@@ -1532,16 +1528,17 @@ namespace StaRTS.Main.Controllers
 				this.eventManager.SendEvent(EventId.ContractStopped, buildingEntity);
 			}
 			DeliveryType deliveryType = contract.DeliveryType;
-			if (deliveryType == DeliveryType.Building)
+			if (deliveryType != DeliveryType.Building)
 			{
-				this.EnableBuilding(buildingEntity);
-				return;
+				if (deliveryType == DeliveryType.UpgradeBuilding)
+				{
+					if (isCanceling)
+					{
+						this.EnableBuilding(buildingEntity);
+					}
+				}
 			}
-			if (deliveryType != DeliveryType.UpgradeBuilding)
-			{
-				return;
-			}
-			if (isCanceling)
+			else
 			{
 				this.EnableBuilding(buildingEntity);
 			}
@@ -1629,7 +1626,7 @@ namespace StaRTS.Main.Controllers
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().Error("UpdatingBuildingKeyToEntity has duplicates");
+					Service.Get<Logger>().Error("UpdatingBuildingKeyToEntity has duplicates");
 				}
 			}
 		}
@@ -1644,20 +1641,18 @@ namespace StaRTS.Main.Controllers
 				ContractTO contractTO = contract.ContractTO;
 				if (contractTO == null)
 				{
-					Service.Get<StaRTSLogger>().Error("UpdateAllContracts: Null ContractTo found.");
+					Service.Get<Logger>().Error("UpdateAllContracts: Null ContractTo found.");
 				}
 				else
 				{
 					string buildingKey = contractTO.BuildingKey;
 					if (buildingKey == null)
 					{
-						Service.Get<StaRTSLogger>().Error("UpdateAllContracts: Null buildingKey found.");
+						Service.Get<Logger>().Error("UpdateAllContracts: Null buildingKey found.");
 					}
 					else if (nowPrecise - contract.LastUpdateTime >= 1.0)
 					{
-						Contract expr_78 = contract;
-						double lastUpdateTime = expr_78.LastUpdateTime;
-						expr_78.LastUpdateTime = lastUpdateTime + 1.0;
+						contract.LastUpdateTime += 1.0;
 						if (ContractUtils.IsBuildingType(contractTO.ContractType) || !this.IsBuildingFrozen(buildingKey))
 						{
 							SmartEntity smartEntity;
@@ -1665,14 +1660,17 @@ namespace StaRTS.Main.Controllers
 							if (smartEntity != null)
 							{
 								contract.UpdateRemainingTime();
-								if (!this.pausedBuildings.Contains(buildingKey) && contract.IsReadyToBeFinished())
+								if (!this.pausedBuildings.Contains(buildingKey))
 								{
-									this.FinishCurrentContract(smartEntity, false);
+									if (contract.IsReadyToBeFinished())
+									{
+										this.FinishCurrentContract(smartEntity, false);
+									}
 								}
 							}
 							else
 							{
-								Service.Get<StaRTSLogger>().Error("UpdateAllContracts: Null entity found.");
+								Service.Get<Logger>().Error("UpdateAllContracts: Null entity found.");
 							}
 						}
 					}
@@ -1719,37 +1717,40 @@ namespace StaRTS.Main.Controllers
 			{
 				Contract contract = this.currentContracts[i];
 				string buildingKey = contract.ContractTO.BuildingKey;
-				if ((hashSet == null || !hashSet.Contains(buildingKey)) && this.frozenBuildings.Contains(buildingKey) && !contract.DoNotShiftTimesForUnfreeze)
+				if (hashSet == null || !hashSet.Contains(buildingKey))
 				{
-					if (ContractUtils.IsBuildingType(contract.ContractTO.ContractType))
+					if (this.frozenBuildings.Contains(buildingKey) && !contract.DoNotShiftTimesForUnfreeze)
 					{
-						if (dictionary == null)
+						if (ContractUtils.IsBuildingType(contract.ContractTO.ContractType))
 						{
-							dictionary = new Dictionary<string, uint>();
+							if (dictionary == null)
+							{
+								dictionary = new Dictionary<string, uint>();
+							}
+							dictionary.Add(buildingKey, contract.ContractTO.EndTime);
 						}
-						dictionary.Add(buildingKey, contract.ContractTO.EndTime);
-					}
-					else
-					{
-						if (hashSet == null)
+						else
 						{
-							hashSet = new HashSet<string>();
-						}
-						hashSet.Add(buildingKey);
-						int num = 0;
-						uint endTime = contract.ContractTO.EndTime;
-						if (dictionary != null && dictionary.ContainsKey(buildingKey))
-						{
-							uint timeB = dictionary[buildingKey];
-							num = GameUtils.GetTimeDifferenceSafe(endTime, timeB);
-						}
-						else if (time > contract.ContractTO.EndTime)
-						{
-							num = GameUtils.GetTimeDifferenceSafe(time, endTime);
-						}
-						if (num != 0)
-						{
-							this.ShiftTroopContractTimes(buildingKey, num);
+							if (hashSet == null)
+							{
+								hashSet = new HashSet<string>();
+							}
+							hashSet.Add(buildingKey);
+							int num = 0;
+							uint endTime = contract.ContractTO.EndTime;
+							if (dictionary != null && dictionary.ContainsKey(buildingKey))
+							{
+								uint timeB = dictionary[buildingKey];
+								num = GameUtils.GetTimeDifferenceSafe(endTime, timeB);
+							}
+							else if (time > contract.ContractTO.EndTime)
+							{
+								num = GameUtils.GetTimeDifferenceSafe(time, endTime);
+							}
+							if (num != 0)
+							{
+								this.ShiftTroopContractTimes(buildingKey, num);
+							}
 						}
 					}
 				}
@@ -1790,7 +1791,7 @@ namespace StaRTS.Main.Controllers
 			HashSet<string> hashSet = null;
 			foreach (KeyValuePair<string, int> current in this.temporaryInventorySizeServerDeltas)
 			{
-				dictionary.Add(current.get_Key(), current.get_Value());
+				dictionary.Add(current.Key, current.Value);
 			}
 			int i = 0;
 			int count = this.currentContracts.Count;
@@ -1799,58 +1800,67 @@ namespace StaRTS.Main.Controllers
 				Contract contract = this.currentContracts[i];
 				string buildingKey = contract.ContractTO.BuildingKey;
 				bool flag = ContractUtils.IsTroopType(contract.ContractTO.ContractType);
-				if ((!flag || simulateTroopContractUpdate) && !((hashSet != null && hashSet.Contains(buildingKey)) & flag) && time >= contract.ContractTO.EndTime)
+				if (!flag || simulateTroopContractUpdate)
 				{
-					if (this.ShouldBeFrozen(contract, dictionary, flag))
+					if (hashSet == null || !hashSet.Contains(buildingKey) || !flag)
 					{
-						if (updateFreezeState)
+						if (time >= contract.ContractTO.EndTime)
 						{
-							this.FreezeBuilding(buildingKey);
-						}
-						if (hashSet == null)
-						{
-							hashSet = new HashSet<string>();
-						}
-						hashSet.Add(buildingKey);
-					}
-					else
-					{
-						if (updateFreezeState)
-						{
-							contract.DoNotShiftTimesForUnfreeze = true;
-						}
-						if (flag)
-						{
-							InventoryStorage inventoryStorage;
-							int num;
-							ContractUtils.GetArmyContractStorageAndSize(contract, out inventoryStorage, out num);
-							if (dictionary.ContainsKey(inventoryStorage.Key))
+							if (this.ShouldBeFrozen(contract, dictionary, flag))
 							{
-								Dictionary<string, int> dictionary2 = dictionary;
-								string key = inventoryStorage.Key;
-								dictionary2[key] += num;
+								if (updateFreezeState)
+								{
+									this.FreezeBuilding(buildingKey);
+								}
+								if (hashSet == null)
+								{
+									hashSet = new HashSet<string>();
+								}
+								hashSet.Add(buildingKey);
 							}
 							else
 							{
-								dictionary.Add(inventoryStorage.Key, num);
+								if (updateFreezeState)
+								{
+									contract.DoNotShiftTimesForUnfreeze = true;
+								}
+								if (flag)
+								{
+									InventoryStorage inventoryStorage;
+									int num;
+									ContractUtils.GetArmyContractStorageAndSize(contract, out inventoryStorage, out num);
+									if (dictionary.ContainsKey(inventoryStorage.Key))
+									{
+										Dictionary<string, int> dictionary2;
+										Dictionary<string, int> expr_150 = dictionary2 = dictionary;
+										string key;
+										string expr_15A = key = inventoryStorage.Key;
+										int num2 = dictionary2[key];
+										expr_150[expr_15A] = num2 + num;
+									}
+									else
+									{
+										dictionary.Add(inventoryStorage.Key, num);
+									}
+								}
+								if (contract.ContractTO.ContractType == ContractType.Upgrade && contract.TotalTime == 0)
+								{
+									BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(contract.ProductUid);
+									if (buildingTypeVO.Type == BuildingType.Wall)
+									{
+										goto IL_1E1;
+									}
+								}
+								if (finishedContracts == null)
+								{
+									finishedContracts = new List<Contract>();
+								}
+								finishedContracts.Add(contract);
 							}
 						}
-						if (contract.ContractTO.ContractType == ContractType.Upgrade && contract.TotalTime == 0)
-						{
-							BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(contract.ProductUid);
-							if (buildingTypeVO.Type == BuildingType.Wall)
-							{
-								goto IL_1A0;
-							}
-						}
-						if (finishedContracts == null)
-						{
-							finishedContracts = new List<Contract>();
-						}
-						finishedContracts.Add(contract);
 					}
 				}
-				IL_1A0:
+				IL_1E1:
 				i++;
 			}
 		}
@@ -1919,7 +1929,7 @@ namespace StaRTS.Main.Controllers
 						Dictionary<string, object> dictionary2 = dictionary[current2] as Dictionary<string, object>;
 						if (dictionary2 != null)
 						{
-							int delta = Convert.ToInt32(dictionary2["amount"], CultureInfo.InvariantCulture);
+							int delta = Convert.ToInt32(dictionary2["amount"]);
 							storage.ModifyItemAmount(current2, delta);
 						}
 					}
@@ -1928,12 +1938,17 @@ namespace StaRTS.Main.Controllers
 				int num = totalStorageAmount - totalStorageAmount2;
 				if (this.temporaryInventorySizeServerDeltas.ContainsKey(storage.Key))
 				{
-					Dictionary<string, int> dictionary3 = this.temporaryInventorySizeServerDeltas;
-					string key = storage.Key;
-					dictionary3[key] += num;
-					return;
+					Dictionary<string, int> dictionary3;
+					Dictionary<string, int> expr_13A = dictionary3 = this.temporaryInventorySizeServerDeltas;
+					string key;
+					string expr_143 = key = storage.Key;
+					int num2 = dictionary3[key];
+					expr_13A[expr_143] = num2 + num;
 				}
-				this.temporaryInventorySizeServerDeltas.Add(storage.Key, num);
+				else
+				{
+					this.temporaryInventorySizeServerDeltas.Add(storage.Key, num);
+				}
 			}
 		}
 
@@ -1950,492 +1965,6 @@ namespace StaRTS.Main.Controllers
 			BuildingTypeVO buildingType = building.Get<BuildingComponent>().BuildingType;
 			float contractCostMultiplier = Service.Get<PerkManager>().GetContractCostMultiplier(buildingType);
 			GameUtils.SpendCurrencyWithMultiplier(credits, materials, contraband, contractCostMultiplier, false);
-		}
-
-		protected internal SupportController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).AddContract((Contract)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).BuyoutAllTroopTrainContracts((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).BuyoutAllTroopTrainContracts((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).BuyoutBuildingOnServer(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).BuyOutCurrentBuildingContract((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).BuyoutDeployableContractOnServer(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).CancelContract((Entity)GCHandledObjects.GCHandleToObject(*args), (Contract)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).CancelCurrentBuildingContract((Contract)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).CancelTroopTrainContract(Marshal.PtrToStringUni(*(IntPtr*)args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).CheatForceUpdateAllContracts();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).ClearClearable((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverBuilding((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverChampion((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverHero((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverProducts((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverStarship((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverSwapBuilding((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverTroop((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverUnit((InventoryStorage)GCHandledObjects.GCHandleToObject(*args), (IDeployableVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverUpgradeBuilding((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverUpgradeEquipment((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).DeliverUpgradeTroopOrStarship((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).DisableBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).EnableBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FindAllContractsThatConsumeDroids());
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FindAllTroopContractsForBuilding(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FindBuildingContract(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FindCurrentContract(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FindFirstContractWithProductUid(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FindFirstTroopContractForBuilding(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FindLastContractById(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FindLastTroopContractForBuilding(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FinishCurrentContract((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FinishCurrentContract((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FinishCurrentContract((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(int*)(args + 2), (SupportController.FinishContractOnServerDelegate)GCHandledObjects.GCHandleToObject(args[3]), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), *(int*)(args + 6)));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).FinishCurrentContract((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(int*)(args + 2), (SupportController.FinishContractOnServerDelegate)GCHandledObjects.GCHandleToObject(args[3]), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), *(int*)(args + 6), *(sbyte*)(args + 7) != 0));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).FreezeBuilding(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).GetContractEventsThatHappenedOffline());
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).GetUninitializedContractData());
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).HasTroopContractForBuilding(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).InitializeContracts();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).InstantBuildingConstruct((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), *(int*)(args + 3), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).IsBuildingFrozen(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).IsContractValidForStorage((Contract)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).IsDeployableUpgradeContract((Contract)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).IsRefundableContractTypeForBuilding((ContractType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).IterationBegin();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).IterationEnd();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).OnBuildingContractDelivered((Contract)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).PauseBuilding(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).RefundContractCost((Contract)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).ReleaseContractEventsThatHappnedOffline();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).RemoveContract((Entity)GCHandledObjects.GCHandleToObject(*args), (Contract)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).SendContractContinuedEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).ShiftTroopContractTimes(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).ShouldBeFrozen((Contract)GCHandledObjects.GCHandleToObject(*args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).SimulateCheckAllContractsWithCurrentTime();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).SortByEndTime((Contract)GCHandledObjects.GCHandleToObject(*args), (Contract)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).SortContractTOByEndTime((ContractTO)GCHandledObjects.GCHandleToObject(*args), (ContractTO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).SortCurrentContracts();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).SpendCurrencyForDeployableContract((IDeployableVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartAllWallPartBuildingUpgrade((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartBuildingConstruct((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), *(int*)(args + 3), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartBuildingContract(Marshal.PtrToStringUni(*(IntPtr*)args), (DeliveryType)(*(int*)(args + 1)), *(int*)(args + 2), (Entity)GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartBuildingContract(Marshal.PtrToStringUni(*(IntPtr*)args), (DeliveryType)(*(int*)(args + 1)), *(int*)(args + 2), (Entity)GCHandledObjects.GCHandleToObject(args[3]), *(sbyte*)(args + 4) != 0));
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartBuildingContract(Marshal.PtrToStringUni(*(IntPtr*)args), (DeliveryType)(*(int*)(args + 1)), *(int*)(args + 2), (Entity)GCHandledObjects.GCHandleToObject(args[3]), *(sbyte*)(args + 4) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 5))));
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartBuildingUpgrade((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartBuildingUpgrade((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartChampionRepair((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartClearingBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartDeployableUpgradeOnServer(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartEquipmentUpgrade((EquipmentVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartHeroMobilization((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartStarshipMobilization((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartStarshipUpgrade((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartTroopContract(Marshal.PtrToStringUni(*(IntPtr*)args), (DeliveryType)(*(int*)(args + 1)), *(int*)(args + 2), (Entity)GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartTroopTrainContract((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartTroopUpgrade((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).StartTurretCrossgrade((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).SyncCurrentPlayerInventoryWithServer((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).SyncInventory((InventoryStorage)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (Dictionary<string, object>)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).UnpauseAllBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentContractsListFromServer(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).UpdateFrozenBuildingsListFromServer(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).UpdateTooltips((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke87(long instance, long* args)
-		{
-			((SupportController)GCHandledObjects.GCHandleToObject(instance)).UpdatingBuildingKeyToEntity();
-			return -1L;
 		}
 	}
 }

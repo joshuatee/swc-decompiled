@@ -1,8 +1,6 @@
-using Net.RichardLord.Ash.Core;
 using StaRTS.GameBoard.Components;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.GameBoard
 {
@@ -155,90 +153,16 @@ namespace StaRTS.GameBoard
 
 		public override string ToString()
 		{
-			string text = "< [";
+			string str = "< [";
 			if (this.currentCell != null)
 			{
-				text = text + this.BoardX.ToString() + ", " + this.BoardZ.ToString();
+				str = str + this.BoardX.ToString() + ", " + this.BoardZ.ToString();
 			}
 			else
 			{
-				text += "-, -";
+				str += "-, -";
 			}
-			return text + "] " + this.data.ToString() + ">";
-		}
-
-		protected internal BoardItem(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).BoardX);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).BoardZ);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).Depth);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).Filter);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).FlagStamp);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).Size);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).Width);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).Internal_InformRemovedFromBoard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).Depth = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).Filter = (FilterComponent)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).FlagStamp = (FlagStamp)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).Width = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardItem<Entity>)GCHandledObjects.GCHandleToObject(instance)).ToString());
+			return str + "] " + this.data.ToString() + ">";
 		}
 	}
 }

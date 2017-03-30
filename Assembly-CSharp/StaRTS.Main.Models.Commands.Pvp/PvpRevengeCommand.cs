@@ -24,9 +24,5 @@ namespace StaRTS.Main.Models.Commands.Pvp
 			}
 			return OnCompleteAction.Desync;
 		}
-
-		protected internal PvpRevengeCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

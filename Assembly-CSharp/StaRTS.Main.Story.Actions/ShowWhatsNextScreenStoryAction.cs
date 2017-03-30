@@ -5,7 +5,6 @@ using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -33,33 +32,15 @@ namespace StaRTS.Main.Story.Actions
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id == EventId.ScreenLoaded && cookie is WhatsNextFUEScreen)
+			if (id == EventId.ScreenLoaded)
 			{
-				Service.Get<EventManager>().UnregisterObserver(this, EventId.ScreenLoaded);
-				this.parent.ChildComplete(this);
+				if (cookie is WhatsNextFUEScreen)
+				{
+					Service.Get<EventManager>().UnregisterObserver(this, EventId.ScreenLoaded);
+					this.parent.ChildComplete(this);
+				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal ShowWhatsNextScreenStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShowWhatsNextScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShowWhatsNextScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ShowWhatsNextScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

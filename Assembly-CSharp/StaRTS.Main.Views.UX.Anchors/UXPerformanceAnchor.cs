@@ -14,9 +14,5 @@ namespace StaRTS.Main.Views.UX.Anchors
 			GameObject root = new GameObject("Performance");
 			base.Init(root, UIAnchor.Side.BottomRight);
 		}
-
-		protected internal UXPerformanceAnchor(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

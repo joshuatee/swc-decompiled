@@ -7,7 +7,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Main.Views.UX.Tags;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -60,7 +59,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		protected override void SetupBar3()
 		{
-			base.SetupBar(3, this.lang.Get("trp_info_shield", new object[0]), this.buildingInfo.Health, this.showUpgradeControls ? this.nextBuildingInfo.Health : 0, this.maxBuildingInfo.Health);
+			base.SetupBar(3, this.lang.Get("trp_info_shield", new object[0]), this.buildingInfo.Health, (!this.showUpgradeControls) ? 0 : this.nextBuildingInfo.Health, this.maxBuildingInfo.Health);
 		}
 
 		private void OnPayMeForCurrencyResult(object result, object cookie)
@@ -104,52 +103,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				return;
 			}
 			this.ConfirmUpgrade();
-		}
-
-		protected internal ChampionInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ChampionInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ConfirmUpgrade();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ChampionInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ChampionInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForDroidResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ChampionInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPurchaseClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ChampionInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ChampionInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupBar3();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ChampionInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupPerksButton();
-			return -1L;
 		}
 	}
 }

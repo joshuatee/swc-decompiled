@@ -9,7 +9,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -28,40 +27,38 @@ namespace StaRTS.Main.Views.World
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.BuildingReplaced)
+			switch (id)
 			{
+			case EventId.UserLoweredBuilding:
+				goto IL_66;
+			case EventId.UserLoweredBuildingAudio:
+				IL_1A:
 				if (id == EventId.BuildingPurchaseSuccess)
 				{
-					goto IL_4C;
+					goto IL_66;
 				}
-				if (id != EventId.PreEntityKilled)
+				if (id == EventId.PreEntityKilled)
 				{
-					if (id != EventId.BuildingReplaced)
-					{
-						return EatResponse.NotEaten;
-					}
-					goto IL_4C;
+					goto IL_42;
 				}
-			}
-			else
-			{
-				if (id == EventId.UserLiftedBuilding)
+				if (id == EventId.BuildingReplaced)
 				{
-					this.DisconnectAllNeighbors(cookie as Entity, false);
-					return EatResponse.NotEaten;
+					goto IL_66;
 				}
-				if (id == EventId.UserLoweredBuilding)
-				{
-					goto IL_4C;
-				}
-				if (id != EventId.UserStashedBuilding)
+				if (id != EventId.UserLiftedBuilding)
 				{
 					return EatResponse.NotEaten;
 				}
+				this.DisconnectAllNeighbors(cookie as Entity, false);
+				return EatResponse.NotEaten;
+			case EventId.UserStashedBuilding:
+				goto IL_42;
 			}
+			goto IL_1A;
+			IL_42:
 			this.DisconnectAllNeighbors(cookie as Entity, true);
 			return EatResponse.NotEaten;
-			IL_4C:
+			IL_66:
 			this.ConnectAllNeighbors(cookie as Entity);
 			return EatResponse.NotEaten;
 		}
@@ -101,8 +98,8 @@ namespace StaRTS.Main.Views.World
 			{
 				return null;
 			}
-			Entity entity = ignoreNE ? null : this.GetWallGridNeighbor(boardCell, 1, 0);
-			Entity entity2 = ignoreNW ? null : this.GetWallGridNeighbor(boardCell, 0, 1);
+			Entity entity = (!ignoreNE) ? this.GetWallGridNeighbor(boardCell, 1, 0) : null;
+			Entity entity2 = (!ignoreNW) ? this.GetWallGridNeighbor(boardCell, 0, 1) : null;
 			if (entity != null && entity2 != null)
 			{
 				return wall.Get<BuildingComponent>().BuildingType.Connectors.AssetNameBoth;
@@ -242,17 +239,13 @@ namespace StaRTS.Main.Views.World
 			BoardCell<Entity> cellAt = cell.ParentBoard.GetCellAt(cell.X + num, cell.Z + num2);
 			if (cellAt != null && cellAt.Children != null)
 			{
-				using (IEnumerator<BoardItem<Entity>> enumerator = cellAt.Children.GetEnumerator())
+				foreach (BoardItem<Entity> current in cellAt.Children)
 				{
-					while (enumerator.MoveNext())
+					Entity data = current.Data;
+					BuildingComponent buildingComponent = data.Get<BuildingComponent>();
+					if (buildingComponent != null && buildingComponent.BuildingType.Connectors != null)
 					{
-						BoardItem<Entity> current = enumerator.get_Current();
-						Entity data = current.Data;
-						BuildingComponent buildingComponent = data.Get<BuildingComponent>();
-						if (buildingComponent != null && buildingComponent.BuildingType.Connectors != null)
-						{
-							return current.Data;
-						}
+						return current.Data;
 					}
 				}
 			}
@@ -275,70 +268,6 @@ namespace StaRTS.Main.Views.World
 				cell = this.CanConnect(entity);
 			}
 			return list;
-		}
-
-		protected internal WallConnector(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WallConnector)GCHandledObjects.GCHandleToObject(instance)).CanConnect((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((WallConnector)GCHandledObjects.GCHandleToObject(instance)).ConnectAllNeighbors((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((WallConnector)GCHandledObjects.GCHandleToObject(instance)).ConnectWallsInExclusiveSet((List<Entity>)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((WallConnector)GCHandledObjects.GCHandleToObject(instance)).DisconnectAllNeighbors((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WallConnector)GCHandledObjects.GCHandleToObject(instance)).GetConnectorAssetName((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WallConnector)GCHandledObjects.GCHandleToObject(instance)).GetNeighborFromTransform((Entity)GCHandledObjects.GCHandleToObject(*args), (List<Entity>)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WallConnector)GCHandledObjects.GCHandleToObject(instance)).GetWallChains((Entity)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WallConnector)GCHandledObjects.GCHandleToObject(instance)).GetWallGridNeighbor((BoardCell<Entity>)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((WallConnector)GCHandledObjects.GCHandleToObject(instance)).LoadWallAsset((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((WallConnector)GCHandledObjects.GCHandleToObject(instance)).LoadWallAssetExplicit((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WallConnector)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

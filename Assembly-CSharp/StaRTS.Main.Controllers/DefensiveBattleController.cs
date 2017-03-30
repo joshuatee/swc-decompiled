@@ -1,5 +1,4 @@
 using Net.RichardLord.Ash.Core;
-using StaRTS.Assets;
 using StaRTS.DataStructures;
 using StaRTS.GameBoard;
 using StaRTS.Main.Controllers.World;
@@ -19,10 +18,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -85,7 +81,7 @@ namespace StaRTS.Main.Controllers
 
 		private int waveDirectionOffset;
 
-		private bool randomizeWaves;
+		private bool randomizeWaves = true;
 
 		private CampaignMissionVO currentMission;
 
@@ -115,8 +111,6 @@ namespace StaRTS.Main.Controllers
 
 		public DefensiveBattleController()
 		{
-			this.randomizeWaves = true;
-			base..ctor();
 			Service.Set<DefensiveBattleController>(this);
 			this.sdc = Service.Get<IDataController>();
 			this.timerManager = Service.Get<SimTimerManager>();
@@ -129,7 +123,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (this.activeDefenseBattle)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Mission {0} is already in progress.  Cannot start Mission {1}.", new object[]
+				Service.Get<Logger>().WarnFormat("Mission {0} is already in progress.  Cannot start Mission {1}.", new object[]
 				{
 					this.currentMission.Uid,
 					mission.Uid
@@ -167,38 +161,12 @@ namespace StaRTS.Main.Controllers
 			this.DeployNextWave(0u, null);
 		}
 
-		public void StartDefenseMissionAfterLoadingAssets(CampaignMissionVO mission)
-		{
-			DefenseWave defenseWave = this.waves[this.currentWaveIndex];
-			List<DefenseTroopGroup> list = DefensiveBattleController.ParseTroopGroups(defenseWave.Encounter.Uid, defenseWave.Encounter.WaveGroup, 0);
-			int count = list.Count;
-			AssetManager assetManager = Service.Get<AssetManager>();
-			List<string> list2 = new List<string>();
-			List<object> list3 = new List<object>();
-			List<AssetHandle> list4 = new List<AssetHandle>();
-			for (int i = 0; i < count; i++)
-			{
-				DefenseTroopGroup defenseTroopGroup = list[i];
-				TroopTypeVO troopTypeVO = this.sdc.Get<TroopTypeVO>(defenseTroopGroup.TroopUid);
-				list2.Add(troopTypeVO.AssetName);
-				list3.Add(new InternalLoadCookie(troopTypeVO.AssetName));
-				list4.Add(AssetHandle.Invalid);
-			}
-			assetManager.MultiLoad(list4, list2, null, null, null, new AssetsCompleteDelegate(this.StartDefenseMissionAfterPreload), mission);
-		}
-
-		public void StartDefenseMissionAfterPreload(object cookie)
-		{
-			CampaignMissionVO mission = (CampaignMissionVO)cookie;
-			this.StartDefenseMission(mission);
-		}
-
 		private void DeployNextWave(uint id, object cookie)
 		{
 			this.timers.Remove(id);
 			this.currentWaveIndex = this.wavesDeployed;
 			this.currentWave = this.waves[this.currentWaveIndex];
-			this.waveDirectionOffset = (this.randomizeWaves ? Service.Get<Rand>().SimRange(0, 360) : 0);
+			this.waveDirectionOffset = ((!this.randomizeWaves) ? 0 : Service.Get<Rand>().SimRange(0, 360));
 			List<DefenseTroopGroup> list = DefensiveBattleController.ParseTroopGroups(this.currentWave.Encounter.Uid, this.currentWave.Encounter.WaveGroup, this.waveDirectionOffset);
 			int count = list.Count;
 			for (int i = 0; i < count; i++)
@@ -222,9 +190,11 @@ namespace StaRTS.Main.Controllers
 					(int)this.waves[this.currentWaveIndex + 1].Delay
 				});
 				Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(instructions, 3f, 2f);
-				return;
 			}
-			this.AllWavesClear = true;
+			else
+			{
+				this.AllWavesClear = true;
+			}
 		}
 
 		private void DeployGroupAfterDelay(uint id, object cookie)
@@ -307,7 +277,7 @@ namespace StaRTS.Main.Controllers
 					}
 					this.AddCameraEvent(Units.BoardToWorldX(transformComponent.CenterX()), Units.BoardToWorldZ(transformComponent.CenterZ()), type);
 				}
-				break;
+				return EatResponse.NotEaten;
 			}
 			case EventId.EntityKilled:
 			{
@@ -320,11 +290,25 @@ namespace StaRTS.Main.Controllers
 						this.EndCurrentWave();
 					}
 				}
-				break;
+				return EatResponse.NotEaten;
 			}
 			case EventId.PostBuildingEntityKilled:
 			case EventId.EntityDestroyed:
-				break;
+				IL_21:
+				if (id == EventId.CameraFinishedMoving)
+				{
+					this.MoveCameraToAction();
+					return EatResponse.NotEaten;
+				}
+				if (id != EventId.UserStartedCameraMove)
+				{
+					return EatResponse.NotEaten;
+				}
+				this.autoMoveCamera = false;
+				this.cameraEvents.Clear();
+				this.numTimesEntityHit.Clear();
+				this.UnRegisterObservers();
+				return EatResponse.NotEaten;
 			case EventId.EntityHit:
 			{
 				Bullet bullet = (Bullet)cookie;
@@ -336,10 +320,12 @@ namespace StaRTS.Main.Controllers
 				{
 					if (this.numTimesEntityHit.ContainsKey(iD))
 					{
-						Dictionary<uint, int> arg_17B_0 = this.numTimesEntityHit;
-						uint key = iD;
-						int num = arg_17B_0[key];
-						arg_17B_0[key] = num + 1;
+						Dictionary<uint, int> dictionary;
+						Dictionary<uint, int> expr_191 = dictionary = this.numTimesEntityHit;
+						uint key;
+						uint expr_196 = key = iD;
+						int num = dictionary[key];
+						expr_191[expr_196] = num + 1;
 					}
 					else
 					{
@@ -351,26 +337,10 @@ namespace StaRTS.Main.Controllers
 						this.AddCameraEvent(Units.BoardToWorldX(transformComp.CenterX()), Units.BoardToWorldZ(transformComp.CenterZ()), DefensiveCameraEventType.EntityDamaged);
 					}
 				}
-				break;
+				return EatResponse.NotEaten;
 			}
-			default:
-				if (id != EventId.CameraFinishedMoving)
-				{
-					if (id == EventId.UserStartedCameraMove)
-					{
-						this.autoMoveCamera = false;
-						this.cameraEvents.Clear();
-						this.numTimesEntityHit.Clear();
-						this.UnRegisterObservers();
-					}
-				}
-				else
-				{
-					this.MoveCameraToAction();
-				}
-				break;
 			}
-			return EatResponse.NotEaten;
+			goto IL_21;
 		}
 
 		private void AddCameraEvent(float x, float z, DefensiveCameraEventType type)
@@ -414,7 +384,6 @@ namespace StaRTS.Main.Controllers
 				if ((double)vector.x < 0.1 || (double)vector.x > 0.9 || (double)vector.y < 0.1 || (double)vector.y > 0.9)
 				{
 					Service.Get<WorldInitializer>().View.PanToLocation(zero);
-					return;
 				}
 			}
 			else
@@ -512,7 +481,7 @@ namespace StaRTS.Main.Controllers
 				}
 				if (!flag)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Could not find valid spawn location near {0}, {1}", new object[]
+					Service.Get<Logger>().WarnFormat("Could not find valid spawn location near {0}, {1}", new object[]
 					{
 						locX,
 						locZ
@@ -534,31 +503,30 @@ namespace StaRTS.Main.Controllers
 				}
 				finalX = num;
 				finalY = degrees * 1024 / 45 * num / 1024;
-				return;
 			}
-			if (degrees > 45 && degrees <= 135)
+			else if (degrees > 45 && degrees <= 135)
 			{
 				degrees -= 90;
 				finalX = degrees * 1024 / 45 * -num / 1024;
 				finalY = num;
-				return;
 			}
-			if (degrees > 135 && degrees <= 225)
+			else if (degrees > 135 && degrees <= 225)
 			{
 				degrees -= 180;
 				finalX = -num;
 				finalY = degrees * 1024 / 45 * -num / 1024;
-				return;
 			}
-			if (degrees > 225 && degrees <= 315)
+			else if (degrees > 225 && degrees <= 315)
 			{
 				degrees -= 270;
 				finalX = degrees * 1024 / 45 * num / 1024;
 				finalY = -num;
-				return;
 			}
-			finalX = 0;
-			finalY = 0;
+			else
+			{
+				finalX = 0;
+				finalY = 0;
+			}
 		}
 
 		public static List<DefenseWave> ParseWaves(string waveData)
@@ -573,7 +541,7 @@ namespace StaRTS.Main.Controllers
 				float delay = 0f;
 				if (i != 0)
 				{
-					delay = Convert.ToSingle(array[i - 1], CultureInfo.InvariantCulture);
+					delay = Convert.ToSingle(array[i - 1]);
 				}
 				DefenseWave item = new DefenseWave(array[i], delay);
 				list.Add(item);
@@ -601,7 +569,7 @@ namespace StaRTS.Main.Controllers
 					});
 					if (array2.Length != 6)
 					{
-						Service.Get<StaRTSLogger>().ErrorFormat("{0} There is an error parsing group {1} of DefenseEncounter {2}", new object[]
+						Service.Get<Logger>().ErrorFormat("{0} There is an error parsing group {1} of DefenseEncounter {2}", new object[]
 						{
 							"Bad Metadata.",
 							i.ToString(),
@@ -609,19 +577,19 @@ namespace StaRTS.Main.Controllers
 						});
 					}
 					defenseTroopGroup.TroopUid = array2[0];
-					defenseTroopGroup.Quantity = Convert.ToInt32(array2[1], CultureInfo.InvariantCulture);
-					defenseTroopGroup.Direction = Convert.ToInt32(array2[2], CultureInfo.InvariantCulture);
+					defenseTroopGroup.Quantity = Convert.ToInt32(array2[1]);
+					defenseTroopGroup.Direction = Convert.ToInt32(array2[2]);
 					defenseTroopGroup.Direction += directionOffset;
 					defenseTroopGroup.Direction %= 360;
-					defenseTroopGroup.Spread = Convert.ToInt32(array2[3], CultureInfo.InvariantCulture);
-					defenseTroopGroup.Range = Math.Min(Convert.ToInt32(array2[4], CultureInfo.InvariantCulture), 45);
-					defenseTroopGroup.Seconds = Convert.ToUInt32(array2[5], CultureInfo.InvariantCulture);
+					defenseTroopGroup.Spread = Convert.ToInt32(array2[3]);
+					defenseTroopGroup.Range = Math.Min(Convert.ToInt32(array2[4]), 45);
+					defenseTroopGroup.Seconds = Convert.ToUInt32(array2[5]);
 					list.Add(defenseTroopGroup);
 				}
 			}
 			catch (Exception ex)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("There was an error parsing the data for DefenseEncounter: {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("There was an error parsing the data for DefenseEncounter: {0}", new object[]
 				{
 					uid
 				});
@@ -645,110 +613,6 @@ namespace StaRTS.Main.Controllers
 			default:
 				return 0f;
 			}
-		}
-
-		protected internal DefensiveBattleController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).AddCameraEvent(*(float*)args, *(float*)(args + 1), (DefensiveCameraEventType)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).DeployTroopGroup(*(int*)args, (TroopTypeVO)GCHandledObjects.GCHandleToObject(args[1]), (DefenseTroopGroup)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).EndCurrentWave();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).EndEncounter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).Active);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).AllWavesClear);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).GetExpirationTimeForEvent((DefensiveCameraEventType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).GetMostReleventCameraEvents());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).GetNearestValidBoardPosition(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).MoveCameraToAction();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DefensiveBattleController.ParseTroopGroups(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DefensiveBattleController.ParseWaves(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).AllWavesClear = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).StartDefenseMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).StartDefenseMissionAfterLoadingAssets((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).StartDefenseMissionAfterPreload(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((DefensiveBattleController)GCHandledObjects.GCHandleToObject(instance)).UnRegisterObservers();
-			return -1L;
 		}
 	}
 }

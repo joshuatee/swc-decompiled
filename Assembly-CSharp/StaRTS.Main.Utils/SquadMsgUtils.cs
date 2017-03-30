@@ -16,10 +16,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -228,32 +225,32 @@ namespace StaRTS.Main.Utils
 			SquadMsg squadMsg = new SquadMsg();
 			if (dictionary.ContainsKey("id"))
 			{
-				squadMsg.NotifId = Convert.ToString(dictionary["id"], CultureInfo.InvariantCulture);
+				squadMsg.NotifId = Convert.ToString(dictionary["id"]);
 			}
 			if (dictionary.ContainsKey("date"))
 			{
-				squadMsg.TimeSent = Convert.ToUInt32(dictionary["date"], CultureInfo.InvariantCulture);
+				squadMsg.TimeSent = Convert.ToUInt32(dictionary["date"]);
 			}
 			if (dictionary.ContainsKey("type"))
 			{
-				string name = Convert.ToString(dictionary["type"], CultureInfo.InvariantCulture);
+				string name = Convert.ToString(dictionary["type"]);
 				squadMsg.Type = StringUtils.ParseEnum<SquadMsgType>(name);
 			}
 			if (dictionary.ContainsKey("playerId"))
 			{
 				SqmOwnerData sqmOwnerData = new SqmOwnerData();
 				squadMsg.OwnerData = sqmOwnerData;
-				sqmOwnerData.PlayerId = Convert.ToString(dictionary["playerId"], CultureInfo.InvariantCulture);
+				sqmOwnerData.PlayerId = Convert.ToString(dictionary["playerId"]);
 				if (dictionary.ContainsKey("name"))
 				{
-					sqmOwnerData.PlayerName = Convert.ToString(dictionary["name"], CultureInfo.InvariantCulture);
+					sqmOwnerData.PlayerName = Convert.ToString(dictionary["name"]);
 				}
 			}
 			if (dictionary.ContainsKey("message"))
 			{
 				SqmChatData sqmChatData = new SqmChatData();
 				squadMsg.ChatData = sqmChatData;
-				sqmChatData.Message = WWW.UnEscapeURL(Convert.ToString(dictionary["message"], CultureInfo.InvariantCulture));
+				sqmChatData.Message = WWW.UnEscapeURL(Convert.ToString(dictionary["message"]));
 			}
 			if (dictionary.ContainsKey("data"))
 			{
@@ -264,43 +261,43 @@ namespace StaRTS.Main.Utils
 					{
 						SqmFriendInviteData sqmFriendInviteData = new SqmFriendInviteData();
 						squadMsg.FriendInviteData = sqmFriendInviteData;
-						sqmFriendInviteData.SenderName = Convert.ToString(dictionary2["senderName"], CultureInfo.InvariantCulture);
+						sqmFriendInviteData.SenderName = Convert.ToString(dictionary2["senderName"]);
 					}
 					if (dictionary2.ContainsKey("toRank"))
 					{
 						SqmMemberData sqmMemberData = new SqmMemberData();
 						squadMsg.MemberData = sqmMemberData;
-						string name2 = Convert.ToString(dictionary2["toRank"], CultureInfo.InvariantCulture);
+						string name2 = Convert.ToString(dictionary2["toRank"]);
 						sqmMemberData.MemberRole = StringUtils.ParseEnum<SquadRole>(name2);
 					}
 					if (dictionary2.ContainsKey("acceptor"))
 					{
 						SqmApplyData sqmApplyData = new SqmApplyData();
 						squadMsg.ApplyData = sqmApplyData;
-						sqmApplyData.AcceptorId = Convert.ToString(dictionary2["acceptor"], CultureInfo.InvariantCulture);
+						sqmApplyData.AcceptorId = Convert.ToString(dictionary2["acceptor"]);
 					}
 					if (dictionary2.ContainsKey("rejector"))
 					{
 						SqmApplyData sqmApplyData2 = new SqmApplyData();
 						squadMsg.ApplyData = sqmApplyData2;
-						sqmApplyData2.RejectorId = Convert.ToString(dictionary2["rejector"], CultureInfo.InvariantCulture);
+						sqmApplyData2.RejectorId = Convert.ToString(dictionary2["rejector"]);
 					}
 					if (dictionary2.ContainsKey("battleId"))
 					{
 						SqmReplayData sqmReplayData = new SqmReplayData();
 						squadMsg.ReplayData = sqmReplayData;
-						sqmReplayData.BattleId = Convert.ToString(dictionary2["battleId"], CultureInfo.InvariantCulture);
+						sqmReplayData.BattleId = Convert.ToString(dictionary2["battleId"]);
 						if (dictionary2.ContainsKey("battleVersion"))
 						{
-							sqmReplayData.BattleVersion = Convert.ToString(dictionary2["battleVersion"], CultureInfo.InvariantCulture);
+							sqmReplayData.BattleVersion = Convert.ToString(dictionary2["battleVersion"]);
 						}
 						if (dictionary2.ContainsKey("cmsVersion"))
 						{
-							sqmReplayData.CMSVersion = Convert.ToString(dictionary2["cmsVersion"], CultureInfo.InvariantCulture);
+							sqmReplayData.CMSVersion = Convert.ToString(dictionary2["cmsVersion"]);
 						}
 						if (dictionary2.ContainsKey("type"))
 						{
-							string name3 = Convert.ToString(dictionary2["type"], CultureInfo.InvariantCulture);
+							string name3 = Convert.ToString(dictionary2["type"]);
 							sqmReplayData.BattleType = StringUtils.ParseEnum<SquadBattleReplayType>(name3);
 						}
 						if (dictionary2.ContainsKey("battleScoreDelta"))
@@ -308,33 +305,33 @@ namespace StaRTS.Main.Utils
 							object obj = dictionary2["battleScoreDelta"];
 							if (obj != null)
 							{
-								sqmReplayData.MedalDelta = Convert.ToInt32(obj, CultureInfo.InvariantCulture);
+								sqmReplayData.MedalDelta = Convert.ToInt32(obj);
 							}
 						}
 						if (dictionary2.ContainsKey("damagePercent"))
 						{
-							sqmReplayData.DamagePercent = Convert.ToInt32(dictionary2["damagePercent"], CultureInfo.InvariantCulture);
+							sqmReplayData.DamagePercent = Convert.ToInt32(dictionary2["damagePercent"]);
 						}
 						if (dictionary2.ContainsKey("stars"))
 						{
-							sqmReplayData.Stars = Convert.ToInt32(dictionary2["stars"], CultureInfo.InvariantCulture);
+							sqmReplayData.Stars = Convert.ToInt32(dictionary2["stars"]);
 						}
 						if (dictionary2.ContainsKey("opponentId"))
 						{
-							sqmReplayData.OpponentId = Convert.ToString(dictionary2["opponentId"], CultureInfo.InvariantCulture);
+							sqmReplayData.OpponentId = Convert.ToString(dictionary2["opponentId"]);
 						}
 						if (dictionary2.ContainsKey("opponentName"))
 						{
-							sqmReplayData.OpponentName = Convert.ToString(dictionary2["opponentName"], CultureInfo.InvariantCulture);
+							sqmReplayData.OpponentName = Convert.ToString(dictionary2["opponentName"]);
 						}
 						if (dictionary2.ContainsKey("opponentFaction"))
 						{
-							string name4 = Convert.ToString(dictionary2["opponentFaction"], CultureInfo.InvariantCulture);
+							string name4 = Convert.ToString(dictionary2["opponentFaction"]);
 							sqmReplayData.OpponentFaction = StringUtils.ParseEnum<FactionType>(name4);
 						}
 						if (dictionary2.ContainsKey("faction"))
 						{
-							string name5 = Convert.ToString(dictionary2["faction"], CultureInfo.InvariantCulture);
+							string name5 = Convert.ToString(dictionary2["faction"]);
 							sqmReplayData.SharerFaction = StringUtils.ParseEnum<FactionType>(name5);
 						}
 					}
@@ -342,28 +339,28 @@ namespace StaRTS.Main.Utils
 					{
 						SqmVideoData sqmVideoData = new SqmVideoData();
 						squadMsg.VideoData = sqmVideoData;
-						sqmVideoData.VideoId = Convert.ToString(dictionary2["url"], CultureInfo.InvariantCulture);
+						sqmVideoData.VideoId = Convert.ToString(dictionary2["url"]);
 					}
 					if (dictionary2.ContainsKey("totalCapacity"))
 					{
 						SqmRequestData sqmRequestData = new SqmRequestData();
 						squadMsg.RequestData = sqmRequestData;
-						sqmRequestData.TotalCapacity = Convert.ToInt32(dictionary2["totalCapacity"], CultureInfo.InvariantCulture);
+						sqmRequestData.TotalCapacity = Convert.ToInt32(dictionary2["totalCapacity"]);
 						if (dictionary2.ContainsKey("amount"))
 						{
-							sqmRequestData.StartingAvailableCapacity = Convert.ToInt32(dictionary2["amount"], CultureInfo.InvariantCulture);
+							sqmRequestData.StartingAvailableCapacity = Convert.ToInt32(dictionary2["amount"]);
 						}
 						if (dictionary2.ContainsKey("warId"))
 						{
-							sqmRequestData.WarId = Convert.ToString(dictionary2["warId"], CultureInfo.InvariantCulture);
+							sqmRequestData.WarId = Convert.ToString(dictionary2["warId"]);
 						}
 						if (dictionary2.ContainsKey("troopDonationLimit"))
 						{
-							sqmRequestData.TroopDonationLimit = Convert.ToInt32(dictionary2["troopDonationLimit"], CultureInfo.InvariantCulture);
+							sqmRequestData.TroopDonationLimit = Convert.ToInt32(dictionary2["troopDonationLimit"]);
 						}
 						else
 						{
-							Service.Get<StaRTSLogger>().Error("Missing troop request data param: troopDonationLimitdefaulting to " + GameConstants.MAX_PER_USER_TROOP_DONATION);
+							Service.Get<Logger>().Error("Missing troop request data param: troopDonationLimitdefaulting to " + GameConstants.MAX_PER_USER_TROOP_DONATION);
 							sqmRequestData.TroopDonationLimit = GameConstants.MAX_PER_USER_TROOP_DONATION;
 						}
 					}
@@ -377,56 +374,56 @@ namespace StaRTS.Main.Utils
 							sqmDonationData.Donations = new Dictionary<string, int>();
 							foreach (KeyValuePair<string, object> current in dictionary3)
 							{
-								string key = current.get_Key();
-								int value = Convert.ToInt32(current.get_Value(), CultureInfo.InvariantCulture);
+								string key = current.Key;
+								int value = Convert.ToInt32(current.Value);
 								sqmDonationData.Donations.Add(key, value);
 							}
 						}
 						if (dictionary2.ContainsKey("requestId"))
 						{
-							sqmDonationData.RequestId = Convert.ToString(dictionary2["requestId"], CultureInfo.InvariantCulture);
+							sqmDonationData.RequestId = Convert.ToString(dictionary2["requestId"]);
 						}
 						if (dictionary2.ContainsKey("recipientId"))
 						{
-							sqmDonationData.RecipientId = Convert.ToString(dictionary2["recipientId"], CultureInfo.InvariantCulture);
+							sqmDonationData.RecipientId = Convert.ToString(dictionary2["recipientId"]);
 						}
 						if (dictionary2.ContainsKey("amount"))
 						{
-							sqmDonationData.DonationCount = Convert.ToInt32(dictionary2["amount"], CultureInfo.InvariantCulture);
+							sqmDonationData.DonationCount = Convert.ToInt32(dictionary2["amount"]);
 						}
 					}
 					if (dictionary2.ContainsKey("warId"))
 					{
 						SqmWarEventData sqmWarEventData = new SqmWarEventData();
 						squadMsg.WarEventData = sqmWarEventData;
-						sqmWarEventData.WarId = Convert.ToString(dictionary2["warId"], CultureInfo.InvariantCulture);
+						sqmWarEventData.WarId = Convert.ToString(dictionary2["warId"]);
 						if (dictionary2.ContainsKey("buffBaseUid"))
 						{
-							sqmWarEventData.BuffBaseUid = Convert.ToString(dictionary2["buffBaseUid"], CultureInfo.InvariantCulture);
+							sqmWarEventData.BuffBaseUid = Convert.ToString(dictionary2["buffBaseUid"]);
 						}
 						if (dictionary2.ContainsKey("captured"))
 						{
-							sqmWarEventData.BuffBaseCaptured = Convert.ToBoolean(dictionary2["captured"], CultureInfo.InvariantCulture);
+							sqmWarEventData.BuffBaseCaptured = Convert.ToBoolean(dictionary2["captured"]);
 						}
 						if (dictionary2.ContainsKey("opponentId"))
 						{
-							sqmWarEventData.OpponentId = Convert.ToString(dictionary2["opponentId"], CultureInfo.InvariantCulture);
+							sqmWarEventData.OpponentId = Convert.ToString(dictionary2["opponentId"]);
 						}
 						if (dictionary2.ContainsKey("opponentName"))
 						{
-							sqmWarEventData.OpponentName = Convert.ToString(dictionary2["opponentName"], CultureInfo.InvariantCulture);
+							sqmWarEventData.OpponentName = Convert.ToString(dictionary2["opponentName"]);
 						}
 						if (dictionary2.ContainsKey("stars"))
 						{
-							sqmWarEventData.StarsEarned = Convert.ToInt32(dictionary2["stars"], CultureInfo.InvariantCulture);
+							sqmWarEventData.StarsEarned = Convert.ToInt32(dictionary2["stars"]);
 						}
 						if (dictionary2.ContainsKey("victoryPoints"))
 						{
-							sqmWarEventData.VictoryPointsTaken = Convert.ToInt32(dictionary2["victoryPoints"], CultureInfo.InvariantCulture);
+							sqmWarEventData.VictoryPointsTaken = Convert.ToInt32(dictionary2["victoryPoints"]);
 						}
 						if (dictionary2.ContainsKey("attackExpirationDate"))
 						{
-							sqmWarEventData.AttackExpirationTime = Convert.ToUInt32(dictionary2["attackExpirationDate"], CultureInfo.InvariantCulture);
+							sqmWarEventData.AttackExpirationTime = Convert.ToUInt32(dictionary2["attackExpirationDate"]);
 						}
 					}
 					if (dictionary2.ContainsKey("level") || dictionary2.ContainsKey("totalRepInvested"))
@@ -459,41 +456,41 @@ namespace StaRTS.Main.Utils
 					{
 						squadMsg.SquadData = new SqmSquadData();
 					}
-					squadMsg.SquadData.Id = Convert.ToString(dictionary["guildId"], CultureInfo.InvariantCulture);
+					squadMsg.SquadData.Id = Convert.ToString(dictionary["guildId"]);
 					if (dictionary.ContainsKey("guildName"))
 					{
-						squadMsg.SquadData.Name = WWW.UnEscapeURL(Convert.ToString(dictionary["guildName"], CultureInfo.InvariantCulture));
+						squadMsg.SquadData.Name = WWW.UnEscapeURL(Convert.ToString(dictionary["guildName"]));
 					}
 				}
 				return squadMsg;
 			}
 			if (dictionary.ContainsKey("serverTime"))
 			{
-				squadMsg.TimeSent = Convert.ToUInt32(dictionary["serverTime"], CultureInfo.InvariantCulture);
+				squadMsg.TimeSent = Convert.ToUInt32(dictionary["serverTime"]);
 			}
 			if (dictionary.ContainsKey("event"))
 			{
-				string name = Convert.ToString(dictionary["event"], CultureInfo.InvariantCulture);
+				string name = Convert.ToString(dictionary["event"]);
 				squadMsg.Type = StringUtils.ParseEnum<SquadMsgType>(name);
 			}
 			if (dictionary.ContainsKey("guildId"))
 			{
 				SqmSquadData sqmSquadData = new SqmSquadData();
 				squadMsg.SquadData = sqmSquadData;
-				sqmSquadData.Id = Convert.ToString(dictionary["guildId"], CultureInfo.InvariantCulture);
+				sqmSquadData.Id = Convert.ToString(dictionary["guildId"]);
 				if (dictionary.ContainsKey("guildName"))
 				{
-					sqmSquadData.Name = WWW.UnEscapeURL(Convert.ToString(dictionary["guildName"], CultureInfo.InvariantCulture));
+					sqmSquadData.Name = WWW.UnEscapeURL(Convert.ToString(dictionary["guildName"]));
 				}
 			}
 			if (dictionary.ContainsKey("senderId"))
 			{
 				SqmFriendInviteData sqmFriendInviteData = new SqmFriendInviteData();
 				squadMsg.FriendInviteData = sqmFriendInviteData;
-				sqmFriendInviteData.SenderId = Convert.ToString(dictionary["senderId"], CultureInfo.InvariantCulture);
+				sqmFriendInviteData.SenderId = Convert.ToString(dictionary["senderId"]);
 				if (dictionary.ContainsKey("senderName"))
 				{
-					sqmFriendInviteData.SenderName = Convert.ToString(dictionary["senderName"], CultureInfo.InvariantCulture);
+					sqmFriendInviteData.SenderName = Convert.ToString(dictionary["senderName"]);
 				}
 			}
 			if (dictionary.ContainsKey("recipientId"))
@@ -502,48 +499,48 @@ namespace StaRTS.Main.Utils
 				{
 					squadMsg.FriendInviteData = new SqmFriendInviteData();
 				}
-				squadMsg.FriendInviteData.PlayerId = Convert.ToString(dictionary["recipientId"], CultureInfo.InvariantCulture);
+				squadMsg.FriendInviteData.PlayerId = Convert.ToString(dictionary["recipientId"]);
 			}
 			if (dictionary.ContainsKey("warId"))
 			{
 				SqmWarEventData sqmWarEventData = new SqmWarEventData();
 				squadMsg.WarEventData = sqmWarEventData;
-				sqmWarEventData.WarId = Convert.ToString(dictionary["warId"], CultureInfo.InvariantCulture);
+				sqmWarEventData.WarId = Convert.ToString(dictionary["warId"]);
 				if (dictionary.ContainsKey("empireName"))
 				{
-					sqmWarEventData.EmpireSquadName = Convert.ToString(dictionary["empireName"], CultureInfo.InvariantCulture);
+					sqmWarEventData.EmpireSquadName = Convert.ToString(dictionary["empireName"]);
 				}
 				if (dictionary.ContainsKey("empireScore"))
 				{
-					sqmWarEventData.EmpireScore = Convert.ToInt32(dictionary["empireScore"], CultureInfo.InvariantCulture);
+					sqmWarEventData.EmpireScore = Convert.ToInt32(dictionary["empireScore"]);
 				}
 				if (dictionary.ContainsKey("rebelName"))
 				{
-					sqmWarEventData.RebelSquadName = Convert.ToString(dictionary["rebelName"], CultureInfo.InvariantCulture);
+					sqmWarEventData.RebelSquadName = Convert.ToString(dictionary["rebelName"]);
 				}
 				if (dictionary.ContainsKey("rebelScore"))
 				{
-					sqmWarEventData.RebelScore = Convert.ToInt32(dictionary["rebelScore"], CultureInfo.InvariantCulture);
+					sqmWarEventData.RebelScore = Convert.ToInt32(dictionary["rebelScore"]);
 				}
 				if (dictionary.ContainsKey("buffBaseUid"))
 				{
-					sqmWarEventData.BuffBaseUid = Convert.ToString(dictionary["buffBaseUid"], CultureInfo.InvariantCulture);
+					sqmWarEventData.BuffBaseUid = Convert.ToString(dictionary["buffBaseUid"]);
 				}
 				if (dictionary.ContainsKey("empireCrateTier"))
 				{
-					sqmWarEventData.EmpireCrateId = Convert.ToString(dictionary["empireCrateTier"], CultureInfo.InvariantCulture);
+					sqmWarEventData.EmpireCrateId = Convert.ToString(dictionary["empireCrateTier"]);
 				}
 				else if (dictionary.ContainsKey("empireCrateId"))
 				{
-					sqmWarEventData.EmpireCrateId = Convert.ToString(dictionary["empireCrateId"], CultureInfo.InvariantCulture);
+					sqmWarEventData.EmpireCrateId = Convert.ToString(dictionary["empireCrateId"]);
 				}
 				if (dictionary.ContainsKey("rebelCrateTier"))
 				{
-					sqmWarEventData.RebelCrateId = Convert.ToString(dictionary["rebelCrateTier"], CultureInfo.InvariantCulture);
+					sqmWarEventData.RebelCrateId = Convert.ToString(dictionary["rebelCrateTier"]);
 				}
 				else if (dictionary.ContainsKey("rebelCrateId"))
 				{
-					sqmWarEventData.RebelCrateId = Convert.ToString(dictionary["rebelCrateId"], CultureInfo.InvariantCulture);
+					sqmWarEventData.RebelCrateId = Convert.ToString(dictionary["rebelCrateId"]);
 				}
 			}
 			if (dictionary.ContainsKey("level") || dictionary.ContainsKey("totalRepInvested"))
@@ -566,12 +563,12 @@ namespace StaRTS.Main.Utils
 			int num = 0;
 			if (dict.ContainsKey("level"))
 			{
-				num = Convert.ToInt32(dict["level"], CultureInfo.InvariantCulture);
+				num = Convert.ToInt32(dict["level"]);
 			}
 			int num2 = 0;
 			if (dict.ContainsKey("totalRepInvested"))
 			{
-				num2 = Convert.ToInt32(dict["totalRepInvested"], CultureInfo.InvariantCulture);
+				num2 = Convert.ToInt32(dict["totalRepInvested"]);
 				message.SquadData.TotalRepInvested = num2;
 			}
 			if (num == 0 && num2 > 0)
@@ -587,10 +584,10 @@ namespace StaRTS.Main.Utils
 			{
 				message.PerkData = new SqmPerkData();
 			}
-			message.PerkData.PerkUId = Convert.ToString(dict["perkId"], CultureInfo.InvariantCulture);
+			message.PerkData.PerkUId = Convert.ToString(dict["perkId"]);
 			if (dict.ContainsKey("perkInvestAmt"))
 			{
-				message.PerkData.PerkInvestedAmt = Convert.ToInt32(dict["perkInvestAmt"], CultureInfo.InvariantCulture);
+				message.PerkData.PerkInvestedAmt = Convert.ToInt32(dict["perkInvestAmt"]);
 			}
 		}
 
@@ -607,7 +604,7 @@ namespace StaRTS.Main.Utils
 			squadMsg.ChatData = sqmChatData;
 			if (dictionary.ContainsKey("text"))
 			{
-				string json = WWW.UnEscapeURL(Convert.ToString(dictionary["text"], CultureInfo.InvariantCulture));
+				string json = WWW.UnEscapeURL(Convert.ToString(dictionary["text"]));
 				object obj2 = new JsonParser(json).Parse();
 				Dictionary<string, object> dictionary2 = obj2 as Dictionary<string, object>;
 				if (dictionary2 != null)
@@ -616,29 +613,29 @@ namespace StaRTS.Main.Utils
 					squadMsg.OwnerData = sqmOwnerData;
 					if (dictionary2.ContainsKey("userId"))
 					{
-						sqmOwnerData.PlayerId = Convert.ToString(dictionary2["userId"], CultureInfo.InvariantCulture);
+						sqmOwnerData.PlayerId = Convert.ToString(dictionary2["userId"]);
 					}
 					if (dictionary2.ContainsKey("userName"))
 					{
-						sqmOwnerData.PlayerName = Convert.ToString(dictionary2["userName"], CultureInfo.InvariantCulture);
+						sqmOwnerData.PlayerName = Convert.ToString(dictionary2["userName"]);
 					}
 					if (dictionary2.ContainsKey("message"))
 					{
-						sqmChatData.Message = Convert.ToString(dictionary2["message"], CultureInfo.InvariantCulture);
+						sqmChatData.Message = Convert.ToString(dictionary2["message"]);
 					}
 					if (dictionary2.ContainsKey("timestamp"))
 					{
-						squadMsg.TimeSent = Convert.ToUInt32(dictionary2["timestamp"], CultureInfo.InvariantCulture);
+						squadMsg.TimeSent = Convert.ToUInt32(dictionary2["timestamp"]);
 					}
 				}
 			}
 			if (dictionary.ContainsKey("tag"))
 			{
-				sqmChatData.Tag = Convert.ToString(dictionary["tag"], CultureInfo.InvariantCulture);
+				sqmChatData.Tag = Convert.ToString(dictionary["tag"]);
 			}
 			if (dictionary.ContainsKey("time"))
 			{
-				sqmChatData.Time = Convert.ToString(dictionary["time"], CultureInfo.InvariantCulture);
+				sqmChatData.Time = Convert.ToString(dictionary["time"]);
 			}
 			return squadMsg;
 		}
@@ -888,258 +885,6 @@ namespace StaRTS.Main.Utils
 		public static SquadMsg CreateCancelMatchmakingMessage()
 		{
 			return SquadMsgUtils.CreateActionMessage(SquadAction.CancelWarMatchmaking, null, null);
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			SquadMsgUtils.AddPerkUnlockUpgrdeDataToSquadMessageData((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			SquadMsgUtils.AddSquadLevelToSquadMessageData((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateAcceptJoinRequestMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[2]), GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateAcceptSquadInviteMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateActionMessage((SquadAction)(*(int*)args), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateApplyToJoinSquadMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[2]), GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateCancelMatchmakingMessage());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateDemoteMemberMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateDonateMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[4]), GCHandledObjects.GCHandleToObject(args[5])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateEditSquadMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2), *(sbyte*)(args + 3) != 0, (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[4]), GCHandledObjects.GCHandleToObject(args[5])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateJoinSquadMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[2]), GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateLeaveSquadMessage((SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateMemberIdMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadAction)(*(int*)(args + 1)), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[2]), GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateNewSquadMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), *(sbyte*)(args + 4) != 0, (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[5]), GCHandledObjects.GCHandleToObject(args[6])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreatePromoteMemberMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateRejectJoinRequestMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateRejectSquadInviteMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateRemoveMemberMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateRequestTroopsMessage(*(sbyte*)args != 0, *(int*)(args + 1), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateRequestWarTroopsMessage(*(sbyte*)args != 0, *(int*)(args + 1), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateSendInviteMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[3]), GCHandledObjects.GCHandleToObject(args[4])));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateSendReplayMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateShareReplayMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (BattleEntry)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateShareVideoMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateSquadMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadAction)(*(int*)(args + 1)), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[2]), GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateSquadMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), *(sbyte*)(args + 4) != 0, (SquadAction)(*(int*)(args + 5)), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[6]), GCHandledObjects.GCHandleToObject(args[7])));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateStartMatchmakingMessage((List<string>)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.CreateWarDonateMessage(Marshal.PtrToStringUni(*(IntPtr*)args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), (SquadController.ActionCallback)GCHandledObjects.GCHandleToObject(args[4]), GCHandledObjects.GCHandleToObject(args[5])));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateApplyToSquadRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateCreateSquadRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateEditSquadRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateMemberIdRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateMessageFromChatMessage(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateMessageFromChatObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateMessageFromGetSquadWarStatusResponse((GetSquadWarStatusResponse)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateMessageFromNotifObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateMessageFromServerMessageObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateMessageFromSquadMemberResponse((SquadMemberResponse)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateMessageFromSquadResponse((SquadResponse)GCHandledObjects.GCHandleToObject(*args), (LeaderboardController)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateMessageFromTroopDonateResponse((TroopDonateResponse)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GeneratePlayerIdChecksumRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GeneratePlayerIdRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateSendInviteRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateShareReplayRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateShareVideoRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateSquadIdRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateSquadInvite((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateStartWarMatchmakingRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateTroopDonateRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadMsgUtils.GenerateTroopRequest((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

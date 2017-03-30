@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands
 		public GetEndpointsCommand(DefaultRequest request) : base("config.endpoints.get", request, new GetEndpointsResponse())
 		{
 		}
-
-		protected internal GetEndpointsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

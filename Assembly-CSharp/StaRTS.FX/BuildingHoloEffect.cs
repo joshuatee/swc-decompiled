@@ -10,9 +10,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -146,70 +144,72 @@ namespace StaRTS.FX
 		{
 			bool flag = (bool)cookie;
 			GameObjectViewComponent gameObjectViewComponent = this.building.Get<GameObjectViewComponent>();
-			if (gameObjectViewComponent != null && !(gameObjectViewComponent.MainGameObject == null))
+			if (gameObjectViewComponent == null || gameObjectViewComponent.MainGameObject == null)
 			{
-				GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(asset as GameObject);
-				Transform transform = GameUtils.FindAssetMetaDataTransform(gameObjectViewComponent.MainGameObject, this.locatorName);
-				Transform transform2 = gameObject.transform;
-				transform2.parent = transform;
-				transform2.localPosition = Vector3.zero;
 				if (flag)
 				{
-					if (transform == null)
-					{
-						Service.Get<StaRTSLogger>().Error("Cone Holo Effect Needs Building Transform");
-						return;
-					}
-					this.coneObj = gameObject;
-					Transform child = gameObject.transform.GetChild(0);
-					if (child != null)
-					{
-						ParticleSystem component = child.GetComponent<ParticleSystem>();
-						if (component != null)
-						{
-							component.startSize = transform.localScale.x * 6.59f;
-						}
-						if (child.childCount >= 2)
-						{
-							Transform child2 = child.GetChild(0);
-							if (child2 != null)
-							{
-								ParticleSystem component2 = child2.GetComponent<ParticleSystem>();
-								if (component2 != null)
-								{
-									component2.startSize = transform.localScale.x;
-								}
-							}
-							Transform child3 = child.GetChild(1);
-							if (child3 != null)
-							{
-								ParticleSystem component3 = child3.GetComponent<ParticleSystem>();
-								if (component3 != null)
-								{
-									Rand rand = Service.Get<Rand>();
-									component3.startSize = transform.localScale.x * rand.ViewRangeFloat(0.63f, 0.67f);
-								}
-							}
-						}
-					}
+					this.UnloadAssetHandle(ref this.coneAssetHandle);
 				}
 				else
 				{
-					this.holoObj = gameObject;
-					if (this.useHoloRotation)
-					{
-						transform2.localRotation = BuildingHoloEffect.HOLO_ROTATION;
-					}
+					this.UnloadAssetHandle(ref this.holoAssetHandle);
 				}
-				this.WaitingForBuildingView = false;
 				return;
 			}
+			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(asset as GameObject);
+			Transform transform = GameUtils.FindAssetMetaDataTransform(gameObjectViewComponent.MainGameObject, this.locatorName);
+			Transform transform2 = gameObject.transform;
+			transform2.parent = transform;
+			transform2.localPosition = Vector3.zero;
 			if (flag)
 			{
-				this.UnloadAssetHandle(ref this.coneAssetHandle);
-				return;
+				if (transform == null)
+				{
+					Service.Get<Logger>().Error("Cone Holo Effect Needs Building Transform");
+					return;
+				}
+				this.coneObj = gameObject;
+				Transform child = gameObject.transform.GetChild(0);
+				if (child != null)
+				{
+					ParticleSystem component = child.GetComponent<ParticleSystem>();
+					if (component != null)
+					{
+						component.startSize = transform.localScale.x * 6.59f;
+					}
+					if (child.childCount >= 2)
+					{
+						Transform child2 = child.GetChild(0);
+						if (child2 != null)
+						{
+							ParticleSystem component2 = child2.GetComponent<ParticleSystem>();
+							if (component2 != null)
+							{
+								component2.startSize = transform.localScale.x;
+							}
+						}
+						Transform child3 = child.GetChild(1);
+						if (child3 != null)
+						{
+							ParticleSystem component3 = child3.GetComponent<ParticleSystem>();
+							if (component3 != null)
+							{
+								Rand rand = Service.Get<Rand>();
+								component3.startSize = transform.localScale.x * rand.ViewRangeFloat(0.63f, 0.67f);
+							}
+						}
+					}
+				}
 			}
-			this.UnloadAssetHandle(ref this.holoAssetHandle);
+			else
+			{
+				this.holoObj = gameObject;
+				if (this.useHoloRotation)
+				{
+					transform2.localRotation = BuildingHoloEffect.HOLO_ROTATION;
+				}
+			}
+			this.WaitingForBuildingView = false;
 		}
 
 		private void OnEffectLoadFailed(object cookie)
@@ -230,9 +230,11 @@ namespace StaRTS.FX
 			{
 				this.WaitingForBuildingView = true;
 				this.OrphanEffects();
-				return;
 			}
-			this.UpdateEffect();
+			else
+			{
+				this.UpdateEffect();
+			}
 		}
 
 		public void UpdateEffect()
@@ -318,87 +320,6 @@ namespace StaRTS.FX
 			this.DestroyHoloCone();
 			this.DestroyHolo();
 			this.unitOrder = 0;
-		}
-
-		protected internal BuildingHoloEffect(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).CreateGenericHolo(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).CreateGenericHolo(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).CreateMobilizationHolo(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).DestroyHolo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).DestroyHoloCone();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).WaitingForBuildingView);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).OnEffectLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).OnEffectLoadFailed(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).OrphanEffects();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).WaitingForBuildingView = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).TransferEffect((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BuildingHoloEffect)GCHandledObjects.GCHandleToObject(instance)).UpdateEffect();
-			return -1L;
 		}
 	}
 }

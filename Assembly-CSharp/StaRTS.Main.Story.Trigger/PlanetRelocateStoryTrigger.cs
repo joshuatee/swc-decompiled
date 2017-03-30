@@ -6,7 +6,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Trigger
 {
@@ -48,7 +47,7 @@ namespace StaRTS.Main.Story.Trigger
 				this.planetVO = Service.Get<IDataController>().GetOptional<PlanetVO>(text);
 				if (this.planetVO == null)
 				{
-					Service.Get<StaRTSLogger>().Error("PlanetRelocateStoryTrigger: invalid planet uid: " + text);
+					Service.Get<Logger>().Error("PlanetRelocateStoryTrigger: invalid planet uid: " + text);
 					return;
 				}
 			}
@@ -81,27 +80,6 @@ namespace StaRTS.Main.Story.Trigger
 		{
 			Service.Get<EventManager>().UnregisterObserver(this, EventId.PlanetRelocate);
 			base.Destroy();
-		}
-
-		protected internal PlanetRelocateStoryTrigger(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetRelocateStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Activate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetRelocateStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetRelocateStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

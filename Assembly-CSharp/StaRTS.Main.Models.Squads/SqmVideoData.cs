@@ -9,13 +9,5 @@ namespace StaRTS.Main.Models.Squads
 		public string Text;
 
 		public string UINameID;
-
-		public SqmVideoData()
-		{
-		}
-
-		protected internal SqmVideoData(UIntPtr dummy)
-		{
-		}
 	}
 }

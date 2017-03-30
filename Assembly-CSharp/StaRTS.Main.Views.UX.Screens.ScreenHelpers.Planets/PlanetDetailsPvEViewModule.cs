@@ -9,7 +9,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 {
@@ -156,39 +155,43 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				this.starsLabel.Visible = false;
 				this.pveContinueButton.Visible = false;
 				this.alternateGroup.Visible = flag;
-				return;
 			}
-			this.chapterLabel.Visible = true;
-			this.chapterStarsSprite.Visible = false;
-			this.chapterJewel.Visible = false;
-			this.progressSlider.Visible = true;
-			this.progressLabel.Visible = true;
-			this.starsLabel.Visible = false;
-			this.pveContinueButton.Visible = true;
-			this.alternateGroup.Visible = flag3;
-			this.chapterLabel.Text = LangUtils.GetCampaignTitle(highestUnlockedCampaign);
-			int totalCampaignMissionsCompleted = base.Player.CampaignProgress.GetTotalCampaignMissionsCompleted(highestUnlockedCampaign);
-			int totalMissions = highestUnlockedCampaign.TotalMissions;
-			this.progressSlider.Value = ((totalMissions == 0) ? 0f : ((float)totalCampaignMissionsCompleted / (float)totalMissions));
-			this.progressLabel.Text = base.LangController.Get("PERCENT_COMPLETE", new object[]
+			else
 			{
-				(int)Mathf.Floor(this.progressSlider.Value * 100f)
-			});
-			this.starsLabel.Text = base.LangController.Get("LABEL_CAMPAIGN_STARS", new object[]
-			{
-				base.Player.CampaignProgress.GetTotalCampaignStarsEarned(highestUnlockedCampaign),
-				highestUnlockedCampaign.TotalMasteryStars
-			});
-			this.pveMeshTexture.LoadTexture(highestUnlockedCampaign.Uid);
-			this.pveMeshTexture.SetShader("Unlit/Premultiplied Colored");
-			this.pveContinueButton.OnClicked = new UXButtonClickedDelegate(this.OnPveButtonClicked);
-			if (flag & flag2)
-			{
-				this.chapterActionButtonLabel.Text = base.LangController.Get("CONTINUE", new object[0]);
-				return;
+				this.chapterLabel.Visible = true;
+				this.chapterStarsSprite.Visible = false;
+				this.chapterJewel.Visible = false;
+				this.progressSlider.Visible = true;
+				this.progressLabel.Visible = true;
+				this.starsLabel.Visible = false;
+				this.pveContinueButton.Visible = true;
+				this.alternateGroup.Visible = flag3;
+				this.chapterLabel.Text = LangUtils.GetCampaignTitle(highestUnlockedCampaign);
+				int totalCampaignMissionsCompleted = base.Player.CampaignProgress.GetTotalCampaignMissionsCompleted(highestUnlockedCampaign);
+				int totalMissions = highestUnlockedCampaign.TotalMissions;
+				this.progressSlider.Value = ((totalMissions != 0) ? ((float)totalCampaignMissionsCompleted / (float)totalMissions) : 0f);
+				this.progressLabel.Text = base.LangController.Get("PERCENT_COMPLETE", new object[]
+				{
+					(int)Mathf.Floor(this.progressSlider.Value * 100f)
+				});
+				this.starsLabel.Text = base.LangController.Get("LABEL_CAMPAIGN_STARS", new object[]
+				{
+					base.Player.CampaignProgress.GetTotalCampaignStarsEarned(highestUnlockedCampaign),
+					highestUnlockedCampaign.TotalMasteryStars
+				});
+				this.pveMeshTexture.LoadTexture(highestUnlockedCampaign.Uid);
+				this.pveMeshTexture.SetShader("Unlit/Premultiplied Colored");
+				this.pveContinueButton.OnClicked = new UXButtonClickedDelegate(this.OnPveButtonClicked);
+				if (flag && flag2)
+				{
+					this.chapterActionButtonLabel.Text = base.LangController.Get("CONTINUE", new object[0]);
+				}
+				else
+				{
+					this.chapterActionButtonLabel.Text = base.LangController.Get("Planets_Chapter_Preview", new object[0]);
+					this.chapterButtonBackground.SpriteName = "BtnBlue";
+				}
 			}
-			this.chapterActionButtonLabel.Text = base.LangController.Get("Planets_Chapter_Preview", new object[0]);
-			this.chapterButtonBackground.SpriteName = "BtnBlue";
 		}
 
 		private bool IsViewingDefaultPlanet()
@@ -218,44 +221,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 		public void OnClose()
 		{
 			this.pveMeshTexture.Visible = false;
-		}
-
-		protected internal PlanetDetailsPvEViewModule(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsPvEViewModule)GCHandledObjects.GCHandleToObject(instance)).IsBasedOnDefaultPlanet());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsPvEViewModule)GCHandledObjects.GCHandleToObject(instance)).IsViewingDefaultPlanet());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetDetailsPvEViewModule)GCHandledObjects.GCHandleToObject(instance)).OnClose();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetDetailsPvEViewModule)GCHandledObjects.GCHandleToObject(instance)).OnPveButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetDetailsPvEViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetDetailsPvEViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshScreenForPlanetChange();
-			return -1L;
 		}
 	}
 }

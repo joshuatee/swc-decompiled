@@ -1,6 +1,5 @@
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player.Raids
 {
@@ -18,15 +17,6 @@ namespace StaRTS.Main.Models.Commands.Player.Raids
 			Serializer startedSerializer = base.GetStartedSerializer();
 			startedSerializer.AddString("planetId", this.planetId);
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal RaidUpdateRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidUpdateRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

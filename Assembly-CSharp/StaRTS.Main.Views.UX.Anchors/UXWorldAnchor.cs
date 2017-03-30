@@ -14,9 +14,5 @@ namespace StaRTS.Main.Views.UX.Anchors
 			GameObject root = new GameObject("World");
 			base.Init(root, UIAnchor.Side.BottomLeft);
 		}
-
-		protected internal UXWorldAnchor(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

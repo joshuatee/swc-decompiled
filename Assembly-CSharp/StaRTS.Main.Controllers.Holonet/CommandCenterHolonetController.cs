@@ -9,7 +9,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Holonet
 {
@@ -74,7 +73,7 @@ namespace StaRTS.Main.Controllers.Holonet
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().Error("Duplicate entry in commander center featured items repsonse: " + commandCenterVO.Uid);
+					Service.Get<Logger>().Error("Duplicate entry in commander center featured items repsonse: " + commandCenterVO.Uid);
 				}
 				i++;
 			}
@@ -121,42 +120,6 @@ namespace StaRTS.Main.Controllers.Holonet
 				}
 			}
 			return false;
-		}
-
-		protected internal CommandCenterHolonetController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CommandCenterHolonetController)GCHandledObjects.GCHandleToObject(instance)).ComparePriority((CommandCenterVO)GCHandledObjects.GCHandleToObject(*args), (CommandCenterVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CommandCenterHolonetController)GCHandledObjects.GCHandleToObject(instance)).ControllerType);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CommandCenterHolonetController)GCHandledObjects.GCHandleToObject(instance)).HasNewPromoEntry());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CommandCenterHolonetController)GCHandledObjects.GCHandleToObject(instance)).IsDuplicateFeaturedItem((CommandCenterVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((CommandCenterHolonetController)GCHandledObjects.GCHandleToObject(instance)).OnSuccess((HolonetGetCommandCenterEntriesResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((CommandCenterHolonetController)GCHandledObjects.GCHandleToObject(instance)).PrepareContent(*(int*)args);
-			return -1L;
 		}
 	}
 }

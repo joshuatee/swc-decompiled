@@ -8,7 +8,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World.Deploying
 {
@@ -120,72 +119,5 @@ namespace StaRTS.Main.Views.World.Deploying
 		public abstract EatResponse OnDrag(GameObject target, Vector2 screenPosition, Vector3 groundPosition);
 
 		public abstract EatResponse OnRelease();
-
-		protected internal AbstractDeployer(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).EnterMode());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).ExitMode();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).IsNotDraggedAndReleasingOwnPress());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).OnDrag((GameObject)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).OnPress((GameObject)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).OnRelease());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).PlaySpawnEffect((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((AbstractDeployer)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
 	}
 }

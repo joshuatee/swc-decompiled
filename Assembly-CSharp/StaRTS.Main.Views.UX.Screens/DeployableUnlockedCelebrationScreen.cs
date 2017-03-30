@@ -15,7 +15,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -77,7 +76,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private AssetHandle subjectHandle;
 
-		private List<Material> outLineMatList;
+		private List<Material> outLineMatList = new List<Material>();
 
 		private bool fadingOutSubject;
 
@@ -97,10 +96,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 		}
 
-		public DeployableUnlockedCelebrationScreen(IDeployableVO vo, bool isSpecialAttack, bool isUnlock)
+		public DeployableUnlockedCelebrationScreen(IDeployableVO vo, bool isSpecialAttack, bool isUnlock) : base("gui_equipment_unlocked")
 		{
-			this.outLineMatList = new List<Material>();
-			base..ctor("gui_equipment_unlocked");
 			this.subjectVO = vo;
 			this.isSpecialAttack = isSpecialAttack;
 			this.isUnlock = isUnlock;
@@ -208,7 +205,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				text = LangUtils.GetTroopDisplayName((TroopTypeVO)this.subjectVO);
 			}
 			base.GetElement<UXLabel>("LabelEquipmentName").Text = text;
-			string text2;
+			string text2 = string.Empty;
 			if (this.isUnlock)
 			{
 				text2 = this.GetUnlockDisplayTitleBasedOnSubject();
@@ -223,7 +220,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private string GetUnlockDisplayTitleBasedOnSubject()
 		{
-			string result = "";
+			string result = string.Empty;
 			if (this.isSpecialAttack)
 			{
 				result = this.lang.Get("UNLOCK_SHRD_STARSHIP_TITLE", new object[0]);
@@ -252,7 +249,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private string GetUpgradeDisplayTitleBasedOnSubject()
 		{
-			string result = "";
+			string result = string.Empty;
 			if (this.isSpecialAttack)
 			{
 				result = this.lang.Get("UPGRADE_SHRD_STARSHIP_TITLE", new object[0]);
@@ -281,7 +278,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private string GetDisplayInstructionsBasedOnSubject()
 		{
-			string result = "";
+			string result = string.Empty;
 			if (this.isSpecialAttack)
 			{
 				result = this.lang.Get("UNLOCK_SHRD_STARSHIP_INSTRUCTIONS", new object[0]);
@@ -434,100 +431,12 @@ namespace StaRTS.Main.Views.UX.Screens
 					}
 					i++;
 				}
-				return;
 			}
-			this.fadingOutSubject = false;
-			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
-		}
-
-		protected internal DeployableUnlockedCelebrationScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).ArrangeRig(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).FadeOutSubject();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).GetDisplayInstructionsBasedOnSubject());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).GetUnlockDisplayTitleBasedOnSubject());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).GetUpgradeDisplayTitleBasedOnSubject());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).LoadFx();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnButtonContinueClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).SetUIText();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((DeployableUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).ShowFx(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
+			else
+			{
+				this.fadingOutSubject = false;
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			}
 		}
 	}
 }

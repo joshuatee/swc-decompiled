@@ -12,9 +12,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Trigger
 {
@@ -110,7 +107,7 @@ namespace StaRTS.Main.Story.Trigger
 		public override void Activate()
 		{
 			base.Activate();
-			this.threshold = Convert.ToInt32(this.prepareArgs[0], CultureInfo.InvariantCulture);
+			this.threshold = Convert.ToInt32(this.prepareArgs[0]);
 			this.eventData = this.prepareArgs[2].Split(new char[]
 			{
 				','
@@ -126,228 +123,179 @@ namespace StaRTS.Main.Story.Trigger
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ButtonClicked)
+			switch (id)
 			{
-				if (id <= EventId.EntityKilled)
-				{
-					if (id <= EventId.BuildingSelected)
-					{
-						if (id != EventId.BuildingPurchaseSuccess)
-						{
-							if (id != EventId.BuildingSelected)
-							{
-								return EatResponse.NotEaten;
-							}
-							Entity entity = (Entity)cookie;
-							BuildingComponent buildingComponent = entity.Get<BuildingComponent>();
-							if (buildingComponent == null)
-							{
-								return EatResponse.NotEaten;
-							}
-							BuildingTypeVO buildingType = buildingComponent.BuildingType;
-							if (buildingType.Uid.Equals(this.eventData[0], 5))
-							{
-								this.CountEvent();
-								return EatResponse.NotEaten;
-							}
-							return EatResponse.NotEaten;
-						}
-						else
-						{
-							Entity entity2 = (Entity)cookie;
-							BuildingComponent buildingComponent2 = entity2.Get<BuildingComponent>();
-							if (buildingComponent2 == null)
-							{
-								return EatResponse.NotEaten;
-							}
-							BuildingTypeVO buildingType2 = buildingComponent2.BuildingType;
-							if (buildingType2.Uid.Equals(this.eventData[0], 5))
-							{
-								this.CountEvent();
-								return EatResponse.NotEaten;
-							}
-							return EatResponse.NotEaten;
-						}
-					}
-					else
-					{
-						if (id == EventId.DroidPurchaseAnimationComplete)
-						{
-							goto IL_3D4;
-						}
-						if (id != EventId.EntityKilled)
-						{
-							return EatResponse.NotEaten;
-						}
-						Entity entity3 = (Entity)cookie;
-						string text = "";
-						string text2 = this.prepareArgs[1];
-						if (text2 == "troopKilled")
-						{
-							TroopComponent troopComponent = entity3.Get<TroopComponent>();
-							if (troopComponent == null)
-							{
-								return EatResponse.NotEaten;
-							}
-							text = troopComponent.TroopType.Uid;
-						}
-						else if (text2 == "buildingKilled")
-						{
-							BuildingComponent buildingComponent3 = entity3.Get<BuildingComponent>();
-							if (buildingComponent3 == null)
-							{
-								return EatResponse.NotEaten;
-							}
-							BuildingTypeVO buildingType3 = buildingComponent3.BuildingType;
-							text = buildingType3.Uid;
-						}
-						if (text.Equals(this.eventData[0], 5))
-						{
-							this.CountEvent();
-							return EatResponse.NotEaten;
-						}
-						return EatResponse.NotEaten;
-					}
-				}
-				else if (id <= EventId.TroopDonationTrackRewardReceived)
-				{
-					if (id != EventId.TroopDeployed)
-					{
-						if (id != EventId.TroopDonationTrackRewardReceived)
-						{
-							return EatResponse.NotEaten;
-						}
-						goto IL_3D4;
-					}
-				}
-				else if (id != EventId.SpecialAttackDeployed)
-				{
-					if (id != EventId.ButtonClicked)
-					{
-						return EatResponse.NotEaten;
-					}
-					string text3 = (string)cookie;
-					if (text3.Equals(this.eventData[0], 5))
-					{
-						this.CountEvent();
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
-				else
-				{
-					SpecialAttack specialAttack = (SpecialAttack)cookie;
-					if (specialAttack.VO.Uid.Equals(this.eventData[0], 5))
-					{
-						this.CountEvent();
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
-			}
-			else if (id <= EventId.InventoryResourceUpdated)
+			case EventId.ContractAdded:
 			{
-				if (id <= EventId.ContractStarted)
+				ContractEventData contractEventData = (ContractEventData)cookie;
+				if (contractEventData.Contract.ProductUid.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
 				{
-					if (id != EventId.ContractAdded)
-					{
-						if (id != EventId.ContractStarted)
-						{
-							return EatResponse.NotEaten;
-						}
-						ContractEventData contractEventData = (ContractEventData)cookie;
-						if (contractEventData.Contract.ProductUid.Equals(this.eventData[0], 5))
-						{
-							this.CountEvent();
-							return EatResponse.NotEaten;
-						}
-						return EatResponse.NotEaten;
-					}
-					else
-					{
-						ContractEventData contractEventData2 = (ContractEventData)cookie;
-						if (contractEventData2.Contract.ProductUid.Equals(this.eventData[0], 5))
-						{
-							this.CountEvent();
-							return EatResponse.NotEaten;
-						}
-						return EatResponse.NotEaten;
-					}
+					this.CountEvent();
 				}
-				else if (id != EventId.ContractCompletedForStoryAction)
-				{
-					if (id != EventId.InventoryResourceUpdated)
-					{
-						return EatResponse.NotEaten;
-					}
-					string text4 = (string)cookie;
-					if (text4.Equals(this.eventData[0], 5))
-					{
-						this.CountEvent();
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
-				else
-				{
-					ContractTO contractTO = (ContractTO)cookie;
-					if (contractTO.Uid.Equals(this.eventData[0], 5))
-					{
-						this.CountEvent();
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
-			}
-			else if (id <= EventId.ScreenLoaded)
-			{
-				if (id != EventId.ScreenClosing)
-				{
-					if (id != EventId.ScreenLoaded)
-					{
-						return EatResponse.NotEaten;
-					}
-					UXFactory uXFactory = cookie as UXFactory;
-					string name = uXFactory.Root.name;
-					if (name.Equals(this.eventData[0], 5))
-					{
-						this.CountEvent();
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
-				else
-				{
-					UXFactory uXFactory2 = cookie as UXFactory;
-					string text5 = (uXFactory2 == null || uXFactory2.Root == null) ? string.Empty : uXFactory2.Root.name;
-					if (text5.Equals(this.eventData[0], 5))
-					{
-						this.CountEvent();
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
-			}
-			else if (id != EventId.HeroDeployed && id != EventId.ChampionDeployed)
-			{
-				if (id != EventId.EquipmentUnlocked)
-				{
-					return EatResponse.NotEaten;
-				}
-				goto IL_3D4;
-			}
-			Entity entity4 = (Entity)cookie;
-			TroopComponent troopComponent2 = entity4.Get<TroopComponent>();
-			ITroopDeployableVO troopType = troopComponent2.TroopType;
-			if (troopType.Uid.Equals(this.eventData[0], 5))
-			{
-				this.CountEvent();
 				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
-			IL_3D4:
-			this.CountEvent();
-			return EatResponse.NotEaten;
+			case EventId.ContractBacklogUpdated:
+				IL_1C:
+				if (id == EventId.ScreenClosing)
+				{
+					UXFactory uXFactory = cookie as UXFactory;
+					string text = (uXFactory != null && !(uXFactory.Root == null)) ? uXFactory.Root.name : string.Empty;
+					if (text.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+					{
+						this.CountEvent();
+					}
+					return EatResponse.NotEaten;
+				}
+				if (id == EventId.ScreenLoaded)
+				{
+					UXFactory uXFactory2 = cookie as UXFactory;
+					string name = uXFactory2.Root.name;
+					if (name.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+					{
+						this.CountEvent();
+					}
+					return EatResponse.NotEaten;
+				}
+				if (id != EventId.BuildingPurchaseSuccess)
+				{
+					if (id != EventId.BuildingSelected)
+					{
+						if (id != EventId.DroidPurchaseAnimationComplete)
+						{
+							if (id != EventId.EntityKilled)
+							{
+								if (id != EventId.TroopDeployed)
+								{
+									if (id == EventId.TroopDonationTrackRewardReceived)
+									{
+										goto IL_3CD;
+									}
+									if (id == EventId.SpecialAttackDeployed)
+									{
+										SpecialAttack specialAttack = (SpecialAttack)cookie;
+										if (specialAttack.VO.Uid.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+										{
+											this.CountEvent();
+										}
+										return EatResponse.NotEaten;
+									}
+									if (id == EventId.ButtonClicked)
+									{
+										string text2 = (string)cookie;
+										if (text2.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+										{
+											this.CountEvent();
+										}
+										return EatResponse.NotEaten;
+									}
+									if (id == EventId.ContractCompletedForStoryAction)
+									{
+										ContractTO contractTO = (ContractTO)cookie;
+										if (contractTO.Uid.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+										{
+											this.CountEvent();
+										}
+										return EatResponse.NotEaten;
+									}
+									if (id == EventId.InventoryResourceUpdated)
+									{
+										string text3 = (string)cookie;
+										if (text3.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+										{
+											this.CountEvent();
+										}
+										return EatResponse.NotEaten;
+									}
+									if (id != EventId.HeroDeployed && id != EventId.ChampionDeployed)
+									{
+										if (id != EventId.EquipmentUnlocked)
+										{
+											return EatResponse.NotEaten;
+										}
+										goto IL_3CD;
+									}
+								}
+								Entity entity = (Entity)cookie;
+								TroopComponent troopComponent = entity.Get<TroopComponent>();
+								ITroopDeployableVO troopType = troopComponent.TroopType;
+								if (troopType.Uid.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+								{
+									this.CountEvent();
+								}
+								return EatResponse.NotEaten;
+							}
+							Entity entity2 = (Entity)cookie;
+							string text4 = string.Empty;
+							string a = this.prepareArgs[1];
+							if (a == "troopKilled")
+							{
+								TroopComponent troopComponent2 = entity2.Get<TroopComponent>();
+								if (troopComponent2 == null)
+								{
+									return EatResponse.NotEaten;
+								}
+								text4 = troopComponent2.TroopType.Uid;
+							}
+							else if (a == "buildingKilled")
+							{
+								BuildingComponent buildingComponent = entity2.Get<BuildingComponent>();
+								if (buildingComponent == null)
+								{
+									return EatResponse.NotEaten;
+								}
+								BuildingTypeVO buildingType = buildingComponent.BuildingType;
+								text4 = buildingType.Uid;
+							}
+							if (text4.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+							{
+								this.CountEvent();
+							}
+							return EatResponse.NotEaten;
+						}
+						IL_3CD:
+						this.CountEvent();
+						return EatResponse.NotEaten;
+					}
+					Entity entity3 = (Entity)cookie;
+					BuildingComponent buildingComponent2 = entity3.Get<BuildingComponent>();
+					if (buildingComponent2 == null)
+					{
+						return EatResponse.NotEaten;
+					}
+					BuildingTypeVO buildingType2 = buildingComponent2.BuildingType;
+					if (buildingType2.Uid.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+					{
+						this.CountEvent();
+					}
+					return EatResponse.NotEaten;
+				}
+				else
+				{
+					Entity entity4 = (Entity)cookie;
+					BuildingComponent buildingComponent3 = entity4.Get<BuildingComponent>();
+					if (buildingComponent3 == null)
+					{
+						return EatResponse.NotEaten;
+					}
+					BuildingTypeVO buildingType3 = buildingComponent3.BuildingType;
+					if (buildingType3.Uid.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+					{
+						this.CountEvent();
+					}
+					return EatResponse.NotEaten;
+				}
+				break;
+			case EventId.ContractStarted:
+			{
+				ContractEventData contractEventData2 = (ContractEventData)cookie;
+				if (contractEventData2.Contract.ProductUid.Equals(this.eventData[0], StringComparison.InvariantCultureIgnoreCase))
+				{
+					this.CountEvent();
+				}
+				return EatResponse.NotEaten;
+			}
+			}
+			goto IL_1C;
 		}
 
 		private void CountEvent()
@@ -371,211 +319,45 @@ namespace StaRTS.Main.Story.Trigger
 
 		private EventId GetRelevantEvent(string name)
 		{
-			uint num = <PrivateImplementationDetails>.ComputeStringHash(name);
-			if (num <= 1014291712u)
+			switch (name)
 			{
-				if (num <= 390872840u)
-				{
-					if (num <= 90849046u)
-					{
-						if (num != 83568195u)
-						{
-							if (num != 90849046u)
-							{
-								goto IL_2D7;
-							}
-							if (!(name == "droidPurchased"))
-							{
-								goto IL_2D7;
-							}
-							return EventId.DroidPurchaseAnimationComplete;
-						}
-						else
-						{
-							if (!(name == "heroDeployed"))
-							{
-								goto IL_2D7;
-							}
-							return EventId.HeroDeployed;
-						}
-					}
-					else if (num != 280708703u)
-					{
-						if (num != 390872840u)
-						{
-							goto IL_2D7;
-						}
-						if (!(name == "donationTrackRewarded"))
-						{
-							goto IL_2D7;
-						}
-						return EventId.TroopDonationTrackRewardReceived;
-					}
-					else
-					{
-						if (!(name == "uiAppears"))
-						{
-							goto IL_2D7;
-						}
-						return EventId.ScreenLoaded;
-					}
-				}
-				else if (num <= 473917134u)
-				{
-					if (num != 463470584u)
-					{
-						if (num != 473917134u)
-						{
-							goto IL_2D7;
-						}
-						if (!(name == "equipmentUnlocked"))
-						{
-							goto IL_2D7;
-						}
-						return EventId.EquipmentUnlocked;
-					}
-					else
-					{
-						if (!(name == "buildingPlaced"))
-						{
-							goto IL_2D7;
-						}
-						return EventId.BuildingPurchaseSuccess;
-					}
-				}
-				else if (num != 676851390u)
-				{
-					if (num != 930184452u)
-					{
-						if (num != 1014291712u)
-						{
-							goto IL_2D7;
-						}
-						if (!(name == "buildingKilled"))
-						{
-							goto IL_2D7;
-						}
-					}
-					else
-					{
-						if (!(name == "buildingSelected"))
-						{
-							goto IL_2D7;
-						}
-						return EventId.BuildingSelected;
-					}
-				}
-				else
-				{
-					if (!(name == "specialAttackDeployed"))
-					{
-						goto IL_2D7;
-					}
-					return EventId.SpecialAttackDeployed;
-				}
-			}
-			else if (num <= 2138028830u)
-			{
-				if (num <= 1246767052u)
-				{
-					if (num != 1127712780u)
-					{
-						if (num != 1246767052u)
-						{
-							goto IL_2D7;
-						}
-						if (!(name == "championDeployed"))
-						{
-							goto IL_2D7;
-						}
-						return EventId.ChampionDeployed;
-					}
-					else
-					{
-						if (!(name == "contractCompleted"))
-						{
-							goto IL_2D7;
-						}
-						return EventId.ContractCompletedForStoryAction;
-					}
-				}
-				else if (num != 1530602600u)
-				{
-					if (num != 2138028830u)
-					{
-						goto IL_2D7;
-					}
-					if (!(name == "inventoryUpdated"))
-					{
-						goto IL_2D7;
-					}
-					return EventId.InventoryResourceUpdated;
-				}
-				else
-				{
-					if (!(name == "contractStarted"))
-					{
-						goto IL_2D7;
-					}
-					return EventId.ContractStarted;
-				}
-			}
-			else if (num <= 2940767986u)
-			{
-				if (num != 2637417530u)
-				{
-					if (num != 2940767986u)
-					{
-						goto IL_2D7;
-					}
-					if (!(name == "troopKilled"))
-					{
-						goto IL_2D7;
-					}
-				}
-				else
-				{
-					if (!(name == "buttonClicked"))
-					{
-						goto IL_2D7;
-					}
-					return EventId.ButtonClicked;
-				}
-			}
-			else if (num != 3152622145u)
-			{
-				if (num != 3305455698u)
-				{
-					if (num != 3517888473u)
-					{
-						goto IL_2D7;
-					}
-					if (!(name == "troopDeployed"))
-					{
-						goto IL_2D7;
-					}
-					return EventId.TroopDeployed;
-				}
-				else
-				{
-					if (!(name == "contractQueued"))
-					{
-						goto IL_2D7;
-					}
-					return EventId.ContractAdded;
-				}
-			}
-			else
-			{
-				if (!(name == "screenClosed"))
-				{
-					goto IL_2D7;
-				}
+			case "heroDeployed":
+				return EventId.HeroDeployed;
+			case "championDeployed":
+				return EventId.ChampionDeployed;
+			case "specialAttackDeployed":
+				return EventId.SpecialAttackDeployed;
+			case "troopDeployed":
+				return EventId.TroopDeployed;
+			case "troopKilled":
+			case "buildingKilled":
+				return EventId.EntityKilled;
+			case "buttonClicked":
+				return EventId.ButtonClicked;
+			case "buildingSelected":
+				return EventId.BuildingSelected;
+			case "uiAppears":
+				return EventId.ScreenLoaded;
+			case "buildingPlaced":
+				return EventId.BuildingPurchaseSuccess;
+			case "contractQueued":
+				return EventId.ContractAdded;
+			case "contractStarted":
+				return EventId.ContractStarted;
+			case "contractCompleted":
+				return EventId.ContractCompletedForStoryAction;
+			case "inventoryUpdated":
+				return EventId.InventoryResourceUpdated;
+			case "droidPurchased":
+				return EventId.DroidPurchaseAnimationComplete;
+			case "donationTrackRewarded":
+				return EventId.TroopDonationTrackRewardReceived;
+			case "screenClosed":
 				return EventId.ScreenClosing;
+			case "equipmentUnlocked":
+				return EventId.EquipmentUnlocked;
 			}
-			return EventId.EntityKilled;
-			IL_2D7:
-			Service.Get<StaRTSLogger>().ErrorFormat("No event type associated with {0}", new object[]
+			Service.Get<Logger>().ErrorFormat("No event type associated with {0}", new object[]
 			{
 				name
 			});
@@ -600,72 +382,15 @@ namespace StaRTS.Main.Story.Trigger
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (!dictionary.ContainsKey("cnt"))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Quest Deserialization Error: Could not find {0} property in trigger {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Quest Deserialization Error: Could not find {0} property in trigger {1}", new object[]
 				{
 					"cnt",
 					this.vo.Uid
 				});
 				return null;
 			}
-			this.eventCount = Convert.ToInt32(dictionary["cnt"], CultureInfo.InvariantCulture);
+			this.eventCount = Convert.ToInt32(dictionary["cnt"]);
 			return base.FromObject(obj);
-		}
-
-		protected internal EventCounterStoryTrigger(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Activate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).CountEvent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).EvaluateThreshold());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).CountedEvents);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).RemainingEvents);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).RequiredEvents);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).GetRelevantEvent(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventCounterStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

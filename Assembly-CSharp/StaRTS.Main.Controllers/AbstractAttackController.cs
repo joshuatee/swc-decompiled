@@ -2,7 +2,6 @@ using StaRTS.Main.Controllers.Entities.StateMachines.Attack;
 using StaRTS.Main.Models.Entities;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -60,57 +59,5 @@ namespace StaRTS.Main.Controllers
 		protected abstract void OnAttackBegin(SmartEntity entity);
 
 		protected abstract void StartSearch(SmartEntity entity);
-
-		protected internal AbstractAttackController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractAttackController)GCHandledObjects.GCHandleToObject(instance)).OnAttackBegin((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractAttackController)GCHandledObjects.GCHandleToObject(instance)).OnBeforeAttack((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AbstractAttackController)GCHandledObjects.GCHandleToObject(instance)).OnTargetIsDead((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractAttackController)GCHandledObjects.GCHandleToObject(instance)).OnTargetIsNull((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AbstractAttackController)GCHandledObjects.GCHandleToObject(instance)).StartSearch((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AbstractAttackController)GCHandledObjects.GCHandleToObject(instance)).TryStartAttack((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AbstractAttackController)GCHandledObjects.GCHandleToObject(instance)).UpdateAttackFSM((AttackFSM)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AbstractAttackController)GCHandledObjects.GCHandleToObject(instance)).UpdateShooter((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
 	}
 }

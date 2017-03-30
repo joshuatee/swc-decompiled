@@ -7,8 +7,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -45,19 +43,19 @@ namespace StaRTS.FX
 			{
 				return keyValuePair;
 			}
-			char[] array = new char[]
+			char[] separator = new char[]
 			{
 				':'
 			};
-			string[] array2 = message.Split(array);
-			if (array2.Length == 2)
+			string[] array = message.Split(separator);
+			if (array.Length == 2)
 			{
-				keyValuePair = new KeyValuePair<string, int>(array2[0], int.Parse(array2[1]));
+				keyValuePair = new KeyValuePair<string, int>(array[0], int.Parse(array[1]));
 			}
 			else
 			{
 				keyValuePair = new KeyValuePair<string, int>(string.Empty, 0);
-				Service.Get<StaRTSLogger>().Error("Incorrect Animation-Event Message");
+				Service.Get<Logger>().Error("Incorrect Animation-Event Message");
 			}
 			this.animationEventMap.Add(message, keyValuePair);
 			return keyValuePair;
@@ -113,45 +111,29 @@ namespace StaRTS.FX
 						return;
 					}
 					KeyValuePair<string, int> keyValuePair = this.ParseMessage(message);
-					if (string.IsNullOrEmpty(keyValuePair.get_Key()))
+					if (string.IsNullOrEmpty(keyValuePair.Key))
 					{
 						return;
 					}
-					if (keyValuePair.get_Key() == "FactorySpark")
+					if (keyValuePair.Key == "FactorySpark")
 					{
 						if (!Service.IsSet<BuildingAnimationController>())
 						{
 							return;
 						}
-						Service.Get<BuildingAnimationController>().FactorySpark(keyValuePair.get_Value(), gameObjectViewComp);
-						return;
+						Service.Get<BuildingAnimationController>().FactorySpark(keyValuePair.Value, gameObjectViewComp);
 					}
-					else if (keyValuePair.get_Key() == "StarShipDepotSpark")
+					else if (keyValuePair.Key == "StarShipDepotSpark")
 					{
 						if (!Service.IsSet<BuildingAnimationController>())
 						{
 							return;
 						}
-						Service.Get<BuildingAnimationController>().DepotSpark(keyValuePair.get_Value(), gameObjectViewComp);
+						Service.Get<BuildingAnimationController>().DepotSpark(keyValuePair.Value, gameObjectViewComp);
 					}
 				}
 				return;
 			}
-		}
-
-		protected internal AnimationEventManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AnimationEventManager)GCHandledObjects.GCHandleToObject(instance)).ParseMessage(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AnimationEventManager)GCHandledObjects.GCHandleToObject(instance)).ProcessAnimationEvent((EntityRef)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
 		}
 	}
 }

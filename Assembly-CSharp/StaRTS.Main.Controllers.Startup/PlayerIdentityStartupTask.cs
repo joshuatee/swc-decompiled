@@ -1,7 +1,6 @@
 using StaRTS.Main.Models.Player;
 using StaRTS.Main.RUF;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -23,16 +22,6 @@ namespace StaRTS.Main.Controllers.Startup
 			new SharedPlayerPrefs();
 			new LeaderboardController();
 			base.Complete();
-		}
-
-		protected internal PlayerIdentityStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlayerIdentityStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

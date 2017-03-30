@@ -12,7 +12,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Holonet
 {
@@ -91,12 +90,15 @@ namespace StaRTS.Main.Controllers.Holonet
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			foreach (TransmissionVO current in dataController.GetAll<TransmissionVO>())
 			{
-				if (current.Faction == currentPlayer.Faction && current.StartTime > 0 && current.StartTime <= serverTime && serverTime < current.EndTime && (!this.IsDailyCrateTutorialTransmission(current) || pref != 1))
+				if (current.Faction == currentPlayer.Faction && current.StartTime > 0 && current.StartTime <= serverTime && serverTime < current.EndTime)
 				{
-					this.Transmissions.Add(current);
-					if (current.StartTime > this.lastTransmissionTimeViewed)
+					if (!this.IsDailyCrateTutorialTransmission(current) || pref != 1)
 					{
-						num++;
+						this.Transmissions.Add(current);
+						if (current.StartTime > this.lastTransmissionTimeViewed)
+						{
+							num++;
+						}
 					}
 				}
 			}
@@ -122,7 +124,7 @@ namespace StaRTS.Main.Controllers.Holonet
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().Error("Duplicate entry in transmission event messages repsonse: " + transmissionVO.Uid);
+					Service.Get<Logger>().Error("Duplicate entry in transmission event messages repsonse: " + transmissionVO.Uid);
 				}
 				num2++;
 			}
@@ -136,41 +138,44 @@ namespace StaRTS.Main.Controllers.Holonet
 			while (num3 < hOLONET_MAX_INCOMING_TRANSMISSIONS && num4 < count2)
 			{
 				TransmissionVO transmissionVO3 = this.Transmissions[num4];
-				if (this.IsIncomingTransmission(transmissionVO3) && (!this.IsWarTransmission(transmissionVO3) || warManager.IsTimeWithinCurrentSquadWarPhase(transmissionVO3.StartTime)))
+				if (this.IsIncomingTransmission(transmissionVO3))
 				{
-					if (this.IsSquadLevelUpTransmission(transmissionVO3))
+					if (!this.IsWarTransmission(transmissionVO3) || warManager.IsTimeWithinCurrentSquadWarPhase(transmissionVO3.StartTime))
 					{
-						if (!Service.Get<PerkManager>().HasPlayerSeenPerkTutorial())
+						if (this.IsSquadLevelUpTransmission(transmissionVO3))
 						{
-							goto IL_2A7;
+							if (!Service.Get<PerkManager>().HasPlayerSeenPerkTutorial())
+							{
+								goto IL_313;
+							}
+							bool flag = transmissionVO2 == null || transmissionVO3.SquadLevel > transmissionVO2.SquadLevel;
+							if (!flag || pref2 >= transmissionVO3.SquadLevel)
+							{
+								goto IL_313;
+							}
+							if (transmissionVO2 != null)
+							{
+								num3--;
+								this.incomingTransmissions.Remove(transmissionVO2);
+							}
+							transmissionVO2 = transmissionVO3;
 						}
-						bool flag = transmissionVO2 == null || transmissionVO3.SquadLevel > transmissionVO2.SquadLevel;
-						if (!flag || pref2 >= transmissionVO3.SquadLevel)
+						if (pref == 0)
 						{
-							goto IL_2A7;
+							if (this.IsDailyCrateTransmission(transmissionVO3))
+							{
+								goto IL_313;
+							}
+							if (this.IsDailyCrateTutorialTransmission(transmissionVO3))
+							{
+								sharedPlayerPrefs.SetPref("DailyCrateTransTutorialViewed", "1");
+							}
 						}
-						if (transmissionVO2 != null)
-						{
-							num3--;
-							this.incomingTransmissions.Remove(transmissionVO2);
-						}
-						transmissionVO2 = transmissionVO3;
+						num3++;
+						this.incomingTransmissions.Add(transmissionVO3);
 					}
-					if (pref == 0)
-					{
-						if (this.IsDailyCrateTransmission(transmissionVO3))
-						{
-							goto IL_2A7;
-						}
-						if (this.IsDailyCrateTutorialTransmission(transmissionVO3))
-						{
-							sharedPlayerPrefs.SetPref("DailyCrateTransTutorialViewed", "1");
-						}
-					}
-					num3++;
-					this.incomingTransmissions.Add(transmissionVO3);
 				}
-				IL_2A7:
+				IL_313:
 				num4++;
 			}
 			this.incomingTransmissions.Sort(new Comparison<TransmissionVO>(this.CompareIncommingPriorites));
@@ -337,130 +342,6 @@ namespace StaRTS.Main.Controllers.Holonet
 				this.battleVO.Faction = currentPlayer.Faction;
 			}
 			this.popupView.RefreshView(this.incomingTransmissions[this.transmissionIndex]);
-		}
-
-		protected internal TransmissionsHolonetController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).CompareIncommingPriorites((TransmissionVO)GCHandledObjects.GCHandleToObject(*args), (TransmissionVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).DismissIncomingTransmission(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).DuplicateTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).FinishPreparingTransmissions((List<TransmissionVO>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).ControllerType);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).Transmissions);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).GetInCommingTransmissionCount());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).HasNewBattles());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).InitBattlesTransmission((List<BattleEntry>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).InitTransmissionsTest((List<TransmissionVO>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).IsDailyCrateTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).IsDailyCrateTutorialTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).IsIncomingTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).IsSquadLevelUpTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).IsTransmissionPopupOpened());
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).IsWarTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).OnGetMessagesSuccess((HolonetGetMessagesResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).OnTransmissionPopupClosed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).OnTransmissionPopupIntialized((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).PrepareContent(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).Transmissions = (List<TransmissionVO>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((TransmissionsHolonetController)GCHandledObjects.GCHandleToObject(instance)).UpdateIncomingTransmission(*(int*)args);
-			return -1L;
 		}
 	}
 }

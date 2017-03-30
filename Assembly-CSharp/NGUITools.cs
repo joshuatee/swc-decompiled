@@ -1,8 +1,8 @@
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using System.IO;
+using System.Reflection;
 using UnityEngine;
-using WinRTBridge;
 
 public static class NGUITools
 {
@@ -203,12 +203,12 @@ public static class NGUITools
 		{
 			TextEditor textEditor = new TextEditor();
 			textEditor.Paste();
-			return textEditor.text;
+			return textEditor.content.text;
 		}
 		set
 		{
 			TextEditor textEditor = new TextEditor();
-			textEditor.text = value;
+			textEditor.content = new GUIContent(value);
 			textEditor.OnFocus();
 			textEditor.Copy();
 		}
@@ -300,7 +300,7 @@ public static class NGUITools
 	{
 		if (obj == null)
 		{
-			return "";
+			return string.Empty;
 		}
 		string text = obj.name;
 		while (obj.transform.parent != null)
@@ -433,12 +433,13 @@ public static class NGUITools
 					Vector4 drawingDimensions = component.drawingDimensions;
 					box.center = new Vector3((drawingDimensions.x + drawingDimensions.z) * 0.5f, (drawingDimensions.y + drawingDimensions.w) * 0.5f);
 					box.size = new Vector3(drawingDimensions.z - drawingDimensions.x, drawingDimensions.w - drawingDimensions.y);
-					return;
 				}
-				Vector3[] localCorners = component.localCorners;
-				box.center = Vector3.Lerp(localCorners[0], localCorners[2], 0.5f);
-				box.size = localCorners[2] - localCorners[0];
-				return;
+				else
+				{
+					Vector3[] localCorners = component.localCorners;
+					box.center = Vector3.Lerp(localCorners[0], localCorners[2], 0.5f);
+					box.size = localCorners[2] - localCorners[0];
+				}
 			}
 			else
 			{
@@ -460,11 +461,13 @@ public static class NGUITools
 				Vector3[] localCorners = component.localCorners;
 				box.offset = Vector3.Lerp(localCorners[0], localCorners[2], 0.5f);
 				box.size = localCorners[2] - localCorners[0];
-				return;
 			}
-			Bounds bounds = NGUIMath.CalculateRelativeWidgetBounds(gameObject.transform, considerInactive);
-			box.offset = bounds.center;
-			box.size = new Vector2(bounds.size.x, bounds.size.y);
+			else
+			{
+				Bounds bounds = NGUIMath.CalculateRelativeWidgetBounds(gameObject.transform, considerInactive);
+				box.offset = bounds.center;
+				box.size = new Vector2(bounds.size.x, bounds.size.y);
+			}
 		}
 	}
 
@@ -589,7 +592,7 @@ public static class NGUITools
 
 	public static int CalculateNextDepth(GameObject go, bool ignoreChildrenWithColliders)
 	{
-		if (go & ignoreChildrenWithColliders)
+		if (go && ignoreChildrenWithColliders)
 		{
 			int num = -1;
 			UIWidget[] componentsInChildren = go.GetComponentsInChildren<UIWidget>();
@@ -652,9 +655,8 @@ public static class NGUITools
 		if (num == 1)
 		{
 			NGUITools.NormalizePanelDepths();
-			return;
 		}
-		if (num == 2)
+		else if (num == 2)
 		{
 			NGUITools.NormalizeWidgetDepths();
 		}
@@ -666,9 +668,8 @@ public static class NGUITools
 		if (num == 1)
 		{
 			NGUITools.NormalizePanelDepths();
-			return;
 		}
-		if (num == 2)
+		else if (num == 2)
 		{
 			NGUITools.NormalizeWidgetDepths();
 		}
@@ -751,7 +752,7 @@ public static class NGUITools
 
 	public static UIPanel CreateUI(Transform trans, bool advanced3D, int layer)
 	{
-		UIRoot uIRoot = (trans != null) ? NGUITools.FindInParents<UIRoot>(trans.gameObject) : null;
+		UIRoot uIRoot = (!(trans != null)) ? null : NGUITools.FindInParents<UIRoot>(trans.gameObject);
 		if (uIRoot == null && UIRoot.list.Count > 0)
 		{
 			foreach (UIRoot current in UIRoot.list)
@@ -832,7 +833,7 @@ public static class NGUITools
 			}
 			Camera camera2 = NGUITools.AddChild<Camera>(uIRoot.gameObject, false);
 			camera2.gameObject.AddComponent<UICamera>();
-			camera2.clearFlags = (flag ? CameraClearFlags.Depth : CameraClearFlags.Color);
+			camera2.clearFlags = ((!flag) ? CameraClearFlags.Color : CameraClearFlags.Depth);
 			camera2.backgroundColor = Color.grey;
 			camera2.cullingMask = num2;
 			camera2.depth = num + 1f;
@@ -907,18 +908,18 @@ public static class NGUITools
 		{
 			depth = NGUITools.CalculateNextDepth(go);
 		}
-		T t = NGUITools.AddChild<T>(go);
-		t.width = 100;
-		t.height = 100;
-		t.depth = depth;
-		return t;
+		T result = NGUITools.AddChild<T>(go);
+		result.width = 100;
+		result.height = 100;
+		result.depth = depth;
+		return result;
 	}
 
 	public static UISprite AddSprite(GameObject go, UIAtlas atlas, string spriteName, int depth = 2147483647)
 	{
-		UISpriteData uISpriteData = (atlas != null) ? atlas.GetSprite(spriteName) : null;
+		UISpriteData uISpriteData = (!(atlas != null)) ? null : atlas.GetSprite(spriteName);
 		UISprite uISprite = NGUITools.AddWidget<UISprite>(go, depth);
-		uISprite.type = ((uISpriteData == null || !uISpriteData.hasBorder) ? UIBasicSprite.Type.Simple : UIBasicSprite.Type.Sliced);
+		uISprite.type = ((uISpriteData != null && uISpriteData.hasBorder) ? UIBasicSprite.Type.Sliced : UIBasicSprite.Type.Simple);
 		uISprite.atlas = atlas;
 		uISprite.spriteName = spriteName;
 		return uISprite;
@@ -943,7 +944,7 @@ public static class NGUITools
 	{
 		if (go == null)
 		{
-			return default(T);
+			return (T)((object)null);
 		}
 		T component = go.GetComponent<T>();
 		if (component == null)
@@ -962,7 +963,7 @@ public static class NGUITools
 	{
 		if (trans == null)
 		{
-			return default(T);
+			return (T)((object)null);
 		}
 		return trans.GetComponentInParent<T>();
 	}
@@ -979,10 +980,11 @@ public static class NGUITools
 				{
 					transform.parent = null;
 					UnityEngine.Object.Destroy(gameObject);
-					return;
 				}
-				UnityEngine.Object.DestroyImmediate(gameObject);
-				return;
+				else
+				{
+					UnityEngine.Object.DestroyImmediate(gameObject);
+				}
 			}
 			else if (obj is GameObject)
 			{
@@ -992,18 +994,18 @@ public static class NGUITools
 				{
 					transform2.parent = null;
 					UnityEngine.Object.Destroy(gameObject2);
-					return;
 				}
-				UnityEngine.Object.DestroyImmediate(gameObject2);
-				return;
+				else
+				{
+					UnityEngine.Object.DestroyImmediate(gameObject2);
+				}
+			}
+			else if (Application.isPlaying)
+			{
+				UnityEngine.Object.Destroy(obj);
 			}
 			else
 			{
-				if (Application.isPlaying)
-				{
-					UnityEngine.Object.Destroy(obj);
-					return;
-				}
 				UnityEngine.Object.DestroyImmediate(obj);
 			}
 		}
@@ -1034,9 +1036,11 @@ public static class NGUITools
 			if (Application.isEditor)
 			{
 				UnityEngine.Object.DestroyImmediate(obj);
-				return;
 			}
-			UnityEngine.Object.Destroy(obj);
+			else
+			{
+				UnityEngine.Object.Destroy(obj);
+			}
 		}
 	}
 
@@ -1131,9 +1135,11 @@ public static class NGUITools
 			{
 				NGUITools.Activate(go.transform, compatibilityMode);
 				NGUITools.CallCreatePanel(go.transform);
-				return;
 			}
-			NGUITools.Deactivate(go.transform);
+			else
+			{
+				NGUITools.Deactivate(go.transform);
+			}
 		}
 	}
 
@@ -1167,15 +1173,17 @@ public static class NGUITools
 				NGUITools.Activate(child);
 				i++;
 			}
-			return;
 		}
-		int j = 0;
-		int childCount2 = transform.childCount;
-		while (j < childCount2)
+		else
 		{
-			Transform child2 = transform.GetChild(j);
-			NGUITools.Deactivate(child2);
-			j++;
+			int j = 0;
+			int childCount2 = transform.childCount;
+			while (j < childCount2)
+			{
+				Transform child2 = transform.GetChild(j);
+				NGUITools.Deactivate(child2);
+				j++;
+			}
 		}
 	}
 
@@ -1248,11 +1256,45 @@ public static class NGUITools
 
 	public static bool Save(string fileName, byte[] bytes)
 	{
-		return false;
+		if (!NGUITools.fileAccess)
+		{
+			return false;
+		}
+		string path = Application.persistentDataPath + "/" + fileName;
+		if (bytes == null)
+		{
+			if (File.Exists(path))
+			{
+				File.Delete(path);
+			}
+			return true;
+		}
+		FileStream fileStream = null;
+		try
+		{
+			fileStream = File.Create(path);
+		}
+		catch (Exception ex)
+		{
+			UnityEngine.Debug.LogError(ex.Message);
+			return false;
+		}
+		fileStream.Write(bytes, 0, bytes.Length);
+		fileStream.Close();
+		return true;
 	}
 
 	public static byte[] Load(string fileName)
 	{
+		if (!NGUITools.fileAccess)
+		{
+			return null;
+		}
+		string path = Application.persistentDataPath + "/" + fileName;
+		if (File.Exists(path))
+		{
+			return File.ReadAllBytes(path);
+		}
 		return null;
 	}
 
@@ -1440,11 +1482,7 @@ public static class NGUITools
 		{
 			text = text.Substring(num + 1);
 		}
-		if (!string.IsNullOrEmpty(method))
-		{
-			return text + "/" + method;
-		}
-		return text;
+		return (!string.IsNullOrEmpty(method)) ? (text + "/" + method) : text;
 	}
 
 	public static void Execute<T>(GameObject go, string funcName) where T : Component
@@ -1454,7 +1492,11 @@ public static class NGUITools
 		for (int i = 0; i < array.Length; i++)
 		{
 			T t = array[i];
-			t.SendMessage(funcName, SendMessageOptions.DontRequireReceiver);
+			MethodInfo method = t.GetType().GetMethod(funcName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			if (method != null)
+			{
+				method.Invoke(t, null);
+			}
 		}
 	}
 
@@ -1542,150 +1584,7 @@ public static class NGUITools
 		case (KeyCode)124:
 		case (KeyCode)125:
 		case (KeyCode)126:
-			break;
-		case KeyCode.Backspace:
-			return "BS";
-		case KeyCode.Tab:
-			return "Tab";
-		case KeyCode.Clear:
-			return "Clr";
-		case KeyCode.Return:
-			return "NT";
-		case KeyCode.Pause:
-			return "PS";
-		case KeyCode.Escape:
-			return "Esc";
-		case KeyCode.Space:
-			return "SP";
-		case KeyCode.Exclaim:
-			return "!";
-		case KeyCode.DoubleQuote:
-			return "\"";
-		case KeyCode.Hash:
-			return "#";
-		case KeyCode.Dollar:
-			return "$";
-		case KeyCode.Ampersand:
-			return "&";
-		case KeyCode.Quote:
-			return "'";
-		case KeyCode.LeftParen:
-			return "(";
-		case KeyCode.RightParen:
-			return ")";
-		case KeyCode.Asterisk:
-			return "*";
-		case KeyCode.Plus:
-			return "+";
-		case KeyCode.Comma:
-			return ",";
-		case KeyCode.Minus:
-			return "-";
-		case KeyCode.Period:
-			return ".";
-		case KeyCode.Slash:
-			return "/";
-		case KeyCode.Alpha0:
-			return "0";
-		case KeyCode.Alpha1:
-			return "1";
-		case KeyCode.Alpha2:
-			return "2";
-		case KeyCode.Alpha3:
-			return "3";
-		case KeyCode.Alpha4:
-			return "4";
-		case KeyCode.Alpha5:
-			return "5";
-		case KeyCode.Alpha6:
-			return "6";
-		case KeyCode.Alpha7:
-			return "7";
-		case KeyCode.Alpha8:
-			return "8";
-		case KeyCode.Alpha9:
-			return "9";
-		case KeyCode.Colon:
-			return ":";
-		case KeyCode.Semicolon:
-			return ";";
-		case KeyCode.Less:
-			return "<";
-		case KeyCode.Equals:
-			return "=";
-		case KeyCode.Greater:
-			return ">";
-		case KeyCode.Question:
-			return "?";
-		case KeyCode.At:
-			return "@";
-		case KeyCode.LeftBracket:
-			return "[";
-		case KeyCode.Backslash:
-			return "\\";
-		case KeyCode.RightBracket:
-			return "]";
-		case KeyCode.Caret:
-			return "^";
-		case KeyCode.Underscore:
-			return "_";
-		case KeyCode.BackQuote:
-			return "`";
-		case KeyCode.A:
-			return "A";
-		case KeyCode.B:
-			return "B";
-		case KeyCode.C:
-			return "C";
-		case KeyCode.D:
-			return "D";
-		case KeyCode.E:
-			return "E";
-		case KeyCode.F:
-			return "F";
-		case KeyCode.G:
-			return "G";
-		case KeyCode.H:
-			return "H";
-		case KeyCode.I:
-			return "I";
-		case KeyCode.J:
-			return "J";
-		case KeyCode.K:
-			return "K";
-		case KeyCode.L:
-			return "L";
-		case KeyCode.M:
-			return "M";
-		case KeyCode.N:
-			return "N0";
-		case KeyCode.O:
-			return "O";
-		case KeyCode.P:
-			return "P";
-		case KeyCode.Q:
-			return "Q";
-		case KeyCode.R:
-			return "R";
-		case KeyCode.S:
-			return "S";
-		case KeyCode.T:
-			return "T";
-		case KeyCode.U:
-			return "U";
-		case KeyCode.V:
-			return "V";
-		case KeyCode.W:
-			return "W";
-		case KeyCode.X:
-			return "X";
-		case KeyCode.Y:
-			return "Y";
-		case KeyCode.Z:
-			return "Z";
-		case KeyCode.Delete:
-			return "Del";
-		default:
+			IL_208:
 			switch (key)
 			{
 			case KeyCode.Keypad0:
@@ -1843,438 +1742,150 @@ public static class NGUITools
 			case KeyCode.JoystickButton19:
 				return "J19";
 			}
-			break;
+			return null;
+		case KeyCode.Backspace:
+			return "BS";
+		case KeyCode.Tab:
+			return "Tab";
+		case KeyCode.Clear:
+			return "Clr";
+		case KeyCode.Return:
+			return "NT";
+		case KeyCode.Pause:
+			return "PS";
+		case KeyCode.Escape:
+			return "Esc";
+		case KeyCode.Space:
+			return "SP";
+		case KeyCode.Exclaim:
+			return "!";
+		case KeyCode.DoubleQuote:
+			return "\"";
+		case KeyCode.Hash:
+			return "#";
+		case KeyCode.Dollar:
+			return "$";
+		case KeyCode.Ampersand:
+			return "&";
+		case KeyCode.Quote:
+			return "'";
+		case KeyCode.LeftParen:
+			return "(";
+		case KeyCode.RightParen:
+			return ")";
+		case KeyCode.Asterisk:
+			return "*";
+		case KeyCode.Plus:
+			return "+";
+		case KeyCode.Comma:
+			return ",";
+		case KeyCode.Minus:
+			return "-";
+		case KeyCode.Period:
+			return ".";
+		case KeyCode.Slash:
+			return "/";
+		case KeyCode.Alpha0:
+			return "0";
+		case KeyCode.Alpha1:
+			return "1";
+		case KeyCode.Alpha2:
+			return "2";
+		case KeyCode.Alpha3:
+			return "3";
+		case KeyCode.Alpha4:
+			return "4";
+		case KeyCode.Alpha5:
+			return "5";
+		case KeyCode.Alpha6:
+			return "6";
+		case KeyCode.Alpha7:
+			return "7";
+		case KeyCode.Alpha8:
+			return "8";
+		case KeyCode.Alpha9:
+			return "9";
+		case KeyCode.Colon:
+			return ":";
+		case KeyCode.Semicolon:
+			return ";";
+		case KeyCode.Less:
+			return "<";
+		case KeyCode.Equals:
+			return "=";
+		case KeyCode.Greater:
+			return ">";
+		case KeyCode.Question:
+			return "?";
+		case KeyCode.At:
+			return "@";
+		case KeyCode.LeftBracket:
+			return "[";
+		case KeyCode.Backslash:
+			return "\\";
+		case KeyCode.RightBracket:
+			return "]";
+		case KeyCode.Caret:
+			return "^";
+		case KeyCode.Underscore:
+			return "_";
+		case KeyCode.BackQuote:
+			return "`";
+		case KeyCode.A:
+			return "A";
+		case KeyCode.B:
+			return "B";
+		case KeyCode.C:
+			return "C";
+		case KeyCode.D:
+			return "D";
+		case KeyCode.E:
+			return "E";
+		case KeyCode.F:
+			return "F";
+		case KeyCode.G:
+			return "G";
+		case KeyCode.H:
+			return "H";
+		case KeyCode.I:
+			return "I";
+		case KeyCode.J:
+			return "J";
+		case KeyCode.K:
+			return "K";
+		case KeyCode.L:
+			return "L";
+		case KeyCode.M:
+			return "M";
+		case KeyCode.N:
+			return "N0";
+		case KeyCode.O:
+			return "O";
+		case KeyCode.P:
+			return "P";
+		case KeyCode.Q:
+			return "Q";
+		case KeyCode.R:
+			return "R";
+		case KeyCode.S:
+			return "S";
+		case KeyCode.T:
+			return "T";
+		case KeyCode.U:
+			return "U";
+		case KeyCode.V:
+			return "V";
+		case KeyCode.W:
+			return "W";
+		case KeyCode.X:
+			return "X";
+		case KeyCode.Y:
+			return "Y";
+		case KeyCode.Z:
+			return "Z";
+		case KeyCode.Delete:
+			return "Del";
 		}
-		return null;
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		NGUITools.Activate((Transform)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		NGUITools.Activate((Transform)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.AddChild((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.AddChild((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.AddChild((GameObject)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.AddSprite((GameObject)GCHandledObjects.GCHandleToObject(*args), (UIAtlas)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3)));
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		NGUITools.AddWidgetCollider((GameObject)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		NGUITools.AddWidgetCollider((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.AdjustDepth((GameObject)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.ApplyPMA(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		NGUITools.BringForward((GameObject)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		NGUITools.Broadcast(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		NGUITools.Broadcast(Marshal.PtrToStringUni(*(IntPtr*)args), GCHandledObjects.GCHandleToObject(args[1]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.CalculateNextDepth((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.CalculateNextDepth((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.CalculateRaycastDepth((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		NGUITools.CallCreatePanel((Transform)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.CreateUI(*(sbyte*)args != 0));
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.CreateUI(*(sbyte*)args != 0, *(int*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.CreateUI((Transform)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(int*)(args + 2)));
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		NGUITools.Deactivate((Transform)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		NGUITools.Destroy((UnityEngine.Object)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((Transform)GCHandledObjects.GCHandleToObject(*args)).DestroyChildren();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		NGUITools.DestroyImmediate((UnityEngine.Object)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.EncodeColor(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.FindCameraForLayer(*(int*)args));
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.clipboard);
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.fileAccess);
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.screenSize);
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.soundVolume);
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.GetActive((Behaviour)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.GetActive((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.GetFuncName(GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.GetHierarchy((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.GetRoot((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((Camera)GCHandledObjects.GCHandleToObject(*args)).GetSides());
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((Camera)GCHandledObjects.GCHandleToObject(*args)).GetSides(*(float*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((Camera)GCHandledObjects.GCHandleToObject(*args)).GetSides((Transform)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke38(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((Camera)GCHandledObjects.GCHandleToObject(*args)).GetSides(*(float*)(args + 1), (Transform)GCHandledObjects.GCHandleToObject(args[2])));
-	}
-
-	public unsafe static long $Invoke39(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.GetTypeName((UnityEngine.Object)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke40(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((Camera)GCHandledObjects.GCHandleToObject(*args)).GetWorldCorners());
-	}
-
-	public unsafe static long $Invoke41(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((Camera)GCHandledObjects.GCHandleToObject(*args)).GetWorldCorners(*(float*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke42(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((Camera)GCHandledObjects.GCHandleToObject(*args)).GetWorldCorners((Transform)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke43(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((Camera)GCHandledObjects.GCHandleToObject(*args)).GetWorldCorners(*(float*)(args + 1), (Transform)GCHandledObjects.GCHandleToObject(args[2])));
-	}
-
-	public unsafe static long $Invoke44(long instance, long* args)
-	{
-		NGUITools.ImmediatelyCreateDrawCalls((GameObject)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke45(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.IsActive((Behaviour)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke46(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.IsChild((Transform)GCHandledObjects.GCHandleToObject(*args), (Transform)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke47(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.KeyToCaption((KeyCode)(*(int*)args)));
-	}
-
-	public unsafe static long $Invoke48(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.Load(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke49(long instance, long* args)
-	{
-		NGUITools.MakePixelPerfect((Transform)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke50(long instance, long* args)
-	{
-		NGUITools.MarkParentAsChanged((GameObject)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke51(long instance, long* args)
-	{
-		NGUITools.NormalizeDepths();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke52(long instance, long* args)
-	{
-		NGUITools.NormalizePanelDepths();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke53(long instance, long* args)
-	{
-		NGUITools.NormalizeWidgetDepths();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke54(long instance, long* args)
-	{
-		NGUITools.NormalizeWidgetDepths((UIWidget[])GCHandledObjects.GCHandleToPinnedArrayObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke55(long instance, long* args)
-	{
-		NGUITools.NormalizeWidgetDepths((GameObject)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke56(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.ParseColor(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke57(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.PlaySound((AudioClip)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke58(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.PlaySound((AudioClip)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke59(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.PlaySound((AudioClip)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2)));
-	}
-
-	public unsafe static long $Invoke60(long instance, long* args)
-	{
-		NGUITools.PushBack((GameObject)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke61(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.RandomRange(*(int*)args, *(int*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke62(long instance, long* args)
-	{
-		NGUITools.RegisterUndo((UnityEngine.Object)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke63(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.Round(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke64(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.Save(Marshal.PtrToStringUni(*(IntPtr*)args), (byte[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1])));
-	}
-
-	public unsafe static long $Invoke65(long instance, long* args)
-	{
-		NGUITools.clipboard = Marshal.PtrToStringUni(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke66(long instance, long* args)
-	{
-		NGUITools.soundVolume = *(float*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke67(long instance, long* args)
-	{
-		NGUITools.SetActive((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke68(long instance, long* args)
-	{
-		NGUITools.SetActive((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke69(long instance, long* args)
-	{
-		NGUITools.SetActiveChildren((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke70(long instance, long* args)
-	{
-		NGUITools.SetActiveSelf((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke71(long instance, long* args)
-	{
-		NGUITools.SetChildLayer((Transform)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke72(long instance, long* args)
-	{
-		NGUITools.SetDirty((UnityEngine.Object)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke73(long instance, long* args)
-	{
-		NGUITools.SetLayer((GameObject)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke74(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUITools.StripSymbols(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke75(long instance, long* args)
-	{
-		NGUITools.UpdateWidgetCollider((GameObject)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke76(long instance, long* args)
-	{
-		NGUITools.UpdateWidgetCollider((BoxCollider)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke77(long instance, long* args)
-	{
-		NGUITools.UpdateWidgetCollider((BoxCollider2D)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke78(long instance, long* args)
-	{
-		NGUITools.UpdateWidgetCollider((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-		return -1L;
+		goto IL_208;
 	}
 }

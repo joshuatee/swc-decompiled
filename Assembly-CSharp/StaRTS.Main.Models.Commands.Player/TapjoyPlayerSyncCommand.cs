@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public TapjoyPlayerSyncCommand(PlayerIdRequest request) : base("player.get", request, new TapjoyPlayerSyncResponse())
 		{
 		}
-
-		protected internal TapjoyPlayerSyncCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

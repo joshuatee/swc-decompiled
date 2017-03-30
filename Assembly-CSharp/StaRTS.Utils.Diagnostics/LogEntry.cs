@@ -9,13 +9,5 @@ namespace StaRTS.Utils.Diagnostics
 		public DateTime Timestamp;
 
 		public LogLevel Level;
-
-		public LogEntry()
-		{
-		}
-
-		protected internal LogEntry(UIntPtr dummy)
-		{
-		}
 	}
 }

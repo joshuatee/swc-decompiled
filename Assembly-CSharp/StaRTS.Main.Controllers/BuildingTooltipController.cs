@@ -16,7 +16,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -145,21 +144,21 @@ namespace StaRTS.Main.Controllers
 						{
 							IDataController dataController = Service.Get<IDataController>();
 							DeliveryType deliveryType = contract.DeliveryType;
-							if (deliveryType != DeliveryType.Starship && deliveryType != DeliveryType.UpgradeStarship)
+							if (deliveryType != DeliveryType.UpgradeStarship)
 							{
 								if (deliveryType == DeliveryType.UpgradeEquipment)
 								{
 									iconAsset = dataController.Get<EquipmentVO>(contract.ProductUid);
+									goto IL_19B;
 								}
-								else
+								if (deliveryType != DeliveryType.Starship)
 								{
 									iconAsset = dataController.Get<TroopTypeVO>(contract.ProductUid);
+									goto IL_19B;
 								}
 							}
-							else
-							{
-								iconAsset = dataController.Get<SpecialAttackTypeVO>(contract.ProductUid);
-							}
+							iconAsset = dataController.Get<SpecialAttackTypeVO>(contract.ProductUid);
+							IL_19B:
 							supportViewComponentState = SupportViewComponentState.IconProgress;
 						}
 						else
@@ -177,7 +176,7 @@ namespace StaRTS.Main.Controllers
 					supportViewComponentState = this.GetBubbleViewComponentStateBasedOnBuilding(building);
 				}
 			}
-			if ((flag2 & flag) && supportViewComponentState == SupportViewComponentState.Dormant && buildingType.Type == BuildingType.Starport)
+			if (flag2 && flag && supportViewComponentState == SupportViewComponentState.Dormant && buildingType.Type == BuildingType.Starport)
 			{
 				supportViewComponentState = SupportViewComponentState.General;
 			}
@@ -195,8 +194,8 @@ namespace StaRTS.Main.Controllers
 					UXController uXController = Service.Get<UXController>();
 					MiscElementsManager miscElementsManager = uXController.MiscElementsManager;
 					GameObjectViewComponent gameObjectViewComp = building.GameObjectViewComp;
-					string text2 = gameObjectViewComp.MainGameObject.GetInstanceID().ToString();
-					string name = "BuildingTooltip" + text2;
+					string str = gameObjectViewComp.MainGameObject.GetInstanceID().ToString();
+					string name = "BuildingTooltip" + str;
 					GameObject worldUIParent = Service.Get<UXController>().WorldUIParent;
 					switch (supportViewComponentState)
 					{
@@ -280,7 +279,7 @@ namespace StaRTS.Main.Controllers
 			ArmoryController armoryController = Service.Get<ArmoryController>();
 			bool flag = deployableShardUnlockController.AllowResearchBuildingBadging && deployableShardUnlockController.DoesUserHaveAnyUpgradeableShardUnits();
 			bool flag2 = armoryController.AllowShowEquipmentTabBadge && armoryController.DoesUserHaveAnyUpgradableEquipment();
-			return flag | flag2;
+			return flag || flag2;
 		}
 
 		public void HideBuildingTooltip(SmartEntity building)
@@ -308,14 +307,13 @@ namespace StaRTS.Main.Controllers
 					if (!Service.Get<CurrentPlayer>().CampaignProgress.FueInProgress && numInventoryItemsNotViewed > 0)
 					{
 						result = Service.Get<Lang>().Get("HQ_BADGE", new object[0]);
-						return result;
 					}
 					return result;
 				}
 				case BuildingType.Barracks:
 				case BuildingType.Factory:
 				case BuildingType.DefenseResearch:
-					break;
+					goto IL_2DD;
 				case BuildingType.FleetCommand:
 				{
 					int totalStorageCapacity = worldOwner.Inventory.SpecialAttack.GetTotalStorageCapacity();
@@ -323,9 +321,11 @@ namespace StaRTS.Main.Controllers
 					if (totalStorageAmount >= totalStorageCapacity)
 					{
 						result = Service.Get<Lang>().Get("FULL", new object[0]);
-						return result;
 					}
-					result = LangUtils.GetBuildingVerb(buildingType.Type);
+					else
+					{
+						result = LangUtils.GetBuildingVerb(buildingType.Type);
+					}
 					return result;
 				}
 				case BuildingType.HeroMobilizer:
@@ -335,9 +335,11 @@ namespace StaRTS.Main.Controllers
 					if (totalStorageAmount2 >= totalStorageCapacity2)
 					{
 						result = Service.Get<Lang>().Get("FULL", new object[0]);
-						return result;
 					}
-					result = LangUtils.GetBuildingVerb(buildingType.Type);
+					else
+					{
+						result = LangUtils.GetBuildingVerb(buildingType.Type);
+					}
 					return result;
 				}
 				case BuildingType.ChampionPlatform:
@@ -345,79 +347,80 @@ namespace StaRTS.Main.Controllers
 				case BuildingType.DroidHut:
 				case BuildingType.Wall:
 				case BuildingType.Turret:
-					return result;
-				case BuildingType.Squad:
-				{
-					if (worldOwner.Squad == null)
-					{
-						result = Service.Get<Lang>().Get("context_Join", new object[0]);
-						return result;
-					}
-					int donatedTroopStorageUsedByWorldOwner = SquadUtils.GetDonatedTroopStorageUsedByWorldOwner();
-					int storage = buildingType.Storage;
-					if (donatedTroopStorageUsedByWorldOwner >= storage)
-					{
-						result = Service.Get<Lang>().Get("FULL", new object[0]);
-						return result;
-					}
-					result = Service.Get<Lang>().Get("context_RequestTroops", new object[0]);
-					return result;
-				}
-				case BuildingType.Starport:
-				{
-					if (isSelected)
-					{
-						return result;
-					}
-					int donatedTroopStorageUsedByWorldOwner;
-					int storage;
-					GameUtils.GetStarportTroopCounts(out donatedTroopStorageUsedByWorldOwner, out storage);
-					if (donatedTroopStorageUsedByWorldOwner >= storage)
-					{
-						result = Service.Get<Lang>().Get("FULL", new object[0]);
-						return result;
-					}
-					return result;
-				}
-				case BuildingType.TroopResearch:
-					if (this.ShouldBadgeResearchBuilding())
-					{
-						result = Service.Get<Lang>().Get("HQ_BADGE", new object[0]);
-						return result;
-					}
-					result = LangUtils.GetBuildingVerb(buildingType.Type);
-					return result;
-				default:
+					IL_63:
 					switch (type)
 					{
 					case BuildingType.Cantina:
 					case BuildingType.NavigationCenter:
-						break;
+						goto IL_2DD;
 					case BuildingType.ScoutTower:
 						return result;
 					case BuildingType.Armory:
 						if (this.ShouldBadgeArmoryBuilding())
 						{
 							result = Service.Get<Lang>().Get("HQ_BADGE", new object[0]);
-							return result;
 						}
-						if (ArmoryUtils.IsArmoryFull(Service.Get<CurrentPlayer>()))
+						else if (ArmoryUtils.IsArmoryFull(Service.Get<CurrentPlayer>()))
 						{
 							result = Service.Get<Lang>().Get("ARMORY_TOOLTIP_FULL", new object[0]);
-							return result;
 						}
-						if (ArmoryUtils.IsArmoryEmpty(Service.Get<CurrentPlayer>()))
+						else if (ArmoryUtils.IsArmoryEmpty(Service.Get<CurrentPlayer>()))
 						{
 							result = Service.Get<Lang>().Get("ARMORY_TOOLTIP_EMPTY", new object[0]);
-							return result;
 						}
-						result = LangUtils.GetBuildingVerb(buildingType.Type);
+						else
+						{
+							result = LangUtils.GetBuildingVerb(buildingType.Type);
+						}
 						return result;
 					default:
 						return result;
 					}
 					break;
+				case BuildingType.Squad:
+					if (worldOwner.Squad != null)
+					{
+						int donatedTroopStorageUsedByWorldOwner = SquadUtils.GetDonatedTroopStorageUsedByWorldOwner();
+						int storage = buildingType.Storage;
+						if (donatedTroopStorageUsedByWorldOwner >= storage)
+						{
+							result = Service.Get<Lang>().Get("FULL", new object[0]);
+						}
+						else
+						{
+							result = Service.Get<Lang>().Get("context_RequestTroops", new object[0]);
+						}
+					}
+					else
+					{
+						result = Service.Get<Lang>().Get("context_Join", new object[0]);
+					}
+					return result;
+				case BuildingType.Starport:
+					if (!isSelected)
+					{
+						int donatedTroopStorageUsedByWorldOwner;
+						int storage;
+						GameUtils.GetStarportTroopCounts(out donatedTroopStorageUsedByWorldOwner, out storage);
+						if (donatedTroopStorageUsedByWorldOwner >= storage)
+						{
+							result = Service.Get<Lang>().Get("FULL", new object[0]);
+						}
+					}
+					return result;
+				case BuildingType.TroopResearch:
+					if (this.ShouldBadgeResearchBuilding())
+					{
+						result = Service.Get<Lang>().Get("HQ_BADGE", new object[0]);
+					}
+					else
+					{
+						result = LangUtils.GetBuildingVerb(buildingType.Type);
+					}
+					return result;
 				}
+				goto IL_63;
+				IL_2DD:
 				result = LangUtils.GetBuildingVerb(buildingType.Type);
 			}
 			return result;
@@ -445,9 +448,9 @@ namespace StaRTS.Main.Controllers
 				return !Service.Get<BuildingController>().IsLifted(building) && !baseLayoutState;
 			case DeliveryType.UpgradeBuilding:
 			case DeliveryType.SwapBuilding:
-				return homeState | editState;
+				return homeState || editState;
 			case DeliveryType.ClearClearable:
-				return homeState | editState | baseLayoutState;
+				return homeState || editState || baseLayoutState;
 			default:
 				return false;
 			}
@@ -482,15 +485,11 @@ namespace StaRTS.Main.Controllers
 				int num;
 				int num2;
 				GameUtils.GetStarportTroopCounts(out num, out num2);
-				text = string.Format("{0} {1}", new object[]
+				text = string.Format("{0} {1}", text, Service.Get<Lang>().Get("FRACTION", new object[]
 				{
-					text,
-					Service.Get<Lang>().Get("FRACTION", new object[]
-					{
-						num,
-						num2
-					})
-				});
+					num,
+					num2
+				}));
 			}
 			return text;
 		}
@@ -524,43 +523,17 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.NumInventoryItemsNotViewedUpdated)
+			if (id != EventId.ShardUnitNowUpgradable && id != EventId.EquipmentNowUpgradable && id != EventId.InventoryCapacityChanged && id != EventId.GameStateChanged)
 			{
-				if (id <= EventId.GameStateChanged)
+				if (id == EventId.InventoryTroopUpdated)
 				{
-					if (id != EventId.InventoryCapacityChanged && id != EventId.GameStateChanged)
-					{
-						return EatResponse.NotEaten;
-					}
+					this.UpdateAllStarportTooltips();
+					return EatResponse.NotEaten;
 				}
-				else
-				{
-					if (id == EventId.InventoryTroopUpdated)
-					{
-						this.UpdateAllStarportTooltips();
-						return EatResponse.NotEaten;
-					}
-					if (id != EventId.NumInventoryItemsNotViewedUpdated)
-					{
-						return EatResponse.NotEaten;
-					}
-				}
-			}
-			else if (id <= EventId.EquipmentNowUpgradable)
-			{
-				if (id != EventId.ShardUnitNowUpgradable && id != EventId.EquipmentNowUpgradable)
+				if (id != EventId.NumInventoryItemsNotViewedUpdated && id != EventId.TroopUpgradeScreenOpened && id != EventId.ScreenSizeChanged)
 				{
 					return EatResponse.NotEaten;
 				}
-			}
-			else if (id != EventId.TroopUpgradeScreenOpened)
-			{
-				if (id != EventId.ScreenSizeChanged)
-				{
-					return EatResponse.NotEaten;
-				}
-				this.UpdateAllSupportBuildingTooltips();
-				return EatResponse.NotEaten;
 			}
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
 			if (currentState is HomeState || currentState is EditBaseState || currentState is BaseLayoutToolState || currentState is WarBoardState)
@@ -568,91 +541,6 @@ namespace StaRTS.Main.Controllers
 				this.UpdateAllSupportBuildingTooltips();
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal BuildingTooltipController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).ClearTooltipScreenSlot((TooltipHelper)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).EnsureBuildingTooltip((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).GetBubbleText((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).GetBubbleViewComponentStateBasedOnBuilding((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingTitle((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).HideBuildingTooltip((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).ResetTooltipSlots();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).ShouldBadgeArmoryBuilding());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).ShouldBadgeResearchBuilding());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).ShouldShowIcon((DeliveryType)(*(int*)args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).ShouldShowProgress((Contract)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, (Entity)GCHandledObjects.GCHandleToObject(args[4])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).UpdateAllStarportTooltips();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).UpdateAllSupportBuildingTooltips();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltipController)GCHandledObjects.GCHandleToObject(instance)).UpdateTooltipScreenSlot((TooltipHelper)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2)));
 		}
 	}
 }

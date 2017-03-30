@@ -45,7 +45,7 @@ namespace StaRTS.DataStructures.PriorityQueue
 		{
 			for (int i = 1; i < this._nodes.Length; i++)
 			{
-				this._nodes[i] = default(T);
+				this._nodes[i] = (T)((object)null);
 			}
 			this._numNodes = 0;
 		}
@@ -61,10 +61,7 @@ namespace StaRTS.DataStructures.PriorityQueue
 			this._numNodes++;
 			this._nodes[this._numNodes] = node;
 			node.QueueIndex = this._numNodes;
-			PriorityQueueNode arg_54_0 = node;
-			int numNodesEverEnqueued = this._numNodesEverEnqueued;
-			this._numNodesEverEnqueued = numNodesEverEnqueued + 1;
-			arg_54_0.InsertionIndex = numNodesEverEnqueued;
+			node.InsertionIndex = this._numNodesEverEnqueued++;
 			this.CascadeUp(this._nodes[this._numNodes]);
 		}
 
@@ -117,7 +114,7 @@ namespace StaRTS.DataStructures.PriorityQueue
 				}
 				if (t == node)
 				{
-					goto IL_134;
+					goto IL_153;
 				}
 				this._nodes[num] = t;
 				int queueIndex = t.QueueIndex;
@@ -127,7 +124,7 @@ namespace StaRTS.DataStructures.PriorityQueue
 			node.QueueIndex = num;
 			this._nodes[num] = node;
 			return;
-			IL_134:
+			IL_153:
 			node.QueueIndex = num;
 			this._nodes[num] = node;
 		}
@@ -157,16 +154,18 @@ namespace StaRTS.DataStructures.PriorityQueue
 			if (num > 0 && this.HasHigherPriority(node, lower))
 			{
 				this.CascadeUp(node);
-				return;
 			}
-			this.CascadeDown(node);
+			else
+			{
+				this.CascadeDown(node);
+			}
 		}
 
 		public void Remove(T node)
 		{
 			if (this._numNodes <= 1)
 			{
-				this._nodes[1] = default(T);
+				this._nodes[1] = (T)((object)null);
 				this._numNodes = 0;
 				return;
 			}
@@ -178,7 +177,7 @@ namespace StaRTS.DataStructures.PriorityQueue
 				flag = true;
 			}
 			this._numNodes--;
-			this._nodes[node.QueueIndex] = default(T);
+			this._nodes[node.QueueIndex] = (T)((object)null);
 			if (flag)
 			{
 				this.OnNodeUpdated(t);

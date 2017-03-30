@@ -14,9 +14,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Tween;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.SquadWar
 {
@@ -38,10 +36,6 @@ namespace StaRTS.Main.Controllers.SquadWar
 
 		private const float CENTERING_ROTATION_OFFSET = -1.72057f;
 
-		private readonly Keyframe[] animationKeys;
-
-		private readonly Keyframe[] easeOutKeys;
-
 		private const float DRAG_FLYOUT_THRESHOLD = 1f;
 
 		private const float INERTIA_MIN = 0.1f;
@@ -58,9 +52,23 @@ namespace StaRTS.Main.Controllers.SquadWar
 
 		private const string LOCATOR_GROUP = "planet_surface";
 
-		public static readonly Vector3 WARBOARD_MASTER_START = new Vector3(-10000f, -10000f, 0f);
-
 		private const string WARBOARD_MASTER_PIVOT_NAME = "MasterWarboardParent";
+
+		private readonly Keyframe[] animationKeys = new Keyframe[]
+		{
+			new Keyframe(0f, 0f, 0f, 0f),
+			new Keyframe(0.5157318f, 0.4470715f, 2.989397f, 2.989397f),
+			new Keyframe(0.6571707f, 0.8017763f, 1.748387f, 1.748387f),
+			new Keyframe(1f, 1f, 0f, 0f)
+		};
+
+		private readonly Keyframe[] easeOutKeys = new Keyframe[]
+		{
+			new Keyframe(0f, 0f, 1f, 1f),
+			new Keyframe(1f, 1f)
+		};
+
+		public static readonly Vector3 WARBOARD_MASTER_START = new Vector3(-10000f, -10000f, 0f);
 
 		private GameObject warboardMaster;
 
@@ -108,92 +116,77 @@ namespace StaRTS.Main.Controllers.SquadWar
 
 		private Transform centeringTarget;
 
-		private float[] rotationSamples;
+		private float[] rotationSamples = new float[4];
 
 		public WarBoardViewController()
 		{
-			this.animationKeys = new Keyframe[]
-			{
-				new Keyframe(0f, 0f, 0f, 0f),
-				new Keyframe(0.5157318f, 0.4470715f, 2.989397f, 2.989397f),
-				new Keyframe(0.6571707f, 0.8017763f, 1.748387f, 1.748387f),
-				new Keyframe(1f, 1f, 0f, 0f)
-			};
-			this.easeOutKeys = new Keyframe[]
-			{
-				new Keyframe(0f, 0f, 1f, 1f),
-				new Keyframe(1f, 1f)
-			};
-			this.rotationSamples = new float[4];
-			base..ctor();
 			Service.Set<WarBoardViewController>(this);
 			this.anchorFingerId = -1;
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id != EventId.PreloadedAudioSuccess && id != EventId.PreloadedAudioFailure)
+			switch (id)
 			{
-				switch (id)
+			case EventId.WarBoardParticipantBuildingSelected:
+			{
+				GameObject gameObject = (GameObject)cookie;
+				SquadWarParticipantState participantState = Service.Get<WarBoardBuildingController>().GetParticipantState(gameObject);
+				bool flag = this.flyout != null && this.flyout.IsShowingParticipantOptions(participantState);
+				if (flag)
 				{
-				case EventId.WarBoardParticipantBuildingSelected:
-				{
-					GameObject gameObject = (GameObject)cookie;
-					SquadWarParticipantState participantState = Service.Get<WarBoardBuildingController>().GetParticipantState(gameObject);
-					bool flag = this.flyout != null && this.flyout.IsShowingParticipantOptions(participantState);
-					if (flag)
-					{
-						Service.Get<WarBoardBuildingController>().DeselectBuilding();
-					}
-					else if (this.flyout != null)
-					{
-						this.flyout.ShowParticipantOptions(gameObject, participantState);
-					}
-					break;
+					Service.Get<WarBoardBuildingController>().DeselectBuilding();
 				}
-				case EventId.WarBoardBuffBaseBuildingSelected:
+				else if (this.flyout != null)
 				{
-					UXCheckbox uXCheckbox = (UXCheckbox)cookie;
-					SquadWarBuffBaseData data = (SquadWarBuffBaseData)uXCheckbox.Tag;
-					bool flag2 = this.flyout != null && this.flyout.IsShowingBuffBaseOptions(data);
-					if (flag2)
-					{
-						if (this.flyout != null)
-						{
-							this.flyout.Hide();
-						}
-					}
-					else
-					{
-						if (this.flyout != null)
-						{
-							this.flyout.ShowBuffBaseOptions(uXCheckbox, data);
-						}
-						Service.Get<WarBoardBuildingController>().DeselectBuilding();
-					}
-					break;
+					this.flyout.ShowParticipantOptions(gameObject, participantState);
 				}
-				case EventId.WarBoardBuildingDeselected:
+				break;
+			}
+			case EventId.WarBoardBuffBaseBuildingSelected:
+			{
+				UXCheckbox uXCheckbox = (UXCheckbox)cookie;
+				SquadWarBuffBaseData data = (SquadWarBuffBaseData)uXCheckbox.Tag;
+				bool flag2 = this.flyout != null && this.flyout.IsShowingBuffBaseOptions(data);
+				if (flag2)
 				{
-					GameObject building = (GameObject)cookie;
-					SquadWarParticipantState participantState2 = Service.Get<WarBoardBuildingController>().GetParticipantState(building);
-					if ((participantState2 == null || this.flyout.IsShowingParticipantOptions(participantState2)) && this.flyout != null)
+					if (this.flyout != null)
 					{
 						this.flyout.Hide();
 					}
-					break;
 				}
-				}
-			}
-			else
-			{
-				AudioTypeVO audioTypeVO = (AudioTypeVO)cookie;
-				if (audioTypeVO != null && audioTypeVO.Uid == "sfx_ui_squadwar_warboard_open")
+				else
 				{
-					this.WarBoardAudioLoadFinished();
-					Service.Get<EventManager>().UnregisterObserver(this, EventId.PreloadedAudioSuccess);
-					Service.Get<EventManager>().UnregisterObserver(this, EventId.PreloadedAudioFailure);
+					if (this.flyout != null)
+					{
+						this.flyout.ShowBuffBaseOptions(uXCheckbox, data);
+					}
+					Service.Get<WarBoardBuildingController>().DeselectBuilding();
 				}
+				break;
+			}
+			case EventId.WarBoardBuildingDeselected:
+			{
+				GameObject building = (GameObject)cookie;
+				SquadWarParticipantState participantState2 = Service.Get<WarBoardBuildingController>().GetParticipantState(building);
+				if ((participantState2 == null || this.flyout.IsShowingParticipantOptions(participantState2)) && this.flyout != null)
+				{
+					this.flyout.Hide();
+				}
+				break;
+			}
+			default:
+				if (id == EventId.PreloadedAudioSuccess || id == EventId.PreloadedAudioFailure)
+				{
+					AudioTypeVO audioTypeVO = (AudioTypeVO)cookie;
+					if (audioTypeVO != null && audioTypeVO.Uid == "sfx_ui_squadwar_warboard_open")
+					{
+						this.WarBoardAudioLoadFinished();
+						Service.Get<EventManager>().UnregisterObserver(this, EventId.PreloadedAudioSuccess);
+						Service.Get<EventManager>().UnregisterObserver(this, EventId.PreloadedAudioFailure);
+					}
+				}
+				break;
 			}
 			return EatResponse.NotEaten;
 		}
@@ -333,6 +326,7 @@ namespace StaRTS.Main.Controllers.SquadWar
 						this.rotateTween.Destroy();
 						this.rotateTween = null;
 					}
+					this.rotateTween = new RotateTween(this.locatorGroup, 1.5f, Quaternion.Euler(new Vector3(this.minRotation + -1.72057f, 0f, 0f)), Quaternion.Euler(new Vector3(this.maxRotation + -1.72057f, 0f, 0f)), animationCurve, null, null);
 					Service.Get<WarBoardBuildingController>().ShowBuildings(this.WarBuildingLocators);
 					Service.Get<UserInputManager>().RegisterObserver(this, UserInputLayer.InternalLowest);
 				}
@@ -480,15 +474,17 @@ namespace StaRTS.Main.Controllers.SquadWar
 			{
 				Service.Get<WarBoardBuildingController>().DeselectBuilding();
 				this.OnCenterComplete(null);
-				return;
 			}
-			Service.Get<WarBoardBuildingController>().DeselectBuilding();
-			if (this.rotateTween != null)
+			else
 			{
-				this.rotateTween.Destroy();
-				this.rotateTween = null;
+				Service.Get<WarBoardBuildingController>().DeselectBuilding();
+				if (this.rotateTween != null)
+				{
+					this.rotateTween.Destroy();
+					this.rotateTween = null;
+				}
+				this.rotateTween = new RotateTween(this.locatorGroup, duration, rotation, rotationTarget, animationCurve, new Action<RotateTween>(this.OnCenterComplete), null);
 			}
-			this.rotateTween = new RotateTween(this.locatorGroup, duration, rotation, rotationTarget, animationCurve, new Action<RotateTween>(this.OnCenterComplete), null);
 		}
 
 		public Quaternion GetRotationTarget(Transform transform)
@@ -577,9 +573,8 @@ namespace StaRTS.Main.Controllers.SquadWar
 
 		private void MoveWarBoard()
 		{
-			Vector3 vector = this.anchorGroundPosition - this.anchorLastGroundPosition;
-			vector *= 0.05f;
-			this.RotateWarBoard(vector.z);
+			Vector3 a = this.anchorGroundPosition - this.anchorLastGroundPosition;
+			this.RotateWarBoard((a * 0.05f).z);
 		}
 
 		private void RotateWarBoard(float rotation)
@@ -614,163 +609,6 @@ namespace StaRTS.Main.Controllers.SquadWar
 		public Quaternion GetPlanetRotation()
 		{
 			return this.locatorGroup.rotation;
-		}
-
-		protected internal WarBoardViewController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).CenterBoardOn((Transform)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).CheckForAllLoadsComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentDisplaySquad());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetRotation());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).GetRelativeRotation(*(float*)args));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).GetRotationTarget((Transform)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).HandleDrag();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).HideWarBoard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).InitializeWarBoardBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).MoveWarBoard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnCenterComplete((RotateTween)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnRotationUpdate((RotateTween)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnWarboardBackgroundLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnWarboardBackgroundLoadFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnWarBoardLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).OnWarBoardLoadFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).RotateWarBoard(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).SampleRotation(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).SelectAndCenterOn(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).ShowWarBoard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateSelections();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((WarBoardViewController)GCHandledObjects.GCHandleToObject(instance)).WarBoardAudioLoadFinished();
-			return -1L;
 		}
 	}
 }

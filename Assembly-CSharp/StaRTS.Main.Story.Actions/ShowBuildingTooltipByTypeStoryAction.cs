@@ -10,9 +10,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -49,7 +47,7 @@ namespace StaRTS.Main.Story.Actions
 			this.type = StringUtils.ParseEnum<BuildingType>(this.prepareArgs[0]);
 			if (this.prepareArgs.Length >= 5)
 			{
-				this.area = new Rect((float)Convert.ToInt32(this.prepareArgs[1], CultureInfo.InvariantCulture), (float)Convert.ToInt32(this.prepareArgs[2], CultureInfo.InvariantCulture), (float)Convert.ToInt32(this.prepareArgs[3], CultureInfo.InvariantCulture), (float)Convert.ToInt32(this.prepareArgs[4], CultureInfo.InvariantCulture));
+				this.area = new Rect((float)Convert.ToInt32(this.prepareArgs[1]), (float)Convert.ToInt32(this.prepareArgs[2]), (float)Convert.ToInt32(this.prepareArgs[3]), (float)Convert.ToInt32(this.prepareArgs[4]));
 			}
 			else
 			{
@@ -66,60 +64,47 @@ namespace StaRTS.Main.Story.Actions
 			{
 				Entity entity = buildingListByType[i];
 				BuildingComponent buildingComponent = entity.Get<BuildingComponent>();
-				if (this.area.Contains(new Vector2((float)buildingComponent.BuildingTO.X, (float)buildingComponent.BuildingTO.Z)) && !ContractUtils.IsBuildingConstructing(entity))
+				if (this.area.Contains(new Vector2((float)buildingComponent.BuildingTO.X, (float)buildingComponent.BuildingTO.Z)))
 				{
-					if (entity.Has<HealthViewComponent>())
+					if (!ContractUtils.IsBuildingConstructing(entity))
 					{
-						entity.Get<HealthViewComponent>().SetEnabled(this.show);
-					}
-					if (entity.Has<SupportViewComponent>())
-					{
-						entity.Get<SupportViewComponent>().SetEnabled(this.show);
-					}
-					if (entity.Has<GeneratorViewComponent>())
-					{
-						GeneratorViewComponent generatorViewComponent = entity.Get<GeneratorViewComponent>();
-						if (this.show)
+						if (entity.Has<HealthViewComponent>())
 						{
-							generatorViewComponent.SetEnabled(this.show);
-							NodeList<GeneratorViewNode> nodeList = Service.Get<EntityController>().GetNodeList<GeneratorViewNode>();
-							for (GeneratorViewNode generatorViewNode = nodeList.Head; generatorViewNode != null; generatorViewNode = generatorViewNode.Next)
+							entity.Get<HealthViewComponent>().SetEnabled(this.show);
+						}
+						if (entity.Has<SupportViewComponent>())
+						{
+							entity.Get<SupportViewComponent>().SetEnabled(this.show);
+						}
+						if (entity.Has<GeneratorViewComponent>())
+						{
+							GeneratorViewComponent generatorViewComponent = entity.Get<GeneratorViewComponent>();
+							if (this.show)
 							{
-								if (generatorViewNode.Entity == entity)
+								generatorViewComponent.SetEnabled(this.show);
+								NodeList<GeneratorViewNode> nodeList = Service.Get<EntityController>().GetNodeList<GeneratorViewNode>();
+								for (GeneratorViewNode generatorViewNode = nodeList.Head; generatorViewNode != null; generatorViewNode = generatorViewNode.Next)
 								{
-									Service.Get<ICurrencyController>().UpdateGeneratorAccruedCurrency((SmartEntity)entity);
+									if (generatorViewNode.Entity == entity)
+									{
+										Service.Get<ICurrencyController>().UpdateGeneratorAccruedCurrency((SmartEntity)entity);
+									}
 								}
 							}
+							else
+							{
+								generatorViewComponent.ShowCollectButton(false);
+								generatorViewComponent.SetEnabled(this.show);
+							}
 						}
-						else
+						if (this.show)
 						{
-							generatorViewComponent.ShowCollectButton(false);
-							generatorViewComponent.SetEnabled(this.show);
+							Service.Get<BuildingTooltipController>().EnsureBuildingTooltip((SmartEntity)buildingComponent.Entity);
 						}
-					}
-					if (this.show)
-					{
-						Service.Get<BuildingTooltipController>().EnsureBuildingTooltip((SmartEntity)buildingComponent.Entity);
 					}
 				}
 			}
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal ShowBuildingTooltipByTypeStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShowBuildingTooltipByTypeStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ShowBuildingTooltipByTypeStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

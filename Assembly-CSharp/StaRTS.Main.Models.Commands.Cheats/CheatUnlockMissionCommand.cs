@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatUnlockMissionCommand(MissionIdRequest request) : base("cheats.unlockSingleMission", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatUnlockMissionCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

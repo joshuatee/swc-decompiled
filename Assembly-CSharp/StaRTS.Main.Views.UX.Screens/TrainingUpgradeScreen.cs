@@ -12,7 +12,6 @@ using StaRTS.Main.Views.UX.Tags;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -119,18 +118,20 @@ namespace StaRTS.Main.Views.UX.Screens
 			SliderControl sliderControl = this.sliders[sliderIndex];
 			sliderControl.DescLabel.Text = this.lang.Get(id, new object[0]);
 			sliderControl.CurrentLabel.Text = this.lang.ThousandsSeparated(storage);
-			sliderControl.CurrentSlider.Value = ((storage3 == 0) ? 0f : ((float)storage / (float)storage3));
+			sliderControl.CurrentSlider.Value = ((storage3 != 0) ? ((float)storage / (float)storage3) : 0f);
 			if (storage2 > storage)
 			{
 				sliderControl.NextLabel.Text = this.lang.Get("PLUS", new object[]
 				{
 					this.lang.ThousandsSeparated(storage2 - storage)
 				});
-				sliderControl.NextSlider.Value = ((storage3 == 0) ? 0f : ((float)storage2 / (float)storage3));
-				return;
+				sliderControl.NextSlider.Value = ((storage3 != 0) ? ((float)storage2 / (float)storage3) : 0f);
 			}
-			sliderControl.NextLabel.Visible = false;
-			sliderControl.NextSlider.Visible = false;
+			else
+			{
+				sliderControl.NextLabel.Visible = false;
+				sliderControl.NextSlider.Visible = false;
+			}
 		}
 
 		private void InitUnlockItemGrid()
@@ -147,23 +148,25 @@ namespace StaRTS.Main.Views.UX.Screens
 				break;
 			case BuildingType.FleetCommand:
 				this.InitStarshipUnlockGrid();
-				goto IL_64;
+				goto IL_74;
 			default:
 				if (type != BuildingType.Cantina)
 				{
-					goto IL_64;
+					goto IL_74;
 				}
 				break;
 			}
 			this.InitTroopUnlockGrid();
-			IL_64:
+			IL_74:
 			if (this.unlockGrid.Count > 0)
 			{
 				this.unlockGrid.RepositionItems();
-				this.unlockGrid.Scroll((this.unlockGrid.Count > 7) ? 0f : 0.5f);
-				return;
+				this.unlockGrid.Scroll((this.unlockGrid.Count <= 7) ? 0.5f : 0f);
 			}
-			base.GetElement<UXElement>("UnlockItems").Visible = false;
+			else
+			{
+				base.GetElement<UXElement>("UnlockItems").Visible = false;
+			}
 		}
 
 		private void InitTroopUnlockGrid()
@@ -226,70 +229,6 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		public override void RefreshView()
 		{
-		}
-
-		protected internal TrainingUpgradeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitGroups();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitStarshipUnlockGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitTroopUnlockGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitUnlockItemGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnUnlockCardClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TrainingUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateCapacity(*(int*)args);
-			return -1L;
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public AwardIncentiveCommand(PlayerIdChecksumRequest request) : base("player.award.rateMyApp", request, new DefaultResponse())
 		{
 		}
-
-		protected internal AwardIncentiveCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

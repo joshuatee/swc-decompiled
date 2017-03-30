@@ -2,7 +2,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Views.World.Deploying;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -111,107 +110,6 @@ namespace StaRTS.Main.Controllers
 				this.deployers[i].ExitMode();
 				i++;
 			}
-		}
-
-		protected internal DeployerController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).EnterChampionDeployMode((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).EnterHeroDeployMode((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).EnterSpecialAttackPlacementMode((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).EnterSquadTroopPlacementMode();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).EnterTroopPlacementMode((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).ExitAllDeployModes();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).ExitAllDeployModesExcept((AbstractDeployer)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployerController)GCHandledObjects.GCHandleToObject(instance)).ChampionDeployer);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployerController)GCHandledObjects.GCHandleToObject(instance)).HeroDeployer);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployerController)GCHandledObjects.GCHandleToObject(instance)).SpecialAttackDeployer);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployerController)GCHandledObjects.GCHandleToObject(instance)).SquadTroopDeployer);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployerController)GCHandledObjects.GCHandleToObject(instance)).TroopDeployer);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).ChampionDeployer = (ChampionDeployer)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).HeroDeployer = (HeroDeployer)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).SpecialAttackDeployer = (SpecialAttackDeployer)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).SquadTroopDeployer = (SquadTroopDeployer)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((DeployerController)GCHandledObjects.GCHandleToObject(instance)).TroopDeployer = (TroopDeployer)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
 		}
 	}
 }

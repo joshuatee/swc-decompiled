@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Deployable
 		public DeployableStartContractCommand(DeployableContractRequest request) : base("player.deployable.train", request, new DefaultResponse())
 		{
 		}
-
-		protected internal DeployableStartContractCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

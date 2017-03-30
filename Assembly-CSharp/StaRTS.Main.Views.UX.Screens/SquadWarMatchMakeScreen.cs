@@ -5,7 +5,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -109,12 +108,14 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.buttonBack.Visible = false;
 				this.buttonConfirm.Visible = false;
 				this.labelSquadQueue.Text = this.lang.Get("WAR_MATCHMAKE_TEXT", new object[0]);
-				return;
 			}
-			this.buttonCancel.Visible = false;
-			this.buttonBack.Visible = true;
-			this.buttonConfirm.Visible = true;
-			this.labelSquadQueue.Text = this.lang.Get("WAR_MATCHMAKE_CANCEL_CONFIRM_TEXT", new object[0]);
+			else
+			{
+				this.buttonCancel.Visible = false;
+				this.buttonBack.Visible = true;
+				this.buttonConfirm.Visible = true;
+				this.labelSquadQueue.Text = this.lang.Get("WAR_MATCHMAKE_CANCEL_CONFIRM_TEXT", new object[0]);
+			}
 		}
 
 		private void OnCancelButtonClicked(UXButton button)
@@ -134,40 +135,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.finalConfirm = false;
 			this.Close(null);
 			Service.Get<SquadController>().WarManager.CancelMatchMakingTakeAction();
-		}
-
-		protected internal SquadWarMatchMakeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadWarMatchMakeScreen)GCHandledObjects.GCHandleToObject(instance)).OnBackClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadWarMatchMakeScreen)GCHandledObjects.GCHandleToObject(instance)).OnCancelButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadWarMatchMakeScreen)GCHandledObjects.GCHandleToObject(instance)).OnConfirmClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadWarMatchMakeScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadWarMatchMakeScreen)GCHandledObjects.GCHandleToObject(instance)).Refresh();
-			return -1L;
 		}
 	}
 }

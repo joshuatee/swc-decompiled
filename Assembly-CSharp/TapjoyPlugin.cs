@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
-public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
+public class TapjoyPlugin : MonoBehaviour
 {
 	public const string MacAddressOptionOn = "0";
 
@@ -16,81 +13,271 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 
 	private static Dictionary<string, TapjoyEvent> eventDictionary = new Dictionary<string, TapjoyEvent>();
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action connectCallSucceeded;
+	public static event Action connectCallSucceeded
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.connectCallSucceeded = (Action)Delegate.Combine(TapjoyPlugin.connectCallSucceeded, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.connectCallSucceeded = (Action)Delegate.Remove(TapjoyPlugin.connectCallSucceeded, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action connectCallFailed;
+	public static event Action connectCallFailed
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.connectCallFailed = (Action)Delegate.Combine(TapjoyPlugin.connectCallFailed, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.connectCallFailed = (Action)Delegate.Remove(TapjoyPlugin.connectCallFailed, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action<int> getTapPointsSucceeded;
+	public static event Action<int> getTapPointsSucceeded
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.getTapPointsSucceeded = (Action<int>)Delegate.Combine(TapjoyPlugin.getTapPointsSucceeded, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.getTapPointsSucceeded = (Action<int>)Delegate.Remove(TapjoyPlugin.getTapPointsSucceeded, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action getTapPointsFailed;
+	public static event Action getTapPointsFailed
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.getTapPointsFailed = (Action)Delegate.Combine(TapjoyPlugin.getTapPointsFailed, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.getTapPointsFailed = (Action)Delegate.Remove(TapjoyPlugin.getTapPointsFailed, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action<int> spendTapPointsSucceeded;
+	public static event Action<int> spendTapPointsSucceeded
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.spendTapPointsSucceeded = (Action<int>)Delegate.Combine(TapjoyPlugin.spendTapPointsSucceeded, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.spendTapPointsSucceeded = (Action<int>)Delegate.Remove(TapjoyPlugin.spendTapPointsSucceeded, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action spendTapPointsFailed;
+	public static event Action spendTapPointsFailed
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.spendTapPointsFailed = (Action)Delegate.Combine(TapjoyPlugin.spendTapPointsFailed, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.spendTapPointsFailed = (Action)Delegate.Remove(TapjoyPlugin.spendTapPointsFailed, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action awardTapPointsSucceeded;
+	public static event Action awardTapPointsSucceeded
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.awardTapPointsSucceeded = (Action)Delegate.Combine(TapjoyPlugin.awardTapPointsSucceeded, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.awardTapPointsSucceeded = (Action)Delegate.Remove(TapjoyPlugin.awardTapPointsSucceeded, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action awardTapPointsFailed;
+	public static event Action awardTapPointsFailed
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.awardTapPointsFailed = (Action)Delegate.Combine(TapjoyPlugin.awardTapPointsFailed, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.awardTapPointsFailed = (Action)Delegate.Remove(TapjoyPlugin.awardTapPointsFailed, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action<int> tapPointsEarned;
+	public static event Action<int> tapPointsEarned
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.tapPointsEarned = (Action<int>)Delegate.Combine(TapjoyPlugin.tapPointsEarned, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.tapPointsEarned = (Action<int>)Delegate.Remove(TapjoyPlugin.tapPointsEarned, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action getFullScreenAdSucceeded;
+	public static event Action getFullScreenAdSucceeded
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.getFullScreenAdSucceeded = (Action)Delegate.Combine(TapjoyPlugin.getFullScreenAdSucceeded, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.getFullScreenAdSucceeded = (Action)Delegate.Remove(TapjoyPlugin.getFullScreenAdSucceeded, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action getFullScreenAdFailed;
+	public static event Action getFullScreenAdFailed
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.getFullScreenAdFailed = (Action)Delegate.Combine(TapjoyPlugin.getFullScreenAdFailed, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.getFullScreenAdFailed = (Action)Delegate.Remove(TapjoyPlugin.getFullScreenAdFailed, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action getDisplayAdSucceeded;
+	public static event Action getDisplayAdSucceeded
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.getDisplayAdSucceeded = (Action)Delegate.Combine(TapjoyPlugin.getDisplayAdSucceeded, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.getDisplayAdSucceeded = (Action)Delegate.Remove(TapjoyPlugin.getDisplayAdSucceeded, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action getDisplayAdFailed;
+	public static event Action getDisplayAdFailed
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.getDisplayAdFailed = (Action)Delegate.Combine(TapjoyPlugin.getDisplayAdFailed, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.getDisplayAdFailed = (Action)Delegate.Remove(TapjoyPlugin.getDisplayAdFailed, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action videoAdStarted;
+	public static event Action videoAdStarted
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.videoAdStarted = (Action)Delegate.Combine(TapjoyPlugin.videoAdStarted, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.videoAdStarted = (Action)Delegate.Remove(TapjoyPlugin.videoAdStarted, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action videoAdFailed;
+	public static event Action videoAdFailed
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.videoAdFailed = (Action)Delegate.Combine(TapjoyPlugin.videoAdFailed, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.videoAdFailed = (Action)Delegate.Remove(TapjoyPlugin.videoAdFailed, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action videoAdCompleted;
+	public static event Action videoAdCompleted
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.videoAdCompleted = (Action)Delegate.Combine(TapjoyPlugin.videoAdCompleted, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.videoAdCompleted = (Action)Delegate.Remove(TapjoyPlugin.videoAdCompleted, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action showOffersFailed;
+	public static event Action showOffersFailed
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.showOffersFailed = (Action)Delegate.Combine(TapjoyPlugin.showOffersFailed, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.showOffersFailed = (Action)Delegate.Remove(TapjoyPlugin.showOffersFailed, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action<TapjoyViewType> viewOpened;
+	public static event Action<TapjoyViewType> viewOpened
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.viewOpened = (Action<TapjoyViewType>)Delegate.Combine(TapjoyPlugin.viewOpened, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.viewOpened = (Action<TapjoyViewType>)Delegate.Remove(TapjoyPlugin.viewOpened, value);
+		}
+	}
 
-	[method: CompilerGenerated]
-	[CompilerGenerated]
-	public static event Action<TapjoyViewType> viewClosed;
+	public static event Action<TapjoyViewType> viewClosed
+	{
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		add
+		{
+			TapjoyPlugin.viewClosed = (Action<TapjoyViewType>)Delegate.Combine(TapjoyPlugin.viewClosed, value);
+		}
+		[MethodImpl(MethodImplOptions.Synchronized)]
+		remove
+		{
+			TapjoyPlugin.viewClosed = (Action<TapjoyViewType>)Delegate.Remove(TapjoyPlugin.viewClosed, value);
+		}
+	}
 
 	private void Awake()
 	{
@@ -104,7 +291,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.connectCallSucceeded != null)
 		{
-			TapjoyPlugin.connectCallSucceeded.Invoke();
+			TapjoyPlugin.connectCallSucceeded();
 		}
 	}
 
@@ -112,7 +299,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.connectCallFailed != null)
 		{
-			TapjoyPlugin.connectCallFailed.Invoke();
+			TapjoyPlugin.connectCallFailed();
 		}
 	}
 
@@ -120,7 +307,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.getTapPointsSucceeded != null)
 		{
-			TapjoyPlugin.getTapPointsSucceeded.Invoke(int.Parse(message));
+			TapjoyPlugin.getTapPointsSucceeded(int.Parse(message));
 		}
 	}
 
@@ -128,7 +315,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.getTapPointsFailed != null)
 		{
-			TapjoyPlugin.getTapPointsFailed.Invoke();
+			TapjoyPlugin.getTapPointsFailed();
 		}
 	}
 
@@ -136,7 +323,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.spendTapPointsSucceeded != null)
 		{
-			TapjoyPlugin.spendTapPointsSucceeded.Invoke(int.Parse(message));
+			TapjoyPlugin.spendTapPointsSucceeded(int.Parse(message));
 		}
 	}
 
@@ -144,7 +331,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.spendTapPointsFailed != null)
 		{
-			TapjoyPlugin.spendTapPointsFailed.Invoke();
+			TapjoyPlugin.spendTapPointsFailed();
 		}
 	}
 
@@ -152,7 +339,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.awardTapPointsSucceeded != null)
 		{
-			TapjoyPlugin.awardTapPointsSucceeded.Invoke();
+			TapjoyPlugin.awardTapPointsSucceeded();
 		}
 	}
 
@@ -160,7 +347,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.awardTapPointsFailed != null)
 		{
-			TapjoyPlugin.awardTapPointsFailed.Invoke();
+			TapjoyPlugin.awardTapPointsFailed();
 		}
 	}
 
@@ -168,7 +355,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.tapPointsEarned != null)
 		{
-			TapjoyPlugin.tapPointsEarned.Invoke(int.Parse(message));
+			TapjoyPlugin.tapPointsEarned(int.Parse(message));
 		}
 	}
 
@@ -176,7 +363,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.getFullScreenAdSucceeded != null)
 		{
-			TapjoyPlugin.getFullScreenAdSucceeded.Invoke();
+			TapjoyPlugin.getFullScreenAdSucceeded();
 		}
 	}
 
@@ -184,7 +371,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.getFullScreenAdFailed != null)
 		{
-			TapjoyPlugin.getFullScreenAdFailed.Invoke();
+			TapjoyPlugin.getFullScreenAdFailed();
 		}
 	}
 
@@ -192,7 +379,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.getDisplayAdSucceeded != null)
 		{
-			TapjoyPlugin.getDisplayAdSucceeded.Invoke();
+			TapjoyPlugin.getDisplayAdSucceeded();
 		}
 	}
 
@@ -200,7 +387,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.getDisplayAdFailed != null)
 		{
-			TapjoyPlugin.getDisplayAdFailed.Invoke();
+			TapjoyPlugin.getDisplayAdFailed();
 		}
 	}
 
@@ -208,7 +395,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.videoAdStarted != null)
 		{
-			TapjoyPlugin.videoAdStarted.Invoke();
+			TapjoyPlugin.videoAdStarted();
 		}
 	}
 
@@ -216,7 +403,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.videoAdFailed != null)
 		{
-			TapjoyPlugin.videoAdFailed.Invoke();
+			TapjoyPlugin.videoAdFailed();
 		}
 	}
 
@@ -224,7 +411,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.videoAdCompleted != null)
 		{
-			TapjoyPlugin.videoAdCompleted.Invoke();
+			TapjoyPlugin.videoAdCompleted();
 		}
 	}
 
@@ -232,7 +419,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.showOffersFailed != null)
 		{
-			TapjoyPlugin.showOffersFailed.Invoke();
+			TapjoyPlugin.showOffersFailed();
 		}
 	}
 
@@ -240,8 +427,8 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.viewOpened != null)
 		{
-			int num = int.Parse(message);
-			TapjoyPlugin.viewOpened.Invoke((TapjoyViewType)num);
+			int obj = int.Parse(message);
+			TapjoyPlugin.viewOpened((TapjoyViewType)obj);
 		}
 	}
 
@@ -249,8 +436,8 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 	{
 		if (TapjoyPlugin.viewClosed != null)
 		{
-			int num = int.Parse(message);
-			TapjoyPlugin.viewClosed.Invoke((TapjoyViewType)num);
+			int obj = int.Parse(message);
+			TapjoyPlugin.viewClosed((TapjoyViewType)obj);
 		}
 	}
 
@@ -260,7 +447,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.SetCallbackHandler(handlerName);
+		TapjoyPluginAndroid.SetCallbackHandler(handlerName);
 	}
 
 	public static void RequestTapjoyConnect(string appID, string secretKey)
@@ -269,7 +456,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.RequestTapjoyConnect(appID, secretKey);
+		TapjoyPluginAndroid.RequestTapjoyConnect(appID, secretKey);
 	}
 
 	public static void RequestTapjoyConnect(string appID, string secretKey, Dictionary<string, string> flags)
@@ -281,9 +468,9 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		Dictionary<string, object> dictionary = new Dictionary<string, object>();
 		foreach (KeyValuePair<string, string> current in flags)
 		{
-			dictionary.Add(current.get_Key(), current.get_Value());
+			dictionary.Add(current.Key, current.Value);
 		}
-		TapjoyPluginDefault.RequestTapjoyConnect(appID, secretKey, dictionary);
+		TapjoyPluginAndroid.RequestTapjoyConnect(appID, secretKey, dictionary);
 	}
 
 	public static void RequestTapjoyConnect(string appID, string secretKey, Dictionary<string, object> flags)
@@ -292,7 +479,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.RequestTapjoyConnect(appID, secretKey, flags);
+		TapjoyPluginAndroid.RequestTapjoyConnect(appID, secretKey, flags);
 	}
 
 	public static void EnableLogging(bool enable)
@@ -301,7 +488,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.EnableLogging(enable);
+		TapjoyPluginAndroid.EnableLogging(enable);
 	}
 
 	public static void SendSegmentationParams(Dictionary<string, object> segmentationParams)
@@ -310,7 +497,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.SendSegmentationParams(segmentationParams);
+		TapjoyPluginAndroid.SendSegmentationParams(segmentationParams);
 	}
 
 	public static void AppPause()
@@ -319,7 +506,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.AppPause();
+		TapjoyPluginAndroid.AppPause();
 	}
 
 	public static void AppResume()
@@ -328,7 +515,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.AppResume();
+		TapjoyPluginAndroid.AppResume();
 	}
 
 	public static void ActionComplete(string actionID)
@@ -337,7 +524,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.ActionComplete(actionID);
+		TapjoyPluginAndroid.ActionComplete(actionID);
 	}
 
 	public static void SetUserID(string userID)
@@ -346,7 +533,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.SetUserID(userID);
+		TapjoyPluginAndroid.SetUserID(userID);
 	}
 
 	public static void ShowOffers()
@@ -355,7 +542,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.ShowOffers();
+		TapjoyPluginAndroid.ShowOffers();
 	}
 
 	public static void GetTapPoints()
@@ -364,7 +551,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.GetTapPoints();
+		TapjoyPluginAndroid.GetTapPoints();
 	}
 
 	public static void SpendTapPoints(int points)
@@ -373,7 +560,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.SpendTapPoints(points);
+		TapjoyPluginAndroid.SpendTapPoints(points);
 	}
 
 	public static void AwardTapPoints(int points)
@@ -382,7 +569,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.AwardTapPoints(points);
+		TapjoyPluginAndroid.AwardTapPoints(points);
 	}
 
 	public static int QueryTapPoints()
@@ -391,7 +578,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return 0;
 		}
-		return TapjoyPluginDefault.QueryTapPoints();
+		return TapjoyPluginAndroid.QueryTapPoints();
 	}
 
 	public static void ShowDefaultEarnedCurrencyAlert()
@@ -400,7 +587,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.ShowDefaultEarnedCurrencyAlert();
+		TapjoyPluginAndroid.ShowDefaultEarnedCurrencyAlert();
 	}
 
 	public static void GetDisplayAd()
@@ -409,7 +596,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.GetDisplayAd();
+		TapjoyPluginAndroid.GetDisplayAd();
 	}
 
 	public static void ShowDisplayAd()
@@ -418,7 +605,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.ShowDisplayAd();
+		TapjoyPluginAndroid.ShowDisplayAd();
 	}
 
 	public static void HideDisplayAd()
@@ -427,7 +614,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.HideDisplayAd();
+		TapjoyPluginAndroid.HideDisplayAd();
 	}
 
 	[Obsolete("SetDisplayAdContentSize is deprecated. Please use SetDisplayAdSize.")]
@@ -455,7 +642,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			displayAdSize = "768x90";
 		}
-		TapjoyPluginDefault.SetDisplayAdSize(displayAdSize);
+		TapjoyPluginAndroid.SetDisplayAdSize(displayAdSize);
 	}
 
 	public static void EnableDisplayAdAutoRefresh(bool enable)
@@ -464,7 +651,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.EnableDisplayAdAutoRefresh(enable);
+		TapjoyPluginAndroid.EnableDisplayAdAutoRefresh(enable);
 	}
 
 	public static void MoveDisplayAd(int x, int y)
@@ -473,7 +660,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.MoveDisplayAd(x, y);
+		TapjoyPluginAndroid.MoveDisplayAd(x, y);
 	}
 
 	[Obsolete("SetTransitionEffect is deprecated since 10.0.0")]
@@ -483,7 +670,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.SetTransitionEffect(transition);
+		TapjoyPluginAndroid.SetTransitionEffect(transition);
 	}
 
 	[Obsolete("GetFullScreenAd is deprecated since 10.0.0")]
@@ -493,7 +680,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.GetFullScreenAd();
+		TapjoyPluginAndroid.GetFullScreenAd();
 	}
 
 	[Obsolete("ShowFullScreenAd is deprecated since 10.0.0. Tapjoy ad units now use TJEvent")]
@@ -503,7 +690,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.ShowFullScreenAd();
+		TapjoyPluginAndroid.ShowFullScreenAd();
 	}
 
 	[Obsolete("SetVideoCacheCount is deprecated, video is now controlled via your Tapjoy Dashboard.")]
@@ -513,7 +700,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 
 	public static void SendShutDownEvent()
 	{
-		TapjoyPluginDefault.SendShutDownEvent();
+		TapjoyPluginAndroid.SendShutDownEvent();
 	}
 
 	public static void SendIAPEvent(string name, float price, int quantity, string currencyCode)
@@ -522,7 +709,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.SendIAPEvent(name, price, quantity, currencyCode);
+		TapjoyPluginAndroid.SendIAPEvent(name, price, quantity, currencyCode);
 	}
 
 	public static void ShowOffersWithCurrencyID(string currencyID, bool selector)
@@ -531,7 +718,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.ShowOffersWithCurrencyID(currencyID, selector);
+		TapjoyPluginAndroid.ShowOffersWithCurrencyID(currencyID, selector);
 	}
 
 	public static void GetDisplayAdWithCurrencyID(string currencyID)
@@ -540,7 +727,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.GetDisplayAdWithCurrencyID(currencyID);
+		TapjoyPluginAndroid.GetDisplayAdWithCurrencyID(currencyID);
 	}
 
 	public static void GetFullScreenAdWithCurrencyID(string currencyID)
@@ -549,7 +736,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.GetFullScreenAdWithCurrencyID(currencyID);
+		TapjoyPluginAndroid.GetFullScreenAdWithCurrencyID(currencyID);
 	}
 
 	public static void SetCurrencyMultiplier(float multiplier)
@@ -558,7 +745,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.SetCurrencyMultiplier(multiplier);
+		TapjoyPluginAndroid.SetCurrencyMultiplier(multiplier);
 	}
 
 	public void SendEventCompleteWithContent(string guid)
@@ -586,7 +773,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		if (array.Length == 2)
 		{
 			string key = array[0];
-			int status = Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+			int status = Convert.ToInt32(array[1]);
 			if (TapjoyPlugin.eventDictionary != null && TapjoyPlugin.eventDictionary.ContainsKey(key))
 			{
 				TapjoyPlugin.eventDictionary[key].TriggerContentIsReady(status);
@@ -626,10 +813,10 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		});
 		string key = array[0];
 		int type;
-		int.TryParse(array[1], ref type);
+		int.TryParse(array[1], out type);
 		string identifier = array[2];
 		int quantity;
-		int.TryParse(array[3], ref quantity);
+		int.TryParse(array[3], out quantity);
 		if (TapjoyPlugin.eventDictionary != null && TapjoyPlugin.eventDictionary.ContainsKey(key))
 		{
 			TapjoyPlugin.eventDictionary[key].TriggerDidRequestAction(type, identifier, quantity);
@@ -648,13 +835,13 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 			text = Guid.NewGuid().ToString();
 		}
 		TapjoyPlugin.eventDictionary.Add(text, eventRef);
-		TapjoyPluginDefault.CreateEvent(text, eventName, eventParameter);
+		TapjoyPluginAndroid.CreateEvent(text, eventName, eventParameter);
 		return text;
 	}
 
 	public static void SendEvent(string guid)
 	{
-		TapjoyPluginDefault.SendEvent(guid);
+		TapjoyPluginAndroid.SendEvent(guid);
 	}
 
 	public static void ShowEvent(string guid)
@@ -663,7 +850,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.ShowEvent(guid);
+		TapjoyPluginAndroid.ShowEvent(guid);
 	}
 
 	public static void EnableEventAutoPresent(string guid, bool autoPresent)
@@ -672,7 +859,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.EnableEventAutoPresent(guid, autoPresent);
+		TapjoyPluginAndroid.EnableEventAutoPresent(guid, autoPresent);
 	}
 
 	public static void EnableEventPreload(string guid, bool preload)
@@ -681,7 +868,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.EnableEventPreload(guid, preload);
+		TapjoyPluginAndroid.EnableEventPreload(guid, preload);
 	}
 
 	public static void EventRequestCompleted(string guid)
@@ -690,7 +877,7 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.EventRequestCompleted(guid);
+		TapjoyPluginAndroid.EventRequestCompleted(guid);
 	}
 
 	public static void EventRequestCancelled(string guid)
@@ -699,692 +886,6 @@ public class TapjoyPlugin : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		TapjoyPluginDefault.EventRequestCancelled(guid);
-	}
-
-	public TapjoyPlugin()
-	{
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-	}
-
-	public override void Unity_NamedSerialize(int depth)
-	{
-	}
-
-	public override void Unity_NamedDeserialize(int depth)
-	{
-	}
-
-	protected internal TapjoyPlugin(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		TapjoyPlugin.ActionComplete(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		TapjoyPlugin.awardTapPointsFailed += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		TapjoyPlugin.awardTapPointsSucceeded += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		TapjoyPlugin.connectCallFailed += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		TapjoyPlugin.connectCallSucceeded += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		TapjoyPlugin.getDisplayAdFailed += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		TapjoyPlugin.getDisplayAdSucceeded += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		TapjoyPlugin.getFullScreenAdFailed += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		TapjoyPlugin.getFullScreenAdSucceeded += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		TapjoyPlugin.getTapPointsFailed += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		TapjoyPlugin.getTapPointsSucceeded += (Action<int>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		TapjoyPlugin.showOffersFailed += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		TapjoyPlugin.spendTapPointsFailed += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		TapjoyPlugin.spendTapPointsSucceeded += (Action<int>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		TapjoyPlugin.tapPointsEarned += (Action<int>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		TapjoyPlugin.videoAdCompleted += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		TapjoyPlugin.videoAdFailed += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		TapjoyPlugin.videoAdStarted += (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		TapjoyPlugin.viewClosed += (Action<TapjoyViewType>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		TapjoyPlugin.viewOpened += (Action<TapjoyViewType>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		TapjoyPlugin.AppPause();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		TapjoyPlugin.AppResume();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).Awake();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		TapjoyPlugin.AwardTapPoints(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).ContentDidAppear(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).ContentDidDisappear(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).ContentIsReady(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(TapjoyPlugin.CreateEvent((TapjoyEvent)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).CurrencyEarned(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).DidRequestAction(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).DisplayAdError(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).DisplayAdLoaded(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		TapjoyPlugin.EnableDisplayAdAutoRefresh(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		TapjoyPlugin.EnableEventAutoPresent(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		TapjoyPlugin.EnableEventPreload(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		TapjoyPlugin.EnableLogging(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		TapjoyPlugin.EventRequestCancelled(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		TapjoyPlugin.EventRequestCompleted(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke38(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).FullScreenAdError(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke39(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).FullScreenAdLoaded(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke40(long instance, long* args)
-	{
-		TapjoyPlugin.GetDisplayAd();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke41(long instance, long* args)
-	{
-		TapjoyPlugin.GetDisplayAdWithCurrencyID(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke42(long instance, long* args)
-	{
-		TapjoyPlugin.GetFullScreenAd();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke43(long instance, long* args)
-	{
-		TapjoyPlugin.GetFullScreenAdWithCurrencyID(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke44(long instance, long* args)
-	{
-		TapjoyPlugin.GetTapPoints();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke45(long instance, long* args)
-	{
-		TapjoyPlugin.HideDisplayAd();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke46(long instance, long* args)
-	{
-		TapjoyPlugin.MoveDisplayAd(*(int*)args, *(int*)(args + 1));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke47(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(TapjoyPlugin.QueryTapPoints());
-	}
-
-	public unsafe static long $Invoke48(long instance, long* args)
-	{
-		TapjoyPlugin.awardTapPointsFailed -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke49(long instance, long* args)
-	{
-		TapjoyPlugin.awardTapPointsSucceeded -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke50(long instance, long* args)
-	{
-		TapjoyPlugin.connectCallFailed -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke51(long instance, long* args)
-	{
-		TapjoyPlugin.connectCallSucceeded -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke52(long instance, long* args)
-	{
-		TapjoyPlugin.getDisplayAdFailed -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke53(long instance, long* args)
-	{
-		TapjoyPlugin.getDisplayAdSucceeded -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke54(long instance, long* args)
-	{
-		TapjoyPlugin.getFullScreenAdFailed -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke55(long instance, long* args)
-	{
-		TapjoyPlugin.getFullScreenAdSucceeded -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke56(long instance, long* args)
-	{
-		TapjoyPlugin.getTapPointsFailed -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke57(long instance, long* args)
-	{
-		TapjoyPlugin.getTapPointsSucceeded -= (Action<int>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke58(long instance, long* args)
-	{
-		TapjoyPlugin.showOffersFailed -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke59(long instance, long* args)
-	{
-		TapjoyPlugin.spendTapPointsFailed -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke60(long instance, long* args)
-	{
-		TapjoyPlugin.spendTapPointsSucceeded -= (Action<int>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke61(long instance, long* args)
-	{
-		TapjoyPlugin.tapPointsEarned -= (Action<int>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke62(long instance, long* args)
-	{
-		TapjoyPlugin.videoAdCompleted -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke63(long instance, long* args)
-	{
-		TapjoyPlugin.videoAdFailed -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke64(long instance, long* args)
-	{
-		TapjoyPlugin.videoAdStarted -= (Action)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke65(long instance, long* args)
-	{
-		TapjoyPlugin.viewClosed -= (Action<TapjoyViewType>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke66(long instance, long* args)
-	{
-		TapjoyPlugin.viewOpened -= (Action<TapjoyViewType>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke67(long instance, long* args)
-	{
-		TapjoyPlugin.RequestTapjoyConnect(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke68(long instance, long* args)
-	{
-		TapjoyPlugin.RequestTapjoyConnect(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (Dictionary<string, object>)GCHandledObjects.GCHandleToObject(args[2]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke69(long instance, long* args)
-	{
-		TapjoyPlugin.RequestTapjoyConnect(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (Dictionary<string, string>)GCHandledObjects.GCHandleToObject(args[2]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke70(long instance, long* args)
-	{
-		TapjoyPlugin.SendEvent(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke71(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).SendEventComplete(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke72(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).SendEventCompleteWithContent(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke73(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).SendEventFail(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke74(long instance, long* args)
-	{
-		TapjoyPlugin.SendIAPEvent(Marshal.PtrToStringUni(*(IntPtr*)args), *(float*)(args + 1), *(int*)(args + 2), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke75(long instance, long* args)
-	{
-		TapjoyPlugin.SendSegmentationParams((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke76(long instance, long* args)
-	{
-		TapjoyPlugin.SendShutDownEvent();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke77(long instance, long* args)
-	{
-		TapjoyPlugin.SetCallbackHandler(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke78(long instance, long* args)
-	{
-		TapjoyPlugin.SetCurrencyMultiplier(*(float*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke79(long instance, long* args)
-	{
-		TapjoyPlugin.SetDisplayAdContentSize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke80(long instance, long* args)
-	{
-		TapjoyPlugin.SetDisplayAdSize((TapjoyDisplayAdSize)(*(int*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke81(long instance, long* args)
-	{
-		TapjoyPlugin.SetTransitionEffect(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke82(long instance, long* args)
-	{
-		TapjoyPlugin.SetUserID(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke83(long instance, long* args)
-	{
-		TapjoyPlugin.SetVideoCacheCount(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke84(long instance, long* args)
-	{
-		TapjoyPlugin.ShowDefaultEarnedCurrencyAlert();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke85(long instance, long* args)
-	{
-		TapjoyPlugin.ShowDisplayAd();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke86(long instance, long* args)
-	{
-		TapjoyPlugin.ShowEvent(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke87(long instance, long* args)
-	{
-		TapjoyPlugin.ShowFullScreenAd();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke88(long instance, long* args)
-	{
-		TapjoyPlugin.ShowOffers();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke89(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).ShowOffersError(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke90(long instance, long* args)
-	{
-		TapjoyPlugin.ShowOffersWithCurrencyID(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke91(long instance, long* args)
-	{
-		TapjoyPlugin.SpendTapPoints(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke92(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).TapjoyConnectFail(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke93(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).TapjoyConnectSuccess(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke94(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).TapPointsAwarded(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke95(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).TapPointsAwardError(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke96(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).TapPointsLoaded(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke97(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).TapPointsLoadedError(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke98(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).TapPointsSpendError(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke99(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).TapPointsSpent(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke100(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke101(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke102(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke103(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke104(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke105(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).VideoAdComplete(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke106(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).VideoAdError(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke107(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).VideoAdStart(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke108(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).ViewClosed(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke109(long instance, long* args)
-	{
-		((TapjoyPlugin)GCHandledObjects.GCHandleToObject(instance)).ViewOpened(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
+		TapjoyPluginAndroid.EventRequestCancelled(guid);
 	}
 }

@@ -5,7 +5,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -21,7 +20,7 @@ namespace StaRTS.Main.Story.Actions
 		{
 			base.VerifyArgumentCount(new int[]
 			{
-				default(int),
+				0,
 				1
 			});
 			this.parent.ChildPrepared(this);
@@ -31,7 +30,7 @@ namespace StaRTS.Main.Story.Actions
 		{
 			base.Execute();
 			string text = this.vo.Uid;
-			if (this.prepareArgs.Length != 0)
+			if (this.prepareArgs.Length > 0)
 			{
 				text = this.prepareArgs[0];
 			}
@@ -50,25 +49,9 @@ namespace StaRTS.Main.Story.Actions
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("Please use the EndFUE command to end the FUE and not SaveProgress!");
+				Service.Get<Logger>().Error("Please use the EndFUE command to end the FUE and not SaveProgress!");
 			}
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal SaveProgressStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SaveProgressStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SaveProgressStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

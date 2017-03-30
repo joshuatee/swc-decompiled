@@ -4,7 +4,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Elements
 {
@@ -32,7 +31,7 @@ namespace StaRTS.Main.Views.UX.Elements
 			}
 			set
 			{
-				this.component.Selected = ((this.inhibitor == null) ? value : (value && this.inhibitor.IsAllowable(this)));
+				this.component.Selected = ((this.inhibitor != null) ? (value && this.inhibitor.IsAllowable(this)) : value);
 			}
 		}
 
@@ -78,11 +77,11 @@ namespace StaRTS.Main.Views.UX.Elements
 					this.OnSelected(this, selected);
 				}
 			}
-			else if (this.radioGroup != 0 & selected)
+			else if (this.radioGroup != 0 && selected)
 			{
 				Service.Get<ViewTimerManager>().CreateViewTimer(0.1f, false, new TimerDelegate(this.OnDeselectTimer), this);
 			}
-			if (this.radioGroup == 0 | selected)
+			if (this.radioGroup == 0 || selected)
 			{
 				base.SendClickEvent();
 			}
@@ -126,85 +125,6 @@ namespace StaRTS.Main.Views.UX.Elements
 		public void DelayedSelect(bool value)
 		{
 			this.component.DelayedSelect(value);
-		}
-
-		protected internal UXCheckbox(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).DelayedSelect(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).OnSelected);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).RadioGroup);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).Selected);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).InternalDestroyComponent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).InternalOnSelect(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).OnSelected = (UXCheckboxSelectedDelegate)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).RadioGroup = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).Selected = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).SetAnimationAndSprite((UXSprite)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).SetSelectable(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).SetSelected(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((UXCheckbox)GCHandledObjects.GCHandleToObject(instance)).SetTweenTarget((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

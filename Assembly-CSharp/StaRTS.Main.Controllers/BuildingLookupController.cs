@@ -9,8 +9,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -204,7 +202,7 @@ namespace StaRTS.Main.Controllers
 			switch (building.Type)
 			{
 			case BuildingType.Invalid:
-				Service.Get<StaRTSLogger>().Warn("Invalid building type for count: " + building.Uid);
+				Service.Get<Logger>().Warn("Invalid building type for count: " + building.Uid);
 				return 0;
 			case BuildingType.HQ:
 				return this.HQNodeList.CalculateCount();
@@ -314,7 +312,7 @@ namespace StaRTS.Main.Controllers
 			case BuildingType.Armory:
 				return this.ArmoryNodeList.CalculateCount();
 			}
-			Service.Get<StaRTSLogger>().Warn("Unknown building type for count: " + building.Uid);
+			Service.Get<Logger>().Warn("Unknown building type for count: " + building.Uid);
 			return 0;
 		}
 
@@ -480,43 +478,31 @@ namespace StaRTS.Main.Controllers
 				}
 				return;
 			}
-			Service.Get<StaRTSLogger>().Warn("Unknown building type " + type);
+			Service.Get<Logger>().Warn("Unknown building type " + type);
 		}
 
 		public Entity GetCurrentHQ()
 		{
 			HQNode head = this.HQNodeList.Head;
-			if (head != null)
-			{
-				return head.HQComp.Entity;
-			}
-			return null;
+			return (head != null) ? head.HQComp.Entity : null;
 		}
 
 		public Entity GetCurrentSquadBuilding()
 		{
 			SquadBuildingNode head = this.SquadBuildingNodeList.Head;
-			if (head != null)
-			{
-				return head.SquadBuildingComp.Entity;
-			}
-			return null;
+			return (head != null) ? head.SquadBuildingComp.Entity : null;
 		}
 
 		public Entity GetCurrentNavigationCenter()
 		{
 			NavigationCenterNode head = this.NavigationCenterNodeList.Head;
-			return (head == null) ? null : head.NavigationCenterComp.Entity;
+			return (head != null) ? head.NavigationCenterComp.Entity : null;
 		}
 
 		public Entity GetCurrentArmory()
 		{
 			ArmoryNode head = this.ArmoryNodeList.Head;
-			if (head != null)
-			{
-				return head.ArmoryComp.Entity;
-			}
-			return null;
+			return (head != null) ? head.ArmoryComp.Entity : null;
 		}
 
 		public int GetHighestLevelHQ()
@@ -786,7 +772,7 @@ namespace StaRTS.Main.Controllers
 				}
 				return false;
 			}
-			Service.Get<StaRTSLogger>().Warn("Unknown reqBuilding type for level: " + reqBuilding.Uid);
+			Service.Get<Logger>().Warn("Unknown reqBuilding type for level: " + reqBuilding.Uid);
 			return false;
 		}
 
@@ -800,16 +786,19 @@ namespace StaRTS.Main.Controllers
 				if (current.BuildingRequirement == reqBuilding.Uid || current.BuildingRequirement2 == reqBuilding.Uid)
 				{
 					BuildingTypeVO minLevel = buildingUpgradeCatalog.GetMinLevel(current);
-					BuildingTypeVO buildingTypeVO = (current.Lvl > minLevel.Lvl) ? buildingUpgradeCatalog.GetByLevel(current, current.Lvl - 1) : null;
-					int num = (buildingTypeVO == null) ? 0 : buildingTypeVO.MaxQuantity;
+					BuildingTypeVO buildingTypeVO = (current.Lvl <= minLevel.Lvl) ? null : buildingUpgradeCatalog.GetByLevel(current, current.Lvl - 1);
+					int num = (buildingTypeVO != null) ? buildingTypeVO.MaxQuantity : 0;
 					int num2 = current.MaxQuantity - num;
 					if (num2 > 0)
 					{
 						if (dictionary.ContainsKey(minLevel))
 						{
-							Dictionary<BuildingTypeVO, int> dictionary2 = dictionary;
-							BuildingTypeVO key = minLevel;
-							dictionary2[key] += num2;
+							Dictionary<BuildingTypeVO, int> dictionary2;
+							Dictionary<BuildingTypeVO, int> expr_C1 = dictionary2 = dictionary;
+							BuildingTypeVO key;
+							BuildingTypeVO expr_C6 = key = minLevel;
+							int num3 = dictionary2[key];
+							expr_C1[expr_C6] = num3 + num2;
 						}
 						else
 						{
@@ -951,7 +940,7 @@ namespace StaRTS.Main.Controllers
 				break;
 			}
 			default:
-				Service.Get<StaRTSLogger>().Error("GetHighestAvailableBuildingVOForTroop; Unsupported troop type: " + troop.Type.ToString() + " UID: " + troop.Uid);
+				Service.Get<Logger>().Error("GetHighestAvailableBuildingVOForTroop; Unsupported troop type: " + troop.Type.ToString() + " UID: " + troop.Uid);
 				return null;
 			}
 			BuildingTypeVO buildingTypeVO = null;
@@ -960,7 +949,7 @@ namespace StaRTS.Main.Controllers
 				BuildingComponent buildingComponent = entity.Get<BuildingComponent>();
 				if (buildingComponent == null)
 				{
-					Service.Get<StaRTSLogger>().Error("GetHighestAvailableBuildingVOForTroop; No building component found for : " + buildingTypeVO.Uid);
+					Service.Get<Logger>().Error("GetHighestAvailableBuildingVOForTroop; No building component found for : " + buildingTypeVO.Uid);
 					return null;
 				}
 				buildingTypeVO = buildingComponent.BuildingType;
@@ -979,11 +968,7 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			list.Sort(new Comparison<BuildingComponent>(this.CompareBuildingLevels));
-			if (list.Count == 0)
-			{
-				return null;
-			}
-			return list[0].Entity;
+			return (list.Count == 0) ? null : list[0].Entity;
 		}
 
 		public Entity GetHighestAvailableFactory()
@@ -997,11 +982,7 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			list.Sort(new Comparison<BuildingComponent>(this.CompareBuildingLevels));
-			if (list.Count == 0)
-			{
-				return null;
-			}
-			return list[0].Entity;
+			return (list.Count == 0) ? null : list[0].Entity;
 		}
 
 		public Entity GetAvailableScoutTower()
@@ -1121,476 +1102,6 @@ namespace StaRTS.Main.Controllers
 				result = !ContractUtils.IsBuildingConstructing(navigationCenterNode.BuildingComp.Entity);
 			}
 			return result;
-		}
-
-		protected internal BuildingLookupController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).CompareBuildingLevels((BuildingComponent)GCHandledObjects.GCHandleToObject(*args), (BuildingComponent)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).DoesMeetMinBuildingRequirement((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).FillBuildingListByType((List<Entity>)GCHandledObjects.GCHandleToObject(*args), (BuildingType)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ArmoryNodeList);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).BarracksNodeList);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).CantinaNodeList);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ChampionPlatformNodeList);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ClearableNodeList);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).DefenseLabNodeList);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).DroidHutNodeList);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).FactoryNodeList);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).FleetCommandNodeList);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GeneratorNodeList);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GeneratorViewNodeList);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).HousingNodeList);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).HQNodeList);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).NavigationCenterNodeList);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).OffenseLabNodeList);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ScoutTowerNodeList);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ShieldGeneratorNodeList);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).SquadBuildingNodeList);
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).StarportNodeList);
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).StorageNodeList);
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).TacticalCommandNodeList);
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).TrapBuildingNodeList);
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).TrapNodeList);
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).TurretBuildingNodeList);
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).WallNodeList);
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetAvailableScoutTower());
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetAvailableTroopResearchLab());
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingConstructionRequirement((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingListByType((BuildingType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingMaxPurchaseQuantity((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingPurchasedQuantity((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingsUnlockedBy((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentArmory());
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentHQ());
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentNavigationCenter());
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentSquadBuilding());
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetEquipmentUnlockRequirement((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHeroSlotUnlockRequirement((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHighestAvailableBarracks());
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHighestAvailableBuildingVOForTroop((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHighestAvailableFactory());
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHighestLevelForBarracks());
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHighestLevelForCantinas());
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHighestLevelForFactories());
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHighestLevelForHeroCommands());
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHighestLevelForStarshipCommands());
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetHighestLevelHQ());
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetMinBuildingRequirement((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetNumberOfClearables());
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetRequiredBuilding(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetStarshipsUnlockedByBuilding(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetStarshipUnlockRequirement((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetTroopsUnlockedByBuilding(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GetTroopUnlockRequirement((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).HasConstructedBuilding((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).HasHeroCommand());
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).HasNavigationCenter());
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).HasStarshipCommand());
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).IsContrabandUnlocked());
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).IsTurretSwappingUnlocked());
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ArmoryNodeList = (NodeList<ArmoryNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).BarracksNodeList = (NodeList<BarracksNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).CantinaNodeList = (NodeList<CantinaNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ChampionPlatformNodeList = (NodeList<ChampionPlatformNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ClearableNodeList = (NodeList<ClearableNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).DefenseLabNodeList = (NodeList<DefenseLabNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).DroidHutNodeList = (NodeList<DroidHutNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).FactoryNodeList = (NodeList<FactoryNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).FleetCommandNodeList = (NodeList<FleetCommandNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GeneratorNodeList = (NodeList<GeneratorNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).GeneratorViewNodeList = (NodeList<GeneratorViewNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).HousingNodeList = (NodeList<HousingNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).HQNodeList = (NodeList<HQNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).NavigationCenterNodeList = (NodeList<NavigationCenterNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).OffenseLabNodeList = (NodeList<OffenseLabNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ScoutTowerNodeList = (NodeList<ScoutTowerNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).ShieldGeneratorNodeList = (NodeList<ShieldGeneratorNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).SquadBuildingNodeList = (NodeList<SquadBuildingNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).StarportNodeList = (NodeList<StarportNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).StorageNodeList = (NodeList<StorageNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).TacticalCommandNodeList = (NodeList<TacticalCommandNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).TrapBuildingNodeList = (NodeList<TrapBuildingNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).TrapNodeList = (NodeList<TrapNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).TurretBuildingNodeList = (NodeList<TurretBuildingNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke87(long instance, long* args)
-		{
-			((BuildingLookupController)GCHandledObjects.GCHandleToObject(instance)).WallNodeList = (NodeList<WallNode>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
 		}
 	}
 }

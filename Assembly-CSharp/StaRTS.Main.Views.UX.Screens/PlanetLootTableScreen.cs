@@ -1,3 +1,4 @@
+using Facebook.Unity;
 using StaRTS.Externals.Manimal;
 using StaRTS.Main.Controllers;
 using StaRTS.Main.Controllers.Planets;
@@ -17,9 +18,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -123,6 +122,8 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private const string EQUIPMENT_ARMORY_REQUIRED = "EQUIPMENT_ARMORY_REQUIRED";
 
+		private const int MAX_TIMER_LABEL_WIDTH = 200;
+
 		private Planet currentPlanet;
 
 		private UXSprite lockedSprite;
@@ -140,8 +141,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		private UXLabel squadmatesCountLabel;
 
 		private UXGrid rewardsGrid;
-
-		private const int MAX_TIMER_LABEL_WIDTH = 200;
 
 		private List<GeometryProjector> projectors;
 
@@ -222,7 +221,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			if (!base.IsLoaded())
 			{
-				Service.Get<StaRTSLogger>().Error("Trying to setup planet locked ui, before screen load");
+				Service.Get<Logger>().Error("Trying to setup planet locked ui, before screen load");
 				return;
 			}
 			bool flag = Service.Get<CurrentPlayer>().IsPlanetUnlocked(this.currentPlanet.VO.Uid);
@@ -309,7 +308,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			CrateSupplyVO optional = dataController.GetOptional<CrateSupplyVO>(lootEntry.SupplyDataUid);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Couldn't find CrateSupplyVO: {0} specified in PlanetLootEntryVO: {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Couldn't find CrateSupplyVO: {0} specified in PlanetLootEntryVO: {1}", new object[]
 				{
 					lootEntry.SupplyDataUid,
 					lootEntry.Uid
@@ -331,10 +330,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			for (int i = 1; i <= 3; i++)
 			{
-				string name = string.Format("RewardItemCardQ{0}", new object[]
-				{
-					i
-				});
+				string name = string.Format("RewardItemCardQ{0}", i);
 				this.rewardsGrid.GetSubElement<UXElement>(uid, name).Visible = false;
 			}
 			this.rewardsGrid.GetSubElement<UXElement>(uid, "RewardItemDefault").Visible = false;
@@ -454,10 +450,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			EquipmentVO currentEquipmentDataByID = ArmoryUtils.GetCurrentEquipmentDataByID(crateSupply.RewardUid);
 			int quality = (int)currentEquipmentDataByID.Quality;
-			string name = string.Format("SpriteTroopImageBkgGridQ{0}", new object[]
-			{
-				quality
-			});
+			string name = string.Format("SpriteTroopImageBkgGridQ{0}", quality);
 			this.rewardsGrid.GetSubElement<UXElement>(itemUID, name).Visible = true;
 			UXSprite subElement = this.rewardsGrid.GetSubElement<UXSprite>(itemUID, "SpriteIconFragmentLootTable");
 			UXUtils.SetupFragmentIconSprite(subElement, quality);
@@ -474,10 +467,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			ShardVO shardVO = Service.Get<IDataController>().Get<ShardVO>(crateSupply.RewardUid);
 			int quality = (int)shardVO.Quality;
-			string name = string.Format("SpriteTroopImageBkgGridQ{0}", new object[]
-			{
-				quality
-			});
+			string name = string.Format("SpriteTroopImageBkgGridQ{0}", quality);
 			this.rewardsGrid.GetSubElement<UXElement>(itemUID, name).Visible = false;
 			UXSprite subElement = this.rewardsGrid.GetSubElement<UXSprite>(itemUID, "SpriteIconFragmentLootTable");
 			UXUtils.SetupFragmentIconSprite(subElement, quality);
@@ -485,7 +475,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			IDeployableVO deployableVOFromShard = Service.Get<DeployableShardUnlockController>().GetDeployableVOFromShard(shardVO);
 			if (deployableVOFromShard == null)
 			{
-				Service.Get<StaRTSLogger>().Error("SetupShardRewardItemElements Unable to find deployable");
+				Service.Get<Logger>().Error("SetupShardRewardItemElements Unable to find deployable");
 				return;
 			}
 			ProjectorConfig projectorConfig = ProjectorUtils.GenerateGeometryConfig(deployableVOFromShard, subElement2, true);
@@ -512,7 +502,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				subElement.Value = 1f;
 				return;
 			}
-			int num = currentPlayer.Shards.ContainsKey(equipmentID) ? currentPlayer.Shards[equipmentID] : 0;
+			int num = (!currentPlayer.Shards.ContainsKey(equipmentID)) ? 0 : currentPlayer.Shards[equipmentID];
 			int upgradeShards;
 			if (currentPlayer.UnlockedLevels.Equipment.Has(eqp))
 			{
@@ -530,7 +520,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			});
 			if (upgradeShards == 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
+				Service.Get<Logger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
 				{
 					nextLevel.Uid
 				});
@@ -584,7 +574,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			});
 			if (upgradeShardCount == 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
+				Service.Get<Logger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
 				{
 					deployableVO.Uid
 				});
@@ -603,19 +593,23 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.relocateButton.OnClicked = new UXButtonClickedDelegate(this.OnRelocateClicked);
 			UXLabel element = base.GetElement<UXLabel>("LabelBtnRelocate");
 			element.Text = lang.Get("Planets_Relocate_Button", new object[0]);
-			if (!currentPlayer.IsPlanetUnlocked(this.currentPlanet.VO.Uid))
+			if (currentPlayer.IsPlanetUnlocked(this.currentPlanet.VO.Uid))
+			{
+				if (GameUtils.IsPlanetCurrentOne(this.currentPlanet.VO.Uid))
+				{
+					this.relocateButton.Visible = false;
+				}
+				else
+				{
+					this.relocateButton.Visible = true;
+					this.relocateButton.Enabled = true;
+				}
+			}
+			else
 			{
 				this.relocateButton.Visible = true;
 				this.relocateButton.Enabled = false;
-				return;
 			}
-			if (GameUtils.IsPlanetCurrentOne(this.currentPlanet.VO.Uid))
-			{
-				this.relocateButton.Visible = false;
-				return;
-			}
-			this.relocateButton.Visible = true;
-			this.relocateButton.Enabled = true;
 		}
 
 		private void UpdateTimeRemainingLabel(PlanetLootEntryVO lootEntry)
@@ -633,8 +627,22 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.facebookButton = base.GetElement<UXButton>("BtnFacebookGoogle");
 			this.facebookLabel = base.GetElement<UXLabel>("LabelFindCommanders");
 			this.facebookButtonLabel = base.GetElement<UXLabel>("LabelBtnFacebookGoogle");
-			this.facebookLabel.Visible = false;
-			this.facebookButton.Visible = false;
+			if (!Service.Get<ISocialDataController>().IsLoggedIn)
+			{
+				this.facebookLabel.Text = this.lang.Get("PLANETS_FACEBOOK_FIND_COMMANDERS", new object[0]);
+				this.facebookButtonLabel.Text = this.lang.Get("SETTINGS_NOTCONNECTED", new object[0]);
+				this.facebookButton.OnClicked = new UXButtonClickedDelegate(this.OnConnectToFacebook);
+			}
+			else if (GameConstants.FACEBOOK_INVITES_ENABLED)
+			{
+				this.facebookLabel.Text = this.lang.Get("PLANETS_FACEBOOK_RECRUIT_COMMANDERS", new object[0]);
+				this.facebookButtonLabel.Text = this.lang.Get("INVITE_FRIENDS", new object[0]);
+				this.facebookButton.OnClicked = new UXButtonClickedDelegate(this.OnInvite);
+			}
+			else
+			{
+				this.facebookButton.Visible = false;
+			}
 		}
 
 		private void OnConnectToFacebook(UXButton button)
@@ -649,7 +657,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			Service.Get<ISocialDataController>().InviteFriends(new OnRequestDelegate(this.InviteFriendsCallback));
 		}
 
-		private void InviteFriendsCallback()
+		private void InviteFriendsCallback(IAppRequestResult result)
 		{
 			Service.Get<GalaxyPlanetController>().UpdatePlanetsFriendData();
 			this.squadmatesCountLabel.Text = this.currentPlanet.FriendsOnPlanet.Count.ToString();
@@ -672,159 +680,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			int time = (int)ServerTime.Time;
 			return lootEntry.ShowDateTimeStamp <= time && (lootEntry.HideDateTimeStamp > 0 && time < lootEntry.HideDateTimeStamp);
-		}
-
-		protected internal PlanetLootTableScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).AddFeaturedRewardItemToGrid((PlanetLootEntryVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).DoesLootEntryHaveCountdown((PlanetLootEntryVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).InitFeaturedRewardsGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).InviteFriendsCallback();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).OnConnectToFacebook((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).OnInfoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).OnInvite((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).OnRelocateClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshWithNewPlanet((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).RewardsGridRepositionComplete((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).SetupCurrentPlanetElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).SetupDeployableShardProgress(Marshal.PtrToStringUni(*(IntPtr*)args), (ShardVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).SetupEquipmentShardProgress(Marshal.PtrToStringUni(*(IntPtr*)args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).SetupEquipmentShardRewardItemElements(Marshal.PtrToStringUni(*(IntPtr*)args), (CrateSupplyVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).SetupFacebookConnectButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).SetupLockedRewardItemElements(Marshal.PtrToStringUni(*(IntPtr*)args), (PlanetLootEntryVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRelocateButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).SetupShardRewardItemElements(Marshal.PtrToStringUni(*(IntPtr*)args), (CrateSupplyVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((PlanetLootTableScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateTimeRemainingLabel((PlanetLootEntryVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

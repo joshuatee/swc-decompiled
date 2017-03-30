@@ -3,9 +3,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Performance
 {
@@ -23,7 +21,7 @@ namespace StaRTS.Main.Controllers.Performance
 		{
 			if (this.sampleMap == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("PerformanceSampler enabled, do not commit!");
+				Service.Get<Logger>().Warn("PerformanceSampler enabled, do not commit!");
 				this.sampleMap = new Dictionary<string, NamedSample>();
 			}
 			NamedSample namedSample;
@@ -66,7 +64,7 @@ namespace StaRTS.Main.Controllers.Performance
 				List<NamedSample> list = new List<NamedSample>();
 				foreach (NamedSample current in this.sampleMap.Values)
 				{
-					current.average = ((current.count == 0) ? 0f : (1000f * current.totalTime / (float)current.count));
+					current.average = ((current.count != 0) ? (1000f * current.totalTime / (float)current.count) : 0f);
 					list.Add(current);
 				}
 				list.Sort(new Comparison<NamedSample>(PerformanceSampler.CompareSampleAverage));
@@ -86,40 +84,14 @@ namespace StaRTS.Main.Controllers.Performance
 					i++;
 				}
 				this.sampleMap = null;
-				Service.Get<StaRTSLogger>().Debug("PerformanceSampler disabled, writing to log...");
+				Service.Get<Logger>().Debug("PerformanceSampler disabled, writing to log...");
 			}
-			Service.Get<StaRTSLogger>().Debug(stringBuilder.ToString());
+			Service.Get<Logger>().Debug(stringBuilder.ToString());
 		}
 
 		private static int CompareSampleAverage(NamedSample a, NamedSample b)
 		{
 			return (int)((b.average - a.average) * 100f);
-		}
-
-		protected internal PerformanceSampler(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PerformanceSampler)GCHandledObjects.GCHandleToObject(instance)).BeginSample(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PerformanceSampler.CompareSampleAverage((NamedSample)GCHandledObjects.GCHandleToObject(*args), (NamedSample)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerformanceSampler)GCHandledObjects.GCHandleToObject(instance)).EndSample(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PerformanceSampler)GCHandledObjects.GCHandleToObject(instance)).LogAndReset();
-			return -1L;
 		}
 	}
 }

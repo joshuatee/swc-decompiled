@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.TargetedBundleOffers
 		public BuyTargetedOfferCommand(BuyTargetedOfferRequest request) : base("player.store.offers.buy", request, new BuyTargetedOfferResponse())
 		{
 		}
-
-		protected internal BuyTargetedOfferCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

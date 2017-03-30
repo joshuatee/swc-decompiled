@@ -3,7 +3,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Utils.Animation
 {
@@ -23,10 +22,12 @@ namespace StaRTS.Utils.Animation
 			if (anim.Delay > 0f)
 			{
 				anim.DelayTimer = Service.Get<ViewTimerManager>().CreateViewTimer(anim.Delay, false, new TimerDelegate(this.OnDelayComplete), anim);
-				return;
 			}
-			anim.DelayTimer = 0u;
-			this.InternalAnimate(anim);
+			else
+			{
+				anim.DelayTimer = 0u;
+				this.InternalAnimate(anim);
+			}
 		}
 
 		private void InternalAnimate(Anim anim)
@@ -112,58 +113,6 @@ namespace StaRTS.Utils.Animation
 					this.CompleteAnimWithIndex(anim, count);
 				}
 			}
-		}
-
-		protected internal AnimController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AnimController)GCHandledObjects.GCHandleToObject(instance)).Animate((Anim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AnimController)GCHandledObjects.GCHandleToObject(instance)).CancelDelayedAnim((Anim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AnimController)GCHandledObjects.GCHandleToObject(instance)).CompleteAndRemoveAnim((Anim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AnimController)GCHandledObjects.GCHandleToObject(instance)).CompleteAnim((Anim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AnimController)GCHandledObjects.GCHandleToObject(instance)).CompleteAnimWithIndex((Anim)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AnimController)GCHandledObjects.GCHandleToObject(instance)).InternalAnimate((Anim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AnimController)GCHandledObjects.GCHandleToObject(instance)).InternalCompleteAnim((Anim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AnimController)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
 		}
 	}
 }

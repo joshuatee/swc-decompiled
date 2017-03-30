@@ -2,7 +2,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Utils.Tween
 {
@@ -52,7 +51,7 @@ namespace StaRTS.Utils.Tween
 			this.transform.rotation = Quaternion.Slerp(this.startRotation, this.endRotation, t);
 			if (this.onUpdate != null)
 			{
-				this.onUpdate.Invoke(this);
+				this.onUpdate(this);
 			}
 			if (this.time >= this.duration)
 			{
@@ -62,7 +61,7 @@ namespace StaRTS.Utils.Tween
 				}
 				if (this.onComplete != null)
 				{
-					this.onComplete.Invoke(this);
+					this.onComplete(this);
 				}
 				this.Destroy();
 			}
@@ -84,27 +83,6 @@ namespace StaRTS.Utils.Tween
 		public bool IsTweenComplete()
 		{
 			return this.tweenComplete;
-		}
-
-		protected internal RotateTween(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RotateTween)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RotateTween)GCHandledObjects.GCHandleToObject(instance)).IsTweenComplete());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((RotateTween)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
 		}
 	}
 }

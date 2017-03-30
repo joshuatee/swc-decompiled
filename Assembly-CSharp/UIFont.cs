@@ -1,66 +1,60 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/UI/NGUI Font"), ExecuteInEditMode]
-public class UIFont : MonoBehaviour, IUnitySerializable
+public class UIFont : MonoBehaviour
 {
 	[HideInInspector, SerializeField]
-	protected internal Material mMat;
+	private Material mMat;
 
 	[HideInInspector, SerializeField]
-	protected internal Rect mUVRect;
+	private Rect mUVRect = new Rect(0f, 0f, 1f, 1f);
 
 	[HideInInspector, SerializeField]
-	protected internal BMFont mFont;
+	private BMFont mFont = new BMFont();
 
 	[HideInInspector, SerializeField]
-	protected internal UIAtlas mAtlas;
+	private UIAtlas mAtlas;
 
 	[HideInInspector, SerializeField]
-	protected internal UIFont mReplacement;
+	private UIFont mReplacement;
 
 	[HideInInspector, SerializeField]
-	protected internal List<BMSymbol> mSymbols;
+	private List<BMSymbol> mSymbols = new List<BMSymbol>();
 
 	[HideInInspector, SerializeField]
-	protected internal Font mDynamicFont;
+	private Font mDynamicFont;
 
 	[HideInInspector, SerializeField]
-	protected internal int mDynamicFontSize;
+	private int mDynamicFontSize = 16;
 
 	[HideInInspector, SerializeField]
-	protected internal FontStyle mDynamicFontStyle;
+	private FontStyle mDynamicFontStyle;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private UISpriteData mSprite;
 
-	private int mPMA;
+	private int mPMA = -1;
 
-	private int mPacked;
+	private int mPacked = -1;
 
 	public BMFont bmFont
 	{
 		get
 		{
-			if (!(this.mReplacement != null))
-			{
-				return this.mFont;
-			}
-			return this.mReplacement.bmFont;
+			return (!(this.mReplacement != null)) ? this.mFont : this.mReplacement.bmFont;
 		}
 		set
 		{
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.bmFont = value;
-				return;
 			}
-			this.mFont = value;
+			else
+			{
+				this.mFont = value;
+			}
 		}
 	}
 
@@ -68,24 +62,15 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (this.mReplacement != null)
-			{
-				return this.mReplacement.texWidth;
-			}
-			if (this.mFont == null)
-			{
-				return 1;
-			}
-			return this.mFont.texWidth;
+			return (!(this.mReplacement != null)) ? ((this.mFont == null) ? 1 : this.mFont.texWidth) : this.mReplacement.texWidth;
 		}
 		set
 		{
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.texWidth = value;
-				return;
 			}
-			if (this.mFont != null)
+			else if (this.mFont != null)
 			{
 				this.mFont.texWidth = value;
 			}
@@ -96,24 +81,15 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (this.mReplacement != null)
-			{
-				return this.mReplacement.texHeight;
-			}
-			if (this.mFont == null)
-			{
-				return 1;
-			}
-			return this.mFont.texHeight;
+			return (!(this.mReplacement != null)) ? ((this.mFont == null) ? 1 : this.mFont.texHeight) : this.mReplacement.texHeight;
 		}
 		set
 		{
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.texHeight = value;
-				return;
 			}
-			if (this.mFont != null)
+			else if (this.mFont != null)
 			{
 				this.mFont.texHeight = value;
 			}
@@ -124,11 +100,7 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mReplacement != null))
-			{
-				return this.mSymbols != null && this.mSymbols.Count != 0;
-			}
-			return this.mReplacement.hasSymbols;
+			return (!(this.mReplacement != null)) ? (this.mSymbols != null && this.mSymbols.Count != 0) : this.mReplacement.hasSymbols;
 		}
 	}
 
@@ -136,11 +108,7 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mReplacement != null))
-			{
-				return this.mSymbols;
-			}
-			return this.mReplacement.symbols;
+			return (!(this.mReplacement != null)) ? this.mSymbols : this.mReplacement.symbols;
 		}
 	}
 
@@ -148,20 +116,15 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mReplacement != null))
-			{
-				return this.mAtlas;
-			}
-			return this.mReplacement.atlas;
+			return (!(this.mReplacement != null)) ? this.mAtlas : this.mReplacement.atlas;
 		}
 		set
 		{
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.atlas = value;
-				return;
 			}
-			if (this.mAtlas != value)
+			else if (this.mAtlas != value)
 			{
 				this.mPMA = -1;
 				this.mAtlas = value;
@@ -209,9 +172,8 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.material = value;
-				return;
 			}
-			if (this.mMat != value)
+			else if (this.mMat != value)
 			{
 				this.mPMA = -1;
 				this.mMat = value;
@@ -244,7 +206,7 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 			if (this.mPMA == -1)
 			{
 				Material material = this.material;
-				this.mPMA = ((material != null && material.shader != null && material.shader.name.Contains("Premultiplied")) ? 1 : 0);
+				this.mPMA = ((!(material != null) || !(material.shader != null) || !material.shader.name.Contains("Premultiplied")) ? 0 : 1);
 			}
 			return this.mPMA == 1;
 		}
@@ -265,7 +227,7 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 			if (this.mPacked == -1)
 			{
 				Material material = this.material;
-				this.mPacked = ((material != null && material.shader != null && material.shader.name.Contains("Packed")) ? 1 : 0);
+				this.mPacked = ((!(material != null) || !(material.shader != null) || !material.shader.name.Contains("Packed")) ? 0 : 1);
 			}
 			return this.mPacked == 1;
 		}
@@ -280,11 +242,7 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 				return this.mReplacement.texture;
 			}
 			Material material = this.material;
-			if (!(material != null))
-			{
-				return null;
-			}
-			return material.mainTexture as Texture2D;
+			return (!(material != null)) ? null : (material.mainTexture as Texture2D);
 		}
 	}
 
@@ -296,20 +254,15 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 			{
 				return this.mReplacement.uvRect;
 			}
-			if (!(this.mAtlas != null) || this.sprite == null)
-			{
-				return new Rect(0f, 0f, 1f, 1f);
-			}
-			return this.mUVRect;
+			return (!(this.mAtlas != null) || this.sprite == null) ? new Rect(0f, 0f, 1f, 1f) : this.mUVRect;
 		}
 		set
 		{
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.uvRect = value;
-				return;
 			}
-			if (this.sprite == null && this.mUVRect != value)
+			else if (this.sprite == null && this.mUVRect != value)
 			{
 				this.mUVRect = value;
 				this.MarkAsChanged();
@@ -321,20 +274,15 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mReplacement != null))
-			{
-				return this.mFont.spriteName;
-			}
-			return this.mReplacement.spriteName;
+			return (!(this.mReplacement != null)) ? this.mFont.spriteName : this.mReplacement.spriteName;
 		}
 		set
 		{
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.spriteName = value;
-				return;
 			}
-			if (this.mFont.spriteName != value)
+			else if (this.mFont.spriteName != value)
 			{
 				this.mFont.spriteName = value;
 				this.MarkAsChanged();
@@ -382,9 +330,11 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.defaultSize = value;
-				return;
 			}
-			this.mDynamicFontSize = value;
+			else
+			{
+				this.mDynamicFontSize = value;
+			}
 		}
 	}
 
@@ -463,11 +413,7 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mReplacement != null))
-			{
-				return this.mDynamicFont != null;
-			}
-			return this.mReplacement.isDynamic;
+			return (!(this.mReplacement != null)) ? (this.mDynamicFont != null) : this.mReplacement.isDynamic;
 		}
 	}
 
@@ -475,20 +421,15 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mReplacement != null))
-			{
-				return this.mDynamicFont;
-			}
-			return this.mReplacement.dynamicFont;
+			return (!(this.mReplacement != null)) ? this.mDynamicFont : this.mReplacement.dynamicFont;
 		}
 		set
 		{
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.dynamicFont = value;
-				return;
 			}
-			if (this.mDynamicFont != value)
+			else if (this.mDynamicFont != value)
 			{
 				if (this.mDynamicFont != null)
 				{
@@ -504,20 +445,15 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mReplacement != null))
-			{
-				return this.mDynamicFontStyle;
-			}
-			return this.mReplacement.dynamicFontStyle;
+			return (!(this.mReplacement != null)) ? this.mDynamicFontStyle : this.mReplacement.dynamicFontStyle;
 		}
 		set
 		{
 			if (this.mReplacement != null)
 			{
 				this.mReplacement.dynamicFontStyle = value;
-				return;
 			}
-			if (this.mDynamicFontStyle != value)
+			else if (this.mDynamicFontStyle != value)
 			{
 				this.mDynamicFontStyle = value;
 				this.MarkAsChanged();
@@ -654,7 +590,7 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 				bool flag = true;
 				for (int j = 0; j < length; j++)
 				{
-					if (text.get_Chars(offset + j) != bMSymbol.sequence.get_Chars(j))
+					if (text[offset + j] != bMSymbol.sequence[j])
 					{
 						flag = false;
 						break;
@@ -717,596 +653,5 @@ public class UIFont : MonoBehaviour, IUnitySerializable
 			}
 		}
 		return false;
-	}
-
-	public UIFont()
-	{
-		this.mUVRect = new Rect(0f, 0f, 1f, 1f);
-		this.mFont = new BMFont();
-		this.mSymbols = new List<BMSymbol>();
-		this.mDynamicFontSize = 16;
-		this.mPMA = -1;
-		this.mPacked = -1;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mMat);
-		}
-		if (depth <= 7)
-		{
-			this.mUVRect.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			if (this.mFont == null)
-			{
-				this.mFont = new BMFont();
-			}
-			this.mFont.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mAtlas);
-		}
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mReplacement);
-		}
-		if (depth <= 7)
-		{
-			if (this.mSymbols == null)
-			{
-				SerializedStateWriter.Instance.WriteInt32(0);
-			}
-			else
-			{
-				SerializedStateWriter.Instance.WriteInt32(this.mSymbols.Count);
-				for (int i = 0; i < this.mSymbols.Count; i++)
-				{
-					((this.mSymbols[i] != null) ? this.mSymbols[i] : new BMSymbol()).Unity_Serialize(depth + 1);
-				}
-			}
-		}
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mDynamicFont);
-		}
-		SerializedStateWriter.Instance.WriteInt32(this.mDynamicFontSize);
-		SerializedStateWriter.Instance.WriteInt32((int)this.mDynamicFontStyle);
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			this.mMat = (SerializedStateReader.Instance.ReadUnityEngineObject() as Material);
-		}
-		if (depth <= 7)
-		{
-			this.mUVRect.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			if (this.mFont == null)
-			{
-				this.mFont = new BMFont();
-			}
-			this.mFont.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			this.mAtlas = (SerializedStateReader.Instance.ReadUnityEngineObject() as UIAtlas);
-		}
-		if (depth <= 7)
-		{
-			this.mReplacement = (SerializedStateReader.Instance.ReadUnityEngineObject() as UIFont);
-		}
-		if (depth <= 7)
-		{
-			int num = SerializedStateReader.Instance.ReadInt32();
-			this.mSymbols = new List<BMSymbol>(num);
-			for (int i = 0; i < num; i++)
-			{
-				BMSymbol bMSymbol = new BMSymbol();
-				bMSymbol.Unity_Deserialize(depth + 1);
-				this.mSymbols.Add(bMSymbol);
-			}
-		}
-		if (depth <= 7)
-		{
-			this.mDynamicFont = (SerializedStateReader.Instance.ReadUnityEngineObject() as Font);
-		}
-		this.mDynamicFontSize = SerializedStateReader.Instance.ReadInt32();
-		this.mDynamicFontStyle = (FontStyle)SerializedStateReader.Instance.ReadInt32();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (this.mMat != null)
-		{
-			this.mMat = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mMat) as Material);
-		}
-		if (depth <= 7)
-		{
-			if (this.mFont != null)
-			{
-				this.mFont.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (this.mAtlas != null)
-		{
-			this.mAtlas = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mAtlas) as UIAtlas);
-		}
-		if (this.mReplacement != null)
-		{
-			this.mReplacement = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mReplacement) as UIFont);
-		}
-		if (depth <= 7)
-		{
-			if (this.mSymbols != null)
-			{
-				for (int i = 0; i < this.mSymbols.Count; i++)
-				{
-					BMSymbol bMSymbol = this.mSymbols[i];
-					if (bMSymbol != null)
-					{
-						bMSymbol.Unity_RemapPPtrs(depth + 1);
-					}
-				}
-			}
-		}
-		if (this.mDynamicFont != null)
-		{
-			this.mDynamicFont = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mDynamicFont) as Font);
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateWriter arg_23_0 = SerializedNamedStateWriter.Instance;
-			UnityEngine.Object arg_23_1 = this.mMat;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_23_0.WriteUnityEngineObject(arg_23_1, &var_0_cp_0[var_0_cp_1] + 2796);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3517);
-			this.mUVRect.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			if (this.mFont == null)
-			{
-				this.mFont = new BMFont();
-			}
-			BMFont arg_95_0 = this.mFont;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3525);
-			arg_95_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.mAtlas, &var_0_cp_0[var_0_cp_1] + 3531);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.mReplacement, &var_0_cp_0[var_0_cp_1] + 3046);
-		}
-		if (depth <= 7)
-		{
-			if (this.mSymbols == null)
-			{
-				SerializedNamedStateWriter.Instance.BeginSequenceGroup(&var_0_cp_0[var_0_cp_1] + 3538, 0);
-				SerializedNamedStateWriter.Instance.EndMetaGroup();
-			}
-			else
-			{
-				SerializedNamedStateWriter.Instance.BeginSequenceGroup(&var_0_cp_0[var_0_cp_1] + 3538, this.mSymbols.Count);
-				for (int i = 0; i < this.mSymbols.Count; i++)
-				{
-					BMSymbol arg_165_0 = (this.mSymbols[i] != null) ? this.mSymbols[i] : new BMSymbol();
-					SerializedNamedStateWriter.Instance.BeginMetaGroup((IntPtr)0);
-					arg_165_0.Unity_NamedSerialize(depth + 1);
-					SerializedNamedStateWriter.Instance.EndMetaGroup();
-				}
-				SerializedNamedStateWriter.Instance.EndMetaGroup();
-			}
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.mDynamicFont, &var_0_cp_0[var_0_cp_1] + 3547);
-		}
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mDynamicFontSize, &var_0_cp_0[var_0_cp_1] + 3560);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mDynamicFontStyle, &var_0_cp_0[var_0_cp_1] + 3577);
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateReader arg_1E_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			this.mMat = (arg_1E_0.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 2796) as Material);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3517);
-			this.mUVRect.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			if (this.mFont == null)
-			{
-				this.mFont = new BMFont();
-			}
-			BMFont arg_9A_0 = this.mFont;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3525);
-			arg_9A_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			this.mAtlas = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 3531) as UIAtlas);
-		}
-		if (depth <= 7)
-		{
-			this.mReplacement = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 3046) as UIFont);
-		}
-		if (depth <= 7)
-		{
-			int num = SerializedNamedStateReader.Instance.BeginSequenceGroup(&var_0_cp_0[var_0_cp_1] + 3538);
-			this.mSymbols = new List<BMSymbol>(num);
-			for (int i = 0; i < num; i++)
-			{
-				BMSymbol bMSymbol = new BMSymbol();
-				BMSymbol arg_12C_0 = bMSymbol;
-				SerializedNamedStateReader.Instance.BeginMetaGroup((IntPtr)0);
-				arg_12C_0.Unity_NamedDeserialize(depth + 1);
-				SerializedNamedStateReader.Instance.EndMetaGroup();
-				this.mSymbols.Add(bMSymbol);
-			}
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			this.mDynamicFont = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 3547) as Font);
-		}
-		this.mDynamicFontSize = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3560);
-		this.mDynamicFontStyle = (FontStyle)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3577);
-	}
-
-	protected internal UIFont(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static long $Get0(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)instance).mMat);
-	}
-
-	public static void $Set0(object instance, long value)
-	{
-		((UIFont)instance).mMat = (Material)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static long $Get1(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)instance).mAtlas);
-	}
-
-	public static void $Set1(object instance, long value)
-	{
-		((UIFont)instance).mAtlas = (UIAtlas)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static long $Get2(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)instance).mReplacement);
-	}
-
-	public static void $Set2(object instance, long value)
-	{
-		((UIFont)instance).mReplacement = (UIFont)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static long $Get3(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)instance).mDynamicFont);
-	}
-
-	public static void $Set3(object instance, long value)
-	{
-		((UIFont)instance).mDynamicFont = (Font)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).AddSymbol(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIFont.CheckIfRelated((UIFont)GCHandledObjects.GCHandleToObject(*args), (UIFont)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).atlas);
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).bmFont);
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).defaultSize);
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).dynamicFont);
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).dynamicFontStyle);
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).dynamicTexture);
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).hasSymbols);
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).isDynamic);
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).isValid);
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).material);
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).packedFontShader);
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).premultipliedAlpha);
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).premultipliedAlphaShader);
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).replacement);
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).size);
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).sprite);
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).spriteName);
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).symbols);
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).texHeight);
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).texture);
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).texWidth);
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).uvRect);
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).GetSymbol(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).MarkAsChanged();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).MatchSymbol(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2)));
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).References((UIFont)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).RemoveSymbol(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).RenameSymbol(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).atlas = (UIAtlas)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).bmFont = (BMFont)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).defaultSize = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).dynamicFont = (Font)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).dynamicFontStyle = (FontStyle)(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).material = (Material)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).replacement = (UIFont)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).size = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke38(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).spriteName = Marshal.PtrToStringUni(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke39(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).texHeight = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke40(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).texWidth = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke41(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).uvRect = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke42(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).Trim();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke43(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke44(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke45(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke46(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke47(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke48(long instance, long* args)
-	{
-		((UIFont)GCHandledObjects.GCHandleToObject(instance)).UpdateUVRect();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke49(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIFont)GCHandledObjects.GCHandleToObject(instance)).UsesSprite(Marshal.PtrToStringUni(*(IntPtr*)args)));
 	}
 }

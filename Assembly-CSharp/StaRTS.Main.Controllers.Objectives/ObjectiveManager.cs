@@ -13,8 +13,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Objectives
 {
@@ -49,16 +47,16 @@ namespace StaRTS.Main.Controllers.Objectives
 			{
 				bool flag = false;
 				int i = 0;
-				int count = current.get_Value().ProgressObjects.Count;
+				int count = current.Value.ProgressObjects.Count;
 				while (i < count)
 				{
-					string objectiveUid = current.get_Value().ProgressObjects[i].ObjectiveUid;
+					string objectiveUid = current.Value.ProgressObjects[i].ObjectiveUid;
 					if (dataController.GetOptional<ObjectiveVO>(objectiveUid) == null)
 					{
 						flag = true;
-						Service.Get<StaRTSLogger>().WarnFormat("Planet {0} has an invalid objective {1}", new object[]
+						Service.Get<Logger>().WarnFormat("Planet {0} has an invalid objective {1}", new object[]
 						{
-							current.get_Key(),
+							current.Key,
 							objectiveUid
 						});
 					}
@@ -66,7 +64,7 @@ namespace StaRTS.Main.Controllers.Objectives
 				}
 				if (flag)
 				{
-					ForceObjectivesUpdateCommand command = new ForceObjectivesUpdateCommand(current.get_Key());
+					ForceObjectivesUpdateCommand command = new ForceObjectivesUpdateCommand(current.Key);
 					Service.Get<ServerAPI>().Sync(command);
 				}
 			}
@@ -82,14 +80,14 @@ namespace StaRTS.Main.Controllers.Objectives
 			Dictionary<string, ObjectiveGroup> objectives = Service.Get<CurrentPlayer>().Objectives;
 			foreach (KeyValuePair<string, ObjectiveGroup> current in objectives)
 			{
-				if (serverTime > current.get_Value().EndTimestamp)
+				if (serverTime > current.Value.EndTimestamp)
 				{
-					this.Expire(current.get_Key(), current.get_Value());
+					this.Expire(current.Key, current.Value);
 					this.RefreshFromServer();
 				}
-				else if (serverTime > current.get_Value().GraceTimestamp)
+				else if (serverTime > current.Value.GraceTimestamp)
 				{
-					this.Grace(current.get_Key(), current.get_Value());
+					this.Grace(current.Key, current.Value);
 				}
 			}
 		}
@@ -165,7 +163,7 @@ namespace StaRTS.Main.Controllers.Objectives
 
 		private void ClaimFailed(uint status, object cookie)
 		{
-			Service.Get<StaRTSLogger>().DebugFormat("Failed to claim objectives from server ({0}).", new object[]
+			Service.Get<Logger>().DebugFormat("Failed to claim objectives from server ({0}).", new object[]
 			{
 				status
 			});
@@ -176,7 +174,7 @@ namespace StaRTS.Main.Controllers.Objectives
 		{
 			if (this.processorMap.Count > 0)
 			{
-				Service.Get<StaRTSLogger>().Error("Attempting to fill an already-full processorMap!");
+				Service.Get<Logger>().Error("Attempting to fill an already-full processorMap!");
 			}
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			string planetId = currentPlayer.PlanetId;
@@ -204,9 +202,9 @@ namespace StaRTS.Main.Controllers.Objectives
 			{
 				if (sendExpirationEvent)
 				{
-					Service.Get<EventManager>().SendEvent(EventId.UpdateObjectiveToastData, current.get_Value());
+					Service.Get<EventManager>().SendEvent(EventId.UpdateObjectiveToastData, current.Value);
 				}
-				current.get_Key().Destroy();
+				current.Key.Destroy();
 			}
 			this.processorMap.Clear();
 		}
@@ -239,7 +237,7 @@ namespace StaRTS.Main.Controllers.Objectives
 
 		private void OnObjectivesFailed(uint status, object cookie)
 		{
-			Service.Get<StaRTSLogger>().ErrorFormat("Failed to refresh objectives from server ({0}).", new object[]
+			Service.Get<Logger>().ErrorFormat("Failed to refresh objectives from server ({0}).", new object[]
 			{
 				status
 			});
@@ -259,7 +257,7 @@ namespace StaRTS.Main.Controllers.Objectives
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			foreach (KeyValuePair<string, ObjectiveGroup> current in currentPlayer.Objectives)
 			{
-				ObjectiveGroup value = current.get_Value();
+				ObjectiveGroup value = current.Value;
 				int i = 0;
 				int count = value.ProgressObjects.Count;
 				while (i < count)
@@ -273,99 +271,6 @@ namespace StaRTS.Main.Controllers.Objectives
 				}
 			}
 			return num;
-		}
-
-		protected internal ObjectiveManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).AttemptRefreshFromServer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).Claim((ObjectiveProgress)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).ClaimCallback((CrateDataResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).ClearProcessorMap(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).Expire(Marshal.PtrToStringUni(*(IntPtr*)args), (ObjectiveGroup)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).FillProcessorMap();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).GetCompletedObjectivesCount());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).Grace(Marshal.PtrToStringUni(*(IntPtr*)args), (ObjectiveGroup)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).Login();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).OnObjectivesRefreshed((GetObjectivesResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).Progress((AbstractObjectiveProcessor)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).RefreshFromServer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).Relocate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).Update();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ObjectiveManager)GCHandledObjects.GCHandleToObject(instance)).VerifyCurrentObjectivesAgainstMeta();
-			return -1L;
 		}
 	}
 }

@@ -3,9 +3,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -37,10 +35,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (delay)
 			{
 				this.waitFrames = 2;
-				return;
 			}
-			this.waitFrames = 0;
-			this.AnimationPlay();
+			else
+			{
+				this.waitFrames = 0;
+				this.AnimationPlay();
+			}
 		}
 
 		public void Destroy()
@@ -62,17 +62,11 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (!this.animation.isPlaying)
 				{
 					this.AnimationComplete();
-					return;
 				}
 			}
-			else
+			else if (--this.waitFrames == 0)
 			{
-				int num = this.waitFrames - 1;
-				this.waitFrames = num;
-				if (num == 0)
-				{
-					this.AnimationPlay();
-				}
+				this.AnimationPlay();
 			}
 		}
 
@@ -83,9 +77,9 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
 			}
-			else if (Service.IsSet<StaRTSLogger>())
+			else if (Service.IsSet<Logger>())
 			{
-				Service.Get<StaRTSLogger>().Error("ScreenTransition.AnimationComplete: ViewTimeEngine is not set in Service");
+				Service.Get<Logger>().Error("ScreenTransition.AnimationComplete: ViewTimeEngine is not set in Service");
 			}
 			if (this.disabledColliders)
 			{
@@ -96,9 +90,9 @@ namespace StaRTS.Main.Views.UX.Screens
 						Service.Get<CameraManager>().UXCamera.ReceiveEvents = true;
 					}
 				}
-				else if (Service.IsSet<StaRTSLogger>())
+				else if (Service.IsSet<Logger>())
 				{
-					Service.Get<StaRTSLogger>().Error("ScreenTransition.AnimationComplete: CameraManager is not set in Service");
+					Service.Get<Logger>().Error("ScreenTransition.AnimationComplete: CameraManager is not set in Service");
 				}
 				this.disabledColliders = false;
 			}
@@ -128,52 +122,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.animation.Stop();
 			}
-		}
-
-		protected internal ScreenTransition(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ScreenTransition)GCHandledObjects.GCHandleToObject(instance)).AnimationComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ScreenTransition)GCHandledObjects.GCHandleToObject(instance)).AnimationPlay();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ScreenTransition)GCHandledObjects.GCHandleToObject(instance)).AnimationStop();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ScreenTransition)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			ScreenTransition.ForceAlpha((Animation)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ScreenTransition)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ScreenTransition)GCHandledObjects.GCHandleToObject(instance)).PlayTransition(Marshal.PtrToStringUni(*(IntPtr*)args), (OnScreenTransitionComplete)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
 		}
 	}
 }

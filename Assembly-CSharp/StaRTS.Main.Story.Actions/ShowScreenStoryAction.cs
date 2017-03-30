@@ -10,7 +10,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -45,7 +44,7 @@ namespace StaRTS.Main.Story.Actions
 		{
 			if (string.IsNullOrEmpty(this.vo.PrepareString))
 			{
-				Service.Get<StaRTSLogger>().Error("ShowScreenStoryAction: " + this.vo.Uid + " : lacks a prepare string");
+				Service.Get<Logger>().Error("ShowScreenStoryAction: " + this.vo.Uid + " : lacks a prepare string");
 				return;
 			}
 			this.screenType = this.prepareArgs[0];
@@ -80,22 +79,23 @@ namespace StaRTS.Main.Story.Actions
 					Service.Get<GalaxyViewController>().GoToPlanetView(currentPlayer.Planet.Uid, CampaignScreenSection.Main);
 				}
 				this.screenType = "PlanetDetailsScreen";
-				return;
 			}
-			if (this.screenType == "GalaxyMap")
+			else if (this.screenType == "GalaxyMap")
 			{
 				Service.Get<GalaxyViewController>().GoToGalaxyView();
 				this.OnScreenReady(null);
-				return;
 			}
-			Service.Get<StaRTSLogger>().Error("ShowScreenStoryAction: " + this.vo.Uid + " : invalid screen type provided: " + this.screenType);
+			else
+			{
+				Service.Get<Logger>().Error("ShowScreenStoryAction: " + this.vo.Uid + " : invalid screen type provided: " + this.screenType);
+			}
 		}
 
 		private void OnScreenReady(ScreenBase screen)
 		{
 			if (screen != null)
 			{
-				string name = screen.GetType().get_Name();
+				string name = screen.GetType().Name;
 				if (name != this.screenType)
 				{
 					return;
@@ -103,33 +103,6 @@ namespace StaRTS.Main.Story.Actions
 			}
 			this.eventManager.UnregisterObserver(this, EventId.ScreenLoaded);
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal ShowScreenStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShowScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShowScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ShowScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnScreenReady((ScreenBase)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ShowScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

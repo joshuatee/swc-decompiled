@@ -12,11 +12,9 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Assets
 {
@@ -24,19 +22,19 @@ namespace StaRTS.Assets
 	{
 		public const string ASSETBUNDLE_DIR = "assetbundles/";
 
-		public const string ASSETBUNDLE_TARGET = "wsaplayer";
+		public const string ASSETBUNDLE_TARGET = "android";
 
 		private const string BATTLES_DIR = "battles/";
 
 		public const string ASSETBUNDLE_EXT = ".assetbundle";
 
-		private const string JOE_ASSETBUNDLE_EXT = ".json.wsaplayer.assetbundle";
+		private const string JOE_ASSETBUNDLE_EXT = ".json.android.assetbundle";
 
-		private const string LOCAL_COMPRESSED_BUNDLE_EXT = ".local.wsaplayer.assetbundle";
+		private const string LOCAL_COMPRESSED_BUNDLE_EXT = ".local.android.assetbundle";
 
-		private const string LOCAL_UNCOMPRESSED_BUNDLE_EXT = ".local_uncompressed.wsaplayer.assetbundle";
+		private const string LOCAL_UNCOMPRESSED_BUNDLE_EXT = ".local_uncompressed.android.assetbundle";
 
-		private const string ASSETBUNDLE_PATH_PREFIX = "assetbundles/wsaplayer/";
+		private const string ASSETBUNDLE_PATH_PREFIX = "assetbundles/android/";
 
 		private const float MAX_CALLBACKS_TIME_PER_FRAME = 0.011f;
 
@@ -48,13 +46,13 @@ namespace StaRTS.Assets
 
 		private const int MAX_CONCURRENT_LOADS = 5;
 
-		private Queue<AssetInfo> assetsPendingLoad;
-
-		private int numAssetsLoading;
-
 		private const string CLEARABLE_BUNDLE_PREFIX = "models_";
 
 		private const string PLANET_LOADING_PRFIX = "planet_loading_";
+
+		private Queue<AssetInfo> assetsPendingLoad;
+
+		private int numAssetsLoading;
 
 		private Dictionary<string, ManifestEntry> manifest;
 
@@ -110,12 +108,10 @@ namespace StaRTS.Assets
 			this.dependencyPrefabIds = new HashSet<int>();
 			this.assetsPendingLoad = new Queue<AssetInfo>();
 			this.numAssetsLoading = 0;
-			this.AddToManifest(AssetType.UXObject, "gui_loading_screen", "gui_loading_screen.local.wsaplayer.assetbundle");
-			this.AddToManifest(AssetType.UXObject, "gui_dialog_small", "gui_dialog_small.local.wsaplayer.assetbundle");
-			this.AddToManifest(AssetType.UXObject, "gui_shared", "gui_shared.local.wsaplayer.assetbundle");
-			this.AddToManifest(AssetType.UnityObject, "shared_shaders", "shared_shaders.local.wsaplayer.assetbundle");
-			this.AddToManifest(AssetType.UXObject, "gui_armory", "gui_armory.local.wsaplayer.assetbundle");
-			this.AddToManifest(AssetType.UXObject, "gui_equipment_unlocked", "gui_equipment_unlocked.local.wsaplayer.assetbundle");
+			this.AddToManifest(AssetType.UXObject, "gui_loading_screen", "gui_loading_screen.local.android.assetbundle");
+			this.AddToManifest(AssetType.UXObject, "gui_dialog_small", "gui_dialog_small.local.android.assetbundle");
+			this.AddToManifest(AssetType.UXObject, "gui_shared", "gui_shared.local.android.assetbundle");
+			this.AddToManifest(AssetType.UnityObject, "shared_shaders", "shared_shaders.local.android.assetbundle");
 			this.assetInfos = new Dictionary<string, AssetInfo>();
 			this.callbackQueue = new List<AssetRequest>();
 			this.callbackQueueIter = new MutableIterator();
@@ -130,7 +126,7 @@ namespace StaRTS.Assets
 		{
 			if (!this.manifest.ContainsKey(bundleName))
 			{
-				Service.Get<StaRTSLogger>().Error("Dependency bundle not found in the manifest: " + bundleName);
+				Service.Get<Logger>().Error("Dependency bundle not found in the manifest: " + bundleName);
 				return;
 			}
 			this.dependencyBundles.Add(this.manifest[bundleName].AssetPath);
@@ -141,7 +137,10 @@ namespace StaRTS.Assets
 			if (this.manifest.ContainsKey(bundleName))
 			{
 				ManifestEntry manifestEntry = this.manifest[bundleName];
-				this.dependencyBundles.Contains(manifestEntry.AssetPath);
+				if (this.dependencyBundles.Contains(manifestEntry.AssetPath))
+				{
+					this.AllContentsExtracted(manifestEntry.AssetPath);
+				}
 			}
 		}
 
@@ -156,7 +155,7 @@ namespace StaRTS.Assets
 			{
 				return;
 			}
-			if ((assetPath.EndsWith(".local.wsaplayer.assetbundle") || assetPath.EndsWith(".local_uncompressed.wsaplayer.assetbundle")) && !this.customPreloadables.Contains(assetName))
+			if ((assetPath.EndsWith(".local.android.assetbundle") || assetPath.EndsWith(".local_uncompressed.android.assetbundle")) && !this.customPreloadables.Contains(assetName))
 			{
 				this.customPreloadables.Add(assetName);
 			}
@@ -194,7 +193,7 @@ namespace StaRTS.Assets
 
 		public void AddJoeFileToManifest(string assetName, string assetPath)
 		{
-			string text = assetName.Replace(".json.joe", ".json.wsaplayer.assetbundle").ToLower();
+			string text = assetName.Replace(".json.joe", ".json.android.assetbundle").ToLower();
 			if (!string.IsNullOrEmpty(assetPath))
 			{
 				text = assetPath + "/" + text;
@@ -209,7 +208,7 @@ namespace StaRTS.Assets
 
 		private bool InBundle(AssetType assetType, string assetPath)
 		{
-			return assetType != AssetType.Bundle && (assetPath.EndsWith(".assetbundle") || assetPath.EndsWith(".local.wsaplayer.assetbundle") || assetPath.EndsWith(".local_uncompressed.wsaplayer.assetbundle"));
+			return assetType != AssetType.Bundle && (assetPath.EndsWith(".assetbundle") || assetPath.EndsWith(".local.android.assetbundle") || assetPath.EndsWith(".local_uncompressed.android.assetbundle"));
 		}
 
 		public void SetupManifest(bool inFue)
@@ -370,11 +369,8 @@ namespace StaRTS.Assets
 				{
 					for (int i = 1; i <= 7; i++)
 					{
-						string assetName = string.Format(current17.AssetName, new object[]
-						{
-							i
-						});
-						this.AddToManifest(AssetType.UnityObject, assetName, "assetbundles/wsaplayer/" + current17.BundleName + ".assetbundle");
+						string assetName = string.Format(current17.AssetName, i);
+						this.AddToManifest(AssetType.UnityObject, assetName, "assetbundles/android/" + current17.BundleName + ".assetbundle");
 					}
 				}
 				if (!string.IsNullOrEmpty(current17.ProjectileAttachmentBundle))
@@ -434,7 +430,7 @@ namespace StaRTS.Assets
 			}
 			foreach (MobilizationHologramVO current24 in dataController.GetAll<MobilizationHologramVO>())
 			{
-				this.AddToManifest(AssetType.UnityObject, current24.AssetName, "assetbundles/wsaplayer/" + current24.BundleName + ".assetbundle");
+				this.AddToManifest(AssetType.UnityObject, current24.AssetName, "assetbundles/android/" + current24.BundleName + ".assetbundle");
 			}
 			foreach (CrateTierVO current25 in dataController.GetAll<CrateTierVO>())
 			{
@@ -455,7 +451,7 @@ namespace StaRTS.Assets
 			}
 			foreach (ShardVO current29 in dataController.GetAll<ShardVO>())
 			{
-				this.AddToManifest(AssetType.ClonedUnityObject, current29.AssetName, "assetbundles/wsaplayer/" + current29.BundleName + ".assetbundle");
+				this.AddToManifest(AssetType.ClonedUnityObject, current29.AssetName, "assetbundles/android/" + current29.BundleName + ".assetbundle");
 			}
 		}
 
@@ -464,15 +460,15 @@ namespace StaRTS.Assets
 			string result;
 			if (AssetConstants.LOCAL_UNCOMPRESSED_BUNDLE_NAMES.Contains(bundleName))
 			{
-				result = bundleName + ".local_uncompressed.wsaplayer.assetbundle";
+				result = bundleName + ".local_uncompressed.android.assetbundle";
 			}
 			else if (AssetConstants.LOCAL_COMPRESSED_BUNDLE_NAMES.Contains(bundleName))
 			{
-				result = bundleName + ".local.wsaplayer.assetbundle";
+				result = bundleName + ".local.android.assetbundle";
 			}
 			else
 			{
-				result = "assetbundles/wsaplayer/" + bundleName + ".assetbundle";
+				result = "assetbundles/android/" + bundleName + ".assetbundle";
 			}
 			return result;
 		}
@@ -531,7 +527,14 @@ namespace StaRTS.Assets
 			int count = list.Count;
 			while (i < count)
 			{
-				Engine.bundles.Add(list[i]);
+				if (list2[i].Contains("shared_shaders") || list2[i].Contains("models_preload"))
+				{
+					list[i].Unload(false);
+				}
+				else
+				{
+					list[i].Unload(true);
+				}
 				i++;
 			}
 			if (list3 != null)
@@ -566,14 +569,11 @@ namespace StaRTS.Assets
 
 		private void ReferenceAssetRecursively(AssetInfo assetInfo, string assetPath)
 		{
-			int loadCount = assetInfo.LoadCount;
-			assetInfo.LoadCount = loadCount + 1;
+			assetInfo.LoadCount++;
 			AssetInfo containingBundle = this.GetContainingBundle(assetInfo, assetPath);
 			if (containingBundle != null)
 			{
-				AssetInfo expr_1D = containingBundle;
-				loadCount = expr_1D.LoadCount;
-				expr_1D.LoadCount = loadCount + 1;
+				containingBundle.LoadCount++;
 			}
 			string assetName = assetInfo.AssetName;
 			if (this.preloadables.ContainsKey(assetName) && assetInfo.LoadCount > 1)
@@ -594,13 +594,11 @@ namespace StaRTS.Assets
 			{
 				throw new Exception("AssetManager: load requres invalid input handle");
 			}
-			AssetHandle assetHandle = this.nextRequestHandle;
-			this.nextRequestHandle = assetHandle + 1;
-			handle = assetHandle;
+			handle = this.nextRequestHandle++;
 			this.requestedAssets.Add(handle, assetName);
 			if (string.IsNullOrEmpty(assetName))
 			{
-				Service.Get<StaRTSLogger>().Error("Asset name cannot be null or empty");
+				Service.Get<Logger>().Error("Asset name cannot be null or empty");
 				if (onFailure != null)
 				{
 					this.callbackQueue.Add(new AssetRequest(handle, assetName, null, onFailure, cookie));
@@ -609,7 +607,7 @@ namespace StaRTS.Assets
 			}
 			if (!this.manifest.ContainsKey(assetName))
 			{
-				Service.Get<StaRTSLogger>().Error("Asset not found in the manifest: " + assetName);
+				Service.Get<Logger>().Error("Asset not found in the manifest: " + assetName);
 				if (onFailure != null)
 				{
 					this.callbackQueue.Add(new AssetRequest(handle, assetName, null, onFailure, cookie));
@@ -664,9 +662,7 @@ namespace StaRTS.Assets
 				assetInfo = new AssetInfo(assetName, assetType);
 				this.assetInfos.Add(assetName, assetInfo);
 			}
-			AssetInfo expr_1B2 = assetInfo;
-			int loadCount = expr_1B2.LoadCount;
-			expr_1B2.LoadCount = loadCount + 1;
+			assetInfo.LoadCount++;
 			assetInfo.AssetRequests = new List<AssetRequest>();
 			assetInfo.AssetRequests.Add(assetRequest2);
 			bool flag2 = this.InBundle(assetType, assetPath);
@@ -674,25 +670,26 @@ namespace StaRTS.Assets
 			{
 				if (this.phase == LoadingPhase.PreLoading && !this.preloadables.ContainsKey(assetName) && !this.customPreloadables.Contains(assetName))
 				{
-					Service.Get<StaRTSLogger>().Warn("Asset not flagged for preload: " + assetName);
+					Service.Get<Logger>().Warn("Asset not flagged for preload: " + assetName);
 				}
 				AssetHandle bundleHandle = AssetHandle.Invalid;
 				this.Load(ref bundleHandle, assetPath, new AssetSuccessDelegate(this.OnBundleSuccess), new AssetFailureDelegate(this.OnBundleFailure), assetName);
 				assetInfo.BundleHandle = bundleHandle;
-				return;
 			}
-			if (!this.IsAtMaxConcurrentLoads())
+			else if (!this.IsAtMaxConcurrentLoads())
 			{
 				this.numAssetsLoading++;
 				Service.Get<Engine>().StartCoroutine(this.Fetch(assetPath, assetInfo));
-				return;
 			}
-			this.assetsPendingLoad.Enqueue(assetInfo);
+			else
+			{
+				this.assetsPendingLoad.Enqueue(assetInfo);
+			}
 		}
 
 		private bool IsAtMaxConcurrentLoads()
 		{
-			int num = (GameConstants.MAX_CONCURRENT_ASSET_LOADS > 0) ? GameConstants.MAX_CONCURRENT_ASSET_LOADS : 5;
+			int num = (GameConstants.MAX_CONCURRENT_ASSET_LOADS <= 0) ? 5 : GameConstants.MAX_CONCURRENT_ASSET_LOADS;
 			return this.numAssetsLoading >= num;
 		}
 
@@ -700,7 +697,7 @@ namespace StaRTS.Assets
 		{
 			if (!this.requestedAssets.ContainsKey(handle))
 			{
-				Service.Get<StaRTSLogger>().Error("Unload: invalid request handle: " + (uint)handle);
+				Service.Get<Logger>().Error("Unload: invalid request handle: " + (uint)handle);
 				return;
 			}
 			int i = 0;
@@ -717,17 +714,17 @@ namespace StaRTS.Assets
 			string text = this.requestedAssets[handle];
 			if (string.IsNullOrEmpty(text))
 			{
-				Service.Get<StaRTSLogger>().Error("Unload: asset name cannot be null or empty");
+				Service.Get<Logger>().Error("Unload: asset name cannot be null or empty");
 				return;
 			}
 			if (!this.assetInfos.ContainsKey(text))
 			{
-				Service.Get<StaRTSLogger>().Error("Unload: not loaded: " + text);
+				Service.Get<Logger>().Error("Unload: not loaded: " + text);
 				return;
 			}
 			if (!this.manifest.ContainsKey(text))
 			{
-				Service.Get<StaRTSLogger>().Error("Unload: asset not in the manifest: " + text);
+				Service.Get<Logger>().Error("Unload: asset not in the manifest: " + text);
 				return;
 			}
 			AssetInfo assetInfo = this.assetInfos[text];
@@ -747,7 +744,7 @@ namespace StaRTS.Assets
 					if (assetInfo.AssetRequests[j].Handle == handle)
 					{
 						assetInfo.AssetRequests.RemoveAt(j);
-						return;
+						break;
 					}
 					j++;
 				}
@@ -755,16 +752,14 @@ namespace StaRTS.Assets
 			}
 			if (assetInfo.LoadCount == 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Asset {0} has negative loadCount={1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Asset {0} has negative loadCount={1}", new object[]
 				{
 					text,
 					assetInfo.LoadCount
 				});
 				return;
 			}
-			AssetInfo expr_18F = assetInfo;
-			int loadCount = expr_18F.LoadCount;
-			expr_18F.LoadCount = loadCount - 1;
+			assetInfo.LoadCount--;
 			if (assetInfo.AssetType != AssetType.Bundle || assetInfo.LoadCount == 0)
 			{
 				this.requestedAssets.Remove(handle);
@@ -829,6 +824,19 @@ namespace StaRTS.Assets
 			}
 		}
 
+		private void AllContentsExtracted(string bundleName)
+		{
+			AssetInfo assetInfo = this.assetInfos[bundleName];
+			AssetBundle assetBundle = assetInfo.AssetObject as AssetBundle;
+			if (assetBundle != null)
+			{
+				assetInfo.AssetObject = null;
+				assetInfo.AllContentsExtracted = true;
+				assetInfo.Prefabs = assetBundle.LoadAllAssets();
+				assetBundle.Unload(false);
+			}
+		}
+
 		public void MultiLoad(List<AssetHandle> handles, List<string> assetNames, AssetSuccessDelegate onSuccess, AssetFailureDelegate onFailure, List<object> cookies, AssetsCompleteDelegate onComplete, object completeCookie)
 		{
 			if (assetNames == null || cookies == null || handles == null || assetNames.Count == 0 || assetNames.Count != cookies.Count || assetNames.Count != handles.Count)
@@ -849,9 +857,12 @@ namespace StaRTS.Assets
 		public void RegisterPreloadableAsset(string assetName)
 		{
 			LoadingPhase loadingPhase = this.phase;
-			if ((loadingPhase == LoadingPhase.Initialized || loadingPhase == LoadingPhase.PreLoading) && !this.customPreloadables.Contains(assetName))
+			if (loadingPhase == LoadingPhase.Initialized || loadingPhase == LoadingPhase.PreLoading)
 			{
-				this.customPreloadables.Add(assetName);
+				if (!this.customPreloadables.Contains(assetName))
+				{
+					this.customPreloadables.Add(assetName);
+				}
 			}
 		}
 
@@ -874,7 +885,6 @@ namespace StaRTS.Assets
 					if (onComplete != null)
 					{
 						onComplete(completeCookie);
-						return;
 					}
 				}
 				else
@@ -916,15 +926,17 @@ namespace StaRTS.Assets
 			if (list.Count == 0)
 			{
 				this.OnLazyLoadComplete(null);
-				return;
 			}
-			this.MultiLoad(list3, list, new AssetSuccessDelegate(this.OnLazyLoadSuccess), new AssetFailureDelegate(this.OnLazyLoadFailure), list2, new AssetsCompleteDelegate(this.OnLazyLoadComplete), null);
-			int i = 0;
-			int count = list3.Count;
-			while (i < count)
+			else
 			{
-				this.lazyloadables[list[i]] = list3[i];
-				i++;
+				this.MultiLoad(list3, list, new AssetSuccessDelegate(this.OnLazyLoadSuccess), new AssetFailureDelegate(this.OnLazyLoadFailure), list2, new AssetsCompleteDelegate(this.OnLazyLoadComplete), null);
+				int i = 0;
+				int count = list3.Count;
+				while (i < count)
+				{
+					this.lazyloadables[list[i]] = list3[i];
+					i++;
+				}
 			}
 		}
 
@@ -966,124 +978,30 @@ namespace StaRTS.Assets
 
 		private bool IsUncompressedLocalBundle(string assetPath)
 		{
-			return assetPath.EndsWith(".local_uncompressed.wsaplayer.assetbundle");
+			return assetPath.EndsWith(".local_uncompressed.android.assetbundle");
 		}
 
 		private string GetBundleUrl(string assetPath, out int version)
 		{
-			if (!assetPath.EndsWith(".local.wsaplayer.assetbundle") && !assetPath.EndsWith(".local_uncompressed.wsaplayer.assetbundle"))
+			if (assetPath.EndsWith(".local.android.assetbundle") || assetPath.EndsWith(".local_uncompressed.android.assetbundle"))
 			{
-				version = Service.Get<FMS>().GetFileVersion(assetPath);
-				return Service.Get<FMS>().GetFileUrl(assetPath);
+				version = 0;
+				return Path.Combine(Application.streamingAssetsPath, assetPath);
 			}
-			version = 0;
-			string text = Path.Combine(new string[]
-			{
-				Application.streamingAssetsPath,
-				assetPath
-			});
-			if (this.IsUncompressedLocalBundle(assetPath))
-			{
-				return text;
-			}
-			if (!text.StartsWith("file://"))
-			{
-				return "file://" + text;
-			}
-			return text;
+			version = Service.Get<FMS>().GetFileVersion(assetPath);
+			return Service.Get<FMS>().GetFileUrl(assetPath);
 		}
 
-		[IteratorStateMachine(typeof(AssetManager.<Fetch>d__71))]
+		[DebuggerHidden]
 		private IEnumerator Fetch(string assetPath, AssetInfo assetInfo)
 		{
-			string text = null;
-			object obj = null;
-			int num;
-			text = this.GetBundleUrl(assetPath, out num);
-			string text2;
-			if (string.IsNullOrEmpty(text))
-			{
-				text2 = string.Format("Unable to map '{0}' to a valid url", new object[]
-				{
-					assetPath
-				});
-			}
-			else
-			{
-				bool enabled = this.Profiler.Enabled;
-				WWW wWW;
-				if (!enabled && assetInfo.AssetType == AssetType.Bundle && num != 0)
-				{
-					wWW = WWW.LoadFromCacheOrDownload(text, num);
-				}
-				else
-				{
-					this.Profiler.RecordFetchEvent(assetPath, 0, false, false);
-					wWW = new WWW(text);
-				}
-				WWWManager.Add(wWW);
-				yield return wWW;
-				if (!WWWManager.Remove(wWW))
-				{
-					yield break;
-				}
-				text2 = wWW.error;
-				if (string.IsNullOrEmpty(text2))
-				{
-					if (enabled)
-					{
-						this.Profiler.RecordFetchEvent(assetPath, wWW.bytesDownloaded, false, true);
-					}
-					switch (assetInfo.AssetType)
-					{
-					case AssetType.Bundle:
-					{
-						AssetBundle assetBundle = wWW.assetBundle;
-						if (assetBundle != null)
-						{
-							obj = assetBundle;
-							if (this.IsDependencyBundle(assetPath))
-							{
-								UnityEngine.Object[] array = assetBundle.LoadAllAssets();
-								int i = 0;
-								int num2 = array.Length;
-								while (i < num2)
-								{
-									this.dependencyPrefabIds.Add(array[i].GetInstanceID());
-									i++;
-								}
-							}
-						}
-						break;
-					}
-					case AssetType.Text:
-						obj = wWW.text;
-						break;
-					case AssetType.Bytes:
-						obj = wWW.bytes;
-						break;
-					case AssetType.AudioClip:
-						obj = wWW.audioClip;
-						break;
-					default:
-						obj = null;
-						break;
-					}
-				}
-				wWW.Dispose();
-				wWW = null;
-			}
-			if (obj == null)
-			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Failed to fetch asset {0} ({1})", new object[]
-				{
-					text,
-					text2
-				});
-			}
-			this.numAssetsLoading--;
-			this.OnAssetLoaded(obj, assetInfo);
-			yield break;
+			AssetManager.<Fetch>c__Iterator6 <Fetch>c__Iterator = new AssetManager.<Fetch>c__Iterator6();
+			<Fetch>c__Iterator.assetPath = assetPath;
+			<Fetch>c__Iterator.assetInfo = assetInfo;
+			<Fetch>c__Iterator.<$>assetPath = assetPath;
+			<Fetch>c__Iterator.<$>assetInfo = assetInfo;
+			<Fetch>c__Iterator.<>f__this = this;
+			return <Fetch>c__Iterator;
 		}
 
 		private void OnAssetLoaded(object asset, AssetInfo assetInfo)
@@ -1117,18 +1035,20 @@ namespace StaRTS.Assets
 					}
 					j++;
 				}
-				return;
 			}
-			int k = 0;
-			int count3 = assetRequests.Count;
-			while (k < count3)
+			else
 			{
-				AssetRequest assetRequest3 = assetRequests[k];
-				if (assetRequest3.OnFailure != null)
+				int k = 0;
+				int count3 = assetRequests.Count;
+				while (k < count3)
 				{
-					this.callbackQueue.Add(new AssetRequest(assetRequest3.Handle, assetRequest3.AssetName, null, assetRequest3.OnFailure, assetRequest3.Cookie));
+					AssetRequest assetRequest3 = assetRequests[k];
+					if (assetRequest3.OnFailure != null)
+					{
+						this.callbackQueue.Add(new AssetRequest(assetRequest3.Handle, assetRequest3.AssetName, null, assetRequest3.OnFailure, assetRequest3.Cookie));
+					}
+					k++;
 				}
-				k++;
 			}
 		}
 
@@ -1147,7 +1067,7 @@ namespace StaRTS.Assets
 				}
 				else if (assetInfo.AssetObject != null)
 				{
-					Service.Get<StaRTSLogger>().Error("Loaded asset of unexpected type " + assetInfo.AssetObject.GetType().get_Name());
+					Service.Get<Logger>().Error("Loaded asset of unexpected type " + assetInfo.AssetObject.GetType().Name);
 				}
 			}
 			return obj;
@@ -1171,7 +1091,7 @@ namespace StaRTS.Assets
 			asset = null;
 			if (assetBundle == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Unable to load bundle {0} for asset {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Unable to load bundle {0} for asset {1}", new object[]
 				{
 					assetPath,
 					text
@@ -1190,28 +1110,25 @@ namespace StaRTS.Assets
 				{
 					flag = false;
 					List<AssetRequest> assetRequests = assetInfo.AssetRequests;
-					if (assetRequests != null)
+					int i = 0;
+					int count = assetRequests.Count;
+					while (i < count)
 					{
-						int i = 0;
-						int count = assetRequests.Count;
-						while (i < count)
+						AssetRequest request = assetRequests[i];
+						if (!this.IsForInternalLoad(request))
 						{
-							AssetRequest request = assetRequests[i];
-							if (!this.IsForInternalLoad(request))
-							{
-								flag = true;
-								break;
-							}
-							i++;
+							flag = true;
+							break;
 						}
+						i++;
 					}
 				}
 				if (flag)
 				{
-					asset = ((assetInfo.AssetType == AssetType.Bytes) ? assetBundle.LoadAsset(text + ".bytes") : assetBundle.LoadAsset(text));
+					asset = ((assetInfo.AssetType != AssetType.Bytes) ? assetBundle.LoadAsset(text) : assetBundle.LoadAsset(text + ".bytes"));
 					if (asset == null)
 					{
-						Service.Get<StaRTSLogger>().ErrorFormat("Unable to load asset {0} from bundle {1} (main asset {2})", new object[]
+						Service.Get<Logger>().ErrorFormat("Unable to load asset {0} from bundle {1} (main asset {2})", new object[]
 						{
 							text,
 							assetPath,
@@ -1222,6 +1139,10 @@ namespace StaRTS.Assets
 					{
 						HashSet<string> hashSet = this.bundleContents[assetPath];
 						hashSet.Remove(text);
+						if (hashSet.Count == 0 && !this.IsDependencyBundle(assetPath))
+						{
+							this.AllContentsExtracted(assetPath);
+						}
 					}
 				}
 			}
@@ -1301,9 +1222,7 @@ namespace StaRTS.Assets
 				AssetRequest assetRequest = this.PeekCallbackQueue(this.callbackQueueIter.Index);
 				if (assetRequest.DelayLoadFrameCount > 0)
 				{
-					AssetRequest expr_BB = assetRequest;
-					int delayLoadFrameCount = expr_BB.DelayLoadFrameCount - 1;
-					expr_BB.DelayLoadFrameCount = delayLoadFrameCount;
+					assetRequest.DelayLoadFrameCount--;
 				}
 				else
 				{
@@ -1331,7 +1250,7 @@ namespace StaRTS.Assets
 							{
 								flag = false;
 							}
-							object asset = flag ? this.Prepare(assetInfo2) : assetInfo2.AssetObject;
+							object asset = (!flag) ? assetInfo2.AssetObject : this.Prepare(assetInfo2);
 							assetRequest.OnSuccess(asset, assetRequest.Cookie);
 						}
 						else
@@ -1377,286 +1296,7 @@ namespace StaRTS.Assets
 		public byte[] GetBinaryContents(object asset)
 		{
 			TextAsset textAsset = asset as TextAsset;
-			if (!(textAsset != null))
-			{
-				return null;
-			}
-			return textAsset.bytes;
-		}
-
-		public bool HasFinishedDownloading()
-		{
-			foreach (string current in this.assetInfos.Keys)
-			{
-				AssetInfo assetInfo = this.assetInfos[current];
-				if (assetInfo.AssetRequests != null)
-				{
-					return false;
-				}
-			}
-			return true;
-		}
-
-		protected internal AssetManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).Add3DModelToManifest(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).AddJoeFileToManifest(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).AddJsonFileToManifest(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).AddToManifest((AssetType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).CloneGameObject((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).DeduceAssetPath(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).DonePreloading();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).Fetch(Marshal.PtrToStringUni(*(IntPtr*)args), (AssetInfo)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).Profiler);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).Shaders);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).GetBinaryContents(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).GetContainingBundle((AssetInfo)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).HasFinishedDownloading());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).InBundle((AssetType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).IsAssetCloned(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).IsAssetCloned((AssetInfo)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).IsAtMaxConcurrentLoads());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).IsDependencyBundle(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).IsForInternalLoad((AssetRequest)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).IsUncompressedLocalBundle(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).LoadGameShaders((AssetsCompleteDelegate)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).MultiLoad((List<AssetHandle>)GCHandledObjects.GCHandleToObject(*args), (List<string>)GCHandledObjects.GCHandleToObject(args[1]), (AssetSuccessDelegate)GCHandledObjects.GCHandleToObject(args[2]), (AssetFailureDelegate)GCHandledObjects.GCHandleToObject(args[3]), (List<object>)GCHandledObjects.GCHandleToObject(args[4]), (AssetsCompleteDelegate)GCHandledObjects.GCHandleToObject(args[5]), GCHandledObjects.GCHandleToObject(args[6]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).OnAssetLoaded(GCHandledObjects.GCHandleToObject(*args), (AssetInfo)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).OnBundleFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).OnBundleSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).OnLazyLoadComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).OnLazyLoadFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).OnLazyLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).OnMultiLoadFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).OnMultiLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).PeekCallbackQueue(*(int*)args));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).PreloadAssets((AssetsCompleteDelegate)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).Prepare((AssetInfo)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).ReferenceAssetRecursively((AssetInfo)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).RegisterDependencyBundle(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).RegisterPreloadableAsset(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).ReleaseAll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetManager)GCHandledObjects.GCHandleToObject(instance)).RemoveFromCallbackQueue(*(int*)args));
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).Profiler = (AssetProfiler)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).Shaders = (GameShaders)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).SetupManifest(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).Unload((AssetHandle)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).UnloadDependencyBundle(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).UnloadPrefabs((AssetInfo)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((AssetManager)GCHandledObjects.GCHandleToObject(instance)).UnloadPreloadables();
-			return -1L;
+			return (!(textAsset != null)) ? null : textAsset.bytes;
 		}
 	}
 }

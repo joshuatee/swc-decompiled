@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Swap
 		public BuildingSwapCommand(BuildingSwapRequest request) : base("player.building.swap", request, new DefaultResponse())
 		{
 		}
-
-		protected internal BuildingSwapCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

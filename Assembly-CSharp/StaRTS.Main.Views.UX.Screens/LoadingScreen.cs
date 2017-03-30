@@ -6,8 +6,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -35,10 +33,6 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private UXSlider loadingSlider;
 
-		private UXSprite logo;
-
-		private UXSprite logoAsian;
-
 		public LoadingScreen() : base(Service.Get<CameraManager>().UXSceneCamera)
 		{
 			base.Load(ref this.assetHandle, "gui_loading_screen", new UXFactoryLoadDelegate(this.LoadSuccess), null, null);
@@ -59,40 +53,39 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void InitLogo()
 		{
-			this.logo = base.GetElement<UXSprite>("SpriteLogo");
-			this.logoAsian = base.GetElement<UXSprite>("SpriteLogoAsian");
+			UXSprite element = base.GetElement<UXSprite>("SpriteLogo");
+			UXSprite element2 = base.GetElement<UXSprite>("SpriteLogoAsian");
 			string locale = Service.Get<Lang>().Locale;
 			if (locale == "ru_RU")
 			{
-				this.logo.SpriteName = "SWC_Logo_Russian_B";
-				this.logo.Visible = true;
-				this.logoAsian.Visible = false;
-				return;
+				element.SpriteName = "SWC_Logo_Russian_B";
+				element.Visible = true;
+				element2.Visible = false;
 			}
-			if (locale == "zh_CN")
+			else if (locale == "zh_CN")
 			{
-				this.logo.Visible = false;
-				this.logoAsian.Visible = true;
-				this.logoAsian.SpriteName = "SWC_Logo_Chinese_SC";
-				return;
+				element.Visible = false;
+				element2.Visible = true;
+				element2.SpriteName = "SWC_Logo_Chinese_SC";
 			}
-			if (locale == "zh_TW")
+			else if (locale == "zh_TW")
 			{
-				this.logo.Visible = false;
-				this.logoAsian.Visible = true;
-				this.logoAsian.SpriteName = "SWC_Logo_Chinese_TC";
-				return;
+				element.Visible = false;
+				element2.Visible = true;
+				element2.SpriteName = "SWC_Logo_Chinese_TC";
 			}
-			if (locale == "ko_KR")
+			else if (locale == "ko_KR")
 			{
-				this.logo.Visible = false;
-				this.logoAsian.Visible = true;
-				this.logoAsian.SpriteName = "SWC_Logo_Korean";
-				return;
+				element.Visible = false;
+				element2.Visible = true;
+				element2.SpriteName = "SWC_Logo_Korean";
 			}
-			this.logo.SpriteName = "LoadingLogo";
-			this.logo.Visible = true;
-			this.logoAsian.Visible = false;
+			else
+			{
+				element.SpriteName = "LoadingLogo";
+				element.Visible = true;
+				element2.Visible = false;
+			}
 		}
 
 		private void InitSlider()
@@ -129,62 +122,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (Service.Get<CurrentPlayer>().HasNotCompletedFirstFueStep())
 			{
 				this.OnWipeComplete(null);
-				return;
 			}
-			Service.Get<CameraManager>().WipeCamera.StartLinearWipe(WipeTransition.FromIntroToBase, 1.57079637f, new WipeCompleteDelegate(this.OnWipeComplete), null);
-			Service.Get<WorldInitializer>().View.SetIsoVantage(CameraFeel.Medium);
-		}
-
-		protected internal LoadingScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LoadingScreen)GCHandledObjects.GCHandleToObject(instance)).Fade();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((LoadingScreen)GCHandledObjects.GCHandleToObject(instance)).InitLogo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((LoadingScreen)GCHandledObjects.GCHandleToObject(instance)).InitSlider();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((LoadingScreen)GCHandledObjects.GCHandleToObject(instance)).LoadSuccess(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((LoadingScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((LoadingScreen)GCHandledObjects.GCHandleToObject(instance)).OnWipeComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((LoadingScreen)GCHandledObjects.GCHandleToObject(instance)).Progress(*(float*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((LoadingScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRootCollider();
-			return -1L;
+			else
+			{
+				Service.Get<CameraManager>().WipeCamera.StartLinearWipe(WipeTransition.FromIntroToBase, 1.57079637f, new WipeCompleteDelegate(this.OnWipeComplete), null);
+				Service.Get<WorldInitializer>().View.SetIsoVantage(CameraFeel.Medium);
+			}
 		}
 	}
 }

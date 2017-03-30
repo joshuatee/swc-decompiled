@@ -1,5 +1,6 @@
 using StaRTS.Assets;
 using StaRTS.Main.Controllers.CombineMesh;
+using StaRTS.Main.Models;
 using StaRTS.Main.Models.Entities;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
@@ -7,7 +8,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -31,9 +31,9 @@ namespace StaRTS.Main.Views.Entities
 
 		private GameObject gameObject;
 
-		private Color startColor;
+		private Color startColor = new Color(1f, 1f, 1f, 1f);
 
-		private Color finalColor;
+		private Color finalColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
 		public SmartEntity Entity
 		{
@@ -45,13 +45,10 @@ namespace StaRTS.Main.Views.Entities
 
 		public FlashingEntity(SmartEntity entity, GameObject gameObject, float flashDuration, float flashDelay)
 		{
-			this.startColor = new Color(1f, 1f, 1f, 1f);
-			this.finalColor = new Color(0.5f, 0.5f, 0.5f, 1f);
-			base..ctor();
 			this.entity = entity;
 			this.gameObject = gameObject;
-			this.flashDuration = ((flashDuration < 0f) ? 0f : flashDuration);
-			this.flashDelay = ((flashDelay < 0f) ? 0f : flashDelay);
+			this.flashDuration = ((flashDuration >= 0f) ? flashDuration : 0f);
+			this.flashDelay = ((flashDelay >= 0f) ? flashDelay : 0f);
 			this.flashActiveCounter = 0f;
 			this.flashDelayCounter = 0f;
 			this.flashingMaterials = null;
@@ -245,61 +242,10 @@ namespace StaRTS.Main.Views.Entities
 			{
 				renderer.sharedMaterial = this.oldMaterials[instanceID];
 			}
-			Service.Get<EventManager>().SendEvent(EventId.ShaderResetOnEntity, this.entity);
-		}
-
-		protected internal FlashingEntity(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((FlashingEntity)GCHandledObjects.GCHandleToObject(instance)).Complete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((FlashingEntity)GCHandledObjects.GCHandleToObject(instance)).EnsureMaterialForRenderer((Renderer)GCHandledObjects.GCHandleToObject(*args), (Shader)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FlashingEntity)GCHandledObjects.GCHandleToObject(instance)).EnsureMaterials());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FlashingEntity)GCHandledObjects.GCHandleToObject(instance)).Flash(*(float*)args));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FlashingEntity)GCHandledObjects.GCHandleToObject(instance)).Entity);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FlashingEntity)GCHandledObjects.GCHandleToObject(instance)).LinearTweenColor(*(float*)args));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((FlashingEntity)GCHandledObjects.GCHandleToObject(instance)).RestoreMaterialForRenderer((Renderer)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((FlashingEntity)GCHandledObjects.GCHandleToObject(instance)).RestoreMaterials();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((FlashingEntity)GCHandledObjects.GCHandleToObject(instance)).SetColor(*(int*)args, *(*(IntPtr*)(args + 1)));
-			return -1L;
+			if (!GameConstants.SEND_RESET_EVENT_ON_ENTITY_STOP_FLASHING)
+			{
+				Service.Get<EventManager>().SendEvent(EventId.ShaderResetOnEntity, this.entity);
+			}
 		}
 	}
 }

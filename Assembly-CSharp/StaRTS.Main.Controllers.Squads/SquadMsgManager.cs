@@ -2,8 +2,6 @@ using StaRTS.Main.Models.Squads;
 using StaRTS.Main.Views.UX.Squads;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Squads
 {
@@ -63,12 +61,12 @@ namespace StaRTS.Main.Controllers.Squads
 			this.msgsToProcess.Clear();
 			for (int i = 0; i < count; i++)
 			{
-				SquadMsg msg = msgs[i];
-				if ((string.IsNullOrEmpty(msg.NotifId) || !this.msgsByIds.ContainsKey(msg.NotifId)) && this.msgs.Find((SquadMsg m) => m.Type == SquadMsgType.Chat && msg.Type == SquadMsgType.Chat && m.TimeSent == msg.TimeSent && ((m.OwnerData == null && msg.OwnerData == null) || (m.OwnerData.PlayerId == null && msg.OwnerData.PlayerId == null) || m.OwnerData.PlayerId.CompareTo(msg.OwnerData.PlayerId) == 0) && ((m.ChatData == null && msg.ChatData == null) || (m.ChatData.Message == null && msg.ChatData.Message == null) || (m.ChatData.Message.CompareTo(msg.ChatData.Message) == 0 && m.ChatData.Tag.CompareTo(msg.ChatData.Tag) == 0 && m.ChatData.Time.CompareTo(msg.ChatData.Time) == 0))) == null)
+				SquadMsg squadMsg = msgs[i];
+				if (string.IsNullOrEmpty(squadMsg.NotifId) || !this.msgsByIds.ContainsKey(squadMsg.NotifId))
 				{
-					this.msgs.Add(msg);
-					this.msgsToProcess.Add(msg);
-					SquadMsg parentMsg = this.GetParentMsg(msg);
+					this.msgs.Add(squadMsg);
+					this.msgsToProcess.Add(squadMsg);
+					SquadMsg parentMsg = this.GetParentMsg(squadMsg);
 					if (parentMsg != null)
 					{
 						List<SquadMsg> list;
@@ -81,11 +79,11 @@ namespace StaRTS.Main.Controllers.Squads
 							list = new List<SquadMsg>();
 							this.linkedMsgs.Add(parentMsg.NotifId, list);
 						}
-						list.Add(msg);
+						list.Add(squadMsg);
 					}
-					if (!string.IsNullOrEmpty(msg.NotifId))
+					if (!string.IsNullOrEmpty(squadMsg.NotifId))
 					{
-						this.msgsByIds.Add(msg.NotifId, msg);
+						this.msgsByIds.Add(squadMsg.NotifId, squadMsg);
 					}
 				}
 			}
@@ -173,11 +171,7 @@ namespace StaRTS.Main.Controllers.Squads
 
 		public SquadMsg GetMsgById(string id)
 		{
-			if (!this.msgsByIds.ContainsKey(id))
-			{
-				return null;
-			}
-			return this.msgsByIds[id];
+			return (!this.msgsByIds.ContainsKey(id)) ? null : this.msgsByIds[id];
 		}
 
 		public void RemoveMsgsByType(string playerId, SquadMsgType[] types)
@@ -244,84 +238,6 @@ namespace StaRTS.Main.Controllers.Squads
 			this.observers = null;
 			this.msgsToProcess = null;
 			this.linkedMsgs = null;
-		}
-
-		protected internal SquadMsgManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).ClearAllMsgs();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).Enable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).GetExistingMessages());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).GetMsgById(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).GetParentMsg((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).OnNewSquadMsgs((List<SquadMsg>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).RegisterObserver((AbstractSquadMsgDisplay)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).RemoveMsg((SquadMsg)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).RemoveMsgsByType(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadMsgType[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).SortMsg((SquadMsg)GCHandledObjects.GCHandleToObject(*args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).TrimMessages((List<SquadMsg>)GCHandledObjects.GCHandleToObject(*args), (List<SquadMsg>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadMsgManager)GCHandledObjects.GCHandleToObject(instance)).UnregisterObserver((AbstractSquadMsgDisplay)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

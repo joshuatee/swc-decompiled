@@ -20,9 +20,5 @@ namespace StaRTS.Main.Models.Commands.Equipment
 			}
 			return base.OnFailure(status, data);
 		}
-
-		protected internal DeactivateEquipmentCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

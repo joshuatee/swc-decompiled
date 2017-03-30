@@ -2,7 +2,6 @@ using StaRTS.Externals.Manimal.TransferObjects.Response;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Squads.Responses
 {
@@ -30,30 +29,6 @@ namespace StaRTS.Main.Models.Commands.Squads.Responses
 				i++;
 			}
 			return this;
-		}
-
-		public FeaturedSquadsResponse()
-		{
-		}
-
-		protected internal FeaturedSquadsResponse(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FeaturedSquadsResponse)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FeaturedSquadsResponse)GCHandledObjects.GCHandleToObject(instance)).SquadData);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((FeaturedSquadsResponse)GCHandledObjects.GCHandleToObject(instance)).SquadData = (List<object>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
 		}
 	}
 }

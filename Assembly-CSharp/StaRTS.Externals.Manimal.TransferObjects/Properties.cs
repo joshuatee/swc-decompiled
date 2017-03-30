@@ -51,13 +51,5 @@ namespace StaRTS.Externals.Manimal.TransferObjects
 		public const string PREFIX = "prefix";
 
 		public const string CLIENT_CHECKSUM_STRING = "clientState";
-
-		public Properties()
-		{
-		}
-
-		protected internal Properties(UIntPtr dummy)
-		{
-		}
 	}
 }

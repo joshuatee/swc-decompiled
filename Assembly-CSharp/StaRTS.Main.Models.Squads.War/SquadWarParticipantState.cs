@@ -3,8 +3,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Squads.War
 {
@@ -20,7 +18,7 @@ namespace StaRTS.Main.Models.Squads.War
 
 		public int VictoryPointsLeft;
 
-		public int HQLevel;
+		public int HQLevel = 1;
 
 		public int AttacksWon;
 
@@ -33,47 +31,47 @@ namespace StaRTS.Main.Models.Squads.War
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary.ContainsKey("id"))
 			{
-				this.SquadMemberId = Convert.ToString(dictionary["id"], CultureInfo.InvariantCulture);
+				this.SquadMemberId = Convert.ToString(dictionary["id"]);
 			}
 			if (dictionary.ContainsKey("name"))
 			{
-				this.SquadMemberName = Convert.ToString(dictionary["name"], CultureInfo.InvariantCulture);
+				this.SquadMemberName = Convert.ToString(dictionary["name"]);
 			}
 			if (dictionary.ContainsKey("turns"))
 			{
-				this.TurnsLeft = Convert.ToInt32(dictionary["turns"], CultureInfo.InvariantCulture);
+				this.TurnsLeft = Convert.ToInt32(dictionary["turns"]);
 			}
 			if (dictionary.ContainsKey("victoryPoints"))
 			{
-				this.VictoryPointsLeft = Convert.ToInt32(dictionary["victoryPoints"], CultureInfo.InvariantCulture);
+				this.VictoryPointsLeft = Convert.ToInt32(dictionary["victoryPoints"]);
 			}
 			if (dictionary.ContainsKey("attacksWon"))
 			{
-				this.AttacksWon = Convert.ToInt32(dictionary["attacksWon"], CultureInfo.InvariantCulture);
+				this.AttacksWon = Convert.ToInt32(dictionary["attacksWon"]);
 			}
 			if (dictionary.ContainsKey("defensesWon"))
 			{
-				this.DefensesWon = Convert.ToInt32(dictionary["defensesWon"], CultureInfo.InvariantCulture);
+				this.DefensesWon = Convert.ToInt32(dictionary["defensesWon"]);
 			}
 			if (dictionary.ContainsKey("score"))
 			{
-				this.Score = Convert.ToInt32(dictionary["score"], CultureInfo.InvariantCulture);
+				this.Score = Convert.ToInt32(dictionary["score"]);
 			}
 			if (dictionary.ContainsKey("currentlyDefending"))
 			{
 				Dictionary<string, object> dictionary2 = dictionary["currentlyDefending"] as Dictionary<string, object>;
 				if (dictionary2 != null && dictionary2.ContainsKey("expiration"))
 				{
-					this.DefendingAttackExpirationDate = Convert.ToUInt32(dictionary2["expiration"], CultureInfo.InvariantCulture);
+					this.DefendingAttackExpirationDate = Convert.ToUInt32(dictionary2["expiration"]);
 				}
 			}
 			if (dictionary.ContainsKey("level"))
 			{
-				this.HQLevel = Convert.ToInt32(dictionary["level"], CultureInfo.InvariantCulture);
+				this.HQLevel = Convert.ToInt32(dictionary["level"]);
 				if (this.HQLevel <= 0)
 				{
 					this.HQLevel = 1;
-					Service.Get<StaRTSLogger>().WarnFormat("War participant has no HQ level: {0}", new object[]
+					Service.Get<Logger>().WarnFormat("War participant has no HQ level: {0}", new object[]
 					{
 						this.SquadMemberId
 					});
@@ -85,26 +83,6 @@ namespace StaRTS.Main.Models.Squads.War
 		public string ToJson()
 		{
 			return Serializer.Start().End().ToString();
-		}
-
-		public SquadWarParticipantState()
-		{
-			this.HQLevel = 1;
-			base..ctor();
-		}
-
-		protected internal SquadWarParticipantState(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

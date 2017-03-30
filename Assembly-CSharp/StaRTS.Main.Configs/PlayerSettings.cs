@@ -1,7 +1,5 @@
 using StaRTS.Main.Controllers;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Configs
 {
@@ -41,7 +39,6 @@ namespace StaRTS.Main.Configs
 		public static void SetMusicVolume(float volume)
 		{
 			UserPlayerPrefsController.SetFloat("prefMusicVolume", volume);
-			UserPlayerPrefsController.Save();
 		}
 
 		public static float GetSfxVolume()
@@ -52,7 +49,6 @@ namespace StaRTS.Main.Configs
 		public static void SetSfxVolume(float volume)
 		{
 			UserPlayerPrefsController.SetFloat("prefSfxVolume", volume);
-			UserPlayerPrefsController.Save();
 		}
 
 		public static int GetNotificationsLevel()
@@ -63,13 +59,11 @@ namespace StaRTS.Main.Configs
 		public static void SetNotificationsLevel(int level)
 		{
 			UserPlayerPrefsController.SetInt("prefNotificationsLevel2", level);
-			UserPlayerPrefsController.Save();
 		}
 
 		public static void SetSkipRaidWaitConfirmation(bool skip)
 		{
-			UserPlayerPrefsController.SetInt("prefSkipRaidWait", skip ? 1 : 0);
-			UserPlayerPrefsController.Save();
+			UserPlayerPrefsController.SetInt("prefSkipRaidWait", (!skip) ? 0 : 1);
 		}
 
 		public static bool GetSkipRaidWaitConfirmation()
@@ -79,8 +73,7 @@ namespace StaRTS.Main.Configs
 
 		public static void SetSkipRaidDefendConfirmation(bool skip)
 		{
-			UserPlayerPrefsController.SetInt("prefSkipRaidDefend", skip ? 1 : 0);
-			UserPlayerPrefsController.Save();
+			UserPlayerPrefsController.SetInt("prefSkipRaidDefend", (!skip) ? 0 : 1);
 		}
 
 		public static bool GetSkipRaidDefendConfirmation()
@@ -96,7 +89,6 @@ namespace StaRTS.Main.Configs
 		public static void SetLocaleCopy(string locale)
 		{
 			UserPlayerPrefsController.SetString("prefLocaleCopy", locale);
-			UserPlayerPrefsController.Save();
 		}
 
 		public static int GetHardwareProfile()
@@ -107,7 +99,6 @@ namespace StaRTS.Main.Configs
 		public static void SetHardwareProfile(int hardwareProfile)
 		{
 			UserPlayerPrefsController.SetInt("prefHardwareProfile", hardwareProfile);
-			UserPlayerPrefsController.Save();
 		}
 
 		public static void ResetAllSettingsToDefault()
@@ -119,90 +110,6 @@ namespace StaRTS.Main.Configs
 			UserPlayerPrefsController.SetInt("prefNotificationsLevel2", 0);
 			UserPlayerPrefsController.SetFloat("prefSfxVolume", 1f);
 			UserPlayerPrefsController.SetFloat("prefMusicVolume", 1f);
-			UserPlayerPrefsController.Save();
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlayerSettings.GetHardwareProfile());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlayerSettings.GetLocaleCopy());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlayerSettings.GetMusicVolume());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlayerSettings.GetNotificationsLevel());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlayerSettings.GetSfxVolume());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlayerSettings.GetSkipRaidDefendConfirmation());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlayerSettings.GetSkipRaidWaitConfirmation());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			PlayerSettings.ResetAllSettingsToDefault();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			PlayerSettings.SetHardwareProfile(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			PlayerSettings.SetLocaleCopy(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			PlayerSettings.SetMusicVolume(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			PlayerSettings.SetNotificationsLevel(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			PlayerSettings.SetSfxVolume(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			PlayerSettings.SetSkipRaidDefendConfirmation(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			PlayerSettings.SetSkipRaidWaitConfirmation(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

@@ -3,8 +3,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -40,7 +38,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (string.IsNullOrEmpty(rawSequence))
 			{
-				Service.Get<StaRTSLogger>().Warn("Blank gunSequence in " + uid);
+				Service.Get<Logger>().Warn("Blank gunSequence in " + uid);
 				return this.GetDefaultGunSequence(uid);
 			}
 			if (this.sequencePairs.ContainsKey(rawSequence))
@@ -54,7 +52,7 @@ namespace StaRTS.Main.Controllers
 			int num = array.Length;
 			if (num == 0)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Empty gunSequence in {0} '{1}'", new object[]
+				Service.Get<Logger>().WarnFormat("Empty gunSequence in {0} '{1}'", new object[]
 				{
 					uid,
 					rawSequence
@@ -65,9 +63,9 @@ namespace StaRTS.Main.Controllers
 			for (int i = 0; i < num; i++)
 			{
 				int num2;
-				if (!int.TryParse(array[i], ref num2))
+				if (!int.TryParse(array[i], out num2))
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Illegal gunSequence value in {0} '{1}'", new object[]
+					Service.Get<Logger>().WarnFormat("Illegal gunSequence value in {0} '{1}'", new object[]
 					{
 						uid,
 						rawSequence
@@ -82,10 +80,12 @@ namespace StaRTS.Main.Controllers
 				int num3 = array2[j];
 				if (dictionary.ContainsKey(num3))
 				{
-					Dictionary<int, int> arg_ED_0 = dictionary;
-					int key = num3;
-					int num4 = arg_ED_0[key];
-					arg_ED_0[key] = num4 + 1;
+					Dictionary<int, int> dictionary2;
+					Dictionary<int, int> expr_FE = dictionary2 = dictionary;
+					int num4;
+					int expr_103 = num4 = num3;
+					num4 = dictionary2[num4];
+					expr_FE[expr_103] = num4 + 1;
 				}
 				else
 				{
@@ -110,10 +110,10 @@ namespace StaRTS.Main.Controllers
 			int num = -1;
 			string strKey = null;
 			int i = 0;
-			int length = blob.get_Length();
+			int length = blob.Length;
 			while (i < length)
 			{
-				char c = blob.get_Chars(i);
+				char c = blob[i];
 				bool flag = c == '"';
 				switch (strIntState)
 				{
@@ -163,8 +163,8 @@ namespace StaRTS.Main.Controllers
 				case StrIntState.IntEnd:
 					if (!char.IsDigit(c))
 					{
-						string text = blob.Substring(num, i - num);
-						this.AddPair(ref result, strKey, int.Parse(text));
+						string s = blob.Substring(num, i - num);
+						this.AddPair(ref result, strKey, int.Parse(s));
 						num = -1;
 						strIntState = StrIntState.StrStart;
 						if (flag)
@@ -185,38 +185,31 @@ namespace StaRTS.Main.Controllers
 				}
 				i++;
 			}
-			if (strIntState != StrIntState.StrStart)
+			switch (strIntState)
 			{
-				if (strIntState == StrIntState.IntEnd)
-				{
-					string text2 = blob.Substring(num);
-					this.AddPair(ref result, strKey, int.Parse(text2));
-				}
-				else
-				{
-					this.AddError(ref list, "String-int mismatch");
-				}
+			case StrIntState.StrStart:
+				goto IL_215;
+			case StrIntState.IntEnd:
+			{
+				string s2 = blob.Substring(num);
+				this.AddPair(ref result, strKey, int.Parse(s2));
+				goto IL_215;
 			}
+			}
+			this.AddError(ref list, "String-int mismatch");
+			IL_215:
 			if (list != null)
 			{
-				string text3 = string.Format("Formatting errors in {0} '{1}'", new object[]
-				{
-					uid,
-					blob
-				});
+				string text = string.Format("Formatting errors in {0} '{1}'", uid, blob);
 				int j = 0;
 				int count = list.Count;
 				while (j < count)
 				{
 					StrIntPair strIntPair = list[j];
-					text3 += string.Format("; {0} ({1})", new object[]
-					{
-						strIntPair.StrKey,
-						strIntPair.IntVal
-					});
+					text += string.Format("; {0} ({1})", strIntPair.StrKey, strIntPair.IntVal);
 					j++;
 				}
-				Service.Get<StaRTSLogger>().Warn(text3);
+				Service.Get<Logger>().Warn(text);
 			}
 			return result;
 		}
@@ -252,30 +245,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			errors.Add(new StrIntPair(error, 1));
-		}
-
-		protected internal ValueObjectController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ValueObjectController)GCHandledObjects.GCHandleToObject(instance)).GetDefaultGunSequence(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ValueObjectController)GCHandledObjects.GCHandleToObject(instance)).GetGunSequences(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ValueObjectController)GCHandledObjects.GCHandleToObject(instance)).GetStrIntPairs(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ValueObjectController)GCHandledObjects.GCHandleToObject(instance)).ParseBlob(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
 		}
 	}
 }

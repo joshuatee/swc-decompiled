@@ -4,7 +4,6 @@ using StaRTS.Main.Models.Player;
 using StaRTS.Main.Story;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.RUF.RUFTasks
 {
@@ -30,16 +29,6 @@ namespace StaRTS.Main.RUF.RUFTasks
 				Service.Get<GameStateMachine>().SetState(new IntroCameraState());
 			}
 			base.Process(continueProcessing);
-		}
-
-		protected internal FueRUFTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((FueRUFTask)GCHandledObjects.GCHandleToObject(instance)).Process(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

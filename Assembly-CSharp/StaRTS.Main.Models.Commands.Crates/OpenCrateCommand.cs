@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Crates
 		public OpenCrateCommand(OpenCrateRequest request) : base("player.crate.open", request, new OpenCrateResponse())
 		{
 		}
-
-		protected internal OpenCrateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

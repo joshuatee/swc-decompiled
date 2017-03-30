@@ -1,6 +1,5 @@
 using StaRTS.Main.Views.UX.Elements;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -26,16 +25,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			UXLabel element2 = base.GetElement<UXLabel>("LabelOverview");
 			element.Text = this.lang.Get("SQUAD_ADVANCEMENT_OVERVIEW_TITLE", new object[0]);
 			element2.Text = this.lang.Get("SQUAD_ADVANCEMENT_OVERVIEW_DESC", new object[0]);
-		}
-
-		protected internal SquadAdvancementInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadAdvancementInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
 		}
 	}
 }

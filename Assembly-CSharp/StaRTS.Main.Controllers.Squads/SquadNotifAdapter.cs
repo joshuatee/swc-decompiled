@@ -9,7 +9,6 @@ using StaRTS.Main.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Squads
 {
@@ -22,7 +21,7 @@ namespace StaRTS.Main.Controllers.Squads
 			this.request = new GetSquadNotifsRequest();
 			this.request.PlayerId = Service.Get<CurrentPlayer>().PlayerId;
 			this.request.Since = 0u;
-			this.request.BattleVersion = "21.0";
+			this.request.BattleVersion = "22.0";
 		}
 
 		public void SetNotifStartDate(uint notifStartDate)
@@ -73,28 +72,6 @@ namespace StaRTS.Main.Controllers.Squads
 				this.request.Since = since;
 			}
 			base.ResetPollTimer();
-		}
-
-		protected internal SquadNotifAdapter(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadNotifAdapter)GCHandledObjects.GCHandleToObject(instance)).OnGetNotifs((SquadNotifsResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadNotifAdapter)GCHandledObjects.GCHandleToObject(instance)).Poll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadNotifAdapter)GCHandledObjects.GCHandleToObject(instance)).PopulateSquadMsgsReceived(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

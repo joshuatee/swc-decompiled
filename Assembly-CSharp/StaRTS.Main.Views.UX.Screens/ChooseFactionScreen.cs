@@ -21,7 +21,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -131,10 +130,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				base.GetElement<UXElement>("FacebookConnect").Visible = false;
 				base.GetElement<UXElement>("FriendPics").Visible = false;
-				return;
 			}
-			this.ShowFacebookCallToAction(!Service.Get<ISocialDataController>().IsLoggedIn);
-			Service.Get<ISocialDataController>().CheckFacebookLoginOnStartup();
+			else
+			{
+				this.ShowFacebookCallToAction(!Service.Get<ISocialDataController>().IsLoggedIn);
+			}
 		}
 
 		private void InitTextures()
@@ -146,9 +146,9 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void HideFacebookIfNeeded()
 		{
 			UXElement element = base.GetElement<UXElement>("BgDialog");
-			bool flag = false;
+			bool nO_FB_FACTION_CHOICE_ANDROID = GameConstants.NO_FB_FACTION_CHOICE_ANDROID;
 			UXLabel element2;
-			if (flag)
+			if (nO_FB_FACTION_CHOICE_ANDROID)
 			{
 				base.GetElement<UXElement>("FBFriends").Visible = false;
 				base.GetElement<UXElement>("BgDialogFB").Visible = false;
@@ -187,38 +187,49 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			base.GetElement<UXElement>("FacebookConnect").Visible = show;
 			base.GetElement<UXElement>("FriendPics").Visible = !show;
-			if (!show)
+			if (show)
 			{
-				bool flag = false;
-				ServerAPI serverAPI = Service.Get<ServerAPI>();
-				if (!serverAPI.Enabled && Service.Get<CurrentPlayer>().CampaignProgress.FueInProgress)
+				UXLabel element = base.GetElement<UXLabel>("LabelCrystalCount");
+				UXLabel element2 = base.GetElement<UXLabel>("LabelCrystals");
+				if (Service.Get<CurrentPlayer>().IsConnectedAccount)
 				{
-					serverAPI.Enabled = true;
-					flag = true;
+					element.Visible = false;
+					element2.Visible = false;
+					base.GetElement<UXElement>("SpriteIcoCrystal").Visible = false;
 				}
+				else
+				{
+					element.Text = this.lang.Get("GET_AMOUNT", new object[]
+					{
+						GameConstants.FB_CONNECT_REWARD
+					});
+					element2.Text = this.lang.Get("CRYSTALS", new object[0]);
+				}
+			}
+			else
+			{
 				ISocialDataController socialDataController = Service.Get<ISocialDataController>();
-				socialDataController.FriendsDetailsCB = new OnFBFriendsDelegate(this.RefreshFriendData);
-				socialDataController.UpdateFriends();
-				if (flag)
-				{
-					serverAPI.Enabled = false;
-				}
-				return;
+				socialDataController.FriendsDetailsCB = new OnFBFriendsDelegate(this.OnFBDataPopulated);
+				Service.Get<ISocialDataController>().CheckFacebookLoginOnStartup();
 			}
-			UXLabel element = base.GetElement<UXLabel>("LabelCrystalCount");
-			UXLabel element2 = base.GetElement<UXLabel>("LabelCrystals");
-			if (Service.Get<CurrentPlayer>().IsConnectedAccount)
+		}
+
+		private void OnFBDataPopulated()
+		{
+			bool flag = false;
+			ServerAPI serverAPI = Service.Get<ServerAPI>();
+			if (!serverAPI.Enabled && Service.Get<CurrentPlayer>().CampaignProgress.FueInProgress)
 			{
-				element.Visible = false;
-				element2.Visible = false;
-				base.GetElement<UXElement>("SpriteIcoCrystal").Visible = false;
-				return;
+				serverAPI.Enabled = true;
+				flag = true;
 			}
-			element.Text = this.lang.Get("GET_AMOUNT", new object[]
+			ISocialDataController socialDataController = Service.Get<ISocialDataController>();
+			socialDataController.FriendsDetailsCB = new OnFBFriendsDelegate(this.RefreshFriendData);
+			socialDataController.UpdateFriends();
+			if (flag)
 			{
-				GameConstants.FB_CONNECT_REWARD
-			});
-			element2.Text = this.lang.Get("CRYSTALS", new object[0]);
+				serverAPI.Enabled = false;
+			}
 		}
 
 		private void RefreshFriendData()
@@ -242,30 +253,26 @@ namespace StaRTS.Main.Views.UX.Screens
 					if (socialFriendData.PlayerData != null)
 					{
 						FactionType faction = socialFriendData.PlayerData.Faction;
-						UXElement uXElement = null;
+						UXButton uXButton = null;
 						if (faction == FactionType.Empire)
 						{
-							uXElement = this.empireGrid.CloneTemplateItem(socialFriendData.Id);
+							uXButton = (UXButton)this.empireGrid.CloneTemplateItem(socialFriendData.Id);
 							UXTexture subElement = this.empireGrid.GetSubElement<UXTexture>(socialFriendData.Id, "FriendEmpirePic");
 							Service.Get<ISocialDataController>().GetFriendPicture(socialFriendData, new OnGetProfilePicture(this.OnGetFriendPicture), subElement);
-							this.empireGrid.AddItem(uXElement, i);
+							this.empireGrid.AddItem(uXButton, i);
 						}
 						else if (faction == FactionType.Rebel)
 						{
-							uXElement = this.rebelGrid.CloneTemplateItem(socialFriendData.Id);
+							uXButton = (UXButton)this.rebelGrid.CloneTemplateItem(socialFriendData.Id);
 							UXTexture subElement2 = this.rebelGrid.GetSubElement<UXTexture>(socialFriendData.Id, "FriendRebelPic");
 							Service.Get<ISocialDataController>().GetFriendPicture(socialFriendData, new OnGetProfilePicture(this.OnGetFriendPicture), subElement2);
-							this.rebelGrid.AddItem(uXElement, i);
+							this.rebelGrid.AddItem(uXButton, i);
 						}
-						if (uXElement != null)
+						if (uXButton != null)
 						{
-							uXElement.Tag = socialFriendData.PlayerData.PlayerName + "\n" + socialFriendData.Name;
-							UXButton uXButton = (UXButton)uXElement;
-							if (uXButton != null)
-							{
-								uXButton.OnPressed = new UXButtonPressedDelegate(this.OnPressFriendButton);
-								uXButton.OnReleased = new UXButtonReleasedDelegate(this.OnReleaseFriendButton);
-							}
+							uXButton.Tag = socialFriendData.PlayerData.PlayerName + "\n" + socialFriendData.Name;
+							uXButton.OnPressed = new UXButtonPressedDelegate(this.OnPressFriendButton);
+							uXButton.OnReleased = new UXButtonReleasedDelegate(this.OnReleaseFriendButton);
 						}
 					}
 				}
@@ -318,9 +325,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (GameConstants.FACTION_CHOICE_CONFIRM_SCREEN_ENABLED)
 			{
 				Service.Get<ScreenController>().AddScreen(new TwoButtonFueScreen(true, new OnScreenModalResult(this.OnConfrimFactionChoice), button.Tag, string.Empty, false));
-				return;
 			}
-			this.OnConfrimFactionChoice(true, button.Tag);
+			else
+			{
+				this.OnConfrimFactionChoice(true, button.Tag);
+			}
 		}
 
 		private void OnConfrimFactionChoice(object result, object cookie)
@@ -331,7 +340,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			Service.Get<AudioManager>().PlayAudio("sfx_button_startbattle");
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-			FactionType faction = (FactionType)cookie;
+			FactionType faction = (FactionType)((int)cookie);
 			currentPlayer.Faction = faction;
 			Service.Get<BILoggingController>().TrackFaction();
 			SetFactionRequest request = new SetFactionRequest(currentPlayer.Faction);
@@ -376,118 +385,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			Service.Get<PlayerValuesController>().RecalculateAll();
 			Service.Get<CampaignController>().StartCampaignProgress();
-		}
-
-		protected internal ChooseFactionScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).HideFacebookIfNeeded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).InitTextures();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).onChooseFaction((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnConfrimFactionChoice(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnFacebookConnect((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnFacebookLoggedIn();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnFactionServerSuccess((DefaultResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnGetFriendPicture((Texture2D)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnNewHomeTransitionedTo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnPressFriendButton((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnReleaseFriendButton((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshFriendData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).ShowFacebookCallToAction(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ChooseFactionScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateBuildings((FactionType)(*(int*)args));
-			return -1L;
 		}
 	}
 }

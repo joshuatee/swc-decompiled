@@ -7,7 +7,6 @@ using StaRTS.Main.Views.UX.Screens.ScreenHelpers;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 {
@@ -36,11 +35,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 
 		protected override void CreateItem()
 		{
-			this.id = string.Format("{0}{1}", new object[]
-			{
-				"create_squad_",
-				this.position
-			});
+			this.id = string.Format("{0}{1}", "create_squad_", this.position);
 			this.item = this.grid.CloneItem(this.id, this.templateItem);
 		}
 
@@ -54,16 +49,18 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			subElement3.Text = Service.Get<Lang>().Get("SQUAD_CREATE_DESC", new object[0]);
 			UXSprite subElement4 = this.grid.GetSubElement<UXSprite>(this.id, "SpriteFacebookIcon");
 			FactionType faction = Service.Get<CurrentPlayer>().Faction;
-			if (faction == FactionType.Empire)
+			FactionType factionType = faction;
+			if (factionType != FactionType.Empire)
+			{
+				if (factionType == FactionType.Rebel)
+				{
+					subElement4.SpriteName = "FactionRebel";
+				}
+			}
+			else
 			{
 				subElement4.SpriteName = "FactionEmpire";
-				return;
 			}
-			if (faction != FactionType.Rebel)
-			{
-				return;
-			}
-			subElement4.SpriteName = "FactionRebel";
 		}
 
 		private void OnCreateSquadClicked(UXButton button)
@@ -82,34 +79,6 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 
 		public override void Destroy()
 		{
-		}
-
-		protected internal LeaderboardRowCreateSquadView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LeaderboardRowCreateSquadView)GCHandledObjects.GCHandleToObject(instance)).CreateItem();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((LeaderboardRowCreateSquadView)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((LeaderboardRowCreateSquadView)GCHandledObjects.GCHandleToObject(instance)).InitView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((LeaderboardRowCreateSquadView)GCHandledObjects.GCHandleToObject(instance)).OnCreateSquadClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

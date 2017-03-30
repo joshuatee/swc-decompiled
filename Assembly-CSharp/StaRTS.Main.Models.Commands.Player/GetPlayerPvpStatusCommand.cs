@@ -22,9 +22,5 @@ namespace StaRTS.Main.Models.Commands.Player
 			}
 			return OnCompleteAction.Ok;
 		}
-
-		protected internal GetPlayerPvpStatusCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

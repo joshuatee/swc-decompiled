@@ -6,8 +6,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 {
@@ -61,32 +59,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 				uXSprite.SpriteName = warBuffVO.BuffIcon;
 			}
 			list.AddItem(uXElement, order);
-		}
-
-		public SquadWarBuffIconHelper()
-		{
-		}
-
-		protected internal SquadWarBuffIconHelper(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			SquadWarBuffIconHelper.AddBuffIcon((AbstractUXList)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2), (IDataController)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			SquadWarBuffIconHelper.SetupBuffIcons((AbstractUXList)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (List<string>)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			SquadWarBuffIconHelper.SetupBuffIcons((AbstractUXList)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
 		}
 	}
 }

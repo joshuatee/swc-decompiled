@@ -10,9 +10,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Controls
 {
@@ -54,7 +52,7 @@ namespace StaRTS.Main.Views.UX.Controls
 
 		private UXElement selectedGroup;
 
-		private readonly Color redToolTipColor;
+		private readonly Color redToolTipColor = new Color(0.737f, 0.074f, 0.074f);
 
 		private float lastTimeLeft;
 
@@ -74,8 +72,6 @@ namespace StaRTS.Main.Views.UX.Controls
 
 		public BuildingTooltip(UXFactory factory, UXElement tooltipElement, string subElementPrefix, string parentName, BuildingTooltipKind kind)
 		{
-			this.redToolTipColor = new Color(0.737f, 0.074f, 0.074f);
-			base..ctor();
 			this.TooltipElement = tooltipElement;
 			this.Kind = kind;
 			this.lastTimeLeft = 0f;
@@ -169,10 +165,12 @@ namespace StaRTS.Main.Views.UX.Controls
 				if (timeLeft < 0)
 				{
 					this.timeLabel.Visible = false;
-					return;
 				}
-				this.timeLabel.Visible = true;
-				this.timeLabel.Text = GameUtils.GetTimeLabelFromSeconds(timeLeft);
+				else
+				{
+					this.timeLabel.Visible = true;
+					this.timeLabel.Text = GameUtils.GetTimeLabelFromSeconds(timeLeft);
+				}
 			}
 		}
 
@@ -186,13 +184,15 @@ namespace StaRTS.Main.Views.UX.Controls
 					this.EnableViewTimeObserving(false);
 					this.lastTimeLeft = 0f;
 					this.lastTimeTotal = 0f;
-					return;
 				}
-				this.progressSlider.Visible = true;
-				this.EnableViewTimeObserving(true);
-				this.lastTimeLeft = (float)timeLeft;
-				this.lastTimeTotal = (float)timeTotal;
-				this.InternalSetProgress();
+				else
+				{
+					this.progressSlider.Visible = true;
+					this.EnableViewTimeObserving(true);
+					this.lastTimeLeft = (float)timeLeft;
+					this.lastTimeTotal = (float)timeTotal;
+					this.InternalSetProgress();
+				}
 			}
 		}
 
@@ -206,9 +206,11 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (enable)
 			{
 				Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
-				return;
 			}
-			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			else
+			{
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			}
 		}
 
 		public void OnViewFrameTime(float dt)
@@ -228,110 +230,6 @@ namespace StaRTS.Main.Views.UX.Controls
 			{
 				this.selectedGroup.Visible = false;
 			}
-		}
-
-		protected internal BuildingTooltip(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).DestroyIconGeometry();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).DestroyTooltip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).EnableViewTimeObserving(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).Kind);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).TooltipElement);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).InternalSetProgress();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).Kind = (BuildingTooltipKind)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).TooltipElement = (UXElement)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).SetBubbleText(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).SetIconAsset((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).SetLevel((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).SetProgress(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).SetSelected(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).SetTime(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).SetTitle(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BuildingTooltip)GCHandledObjects.GCHandleToObject(instance)).SetupBGBasedOnKind();
-			return -1L;
 		}
 	}
 }

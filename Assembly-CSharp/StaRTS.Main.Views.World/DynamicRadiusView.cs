@@ -11,7 +11,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -27,13 +26,9 @@ namespace StaRTS.Main.Views.World
 
 		private const float ROTATION_FACTOR = 4f;
 
-		private float inverseSpeedFactor;
-
 		private const string EFFECT_TEXTURE_UID = "effect_radius";
 
 		private const float EFFECT_ANIMATION_SPEED = 0f;
-
-		private Color EFFECT_COLOR;
 
 		private const float EFFECT_TINT = 0.9f;
 
@@ -43,8 +38,6 @@ namespace StaRTS.Main.Views.World
 
 		private const float TRIGGER_ANIMATION_SPEED = 0f;
 
-		private Color TRIGGER_COLOR;
-
 		private const float TRIGGER_TINT = 1f;
 
 		private const float TRIGGER_TILING = 1f;
@@ -52,6 +45,12 @@ namespace StaRTS.Main.Views.World
 		private const float TRIGGER_SCALE = 0.8f;
 
 		private const float TRIGGER_OFFSET = 0.1f;
+
+		private float inverseSpeedFactor;
+
+		private Color EFFECT_COLOR = new Color(1f, 0f, 0f, 0.9f);
+
+		private Color TRIGGER_COLOR = new Color(0.4f, 0f, 0f, 0.7f);
 
 		private static int LastIdentity;
 
@@ -81,16 +80,8 @@ namespace StaRTS.Main.Views.World
 
 		private RadiusView particleView;
 
-		public static void StaticReset()
-		{
-			DynamicRadiusView.LastIdentity = 0;
-		}
-
 		public DynamicRadiusView()
 		{
-			this.EFFECT_COLOR = new Color(1f, 0f, 0f, 0.9f);
-			this.TRIGGER_COLOR = new Color(0.4f, 0f, 0f, 0.7f);
-			base..ctor();
 			this.identity = ++DynamicRadiusView.LastIdentity;
 			this.particleView = new RadiusView();
 			this.radiusParent = new GameObject("RadiusView_" + this.identity);
@@ -99,6 +90,11 @@ namespace StaRTS.Main.Views.World
 			this.triggerRadius.transform.parent = this.radiusParent.transform;
 			this.effectRadius.transform.parent = this.radiusParent.transform;
 			this.HideHighlight();
+		}
+
+		public static void StaticReset()
+		{
+			DynamicRadiusView.LastIdentity = 0;
 		}
 
 		public void ShowHighlight(Entity entity)
@@ -115,11 +111,11 @@ namespace StaRTS.Main.Views.World
 			uint num2 = 0u;
 			this.DetermineTriggerRange(smartEntity, ref num2);
 			this.GenerateTriggerRadius(num2);
-			this.inverseSpeedFactor = ((num2 > 0u) ? (15f / num2) : 0f);
+			this.inverseSpeedFactor = ((num2 <= 0u) ? 0f : (15f / num2));
 			this.UpdateDepths(num, num2);
 			this.radiusParent.SetActive(true);
 			this.govc = smartEntity.GameObjectViewComp;
-			this.govc.AttachGameObject("dynamicRadius", this.radiusParent, new Vector3(0f, 0.09f, 0f), true, false);
+			this.govc.AttachGameObject("dynamicRadius", this.radiusParent, new Vector3(0f, 0.04f, 0f), true, false);
 			this.showing = true;
 			Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
 			this.particleView.ShowHighlight(entity);
@@ -157,9 +153,8 @@ namespace StaRTS.Main.Views.World
 				if (this.effectTexture != null)
 				{
 					this.AssignEffectMaterial();
-					return;
 				}
-				if (this.effectHandle == AssetHandle.Invalid)
+				else if (this.effectHandle == AssetHandle.Invalid)
 				{
 					this.effectRadius.SetActive(false);
 					TextureVO textureVO = Service.Get<IDataController>().Get<TextureVO>("effect_radius");
@@ -186,9 +181,8 @@ namespace StaRTS.Main.Views.World
 				if (this.triggerTexture != null)
 				{
 					this.AssignTriggerMaterial();
-					return;
 				}
-				if (this.triggerHandle == AssetHandle.Invalid)
+				else if (this.triggerHandle == AssetHandle.Invalid)
 				{
 					this.triggerRadius.SetActive(false);
 					TextureVO textureVO = Service.Get<IDataController>().Get<TextureVO>("trigger_radius");
@@ -206,9 +200,8 @@ namespace StaRTS.Main.Views.World
 				this.effectTexture = texture2D;
 				this.effectRadius.SetActive(true);
 				this.AssignEffectMaterial();
-				return;
 			}
-			if (x == this.triggerMaterial)
+			else if (x == this.triggerMaterial)
 			{
 				this.triggerTexture = texture2D;
 				this.triggerRadius.SetActive(true);
@@ -235,10 +228,12 @@ namespace StaRTS.Main.Views.World
 			{
 				this.effectRadius.transform.localPosition = Vector3.zero;
 				this.triggerRadius.transform.localPosition = new Vector3(0f, 0.01f, 0f);
-				return;
 			}
-			this.effectRadius.transform.localPosition = new Vector3(0f, 0.01f, 0f);
-			this.triggerRadius.transform.localPosition = Vector3.zero;
+			else
+			{
+				this.effectRadius.transform.localPosition = new Vector3(0f, 0.01f, 0f);
+				this.triggerRadius.transform.localPosition = Vector3.zero;
+			}
 		}
 
 		public void HideHighlight()
@@ -338,76 +333,6 @@ namespace StaRTS.Main.Views.World
 			Vector3 eulerAngles = new Vector3(0f, dt * (4f * this.inverseSpeedFactor), 0f);
 			this.effectRadius.transform.Rotate(eulerAngles);
 			this.triggerRadius.transform.Rotate(eulerAngles);
-		}
-
-		protected internal DynamicRadiusView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).AssignEffectMaterial();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).AssignTriggerMaterial();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).GenerateEffectMaterial();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).GenerateTriggerMaterial();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).HideHighlight();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).HideHighlight((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).OnTextureLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((DynamicRadiusView)GCHandledObjects.GCHandleToObject(instance)).ShowHighlight((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			DynamicRadiusView.StaticReset();
-			return -1L;
 		}
 	}
 }

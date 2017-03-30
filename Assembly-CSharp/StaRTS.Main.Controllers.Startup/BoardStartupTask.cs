@@ -5,7 +5,6 @@ using StaRTS.Main.Controllers.SquadWar;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -34,16 +33,6 @@ namespace StaRTS.Main.Controllers.Startup
 			new PathingManager();
 			Service.Get<EventManager>().SendEvent(EventId.InitializeBoardEnd, null);
 			base.Complete();
-		}
-
-		protected internal BoardStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BoardStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

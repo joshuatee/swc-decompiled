@@ -17,7 +17,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -134,7 +133,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (!inventory.HasItem("reputation"))
 			{
 				this.sliders[sliderIndex].HideAll();
-				Service.Get<StaRTSLogger>().WarnFormat("No reputation found in your inventory", new object[0]);
+				Service.Get<Logger>().WarnFormat("No reputation found in your inventory", new object[0]);
 				return;
 			}
 			int itemAmount = inventory.GetItemAmount("reputation");
@@ -146,7 +145,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.lang.ThousandsSeparated(itemCapacity)
 			});
 			UXSlider currentSlider = this.sliders[sliderIndex].CurrentSlider;
-			currentSlider.Value = ((itemCapacity == 0) ? 0f : ((float)itemAmount / (float)itemCapacity));
+			currentSlider.Value = ((itemCapacity != 0) ? ((float)itemAmount / (float)itemCapacity) : 0f);
 		}
 
 		protected override void OnScreenLoaded()
@@ -182,7 +181,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.lang.ThousandsSeparated(storage)
 			});
 			UXSlider currentSlider = this.sliders[1].CurrentSlider;
-			float value = (storage == 0) ? 0f : ((float)donatedTroopStorageUsedByWorldOwner / (float)storage);
+			float value = (storage != 0) ? ((float)donatedTroopStorageUsedByWorldOwner / (float)storage) : 0f;
 			currentSlider.Value = value;
 		}
 
@@ -245,8 +244,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				foreach (KeyValuePair<string, int> current in donation.SenderAmounts)
 				{
-					string key = current.get_Key();
-					int value = current.get_Value();
+					string key = current.Key;
+					int value = current.Value;
 					string text;
 					if (num2 < 3 && squadMemberLookup.TryGetValue(key, out text))
 					{
@@ -329,7 +328,6 @@ namespace StaRTS.Main.Views.UX.Screens
 					{
 						this.observingClockViewTime = false;
 						Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
-						return;
 					}
 				}
 				else
@@ -371,116 +369,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			Service.Get<EventManager>().UnregisterObserver(this, EventId.SquadTroopsReceived);
 			base.OnDestroyElement();
-		}
-
-		protected internal SquadBuildingScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).AddTroopRequestItem();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).CreateSquadClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).GetTooltipString((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (SquadDonatedTroop)GCHandledObjects.GCHandleToObject(args[1]), (Dictionary<string, string>)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).InitReputation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).InitTroopGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).JoinSquadClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnButtonClicked();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).RequestTroopsClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateHousingSpace();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateReputation(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateRequestState();
-			return -1L;
 		}
 	}
 }

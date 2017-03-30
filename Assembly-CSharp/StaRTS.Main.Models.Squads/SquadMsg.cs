@@ -46,13 +46,5 @@ namespace StaRTS.Main.Models.Squads
 		public string NotifId;
 
 		public string BISource;
-
-		public SquadMsg()
-		{
-		}
-
-		protected internal SquadMsg(UIntPtr dummy)
-		{
-		}
 	}
 }

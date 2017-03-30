@@ -20,9 +20,5 @@ namespace StaRTS.Main.Models.Commands
 			}
 			return OnCompleteAction.Desync;
 		}
-
-		protected internal GetReplayCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

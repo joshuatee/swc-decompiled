@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Player.Identity
 		public PlayerIdentityGetCommand(PlayerIdentityRequest request) : base("player.identity.get", request, new PlayerIdentityGetResponse())
 		{
 		}
-
-		protected internal PlayerIdentityGetCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

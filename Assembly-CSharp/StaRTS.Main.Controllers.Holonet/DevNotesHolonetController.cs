@@ -3,7 +3,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Holonet
 {
@@ -47,21 +46,6 @@ namespace StaRTS.Main.Controllers.Holonet
 			HolonetController holonetController = Service.Get<HolonetController>();
 			this.DevNotes.Sort(new Comparison<DevNoteEntryVO>(holonetController.CompareTimestamps));
 			holonetController.ContentPrepared(this, Math.Min(num, 3));
-		}
-
-		protected internal DevNotesHolonetController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DevNotesHolonetController)GCHandledObjects.GCHandleToObject(instance)).ControllerType);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DevNotesHolonetController)GCHandledObjects.GCHandleToObject(instance)).PrepareContent(*(int*)args);
-			return -1L;
 		}
 	}
 }

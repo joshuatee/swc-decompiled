@@ -3,7 +3,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Runtime.CompilerServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 {
@@ -65,9 +64,19 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 
 		protected FactionToggle selectedFaction;
 
-		[method: CompilerGenerated]
-		[CompilerGenerated]
-		public event Action<FactionToggle> FactionSelectCallBack;
+		public event Action<FactionToggle> FactionSelectCallBack
+		{
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			add
+			{
+				this.FactionSelectCallBack = (Action<FactionToggle>)Delegate.Combine(this.FactionSelectCallBack, value);
+			}
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			remove
+			{
+				this.FactionSelectCallBack = (Action<FactionToggle>)Delegate.Remove(this.FactionSelectCallBack, value);
+			}
+		}
 
 		public FactionSelectorDropDown(UXFactory uxFactory)
 		{
@@ -149,97 +158,28 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 			case FactionToggle.Empire:
 				uXLabel = this.empireBtnLabel;
 				element = this.uxFactory.GetElement<UXSprite>("SpriteBtnEmpireSymbol");
-				goto IL_67;
+				goto IL_77;
 			case FactionToggle.Rebel:
 				uXLabel = this.rebelBtnLabel;
 				element = this.uxFactory.GetElement<UXSprite>("SpriteBtnRebelSymbol");
-				goto IL_67;
+				goto IL_77;
 			}
 			uXLabel = this.bothBtnLabel;
 			element = this.uxFactory.GetElement<UXSprite>("SpriteBtnBothSymbol");
-			IL_67:
+			IL_77:
 			this.filterBtnLabel.Text = uXLabel.Text;
 			this.filterSprite.SpriteName = element.SpriteName;
 			this.filterSprite.Color = element.Color;
 			this.ShowHideFilterOptions(false);
 			if (doCallBack && this.FactionSelectCallBack != null)
 			{
-				this.FactionSelectCallBack.Invoke(faction);
+				this.FactionSelectCallBack(faction);
 			}
 		}
 
 		public FactionToggle GetSelectedFaction()
 		{
 			return this.selectedFaction;
-		}
-
-		protected internal FactionSelectorDropDown(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).FactionSelectCallBack += (Action<FactionToggle>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).BothTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).EmpireTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).FilterButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).GetSelectedFaction());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).Init((FactionToggle)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).RebelTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).FactionSelectCallBack -= (Action<FactionToggle>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).SelectFaction((FactionToggle)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).SelectFaction((FactionToggle)(*(int*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((FactionSelectorDropDown)GCHandledObjects.GCHandleToObject(instance)).ShowHideFilterOptions(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

@@ -5,7 +5,6 @@ using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Cheats
 {
@@ -29,15 +28,6 @@ namespace StaRTS.Main.Models.Commands.Cheats
 				serializer.AddArrayOfPrimitives<string>("uids", this.uids);
 			}
 			return serializer.End().ToString();
-		}
-
-		protected internal CheatSetObjectivesRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CheatSetObjectivesRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

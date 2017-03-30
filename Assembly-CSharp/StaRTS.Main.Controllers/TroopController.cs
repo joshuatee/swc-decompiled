@@ -14,15 +14,14 @@ using StaRTS.Main.Views.World.Deploying;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class TroopController : AbstractDeployableController
 	{
-		private BoardController boardController;
-
 		private const int DROPSHIP_SEARCH_RADIUS = 2;
+
+		private BoardController boardController;
 
 		public TroopController()
 		{
@@ -125,9 +124,7 @@ namespace StaRTS.Main.Controllers
 			{
 				boardPosition = spawnPosition;
 			}
-			int num = currentOffsetIndex + 1;
-			currentOffsetIndex = num;
-			if (num == TroopDeployer.OFFSETS.Length)
+			if (++currentOffsetIndex == TroopDeployer.OFFSETS.Length)
 			{
 				currentOffsetIndex = 0;
 			}
@@ -136,7 +133,7 @@ namespace StaRTS.Main.Controllers
 
 		public SmartEntity SpawnChampion(TroopTypeVO troopType, TeamType teamType, IntPosition boardPosition)
 		{
-			TroopSpawnMode spawnMode = (teamType == TeamType.Defender) ? TroopSpawnMode.LeashedToBuilding : TroopSpawnMode.Unleashed;
+			TroopSpawnMode spawnMode = (teamType != TeamType.Defender) ? TroopSpawnMode.Unleashed : TroopSpawnMode.LeashedToBuilding;
 			SmartEntity smartEntity = this.SpawnTroop(troopType, teamType, boardPosition, spawnMode, true, teamType == TeamType.Defender);
 			if (smartEntity != null)
 			{
@@ -152,7 +149,7 @@ namespace StaRTS.Main.Controllers
 
 		public SmartEntity SpawnHero(TroopTypeVO troopType, TeamType teamType, IntPosition boardPosition, bool leashed)
 		{
-			return this.SpawnTroop(troopType, teamType, boardPosition, leashed ? TroopSpawnMode.LeashedToBuilding : TroopSpawnMode.Unleashed, true);
+			return this.SpawnTroop(troopType, teamType, boardPosition, (!leashed) ? TroopSpawnMode.Unleashed : TroopSpawnMode.LeashedToBuilding, true);
 		}
 
 		public bool ValidateTroopPlacement(IntPosition boardPosition, TeamType teamType, int troopWidth, bool sendEventsForInvalidPlacement, out BoardCell<Entity> pathCell, bool forceAllow)
@@ -224,45 +221,6 @@ namespace StaRTS.Main.Controllers
 				result = troop.TroopComp.TroopType.IsHealer;
 			}
 			return result;
-		}
-
-		protected internal TroopController(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TroopController.IsEntityHealer((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopController)GCHandledObjects.GCHandleToObject(instance)).SpawnChampion((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopController)GCHandledObjects.GCHandleToObject(instance)).SpawnHero((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopController)GCHandledObjects.GCHandleToObject(instance)).SpawnHero((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)), *(sbyte*)(args + 3) != 0));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopController)GCHandledObjects.GCHandleToObject(instance)).SpawnTroop((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)), (TroopSpawnMode)(*(int*)(args + 3)), *(sbyte*)(args + 4) != 0));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopController)GCHandledObjects.GCHandleToObject(instance)).SpawnTroop((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)), (TroopSpawnMode)(*(int*)(args + 3)), *(sbyte*)(args + 4) != 0, *(sbyte*)(args + 5) != 0));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopController)GCHandledObjects.GCHandleToObject(instance)).ValidateAttackerTroopPlacement(*(*(IntPtr*)args), *(int*)(args + 1), *(sbyte*)(args + 2) != 0));
 		}
 	}
 }

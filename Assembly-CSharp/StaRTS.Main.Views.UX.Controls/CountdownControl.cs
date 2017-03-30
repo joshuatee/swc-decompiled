@@ -7,9 +7,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Controls
 {
@@ -51,11 +49,8 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (this.label != null)
 			{
 				string timeLabelFromSeconds = GameUtils.GetTimeLabelFromSeconds(num);
-				this.label.Text = string.Format(this.localizedFormat, new object[]
-				{
-					timeLabelFromSeconds
-				});
-				this.label.TextColor = ((num < this.threshold.get_Key()) ? this.threshold.get_Value() : this.originalLabelColor);
+				this.label.Text = string.Format(this.localizedFormat, timeLabelFromSeconds);
+				this.label.TextColor = ((num >= this.threshold.Key) ? this.originalLabelColor : this.threshold.Value);
 			}
 			if (num <= 0)
 			{
@@ -91,45 +86,6 @@ namespace StaRTS.Main.Views.UX.Controls
 			this.label = null;
 			this.deadline = 0;
 			this.localizedFormat = null;
-		}
-
-		protected internal CountdownControl(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CountdownControl)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CountdownControl)GCHandledObjects.GCHandleToObject(instance)).init((UXLabel)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CountdownControl)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CountdownControl)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((CountdownControl)GCHandledObjects.GCHandleToObject(instance)).SetDeadline(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((CountdownControl)GCHandledObjects.GCHandleToObject(instance)).SetThreshold(*(int*)args, *(*(IntPtr*)(args + 1)));
-			return -1L;
 		}
 	}
 }

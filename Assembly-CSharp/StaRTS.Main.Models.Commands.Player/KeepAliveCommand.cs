@@ -1,6 +1,5 @@
 using StaRTS.Externals.Manimal.TransferObjects.Response;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player
 {
@@ -15,15 +14,6 @@ namespace StaRTS.Main.Models.Commands.Player
 		protected override bool IsAddToken()
 		{
 			return false;
-		}
-
-		protected internal KeepAliveCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((KeepAliveCommand)GCHandledObjects.GCHandleToObject(instance)).IsAddToken());
 		}
 	}
 }

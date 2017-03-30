@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -77,51 +76,6 @@ namespace StaRTS.Utils
 				num += samples[i];
 			}
 			return num;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MathUtils.FloatMod(*(float*)args, *(float*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MathUtils.IntMultSqrt2(*(int*)args));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MathUtils.IsGreaterThanZero(*(float*)args));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MathUtils.MinAngle(*(float*)args, *(float*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MathUtils.Normalize(*(float*)args, *(float*)(args + 1), *(float*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MathUtils.NormalizeRange(*(float*)args, *(float*)(args + 1), *(float*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MathUtils.NormalizeRange(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3), *(float*)(args + 4)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MathUtils.Sum((float[])GCHandledObjects.GCHandleToPinnedArrayObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MathUtils.WrapAngle(*(float*)args));
 		}
 	}
 }

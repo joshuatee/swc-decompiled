@@ -11,13 +11,11 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
-	public class ScreenController : IViewFrameTimeObserver, IEventObserver
+	public class ScreenController : IEventObserver, IViewFrameTimeObserver
 	{
 		private List<ScreenInfo> screens;
 
@@ -101,15 +99,6 @@ namespace StaRTS.Main.Controllers
 				Service.Get<UserInputManager>().ResetLastScreenPosition();
 			}
 			return screenInfo;
-		}
-
-		public UXElement GetLastScreen()
-		{
-			if (this.screens.Count > 0)
-			{
-				return this.screens[this.screens.Count - 1].Screen;
-			}
-			return null;
 		}
 
 		private bool HandleScreenQueue(ScreenInfo screen)
@@ -296,7 +285,7 @@ namespace StaRTS.Main.Controllers
 			{
 				if (this.screens[i].Screen != null)
 				{
-					Service.Get<StaRTSLogger>().Warn("Active Screen: " + this.screens[i].Screen.Root.name);
+					Service.Get<Logger>().Warn("Active Screen: " + this.screens[i].Screen.Root.name);
 				}
 			}
 		}
@@ -310,14 +299,14 @@ namespace StaRTS.Main.Controllers
 					return this.screens[i].Screen as T;
 				}
 			}
-			return default(T);
+			return (T)((object)null);
 		}
 
 		public T FindElement<T>(string elementName) where T : UXElement
 		{
 			if (this.screens.Count == 0)
 			{
-				return default(T);
+				return (T)((object)null);
 			}
 			for (int i = this.screens.Count - 1; i >= 0; i--)
 			{
@@ -330,7 +319,7 @@ namespace StaRTS.Main.Controllers
 					}
 				}
 			}
-			return default(T);
+			return (T)((object)null);
 		}
 
 		public void PreloadAndCacheScreens(AssetsCompleteDelegate onComplete, object cookie)
@@ -427,11 +416,10 @@ namespace StaRTS.Main.Controllers
 			gameObj.SetActive(true);
 			if (gameObjectContainer.Flagged)
 			{
-				Service.Get<StaRTSLogger>().Error("Cannot use a cached screen multiple times: " + gameObj.name);
+				Service.Get<Logger>().Error("Cannot use a cached screen multiple times: " + gameObj.name);
 				if (assetRequest.OnFailure != null)
 				{
 					assetRequest.OnFailure(assetRequest.Cookie);
-					return;
 				}
 			}
 			else
@@ -640,191 +628,6 @@ namespace StaRTS.Main.Controllers
 				this.UpdateScrimAndDepths();
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal ScreenController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).AddScreen((ScreenBase)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).AddScreen((UXElement)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).AddScreen((ScreenBase)GCHandledObjects.GCHandleToObject(*args), (QueueScreenBehavior)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).AddScreen((UXElement)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, (QueueScreenBehavior)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).AddScreen((UXElement)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).AddScreen((UXElement)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0, (QueueScreenBehavior)(*(int*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).AddScreenInfoToQueue((ScreenInfo)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).AdjustDepths();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).CloseAll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).GetLastScreen());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).HandleScreenQueue((ScreenInfo)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).HideAll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).IsFatalAlertActive());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).IsModalDialogActive());
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).IsScreenAutoCloseable((ScreenInfo)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).LoadQueueRemoveAt(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).LogAllScreens();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).PopAndShowNextQueuedScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).PreloadAndCacheScreens((AssetsCompleteDelegate)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).PreloadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).RecalculateCurrencyTrayVisibility();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).RecalculateHudVisibility();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).RemoveScreen((ScreenBase)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).RemoveScreenHelper((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).RestoreDepths(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).RestoreVisibilityToAll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).ShouldDequeueScreen((ScreenInfo)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).ShouldForceScreenToQueue());
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScreenController)GCHandledObjects.GCHandleToObject(instance)).UnloadCachedScreen(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((ScreenController)GCHandledObjects.GCHandleToObject(instance)).UpdateScrimAndDepths();
-			return -1L;
 		}
 	}
 }

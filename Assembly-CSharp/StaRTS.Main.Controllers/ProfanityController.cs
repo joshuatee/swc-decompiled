@@ -3,13 +3,15 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class ProfanityController
 	{
+		private const string META_RESERVED_UID = "reserved";
+
+		private const string META_EN_UID = "en";
+
 		private List<string> profaneWordsLoose;
 
 		private List<string> profaneWordsStrict;
@@ -26,17 +28,13 @@ namespace StaRTS.Main.Controllers
 			','
 		};
 
-		private const string META_RESERVED_UID = "reserved";
-
-		private const string META_EN_UID = "en";
-
 		public ProfanityController()
 		{
 			Service.Set<ProfanityController>(this);
 			this.profaneWordsLoose = new List<string>();
 			this.profaneWordsStrict = new List<string>();
 			this.reservedWords = new List<string>();
-			string text = Service.Get<Lang>().ExtractLanguageFromLocale();
+			string b = Service.Get<Lang>().ExtractLanguageFromLocale();
 			IDataController dataController = Service.Get<IDataController>();
 			foreach (ProfanityVO current in dataController.GetAll<ProfanityVO>())
 			{
@@ -45,7 +43,7 @@ namespace StaRTS.Main.Controllers
 				{
 					this.reservedWords.AddRange(words);
 				}
-				else if (current.Uid == text || current.Uid == "en")
+				else if (current.Uid == b || current.Uid == "en")
 				{
 					this.profaneWordsLoose.AddRange(words);
 				}
@@ -77,7 +75,7 @@ namespace StaRTS.Main.Controllers
 			int num = ProfanityController.SPECIAL_CHARS.Length;
 			while (i < num)
 			{
-				text2 = text2.Replace(ProfanityController.SPECIAL_CHARS[i].ToString(), "");
+				text2 = text2.Replace(ProfanityController.SPECIAL_CHARS[i].ToString(), string.Empty);
 				i++;
 			}
 			int j = 0;
@@ -104,15 +102,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			return true;
-		}
-
-		protected internal ProfanityController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProfanityController)GCHandledObjects.GCHandleToObject(instance)).IsValid(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0));
 		}
 	}
 }

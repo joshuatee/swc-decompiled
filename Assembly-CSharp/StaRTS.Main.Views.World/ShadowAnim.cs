@@ -4,7 +4,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -130,61 +129,6 @@ namespace StaRTS.Main.Views.World
 					this.ShadowMaterial.color = new Color(0f, 0f, 0f, a);
 				}
 			}
-		}
-
-		protected internal ShadowAnim(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShadowAnim)GCHandledObjects.GCHandleToObject(instance)).EnsureShadowAnimSetup((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShadowAnim)GCHandledObjects.GCHandleToObject(instance)).CenterOfMass);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShadowAnim)GCHandledObjects.GCHandleToObject(instance)).ShadowGameObject);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShadowAnim)GCHandledObjects.GCHandleToObject(instance)).ShadowMaterial);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ShadowAnim)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ShadowAnim)GCHandledObjects.GCHandleToObject(instance)).PlayShadowAnim(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ShadowAnim)GCHandledObjects.GCHandleToObject(instance)).CenterOfMass = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ShadowAnim)GCHandledObjects.GCHandleToObject(instance)).ShadowGameObject = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ShadowAnim)GCHandledObjects.GCHandleToObject(instance)).ShadowMaterial = (Material)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Fue
 		public FueUpdateStateCommand() : base("player.fue.setQuest", new FueUpdateStateRequest(), new DefaultResponse())
 		{
 		}
-
-		protected internal FueUpdateStateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

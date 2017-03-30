@@ -3,10 +3,8 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using System.Diagnostics;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Externals.FileManagement
 {
@@ -28,14 +26,14 @@ namespace StaRTS.Externals.FileManagement
 
 		private string manifestUrl;
 
-		private StaRTSLogger logger;
+		private Logger logger;
 
 		private int loadAttempts;
 
 		public VersionedFileManifestLoader(MonoBehaviour engine)
 		{
 			this.engine = engine;
-			this.logger = Service.Get<StaRTSLogger>();
+			this.logger = Service.Get<Logger>();
 		}
 
 		public void Load(FmsOptions options, string manifestUrl, FmsCallback onComplete, FmsCallback onError)
@@ -67,14 +65,14 @@ namespace StaRTS.Externals.FileManagement
 
 		private void AttemptManifestRequest(uint id, object cookie)
 		{
-			int num = this.loadAttempts + 1;
-			this.loadAttempts = num;
-			if (num > 3)
+			if (++this.loadAttempts > 3)
 			{
 				this.onError();
-				return;
 			}
-			this.engine.StartCoroutine(this.RequestManifestFile());
+			else
+			{
+				this.engine.StartCoroutine(this.RequestManifestFile());
+			}
 		}
 
 		private void RetryRequest()
@@ -82,43 +80,12 @@ namespace StaRTS.Externals.FileManagement
 			Service.Get<ViewTimerManager>().CreateViewTimer(0.5f, false, new TimerDelegate(this.AttemptManifestRequest), null);
 		}
 
-		[IteratorStateMachine(typeof(VersionedFileManifestLoader.<RequestManifestFile>d__16))]
+		[DebuggerHidden]
 		private IEnumerator RequestManifestFile()
 		{
-			WWW wWW = new WWW(this.manifestUrl);
-			WWWManager.Add(wWW);
-			yield return wWW;
-			if (!WWWManager.Remove(wWW))
-			{
-				yield break;
-			}
-			if (wWW.error != null)
-			{
-				this.logger.ErrorFormat("Unable to request manifest file [{0}] on attempt #{1} with the following error: {2}", new object[]
-				{
-					this.manifestUrl,
-					this.loadAttempts,
-					wWW.error
-				});
-				this.RetryRequest();
-			}
-			else if (wWW.isDone)
-			{
-				if (wWW.text != "")
-				{
-					this.PrepareManifest(wWW.text);
-				}
-				else
-				{
-					this.logger.ErrorFormat("Manifest request attempt #{0} yielded an empty manifest.", new object[]
-					{
-						this.loadAttempts
-					});
-					this.RetryRequest();
-				}
-			}
-			wWW.Dispose();
-			yield break;
+			VersionedFileManifestLoader.<RequestManifestFile>c__Iterator8 <RequestManifestFile>c__Iterator = new VersionedFileManifestLoader.<RequestManifestFile>c__Iterator8();
+			<RequestManifestFile>c__Iterator.<>f__this = this;
+			return <RequestManifestFile>c__Iterator;
 		}
 
 		private void PrepareManifest(string json)
@@ -126,43 +93,6 @@ namespace StaRTS.Externals.FileManagement
 			this.manifest = new VersionedFileManifest();
 			this.manifest.Prepare(this.options, json);
 			this.onComplete();
-		}
-
-		protected internal VersionedFileManifestLoader(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).GetManifest());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).IsLoaded());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((VersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).Load((FmsOptions)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (FmsCallback)GCHandledObjects.GCHandleToObject(args[2]), (FmsCallback)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((VersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).PrepareManifest(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).RequestManifestFile());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((VersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).RetryRequest();
-			return -1L;
 		}
 	}
 }

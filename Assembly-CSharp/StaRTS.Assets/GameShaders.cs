@@ -3,9 +3,7 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Assets
 {
@@ -96,26 +94,7 @@ namespace StaRTS.Assets
 
 		public Shader GetShader(string shaderName)
 		{
-			if (string.IsNullOrEmpty(shaderName) || !this.shaders.ContainsKey(shaderName))
-			{
-				return null;
-			}
-			return this.shaders[shaderName];
-		}
-
-		protected internal GameShaders(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameShaders)GCHandledObjects.GCHandleToObject(instance)).GetShader(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GameShaders)GCHandledObjects.GCHandleToObject(instance)).LoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
+			return (string.IsNullOrEmpty(shaderName) || !this.shaders.ContainsKey(shaderName)) ? null : this.shaders[shaderName];
 		}
 	}
 }

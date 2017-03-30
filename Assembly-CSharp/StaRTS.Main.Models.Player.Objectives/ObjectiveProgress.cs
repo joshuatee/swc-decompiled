@@ -6,8 +6,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player.Objectives
 {
@@ -17,11 +15,11 @@ namespace StaRTS.Main.Models.Player.Objectives
 
 		public string PlanetId;
 
-		public int HQ;
+		public int HQ = 1;
 
 		public int Count;
 
-		public int Target;
+		public int Target = 1;
 
 		public ObjectiveState State;
 
@@ -37,9 +35,6 @@ namespace StaRTS.Main.Models.Player.Objectives
 
 		public ObjectiveProgress(ObjectiveProgress cloneFrom)
 		{
-			this.HQ = 1;
-			this.Target = 1;
-			base..ctor();
 			this.ObjectiveUid = cloneFrom.ObjectiveUid;
 			this.PlanetId = cloneFrom.PlanetId;
 			this.HQ = cloneFrom.HQ;
@@ -50,15 +45,12 @@ namespace StaRTS.Main.Models.Player.Objectives
 
 		public ObjectiveProgress(string planetId)
 		{
-			this.HQ = 1;
-			this.Target = 1;
-			base..ctor();
 			this.PlanetId = planetId;
 		}
 
 		public string ToJson()
 		{
-			Service.Get<StaRTSLogger>().Warn("Attempting to inappropriately serialize an ObjectiveGroup");
+			Service.Get<Logger>().Warn("Attempting to inappropriately serialize an ObjectiveGroup");
 			return string.Empty;
 		}
 
@@ -71,40 +63,21 @@ namespace StaRTS.Main.Models.Player.Objectives
 			}
 			if (dictionary.ContainsKey("hq"))
 			{
-				this.HQ = Convert.ToInt32(dictionary["hq"], CultureInfo.InvariantCulture);
+				this.HQ = Convert.ToInt32(dictionary["hq"]);
 			}
 			if (dictionary.ContainsKey("count"))
 			{
-				this.Count = Convert.ToInt32(dictionary["count"], CultureInfo.InvariantCulture);
+				this.Count = Convert.ToInt32(dictionary["count"]);
 			}
 			if (dictionary.ContainsKey("target"))
 			{
-				this.Target = Convert.ToInt32(dictionary["target"], CultureInfo.InvariantCulture);
+				this.Target = Convert.ToInt32(dictionary["target"]);
 			}
 			if (dictionary.ContainsKey("state"))
 			{
 				this.State = StringUtils.ParseEnum<ObjectiveState>(dictionary["state"] as string);
 			}
 			return this;
-		}
-
-		protected internal ObjectiveProgress(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveProgress)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveProgress)GCHandledObjects.GCHandleToObject(instance)).VO);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveProgress)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

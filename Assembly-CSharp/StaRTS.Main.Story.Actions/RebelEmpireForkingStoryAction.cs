@@ -4,7 +4,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -22,28 +21,30 @@ namespace StaRTS.Main.Story.Actions
 
 		public RebelEmpireForkingStoryAction(StoryActionVO vo, IStoryReactor parent) : base(vo, parent)
 		{
-			char[] array = new char[]
+			char[] separator = new char[]
 			{
 				'|'
 			};
-			string[] array2 = vo.PrepareString.Split(array, 0);
-			if (array2.Length < 2)
+			string[] array = vo.PrepareString.Split(separator, StringSplitOptions.None);
+			if (array.Length < 2)
 			{
-				Service.Get<StaRTSLogger>().Error("RebelEmpireForkingStoryAction lacking params: " + this.vo.Uid);
+				Service.Get<Logger>().Error("RebelEmpireForkingStoryAction lacking params: " + this.vo.Uid);
 			}
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			if (currentPlayer.CampaignProgress.FueInProgress)
 			{
-				Service.Get<StaRTSLogger>().Error("Cannot do forking actions in FUE only later guided experiences");
+				Service.Get<Logger>().Error("Cannot do forking actions in FUE only later guided experiences");
 				this.Execute();
 			}
 			FactionType faction = currentPlayer.Faction;
 			if (faction == FactionType.Rebel)
 			{
-				this.reactionUID = array2[0];
-				return;
+				this.reactionUID = array[0];
 			}
-			this.reactionUID = array2[1];
+			else
+			{
+				this.reactionUID = array[1];
+			}
 		}
 
 		public override void Prepare()
@@ -55,27 +56,6 @@ namespace StaRTS.Main.Story.Actions
 		{
 			base.Execute();
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal RebelEmpireForkingStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RebelEmpireForkingStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RebelEmpireForkingStoryAction)GCHandledObjects.GCHandleToObject(instance)).Reaction);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((RebelEmpireForkingStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

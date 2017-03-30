@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public PromoteSquadMemberCommand(MemberIdRequest request) : base("guild.promote", request, new DefaultResponse())
 		{
 		}
-
-		protected internal PromoteSquadMemberCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Missions
 		public ClaimMissionCommand(MissionIdRequest request) : base("player.missions.claimMission", request, new DefaultResponse())
 		{
 		}
-
-		protected internal ClaimMissionCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

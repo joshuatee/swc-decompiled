@@ -16,7 +16,6 @@ using StaRTS.Main.Views.UX;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.GameStates
 {
@@ -129,75 +128,6 @@ namespace StaRTS.Main.Controllers.GameStates
 		public bool CanUpdateHomeContracts()
 		{
 			return false;
-		}
-
-		protected internal WarBaseEditorState(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).CanUpdateHomeContracts());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).CleanupBaseEditing();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			WarBaseEditorState.GoToWarBaseEditorState();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).OnEnter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).OnExit((IState)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).OnTransitionComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).OnWarBaseDataSuccess((SquadMemberWarDataResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).QueryBaseData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).SetupBaseEditing();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).SetupEditingMode();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((WarBaseEditorState)GCHandledObjects.GCHandleToObject(instance)).StartTransitionToWarBase();
-			return -1L;
 		}
 	}
 }

@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public SquadWarSpendDeployablesCommand(DeployableSpendRequest request) : base("guild.war.deployable.spend", request, new DefaultResponse())
 		{
 		}
-
-		protected internal SquadWarSpendDeployablesCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -3,7 +3,6 @@ using StaRTS.Main.Controllers.Entities.StateMachines.Attack;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Utils;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Entities.Components
 {
@@ -164,9 +163,11 @@ namespace StaRTS.Main.Models.Entities.Components
 			if (shooterVO is TroopTypeVO)
 			{
 				this.IsMelee = (shooterVO.MaxAttackRange < 4u);
-				return;
 			}
-			this.IsMelee = false;
+			else
+			{
+				this.IsMelee = false;
+			}
 		}
 
 		public bool PrimaryTargetMoved()
@@ -183,181 +184,6 @@ namespace StaRTS.Main.Models.Entities.Components
 				this.TargetOriginalBoardZ = transformComp.CenterGridZ();
 			}
 			return flag;
-		}
-
-		protected internal ShooterComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).AttackFSM);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).FirstTargetAcquired);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).IsMelee);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).isSkinned);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).OriginalShooterVO);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).ReevaluateTarget);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).Searching);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).ShooterVO);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).ShouldCountClips);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).Target);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).TargetingDelayAmount);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).TargetingDelayed);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).TargetOriginalBoardX);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).TargetOriginalBoardZ);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).PrimaryTargetMoved());
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).AttackFSM = (AttackFSM)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).FirstTargetAcquired = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).IsMelee = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).isSkinned = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).OriginalShooterVO = (IShooterVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).ReevaluateTarget = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).Searching = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).ShooterVO = (IShooterVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).ShouldCountClips = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).Target = (SmartEntity)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).TargetingDelayAmount = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).TargetingDelayed = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).TargetOriginalBoardX = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).TargetOriginalBoardZ = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((ShooterComponent)GCHandledObjects.GCHandleToObject(instance)).SetVOData((IShooterVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

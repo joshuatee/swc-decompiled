@@ -6,7 +6,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -20,7 +19,7 @@ namespace StaRTS.Main.Story.Actions
 
 		public override void Prepare()
 		{
-			if (this.prepareArgs.Length != 0)
+			if (this.prepareArgs.Length > 0)
 			{
 				this.planet = Service.Get<GalaxyPlanetController>().GetPlanet(this.prepareArgs[0]);
 			}
@@ -61,32 +60,11 @@ namespace StaRTS.Main.Story.Actions
 			}
 			if (planet != null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find any unlocked planets other than the default", new object[0]);
+				Service.Get<Logger>().ErrorFormat("Could not find any unlocked planets other than the default", new object[0]);
 				return planet;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("Could not find any unlocked planets at all", new object[0]);
+			Service.Get<Logger>().ErrorFormat("Could not find any unlocked planets at all", new object[0]);
 			return new Planet(planetVO);
-		}
-
-		protected internal SpinPlanetForwardStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SpinPlanetForwardStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SpinPlanetForwardStoryAction)GCHandledObjects.GCHandleToObject(instance)).FindFirstUnlockedPlanet());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SpinPlanetForwardStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

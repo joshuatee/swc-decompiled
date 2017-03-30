@@ -4,7 +4,6 @@ using StaRTS.Main.Controllers.Notifications;
 using StaRTS.Main.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -21,16 +20,6 @@ namespace StaRTS.Main.Controllers.Startup
 			new InAppPurchaseController();
 			new NotificationController();
 			base.Complete();
-		}
-
-		protected internal ExternalsStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ExternalsStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

@@ -8,7 +8,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Pooling;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World.Targeting
 {
@@ -22,7 +21,7 @@ namespace StaRTS.Main.Views.World.Targeting
 		{
 			Service.Get<EventManager>().RegisterObserver(this, EventId.TroopAcquiredFirstTarget, EventPriority.Default);
 			Service.Get<EventManager>().RegisterObserver(this, EventId.SpecialAttackDeployed, EventPriority.Default);
-			base.EnsurePoolCapacity(10);
+			this.EnsurePoolCapacity(10);
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
@@ -70,15 +69,6 @@ namespace StaRTS.Main.Views.World.Targeting
 		public void DeactivateTargetReticle(uint id, object cookie)
 		{
 			this.ReturnToPool(cookie as TargetReticle);
-		}
-
-		protected internal TargetIdentifier(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetIdentifier)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

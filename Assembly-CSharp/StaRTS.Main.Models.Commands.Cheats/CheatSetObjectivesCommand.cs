@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetObjectivesCommand(CheatSetObjectivesRequest request) : base("cheats.objectives.set", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSetObjectivesCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

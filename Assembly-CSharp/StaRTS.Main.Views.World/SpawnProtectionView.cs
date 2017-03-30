@@ -17,7 +17,6 @@ using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -35,7 +34,7 @@ namespace StaRTS.Main.Views.World
 
 		private const float FADE_OUT_TIME = 1f;
 
-		public const float ELEVATION = 0.045f;
+		public const float ELEVATION = 0.005f;
 
 		private bool initialized;
 
@@ -174,100 +173,83 @@ namespace StaRTS.Main.Views.World
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.EnterEditMode)
+			switch (id)
 			{
-				if (id <= EventId.TroopNotPlacedInvalidArea)
+			case EventId.MapDataProcessingStart:
+				if (!Service.Get<WorldTransitioner>().IsCurrentWorldHome())
 				{
+					this.IgnoreBoardChanges();
+				}
+				return EatResponse.NotEaten;
+			case EventId.MapDataProcessingEnd:
+				IL_1B:
+				switch (id)
+				{
+				case EventId.BuildingPlacedOnBoard:
+				case EventId.BuildingMovedOnBoard:
+				case EventId.BuildingRemovedFromBoard:
+					break;
+				default:
 					switch (id)
 					{
-					case EventId.BuildingPlacedOnBoard:
-					case EventId.BuildingMovedOnBoard:
-					case EventId.BuildingRemovedFromBoard:
-						break;
-					default:
-						if (id != EventId.TroopNotPlacedInvalidArea)
+					case EventId.ShieldBorderDestroyed:
+					case EventId.ShieldDisabled:
+						goto IL_10A;
+					case EventId.ShieldStarted:
+						IL_47:
+						if (id == EventId.EnterEditMode)
 						{
+							this.ObserveBoardChanges();
+							this.Initialize();
+							this.DisplaySpawnProtection();
 							return EatResponse.NotEaten;
 						}
-						this.DisplaySpawnProtection();
-						return EatResponse.NotEaten;
-					}
-				}
-				else
-				{
-					switch (id)
-					{
-					case EventId.MapDataProcessingStart:
-						if (!Service.Get<WorldTransitioner>().IsCurrentWorldHome())
+						if (id == EventId.ExitEditMode)
 						{
 							this.IgnoreBoardChanges();
 							return EatResponse.NotEaten;
 						}
-						return EatResponse.NotEaten;
-					case EventId.MapDataProcessingEnd:
-						return EatResponse.NotEaten;
-					case EventId.WorldLoadComplete:
-						if (!Service.Get<WorldTransitioner>().IsCurrentWorldHome())
-						{
-							this.Initialize();
-							return EatResponse.NotEaten;
-						}
-						return EatResponse.NotEaten;
-					case EventId.WorldInTransitionComplete:
-					{
-						if (Service.Get<WorldTransitioner>().IsCurrentWorldHome() || Service.Get<BattleController>().GetCurrentBattle() == null)
-						{
-							return EatResponse.NotEaten;
-						}
-						CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
-						if (currentBattle.IsPvP() || currentBattle.Type == BattleType.PvpAttackSquadWar)
+						if (id == EventId.TroopNotPlacedInvalidArea)
 						{
 							this.DisplaySpawnProtection();
 							return EatResponse.NotEaten;
 						}
-						return EatResponse.NotEaten;
-					}
-					default:
-						if (id != EventId.EnterEditMode)
+						if (id == EventId.MissionStarted)
+						{
+							this.DisplaySpawnProtection();
+							return EatResponse.NotEaten;
+						}
+						if (id != EventId.UserLiftedBuilding)
 						{
 							return EatResponse.NotEaten;
 						}
-						this.ObserveBoardChanges();
-						this.Initialize();
-						this.DisplaySpawnProtection();
+						this.CleanUp();
 						return EatResponse.NotEaten;
 					}
+					goto IL_47;
 				}
-			}
-			else if (id <= EventId.MissionStarted)
-			{
-				if (id == EventId.ExitEditMode)
-				{
-					this.IgnoreBoardChanges();
-					return EatResponse.NotEaten;
-				}
-				if (id != EventId.MissionStarted)
-				{
-					return EatResponse.NotEaten;
-				}
+				IL_10A:
+				this.Initialize();
 				this.DisplaySpawnProtection();
 				return EatResponse.NotEaten;
-			}
-			else
-			{
-				if (id == EventId.UserLiftedBuilding)
+			case EventId.WorldLoadComplete:
+				if (!Service.Get<WorldTransitioner>().IsCurrentWorldHome())
 				{
-					this.CleanUp();
-					return EatResponse.NotEaten;
+					this.Initialize();
 				}
-				if (id != EventId.ShieldBorderDestroyed && id != EventId.ShieldDisabled)
+				return EatResponse.NotEaten;
+			case EventId.WorldInTransitionComplete:
+				if (!Service.Get<WorldTransitioner>().IsCurrentWorldHome() && Service.Get<BattleController>().GetCurrentBattle() != null)
 				{
-					return EatResponse.NotEaten;
+					CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
+					if (currentBattle.IsPvP() || currentBattle.Type == BattleType.PvpAttackSquadWar)
+					{
+						this.DisplaySpawnProtection();
+					}
 				}
+				return EatResponse.NotEaten;
 			}
-			this.Initialize();
-			this.DisplaySpawnProtection();
-			return EatResponse.NotEaten;
+			goto IL_1B;
 		}
 
 		private void CreateSpawnMesh()
@@ -353,7 +335,7 @@ namespace StaRTS.Main.Views.World
 				meshFilter = this.gameObject.GetComponent<MeshFilter>();
 			}
 			this.gameObject.SetActive(false);
-			this.gameObject.transform.position = new Vector3(0f, 0.045f, 0f);
+			this.gameObject.transform.position = new Vector3(0f, 0.005f, 0f);
 			this.gameObjectExists = true;
 			this.gameObjectVisible = false;
 			meshFilter.sharedMesh = this.mesh;
@@ -411,81 +393,6 @@ namespace StaRTS.Main.Views.World
 				this.gameObject.SetActive(false);
 			}
 			this.gameObjectVisible = false;
-		}
-
-		protected internal SpawnProtectionView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).CleanUp();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).CreateSpawnGameObject();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).CreateSpawnMesh();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).DisplaySpawnProtection();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).IgnoreBoardChanges();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).Initialize();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).ObserveBoardChanges();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).OnAlphaOutComplete((Anim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).OnTextureLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SpawnProtectionView)GCHandledObjects.GCHandleToObject(instance)).SetGridQuadVertices(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), (Vector3[])GCHandledObjects.GCHandleToPinnedArrayObject(args[3]));
-			return -1L;
 		}
 	}
 }

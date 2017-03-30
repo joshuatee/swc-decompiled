@@ -5,7 +5,6 @@ using StaRTS.Main.Models.Entities.Components;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -50,27 +49,6 @@ namespace StaRTS.Main.Views.Entities
 				renderer.enabled = true;
 			}
 			base.EnsureMaterialForRenderer(renderer, shader);
-		}
-
-		protected internal ShaderSwappedEntity(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShaderSwappedEntity)GCHandledObjects.GCHandleToObject(instance)).EnsureMaterialForRenderer((Renderer)GCHandledObjects.GCHandleToObject(*args), (Shader)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShaderSwappedEntity)GCHandledObjects.GCHandleToObject(instance)).Entity);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ShaderSwappedEntity)GCHandledObjects.GCHandleToObject(instance)).RestoreMaterialForRenderer((Renderer)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

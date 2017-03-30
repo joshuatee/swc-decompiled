@@ -15,7 +15,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -268,9 +267,11 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (currentPlayer.Faction == FactionType.Rebel)
 			{
 				this.factionTexture.LoadTexture("SquadFactionRebel");
-				return;
 			}
-			this.factionTexture.LoadTexture("SquadFactionEmpire");
+			else
+			{
+				this.factionTexture.LoadTexture("SquadFactionEmpire");
+			}
 		}
 
 		private void UpdateSquadRank()
@@ -286,9 +287,11 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (SquadUtils.CanLeaveSquad())
 			{
 				this.leaveButton.VisuallyEnableButton();
-				return;
 			}
-			this.leaveButton.VisuallyDisableButton();
+			else
+			{
+				this.leaveButton.VisuallyDisableButton();
+			}
 		}
 
 		private void UpdateStatsLabels()
@@ -319,20 +322,23 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (member != null && (currentPlayer.PlayerId == member.MemberID || member.Role == SquadRole.Owner))
 			{
 				btn.Visible = false;
-				return;
 			}
-			SquadStateManager stateManager = Service.Get<SquadController>().StateManager;
-			if (stateManager.Role == SquadRole.Owner)
+			else
 			{
-				btn.Visible = true;
-				return;
+				SquadStateManager stateManager = Service.Get<SquadController>().StateManager;
+				if (stateManager.Role == SquadRole.Owner)
+				{
+					btn.Visible = true;
+				}
+				else if (!ownerOnly && stateManager.Role == SquadRole.Officer)
+				{
+					btn.Visible = true;
+				}
+				else
+				{
+					btn.Visible = false;
+				}
 			}
-			if (!ownerOnly && stateManager.Role == SquadRole.Officer)
-			{
-				btn.Visible = true;
-				return;
-			}
-			btn.Visible = false;
 		}
 
 		private void OnEditSquadClicked(UXButton button)
@@ -356,15 +362,16 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				ScreenController screenController = Service.Get<ScreenController>();
 				screenController.CloseAll();
 				Service.Get<GalaxyViewController>().GoToHome(true, new WipeCompleteDelegate(this.InternalFeatureSquadClicked), null);
-				return;
 			}
-			if (currentState is WarBoardState)
+			else if (currentState is WarBoardState)
 			{
 				Service.Get<UXController>().HUD.SetSquadScreenAlwaysOnTop(false);
 				this.InternalFeatureSquadClicked(null);
-				return;
 			}
-			this.InternalFeatureSquadClicked(null);
+			else
+			{
+				this.InternalFeatureSquadClicked(null);
+			}
 		}
 
 		private void InternalFeatureSquadClicked(object cookie)
@@ -382,9 +389,11 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				ScreenController screenController = Service.Get<ScreenController>();
 				screenController.CloseAll();
 				Service.Get<GalaxyViewController>().GoToHome(true, new WipeCompleteDelegate(this.InternalOnLeaveSquadClicked), null);
-				return;
 			}
-			this.InternalOnLeaveSquadClicked(null);
+			else
+			{
+				this.InternalOnLeaveSquadClicked(null);
+			}
 		}
 
 		private void InternalOnLeaveSquadClicked(object cookie)
@@ -399,17 +408,18 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				string message = Service.Get<Lang>().Get("IN_WAR_CANT_LEAVE_SQUAD", new object[0]);
 				AlertScreen.ShowModal(false, null, message, null, null, true);
 				this.screen.ShowSquadSlideButton();
-				return;
 			}
-			if (unclaimedSquadWarRewardsCount > 0)
+			else if (unclaimedSquadWarRewardsCount > 0)
 			{
 				YesNoScreen.ShowModal(this.lang.Get("LEAVING_SQUAD_ALERT_WITH_REWARDS_TITLE", new object[0]), this.lang.Get("LEAVING_SQUAD_ALERT_WITH_REWARDS", new object[]
 				{
 					unclaimedSquadWarRewardsCount
-				}), false, this.lang.Get("LEAVING_SQUAD_CONFIRM", new object[0]), this.lang.Get("ACCOUNT_CONFLICT_CONFIRM_CANCEL", new object[0]), new OnScreenModalResult(this.OnAlertLeaveResult), null, false);
-				return;
+				}), false, this.lang.Get("LEAVING_SQUAD_CONFIRM", new object[0]), this.lang.Get("ACCOUNT_CONFLICT_CONFIRM_CANCEL", new object[0]), new OnScreenModalResult(this.OnAlertLeaveResult), null);
 			}
-			YesNoScreen.ShowModal(this.lang.Get("LEAVING_SQUAD_ALERT_TITLE", new object[0]), this.lang.Get("LEAVING_SQUAD_ALERT", new object[0]), false, this.lang.Get("LEAVING_SQUAD_CONFIRM", new object[0]), this.lang.Get("ACCOUNT_CONFLICT_CONFIRM_CANCEL", new object[0]), new OnScreenModalResult(this.OnAlertLeaveResult), null, false);
+			else
+			{
+				YesNoScreen.ShowModal(this.lang.Get("LEAVING_SQUAD_ALERT_TITLE", new object[0]), this.lang.Get("LEAVING_SQUAD_ALERT", new object[0]), false, this.lang.Get("LEAVING_SQUAD_CONFIRM", new object[0]), this.lang.Get("ACCOUNT_CONFLICT_CONFIRM_CANCEL", new object[0]), new OnScreenModalResult(this.OnAlertLeaveResult), null);
+			}
 		}
 
 		private void OnAlertLeaveResult(object result, object cookie)
@@ -424,7 +434,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 					if (highestLevelScreen != null)
 					{
 						highestLevelScreen.CloseSquadWarScreen(null);
-						return;
 					}
 				}
 			}
@@ -455,122 +464,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		public override bool IsVisible()
 		{
 			return this.overviewContainer.Visible;
-		}
-
-		protected internal SquadScreenOverviewView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).HideView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).InitOverview();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).InternalFeatureSquadClicked(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).InternalOnLeaveSquadClicked(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).IsVisible());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).OnAlertLeaveResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).OnEditSquadClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).OnFeatureSquadClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).OnLeaveSquadClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).OnLeaveSquadComplete(*(sbyte*)args != 0, GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).OnTabButtonSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).SetupButtonBasedOnRole((UXButton)GCHandledObjects.GCHandleToObject(*args), (SquadMember)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).ShowView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadRank();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadScreenOverviewView)GCHandledObjects.GCHandleToObject(instance)).UpdateStatsLabels();
-			return -1L;
 		}
 	}
 }

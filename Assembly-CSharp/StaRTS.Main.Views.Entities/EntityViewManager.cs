@@ -16,9 +16,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -121,7 +119,7 @@ namespace StaRTS.Main.Views.Entities
 				Transform transform = gameObjectViewComponent.MainGameObject.transform.FindChild("Contents");
 				if (component2 == null)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("A trap has been added that does not have a MecAnim controller. Building Uid: {0}, AssetName: {1}", new object[]
+					Service.Get<Logger>().ErrorFormat("A trap has been added that does not have a MecAnim controller. Building Uid: {0}, AssetName: {1}", new object[]
 					{
 						entity.BuildingComp.BuildingType.Uid,
 						entity.BuildingComp.BuildingType.AssetName
@@ -129,7 +127,7 @@ namespace StaRTS.Main.Views.Entities
 				}
 				else if (transform == null)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("A trap has been added that does not have a Contents transform. Building Uid: {0}, AssetName: {1}", new object[]
+					Service.Get<Logger>().ErrorFormat("A trap has been added that does not have a Contents transform. Building Uid: {0}, AssetName: {1}", new object[]
 					{
 						entity.BuildingComp.BuildingType.Uid,
 						entity.BuildingComp.BuildingType.AssetName
@@ -140,7 +138,7 @@ namespace StaRTS.Main.Views.Entities
 					GameObject gameObject2 = transform.gameObject;
 					if (gameObject2 == null)
 					{
-						Service.Get<StaRTSLogger>().ErrorFormat("A trap has been added that does not have a Contents GameObject. Building Uid: {0}, AssetName: {1}", new object[]
+						Service.Get<Logger>().ErrorFormat("A trap has been added that does not have a Contents GameObject. Building Uid: {0}, AssetName: {1}", new object[]
 						{
 							entity.BuildingComp.BuildingType.Uid,
 							entity.BuildingComp.BuildingType.AssetName
@@ -153,7 +151,7 @@ namespace StaRTS.Main.Views.Entities
 						Transform transform3 = transform2.FindChild(trapComp.Type.TurretTED.TurretAnimatorName);
 						if (transform3 == null)
 						{
-							Service.Get<StaRTSLogger>().ErrorFormat("Trap {0}: Cannot find a gameobject in path {1}", new object[]
+							Service.Get<Logger>().ErrorFormat("Trap {0}: Cannot find a gameobject in path {1}", new object[]
 							{
 								entity.BuildingComp.BuildingType.Uid,
 								trapComp.Type.TurretTED.TurretAnimatorName
@@ -164,7 +162,7 @@ namespace StaRTS.Main.Views.Entities
 							Animator component3 = transform3.gameObject.GetComponent<Animator>();
 							if (component3 == null)
 							{
-								Service.Get<StaRTSLogger>().ErrorFormat("Trap {0}: Cannot find an animator on gameobject in path {1}", new object[]
+								Service.Get<Logger>().ErrorFormat("Trap {0}: Cannot find an animator on gameobject in path {1}", new object[]
 								{
 									entity.BuildingComp.BuildingType.Uid,
 									trapComp.Type.TurretTED.TurretAnimatorName
@@ -241,7 +239,7 @@ namespace StaRTS.Main.Views.Entities
 				if (abilityVO != null)
 				{
 					int[] altGunLocators = abilityVO.AltGunLocators;
-					if (altGunLocators != null && altGunLocators.Length != 0)
+					if (altGunLocators != null && altGunLocators.Length > 0)
 					{
 						int count = meta.GunLocatorGameObjects.Count;
 						List<GameObject> list2 = new List<GameObject>();
@@ -283,11 +281,11 @@ namespace StaRTS.Main.Views.Entities
 		private void SetupGunLocatorsBySequence(SmartEntity entity, List<GameObject> gunLocatorGameObjects, int[] fireSequence, bool isAlternateSequence)
 		{
 			GameObjectViewComponent gameObjectViewComp = entity.GameObjectViewComp;
-			List<List<GameObject>> list = isAlternateSequence ? gameObjectViewComp.SetupAlternateGunLocators() : gameObjectViewComp.GunLocators;
+			List<List<GameObject>> list = (!isAlternateSequence) ? gameObjectViewComp.GunLocators : gameObjectViewComp.SetupAlternateGunLocators();
 			int count = list.Count;
 			if (count > 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("SetupGunLocatorsBySequence : numOrderedGunLocators = {0}on model {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("SetupGunLocatorsBySequence : numOrderedGunLocators = {0}on model {1}", new object[]
 				{
 					count,
 					this.GetEntityUid(entity)
@@ -312,7 +310,7 @@ namespace StaRTS.Main.Views.Entities
 					}
 					else
 					{
-						Service.Get<StaRTSLogger>().WarnFormat("Cannot find gun locator {0} for model {1}.", new object[]
+						Service.Get<Logger>().WarnFormat("Cannot find gun locator {0} for model {1}.", new object[]
 						{
 							i,
 							this.GetEntityUid(entity)
@@ -326,20 +324,22 @@ namespace StaRTS.Main.Views.Entities
 					list.Add(dictionary[j]);
 					j++;
 				}
-				return;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("GunSequence length ({0}) doesn't matchnumber of gun locators ({1}) for {2}", new object[]
+			else
 			{
-				fireSequence.Length,
-				gunLocatorGameObjects.Count,
-				this.GetEntityUid(entity)
-			});
-			List<GameObject> list2 = new List<GameObject>();
-			for (int k = 0; k < count2; k++)
-			{
-				list2.Add(gunLocatorGameObjects[k]);
+				Service.Get<Logger>().ErrorFormat("GunSequence length ({0}) doesn't matchnumber of gun locators ({1}) for {2}", new object[]
+				{
+					fireSequence.Length,
+					gunLocatorGameObjects.Count,
+					this.GetEntityUid(entity)
+				});
+				List<GameObject> list2 = new List<GameObject>();
+				for (int k = 0; k < count2; k++)
+				{
+					list2.Add(gunLocatorGameObjects[k]);
+				}
+				list.Add(list2);
 			}
-			list.Add(list2);
 		}
 
 		private string GetEntityUid(SmartEntity entity)
@@ -352,10 +352,7 @@ namespace StaRTS.Main.Views.Entities
 			{
 				return entity.TroopComp.TroopType.Uid;
 			}
-			return string.Format("<entity {0}>", new object[]
-			{
-				entity.ID
-			});
+			return string.Format("<entity {0}>", entity.ID);
 		}
 
 		public void CheckHealthView(SmartEntity entity)
@@ -398,7 +395,7 @@ namespace StaRTS.Main.Views.Entities
 				return false;
 			}
 			bool flag = health != null && health.Health >= health.MaxHealth;
-			if (health == null || (!showAtFullHealth & flag))
+			if (health == null || (!showAtFullHealth && flag))
 			{
 				if (smartEntity.HealthViewComp != null)
 				{
@@ -501,7 +498,7 @@ namespace StaRTS.Main.Views.Entities
 			float y = gameObject.transform.position.y;
 			float num = Units.BoardToWorldX(size.Depth);
 			float num2 = Units.BoardToWorldX(size.Width);
-			float num3 = flat ? 0.25f : ((num + num2) * 0.5f + y);
+			float num3 = (!flat) ? ((num + num2) * 0.5f + y) : 0.25f;
 			component.size = new Vector3(num, num3, num2);
 			component.center = new Vector3(0f, num3 * 0.5f - y, 0f);
 		}
@@ -534,7 +531,7 @@ namespace StaRTS.Main.Views.Entities
 			AssetComponent assetComp = smartEntity.AssetComp;
 			if (assetComp == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Entity is missing asset component: " + assetName);
+				Service.Get<Logger>().Error("Entity is missing asset component: " + assetName);
 				this.AssetFailure(entityViewParams);
 				return;
 			}
@@ -559,28 +556,34 @@ namespace StaRTS.Main.Views.Entities
 				this.UnloadEntityAsset(smartEntity);
 			}
 			assetComp.RequestedAssetName = assetName;
-			if (assetName == null)
+			if (assetName != null)
+			{
+				AssetManager assetManager = Service.Get<AssetManager>();
+				assetManager.RegisterPreloadableAsset(assetName);
+				WorldPreloadAsset preloadedAsset = Service.Get<WorldPreloader>().GetPreloadedAsset(assetName);
+				if (preloadedAsset == null)
+				{
+					AssetHandle requestedAssetHandle = AssetHandle.Invalid;
+					assetManager.Load(ref requestedAssetHandle, assetName, new AssetSuccessDelegate(this.AssetSuccess), new AssetFailureDelegate(this.AssetFailure), entityViewParams);
+					assetComp.RequestedAssetHandle = requestedAssetHandle;
+				}
+				else
+				{
+					assetComp.RequestedAssetHandle = preloadedAsset.Handle;
+					if (preloadedAsset.GameObj == null)
+					{
+						this.AssetFailure(entityViewParams);
+					}
+					else
+					{
+						this.AssetSuccess(preloadedAsset.GameObj, entityViewParams);
+					}
+				}
+			}
+			else
 			{
 				this.AssetFailure(entityViewParams);
-				return;
 			}
-			AssetManager assetManager = Service.Get<AssetManager>();
-			assetManager.RegisterPreloadableAsset(assetName);
-			WorldPreloadAsset preloadedAsset = Service.Get<WorldPreloader>().GetPreloadedAsset(assetName);
-			if (preloadedAsset == null)
-			{
-				AssetHandle requestedAssetHandle = AssetHandle.Invalid;
-				assetManager.Load(ref requestedAssetHandle, assetName, new AssetSuccessDelegate(this.AssetSuccess), new AssetFailureDelegate(this.AssetFailure), entityViewParams);
-				assetComp.RequestedAssetHandle = requestedAssetHandle;
-				return;
-			}
-			assetComp.RequestedAssetHandle = preloadedAsset.Handle;
-			if (preloadedAsset.GameObj == null)
-			{
-				this.AssetFailure(entityViewParams);
-				return;
-			}
-			this.AssetSuccess(preloadedAsset.GameObj, entityViewParams);
 		}
 
 		private void AssetSuccess(object asset, object cookie)
@@ -601,24 +604,6 @@ namespace StaRTS.Main.Views.Entities
 			bool flag2 = troopComp != null;
 			bool flag3 = transportComp != null;
 			bool isDroid = droidComp != null;
-			AssetMeshDataMonoBehaviour component = gameObject.GetComponent<AssetMeshDataMonoBehaviour>();
-			if (component != null && component.ShadowGameObject != null)
-			{
-				Vector3 position = component.ShadowGameObject.transform.position;
-				position.y = 0.0225f;
-				component.ShadowGameObject.transform.position = position;
-			}
-			Transform transform = gameObject.transform.FindChild("MASTER_MOVER");
-			if (transform != null)
-			{
-				Transform transform2 = transform.FindChild("shadowMesh");
-				if (transform2 != null)
-				{
-					Vector3 position2 = transform2.position;
-					position2.y = 0.0225f;
-					transform2.position = position2;
-				}
-			}
 			if (flag2)
 			{
 				gameObject.name = "Troop " + troopComp.TroopType.Uid + " #" + entity.ID.ToString();
@@ -720,7 +705,7 @@ namespace StaRTS.Main.Views.Entities
 			Transform transform = gameObjectViewComp.MainGameObject.transform.FindChild(parentName);
 			if (transform == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Add On Parent not found!  There's a mismatch between the CMS AddOn parent name ({0}) and the loaded model ({1})", new object[]
+				Service.Get<Logger>().ErrorFormat("Add On Parent not found!  There's a mismatch between the CMS AddOn parent name ({0}) and the loaded model ({1})", new object[]
 				{
 					parentName,
 					gameObjectViewComp.MainGameObject.name
@@ -747,11 +732,11 @@ namespace StaRTS.Main.Views.Entities
 			EventId id;
 			if (isBuilding)
 			{
-				id = (isMissingAsset ? EventId.BuildingViewFailed : EventId.BuildingViewReady);
+				id = ((!isMissingAsset) ? EventId.BuildingViewReady : EventId.BuildingViewFailed);
 			}
 			else
 			{
-				id = (isDroid ? EventId.DroidViewReady : EventId.TroopViewReady);
+				id = ((!isDroid) ? EventId.TroopViewReady : EventId.DroidViewReady);
 			}
 			Service.Get<EventManager>().SendEvent(id, viewParams);
 		}
@@ -772,155 +757,6 @@ namespace StaRTS.Main.Views.Entities
 			entity.Remove<GameObjectViewComponent>();
 			entity.Remove<HealthViewComponent>();
 			entity.Remove<SupportViewComponent>();
-		}
-
-		protected internal EntityViewManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).AddOnSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).AssetFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).AssetSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).CheckHealthView((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).CheckMeterShaderView((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).CreateMeterShaderComponentIfApplicable((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).DestroyView((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).WallConnector);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).GetEntityUid((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).LoadAddOns((EntityViewParams)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).LoadEntityAsset((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).LoadEntityAsset((Entity)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).OnAllAddonsLoaded(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).PrepareEntityView((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).PrepareGameObject((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).ProcessGameObject(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).SendAssetReadyEvent(*(sbyte*)args != 0, *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0, (EntityViewParams)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).WallConnector = (WallConnector)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).SetCollider((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).SetColliderHelper((GameObject)GCHandledObjects.GCHandleToObject(*args), (SizeComponent)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).SetupGunLocators((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (AssetMeshDataMonoBehaviour)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).SetupGunLocatorsBySequence((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (List<GameObject>)GCHandledObjects.GCHandleToObject(args[1]), (int[])GCHandledObjects.GCHandleToPinnedArrayObject(args[2]), *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).ShowHealthView((Entity)GCHandledObjects.GCHandleToObject(*args), (IHealthComponent)GCHandledObjects.GCHandleToObject(args[1]), (GameObjectViewComponent)GCHandledObjects.GCHandleToObject(args[2]), *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0, *(sbyte*)(args + 5) != 0, *(sbyte*)(args + 6) != 0));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).SparkFxSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((EntityViewManager)GCHandledObjects.GCHandleToObject(instance)).UnloadEntityAsset((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

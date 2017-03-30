@@ -1,6 +1,5 @@
 using StaRTS.Main.Story;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.RUF.RUFTasks
 {
@@ -23,16 +22,6 @@ namespace StaRTS.Main.RUF.RUFTasks
 				new ActionChain(this.story);
 			}
 			base.Process(continueProcessing);
-		}
-
-		protected internal ResumeTutorialRUFTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ResumeTutorialRUFTask)GCHandledObjects.GCHandleToObject(instance)).Process(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Campaign
 		public StartSpecOpCommand(CampaignIdRequest request) : base("player.missions.startSpecop", request, new DefaultResponse())
 		{
 		}
-
-		protected internal StartSpecOpCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -5,7 +5,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Audio
 {
@@ -25,7 +24,7 @@ namespace StaRTS.Audio
 		{
 			if (source == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Source is null");
+				Service.Get<Logger>().Warn("Source is null");
 			}
 			this.constantTime = GameConstants.FADE_OUT_CONSTANT_LENGTH;
 			this.originalVolume = source.volume;
@@ -44,11 +43,13 @@ namespace StaRTS.Audio
 			{
 				float t = age / this.constantTime;
 				this.source.volume = Mathf.Lerp(this.originalVolume, 0f, t);
-				return;
 			}
-			this.source.Stop();
-			this.source.volume = this.originalVolume;
-			this.FadeOutComplete();
+			else
+			{
+				this.source.Stop();
+				this.source.volume = this.originalVolume;
+				this.FadeOutComplete();
+			}
 		}
 
 		public void QueueNextAudio(AudioTypeVO type)
@@ -78,40 +79,6 @@ namespace StaRTS.Audio
 		{
 			this.age += dt;
 			this.FadeSound(this.age);
-		}
-
-		protected internal AudioFader(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AudioFader)GCHandledObjects.GCHandleToObject(instance)).FadeOutComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AudioFader)GCHandledObjects.GCHandleToObject(instance)).FadeSound(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AudioFader)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AudioFader)GCHandledObjects.GCHandleToObject(instance)).QueueNextAudio((AudioTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AudioFader)GCHandledObjects.GCHandleToObject(instance)).UnregisterFrameTimeObserver();
-			return -1L;
 		}
 	}
 }

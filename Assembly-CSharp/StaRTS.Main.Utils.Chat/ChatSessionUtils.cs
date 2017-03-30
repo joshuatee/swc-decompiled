@@ -2,10 +2,9 @@ using StaRTS.Main.Models.Chat;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
+using System.IO;
+using System.Security.Cryptography;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils.Chat
 {
@@ -22,15 +21,11 @@ namespace StaRTS.Main.Utils.Chat
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary != null)
 			{
-				string text = dictionary.ContainsKey("subscriptionUrl") ? (dictionary["subscriptionUrl"] as string) : null;
-				string text2 = dictionary.ContainsKey("signedChatChannelInfo") ? (dictionary["signedChatChannelInfo"] as string) : null;
+				string text = (!dictionary.ContainsKey("subscriptionUrl")) ? null : (dictionary["subscriptionUrl"] as string);
+				string text2 = (!dictionary.ContainsKey("signedChatChannelInfo")) ? null : (dictionary["signedChatChannelInfo"] as string);
 				if (text != null && text2 != null)
 				{
-					result = string.Format("https://{0}/lp?session={1}", new object[]
-					{
-						text,
-						text2
-					});
+					result = string.Format("https://{0}/lp?session={1}", text, text2);
 				}
 			}
 			return result;
@@ -61,23 +56,27 @@ namespace StaRTS.Main.Utils.Chat
 
 		public static string GetSignedString(string json)
 		{
+			Encoding encoding = new UTF8Encoding(true, true);
+			byte[] bytes = encoding.GetBytes("e168217158d6a34d73be5220d166f312");
 			string text = ChatSessionUtils.EncodeReplaceStrip(json);
-			string hexString = ChatSessionUtils.HashAggregate(CryptoUtility.ComputeHash(text, "87e278e1dd0a48649af0b77dc80a5ef1"));
-			string text2 = ChatSessionUtils.ConvertHexStringToBase64(hexString);
-			return text2 + "." + text;
+			HMACSHA256 hMACSHA = new HMACSHA256(bytes);
+			byte[] bytes2 = encoding.GetBytes(text);
+			MemoryStream memoryStream = new MemoryStream(bytes2);
+			string hexString = ChatSessionUtils.HashAggregate(hMACSHA.ComputeHash(memoryStream));
+			string str = ChatSessionUtils.ConvertHexStringToBase64(hexString);
+			memoryStream.Close();
+			memoryStream.Dispose();
+			return str + "." + text;
 		}
 
 		private static string HashAggregate(byte[] bytes)
 		{
-			string text = "";
+			string text = string.Empty;
 			int i = 0;
 			int num = bytes.Length;
 			while (i < num)
 			{
-				text += string.Format("{0:x2}", new object[]
-				{
-					bytes[i]
-				});
+				text += string.Format("{0:x2}", bytes[i]);
 				i++;
 			}
 			return text;
@@ -85,66 +84,36 @@ namespace StaRTS.Main.Utils.Chat
 
 		private static string EncodeReplaceStrip(string toEncode)
 		{
-			byte[] bytes = Encoding.UTF8.GetBytes(toEncode);
+			byte[] bytes = Encoding.ASCII.GetBytes(toEncode);
 			string text = Convert.ToBase64String(bytes, 0, bytes.Length);
 			text = text.Replace('+', '-');
 			text = text.Replace('/', '_');
-			char[] array = new char[]
+			char[] trimChars = new char[]
 			{
 				'='
 			};
-			return text.TrimEnd(array);
+			return text.TrimEnd(trimChars);
 		}
 
 		private static string ConvertHexStringToBase64(string hexString)
 		{
-			byte[] array = new byte[hexString.get_Length() / 2];
+			byte[] array = new byte[hexString.Length / 2];
 			int i = 0;
 			int num = 0;
-			while (i < hexString.get_Length())
+			while (i < hexString.Length)
 			{
-				array[num] = Convert.ToByte(Convert.ToInt32(hexString.Substring(i, 2), 16), CultureInfo.InvariantCulture);
+				array[num] = Convert.ToByte(Convert.ToInt32(hexString.Substring(i, 2), 16));
 				i += 2;
 				num++;
 			}
 			string text = Convert.ToBase64String(array);
 			text = text.Replace('+', '-');
 			text = text.Replace('/', '_');
-			char[] array2 = new char[]
+			char[] trimChars = new char[]
 			{
 				'='
 			};
-			return text.TrimEnd(array2);
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ChatSessionUtils.ConvertHexStringToBase64(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ChatSessionUtils.CreateSessionString(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), (ChatType)(*(int*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ChatSessionUtils.EncodeReplaceStrip(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ChatSessionUtils.GetSessionUrlFromChannelResponse(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ChatSessionUtils.GetSignedString(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ChatSessionUtils.HashAggregate((byte[])GCHandledObjects.GCHandleToPinnedArrayObject(*args)));
+			return text.TrimEnd(trimChars);
 		}
 	}
 }

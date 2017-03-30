@@ -1,7 +1,6 @@
 using StaRTS.Externals.Manimal.TransferObjects.Request;
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands
 {
@@ -25,15 +24,6 @@ namespace StaRTS.Main.Models.Commands
 			serializer.AddString("battleId", this.battleId);
 			serializer.AddString("participantId", this.participantId);
 			return serializer.End().ToString();
-		}
-
-		protected internal GetReplayRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GetReplayRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

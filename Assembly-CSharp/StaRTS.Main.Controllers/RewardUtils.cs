@@ -17,10 +17,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -320,12 +317,14 @@ namespace StaRTS.Main.Controllers
 				rct.RewardAssetName = troopTypeVO.AssetName;
 				rct.RewardGeometryConfig = troopTypeVO;
 				rct.Type = RewardType.Troop;
-				return;
 			}
-			rct.RewardName = LangUtils.GetBuildingDisplayName(buildingTypeVO);
-			rct.RewardAssetName = buildingTypeVO.AssetName;
-			rct.RewardGeometryConfig = buildingTypeVO;
-			rct.Type = RewardType.Building;
+			else
+			{
+				rct.RewardName = LangUtils.GetBuildingDisplayName(buildingTypeVO);
+				rct.RewardAssetName = buildingTypeVO.AssetName;
+				rct.RewardGeometryConfig = buildingTypeVO;
+				rct.Type = RewardType.Building;
+			}
 		}
 
 		public static bool SetupTargetedOfferCrateRewardDisplay(RewardVO rewardVO, UXLabel itemLabel, UXSprite itemSprite)
@@ -385,7 +384,7 @@ namespace StaRTS.Main.Controllers
 						':'
 					});
 					TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(array[0]);
-					num += troopTypeVO.Size * Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+					num += troopTypeVO.Size * Convert.ToInt32(array[1]);
 				}
 				if (num > num2)
 				{
@@ -404,7 +403,7 @@ namespace StaRTS.Main.Controllers
 						':'
 					});
 					TroopTypeVO troopTypeVO2 = dataController.Get<TroopTypeVO>(array[0]);
-					num += troopTypeVO2.Size * Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+					num += troopTypeVO2.Size * Convert.ToInt32(array[1]);
 				}
 				if (num > num2)
 				{
@@ -423,7 +422,7 @@ namespace StaRTS.Main.Controllers
 						':'
 					});
 					SpecialAttackTypeVO specialAttackTypeVO = dataController.Get<SpecialAttackTypeVO>(array[0]);
-					num += specialAttackTypeVO.Size * Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+					num += specialAttackTypeVO.Size * Convert.ToInt32(array[1]);
 				}
 				if (num > num2)
 				{
@@ -431,7 +430,7 @@ namespace StaRTS.Main.Controllers
 					rewardabilityResult.Reason = "NOT_ENOUGH_SPACE";
 				}
 			}
-			if (reward.CurrencyRewards != null & checkCurrencyCapacity)
+			if (reward.CurrencyRewards != null && checkCurrencyCapacity)
 			{
 				int num3 = cp.CurrentReputationAmount;
 				int maxReputationAmount = cp.MaxReputationAmount;
@@ -521,7 +520,7 @@ namespace StaRTS.Main.Controllers
 					});
 					int itemCapacity = cp.Inventory.GetItemCapacity(array[0]);
 					int itemAmount = cp.Inventory.GetItemAmount(array[0]);
-					int num2 = Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+					int num2 = Convert.ToInt32(array[1]);
 					if (saleBonusMultiplier > 1.0)
 					{
 						num2 = (int)Math.Floor((double)num2 * saleBonusMultiplier);
@@ -550,7 +549,7 @@ namespace StaRTS.Main.Controllers
 					{
 						':'
 					});
-					int count = Convert.ToInt32(array2[1], CultureInfo.InvariantCulture);
+					int count = Convert.ToInt32(array2[1]);
 					armoryController.HandleEarnedShardReward(array2[0], count);
 					i++;
 				}
@@ -565,7 +564,7 @@ namespace StaRTS.Main.Controllers
 					{
 						':'
 					});
-					int delta2 = Convert.ToInt32(array3[1], CultureInfo.InvariantCulture);
+					int delta2 = Convert.ToInt32(array3[1]);
 					cp.Inventory.Troop.ModifyItemAmount(array3[0], delta2);
 					i++;
 				}
@@ -580,7 +579,7 @@ namespace StaRTS.Main.Controllers
 					{
 						':'
 					});
-					int delta3 = Convert.ToInt32(array4[1], CultureInfo.InvariantCulture);
+					int delta3 = Convert.ToInt32(array4[1]);
 					cp.Inventory.Hero.ModifyItemAmount(array4[0], delta3);
 					i++;
 				}
@@ -595,14 +594,14 @@ namespace StaRTS.Main.Controllers
 					{
 						':'
 					});
-					int delta4 = Convert.ToInt32(array5[1], CultureInfo.InvariantCulture);
+					int delta4 = Convert.ToInt32(array5[1]);
 					cp.Inventory.SpecialAttack.ModifyItemAmount(array5[0], delta4);
 					i++;
 				}
 			}
 			if (!string.IsNullOrEmpty(reward.DroidRewards))
 			{
-				int delta5 = Convert.ToInt32(reward.DroidRewards, CultureInfo.InvariantCulture);
+				int delta5 = Convert.ToInt32(reward.DroidRewards);
 				cp.Inventory.ModifyDroids(delta5);
 			}
 			if (reward.BuildingInstantRewards != null)
@@ -615,12 +614,12 @@ namespace StaRTS.Main.Controllers
 					{
 						':'
 					});
-					int num3 = Convert.ToInt32(array6[1], CultureInfo.InvariantCulture);
+					int num3 = Convert.ToInt32(array6[1]);
 					string text = array6[0];
 					BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(text);
 					if (buildingTypeVO == null)
 					{
-						Service.Get<StaRTSLogger>().WarnFormat("buildingUiD {0} does not exist", new object[]
+						Service.Get<Logger>().WarnFormat("buildingUiD {0} does not exist", new object[]
 						{
 							text
 						});
@@ -695,7 +694,7 @@ namespace StaRTS.Main.Controllers
 			UnlockedLevelData unlockedLevels = Service.Get<CurrentPlayer>().UnlockedLevels;
 			string[] array = RewardUtils.ParsePairedStrings(rewardString, ':');
 			string uid = array[0];
-			int level = Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+			int level = Convert.ToInt32(array[1]);
 			TroopTypeVO optional = dataController.GetOptional<TroopTypeVO>(uid);
 			if (optional != null)
 			{
@@ -704,12 +703,11 @@ namespace StaRTS.Main.Controllers
 				if (byLevel != null)
 				{
 					unlockedLevels.Troops.SetLevel(byLevel);
-					return;
 				}
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Instant unit upgrade {0} does not exist", new object[]
+				Service.Get<Logger>().WarnFormat("Instant unit upgrade {0} does not exist", new object[]
 				{
 					rewardString
 				});
@@ -722,7 +720,7 @@ namespace StaRTS.Main.Controllers
 			UnlockedLevelData unlockedLevels = Service.Get<CurrentPlayer>().UnlockedLevels;
 			string[] array = RewardUtils.ParsePairedStrings(rewardString, ':');
 			string uid = array[0];
-			int level = Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+			int level = Convert.ToInt32(array[1]);
 			SpecialAttackTypeVO optional = dataController.GetOptional<SpecialAttackTypeVO>(uid);
 			if (optional != null)
 			{
@@ -731,12 +729,11 @@ namespace StaRTS.Main.Controllers
 				if (byLevel != null)
 				{
 					unlockedLevels.Starships.SetLevel(byLevel);
-					return;
 				}
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Instant spec Attack upgrade {0} does not exist", new object[]
+				Service.Get<Logger>().WarnFormat("Instant spec Attack upgrade {0} does not exist", new object[]
 				{
 					rewardString
 				});
@@ -751,12 +748,12 @@ namespace StaRTS.Main.Controllers
 				{
 					':'
 				});
-				int num = Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+				int num = Convert.ToInt32(array[1]);
 				string text = array[0];
 				BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(text);
 				if (buildingTypeVO == null)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("buildingUiD {0} does not exist", new object[]
+					Service.Get<Logger>().WarnFormat("buildingUiD {0} does not exist", new object[]
 					{
 						text
 					});
@@ -769,32 +766,38 @@ namespace StaRTS.Main.Controllers
 					for (BuildingNode buildingNode = nodeList.Head; buildingNode != null; buildingNode = buildingNode.Next)
 					{
 						BuildingTypeVO buildingType = buildingNode.BuildingComp.BuildingType;
-						if (buildingType.Lvl < num && buildingType.Type == buildingTypeVO.Type && buildingType.Type != BuildingType.Clearable)
+						if (buildingType.Lvl < num)
 						{
-							BuildingTypeVO byLevel = buildingUpgradeCatalog.GetByLevel(buildingType.UpgradeGroup, num);
-							if (byLevel != null && byLevel.PlayerFacing)
+							if (buildingType.Type == buildingTypeVO.Type)
 							{
-								if (!string.IsNullOrEmpty(buildingTypeVO.LinkedUnit))
+								if (buildingType.Type != BuildingType.Clearable)
 								{
-									if (ContractUtils.IsChampionRepairing(buildingNode.Entity))
+									BuildingTypeVO byLevel = buildingUpgradeCatalog.GetByLevel(buildingType.UpgradeGroup, num);
+									if (byLevel != null && byLevel.PlayerFacing)
 									{
-										supportController.FinishCurrentContract(buildingNode.Entity, true);
-									}
-									if (cp.Inventory.Champion.GetItemAmount(buildingTypeVO.LinkedUnit) == 0)
-									{
-										cp.OnChampionRepaired(buildingTypeVO.LinkedUnit);
+										if (!string.IsNullOrEmpty(buildingTypeVO.LinkedUnit))
+										{
+											if (ContractUtils.IsChampionRepairing(buildingNode.Entity))
+											{
+												supportController.FinishCurrentContract(buildingNode.Entity, true);
+											}
+											if (cp.Inventory.Champion.GetItemAmount(buildingTypeVO.LinkedUnit) == 0)
+											{
+												cp.OnChampionRepaired(buildingTypeVO.LinkedUnit);
+											}
+										}
+										supportController.StartBuildingUpgrade(byLevel, buildingNode.Entity, true);
+										int boardX = buildingNode.Entity.Get<BoardItemComponent>().BoardItem.BoardX;
+										int boardZ = buildingNode.Entity.Get<BoardItemComponent>().BoardItem.BoardZ;
+										float x;
+										float z;
+										EditBaseController.BuildingBoardToWorld(buildingNode.Entity, boardX, boardZ, out x, out z);
+										Vector3 worldLocation = new Vector3(x, 0f, z);
+										worldLocation.x = Units.BoardToWorldX(boardX);
+										worldLocation.z = Units.BoardToWorldX(boardZ);
+										Service.Get<WorldInitializer>().View.PanToLocation(worldLocation);
 									}
 								}
-								supportController.StartBuildingUpgrade(byLevel, buildingNode.Entity, true);
-								int boardX = buildingNode.Entity.Get<BoardItemComponent>().BoardItem.BoardX;
-								int boardZ = buildingNode.Entity.Get<BoardItemComponent>().BoardItem.BoardZ;
-								float x;
-								float z;
-								EditBaseController.BuildingBoardToWorld(buildingNode.Entity, boardX, boardZ, out x, out z);
-								Vector3 worldLocation = new Vector3(x, 0f, z);
-								worldLocation.x = Units.BoardToWorldX(boardX);
-								worldLocation.z = Units.BoardToWorldX(boardZ);
-								Service.Get<WorldInitializer>().View.PanToLocation(worldLocation);
 							}
 						}
 					}
@@ -805,88 +808,15 @@ namespace StaRTS.Main.Controllers
 		public static int GetShardsRewarded(RewardVO reward)
 		{
 			int result = 0;
-			if (reward.ShardRewards != null && reward.ShardRewards.Length != 0)
+			if (reward.ShardRewards != null && reward.ShardRewards.Length > 0)
 			{
 				string[] array = reward.ShardRewards[0].Split(new char[]
 				{
 					':'
 				});
-				result = Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+				result = Convert.ToInt32(array[1]);
 			}
 			return result;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(RewardUtils.CanPlayerHandleReward((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (RewardVO)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(RewardUtils.GetRewardComponents((RewardVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(RewardUtils.GetShardsRewarded((RewardVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			RewardUtils.GrantInAppPurchaseRewardToHQInventory((RewardVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			RewardUtils.GrantInstantBuildingUpgrade((RewardVO)GCHandledObjects.GCHandleToObject(*args), (CurrentPlayer)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			RewardUtils.GrantInstantSpecialAttackUpgrade(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			RewardUtils.GrantInstantTroopHeroUpgrade(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			RewardUtils.GrantReward((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (RewardVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			RewardUtils.GrantReward((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (RewardVO)GCHandledObjects.GCHandleToObject(args[1]), *(double*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(RewardUtils.IsUnlockReward((RewardVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			RewardUtils.SetCrateIcon((UXSprite)GCHandledObjects.GCHandleToObject(*args), (CrateVO)GCHandledObjects.GCHandleToObject(args[1]), (AnimState)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			RewardUtils.SetRewardIcon((UXSprite)GCHandledObjects.GCHandleToObject(*args), (IGeometryVO)GCHandledObjects.GCHandleToObject(args[1]), (AnimationPreference)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(RewardUtils.SetupTargetedOfferCrateRewardDisplay((RewardVO)GCHandledObjects.GCHandleToObject(*args), (UXLabel)GCHandledObjects.GCHandleToObject(args[1]), (UXSprite)GCHandledObjects.GCHandleToObject(args[2])));
 		}
 	}
 }

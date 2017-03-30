@@ -2,7 +2,6 @@ using Net.RichardLord.Ash.Core;
 using StaRTS.Main.Models.Static;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -33,24 +32,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.lang.ThousandsSeparated(storage2 - storage)
 			});
-			this.sliders[sliderIndex].CurrentSlider.Value = ((storage3 == 0) ? 0f : ((float)storage / (float)storage3));
-			this.sliders[sliderIndex].NextSlider.Value = ((storage3 == 0) ? 0f : ((float)storage2 / (float)storage3));
-		}
-
-		protected internal StarportUpgradeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StarportUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((StarportUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateCapacity(*(int*)args);
-			return -1L;
+			this.sliders[sliderIndex].CurrentSlider.Value = ((storage3 != 0) ? ((float)storage / (float)storage3) : 0f);
+			this.sliders[sliderIndex].NextSlider.Value = ((storage3 != 0) ? ((float)storage2 / (float)storage3) : 0f);
 		}
 	}
 }

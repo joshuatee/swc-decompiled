@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public DemoteSquadMemberCommand(MemberIdRequest request) : base("guild.demote", request, new DefaultResponse())
 		{
 		}
-
-		protected internal DemoteSquadMemberCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

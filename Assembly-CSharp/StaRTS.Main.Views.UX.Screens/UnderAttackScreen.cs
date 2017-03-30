@@ -10,7 +10,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -41,9 +40,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (expiration > ServerTime.Time)
 			{
 				this.totalSecondsLeft = (int)(expiration - ServerTime.Time);
-				return;
 			}
-			this.totalSecondsLeft = GameConstants.PVP_MATCH_DURATION;
+			else
+			{
+				this.totalSecondsLeft = GameConstants.PVP_MATCH_DURATION;
+			}
 		}
 
 		protected override void OnScreenLoaded()
@@ -61,9 +62,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		public void OnViewClockTime(float dt)
 		{
-			int num = this.intervalSecondsLeft - 1;
-			this.intervalSecondsLeft = num;
-			if (num < 1)
+			if (--this.intervalSecondsLeft < 1)
 			{
 				GetPlayerPvpStatusCommand command = new GetPlayerPvpStatusCommand(new PlayerIdRequest
 				{
@@ -74,19 +73,15 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (this.intervalSecondsLeft == 0)
 				{
 					this.intervalSecondsLeft = 15;
-					return;
 				}
+			}
+			else if (--this.totalSecondsLeft < 1)
+			{
+				Service.Get<Engine>().Reload();
+				this.Close(null);
 			}
 			else
 			{
-				num = this.totalSecondsLeft - 1;
-				this.totalSecondsLeft = num;
-				if (num < 1)
-				{
-					Service.Get<Engine>().Reload();
-					this.Close(null);
-					return;
-				}
 				this.timeCountLabel.Text = GameUtils.GetTimeLabelFromSeconds(this.totalSecondsLeft);
 			}
 		}
@@ -94,28 +89,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		public override void OnDestroyElement()
 		{
 			Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
-		}
-
-		protected internal UnderAttackScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((UnderAttackScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((UnderAttackScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((UnderAttackScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
 		}
 	}
 }

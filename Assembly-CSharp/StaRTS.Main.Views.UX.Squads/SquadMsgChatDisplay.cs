@@ -22,9 +22,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Squads
 {
@@ -102,7 +100,7 @@ namespace StaRTS.Main.Views.UX.Squads
 
 		private const string WAR_SUFFIX = "war";
 
-		private int nextItemId;
+		private int nextItemId = -1;
 
 		private Dictionary<SquadMsg, ChatItemElements> msgToElementsMap;
 
@@ -124,10 +122,8 @@ namespace StaRTS.Main.Views.UX.Squads
 
 		private bool readyForNewMessageSetup;
 
-		public SquadMsgChatDisplay(SquadSlidingScreen parentScreen, UXTable table)
+		public SquadMsgChatDisplay(SquadSlidingScreen parentScreen, UXTable table) : base(table)
 		{
-			this.nextItemId = -1;
-			base..ctor(table);
 			table.BypassLocalPositionOnAdd = true;
 			table.HideInactive = true;
 			table.ChangeScrollDirection(true);
@@ -453,9 +449,9 @@ namespace StaRTS.Main.Views.UX.Squads
 			SquadMsg squadMsg = null;
 			foreach (KeyValuePair<SquadMsg, UXElement> current in this.videoItems)
 			{
-				if (current.get_Value() == item)
+				if (current.Value == item)
 				{
-					squadMsg = current.get_Key();
+					squadMsg = current.Key;
 					break;
 				}
 			}
@@ -475,24 +471,27 @@ namespace StaRTS.Main.Views.UX.Squads
 			if (this.videoSummaries != null && !string.IsNullOrEmpty(uiName))
 			{
 				int count = this.videoSummaries.Count;
-				int num = 0;
-				while (num < count && !(this.videoSummaries[num].UIName == uiName))
+				int i;
+				for (i = 0; i < count; i++)
 				{
-					num++;
+					if (this.videoSummaries[i].UIName == uiName)
+					{
+						break;
+					}
 				}
-				if (num < count)
+				if (i < count)
 				{
-					this.videoSummaries[num].Cleanup();
-					this.videoSummaries.RemoveAt(num);
+					this.videoSummaries[i].Cleanup();
+					this.videoSummaries.RemoveAt(i);
 				}
 			}
 		}
 
 		private void SetupPlayerName(ChatItemElements elements, string playerName)
 		{
-			if (playerName.get_Length() > 30)
+			if (playerName.Length > 30)
 			{
-				playerName = playerName.Remove(30, playerName.get_Length() - 30);
+				playerName = playerName.Remove(30, playerName.Length - 30);
 				playerName += Service.Get<Lang>().Get("SQUAD_CHAT_PLAYER_NAME_SUFFIX", new object[0]) + "   ";
 			}
 			else
@@ -556,7 +555,7 @@ namespace StaRTS.Main.Views.UX.Squads
 			{
 				foreach (KeyValuePair<SquadMsg, UXElement> current in this.joinRequestItems)
 				{
-					SquadMsg key = current.get_Key();
+					SquadMsg key = current.Key;
 					ChatItemElements elements = this.msgToElementsMap[key];
 					this.UpdateJoinRequestActionPermission(elements, key);
 				}
@@ -610,13 +609,15 @@ namespace StaRTS.Main.Views.UX.Squads
 						msg.OwnerData.PlayerName
 					});
 					chatItemElements.PlayerMessageLabel.TextColor = Color.green;
-					return;
 				}
-				chatItemElements.PlayerMessageLabel.Text = Service.Get<Lang>().Get("s_sqd_Rejected", new object[]
+				else
 				{
-					msg.OwnerData.PlayerName
-				});
-				chatItemElements.PlayerMessageLabel.TextColor = Color.red;
+					chatItemElements.PlayerMessageLabel.Text = Service.Get<Lang>().Get("s_sqd_Rejected", new object[]
+					{
+						msg.OwnerData.PlayerName
+					});
+					chatItemElements.PlayerMessageLabel.TextColor = Color.red;
+				}
 			}
 		}
 
@@ -666,7 +667,7 @@ namespace StaRTS.Main.Views.UX.Squads
 					{
 						foreach (KeyValuePair<string, int> current in squadMsg.DonationData.Donations)
 						{
-							num += dataController.Get<TroopTypeVO>(current.get_Key()).Size * current.get_Value();
+							num += dataController.Get<TroopTypeVO>(current.Key).Size * current.Value;
 						}
 					}
 					i++;
@@ -716,7 +717,7 @@ namespace StaRTS.Main.Views.UX.Squads
 						IDataController dataController = Service.Get<IDataController>();
 						foreach (KeyValuePair<string, int> current in squadMsg.DonationData.Donations)
 						{
-							num += dataController.Get<TroopTypeVO>(current.get_Key()).Size * current.get_Value();
+							num += dataController.Get<TroopTypeVO>(current.Key).Size * current.Value;
 						}
 					}
 					i++;
@@ -817,7 +818,7 @@ namespace StaRTS.Main.Views.UX.Squads
 					num2,
 					totalCapacity
 				});
-				float value = (totalCapacity > 0) ? ((float)num2 / (float)totalCapacity) : 0f;
+				float value = (totalCapacity <= 0) ? 0f : ((float)num2 / (float)totalCapacity);
 				elements.DonateProgBar.Value = value;
 			}
 			return flag2;
@@ -838,7 +839,7 @@ namespace StaRTS.Main.Views.UX.Squads
 			string requestId = msg.DonationData.RequestId;
 			if (string.IsNullOrEmpty(requestId))
 			{
-				Service.Get<StaRTSLogger>().Warn("Troop donation message does not have request Id");
+				Service.Get<Logger>().Warn("Troop donation message does not have request Id");
 				return result;
 			}
 			SquadMsg msgById = Service.Get<SquadController>().MsgManager.GetMsgById(requestId);
@@ -902,7 +903,7 @@ namespace StaRTS.Main.Views.UX.Squads
 			{
 				replayData.DamagePercent
 			});
-			elements.ReplayTypeLabel.Text = ((replayData.BattleType == SquadBattleReplayType.Attack) ? lang.Get("SQUAD_OFFENSE", new object[0]) : lang.Get("SQUAD_DEFENSE", new object[0]));
+			elements.ReplayTypeLabel.Text = ((replayData.BattleType != SquadBattleReplayType.Attack) ? lang.Get("SQUAD_DEFENSE", new object[0]) : lang.Get("SQUAD_OFFENSE", new object[0]));
 			elements.ReplayMedals.Text = lang.ThousandsSeparated(replayData.MedalDelta);
 		}
 
@@ -1020,10 +1021,10 @@ namespace StaRTS.Main.Views.UX.Squads
 			Lang lang = Service.Get<Lang>();
 			foreach (KeyValuePair<SquadMsg, ChatItemElements> current in this.msgToElementsMap)
 			{
-				SquadMsg key = current.get_Key();
+				SquadMsg key = current.Key;
 				if (key.ChatData != null)
 				{
-					this.UpdateTimestampLabel(current.get_Value(), key.TimeSent, lang);
+					this.UpdateTimestampLabel(current.Value, key.TimeSent, lang);
 				}
 			}
 		}
@@ -1167,7 +1168,7 @@ namespace StaRTS.Main.Views.UX.Squads
 		{
 			List<UXElement> elementList = this.table.GetElementList();
 			int count = elementList.Count;
-			int num = (count > numToRemove) ? (count - numToRemove) : 0;
+			int num = (count <= numToRemove) ? 0 : (count - numToRemove);
 			for (int i = count - 1; i >= num; i--)
 			{
 				UXElement uXElement = elementList[i];
@@ -1185,22 +1186,22 @@ namespace StaRTS.Main.Views.UX.Squads
 				{
 					if (id == EventId.WarPhaseChanged)
 					{
-						if ((SquadWarStatusType)cookie == SquadWarStatusType.PhaseAction && this.warTroopRequestItems != null)
+						if ((int)cookie == 3 && this.warTroopRequestItems != null)
 						{
 							foreach (KeyValuePair<SquadMsg, UXElement> current in this.warTroopRequestItems)
 							{
-								this.RemoveItemForMsg(current.get_Value(), current.get_Key());
+								this.RemoveItemForMsg(current.Value, current.Key);
 							}
 						}
 					}
 				}
 				else
 				{
-					ChatFilterType type = (ChatFilterType)cookie;
+					ChatFilterType type = (ChatFilterType)((int)cookie);
 					foreach (KeyValuePair<SquadMsg, ChatItemElements> current2 in this.msgToElementsMap)
 					{
-						SquadMsg key = current2.get_Key();
-						ChatItemElements value = current2.get_Value();
+						SquadMsg key = current2.Key;
+						ChatItemElements value = current2.Value;
 						this.ProcessMessageByFilter(type, key, value);
 					}
 					this.table.RepositionItems();
@@ -1209,39 +1210,42 @@ namespace StaRTS.Main.Views.UX.Squads
 			else
 			{
 				KeyValuePair<VideoSummaryStyle, List<VideoSummaryData>> keyValuePair = (KeyValuePair<VideoSummaryStyle, List<VideoSummaryData>>)cookie;
-				if (keyValuePair.get_Key() == VideoSummaryStyle.SquadChatEmpty && this.videoItems != null)
+				if (keyValuePair.Key == VideoSummaryStyle.SquadChatEmpty)
 				{
-					List<SquadMsg> list = null;
-					List<VideoSummaryData> value2 = keyValuePair.get_Value();
-					int i = 0;
-					int count = value2.Count;
-					while (i < count)
+					if (this.videoItems != null)
 					{
-						VideoSummaryData videoSummaryData = value2[i];
-						foreach (KeyValuePair<SquadMsg, UXElement> current3 in this.videoItems)
+						List<SquadMsg> list = null;
+						List<VideoSummaryData> value2 = keyValuePair.Value;
+						int i = 0;
+						int count = value2.Count;
+						while (i < count)
 						{
-							SqmVideoData videoData = current3.get_Key().VideoData;
-							if (videoData != null && videoData.VideoId == videoSummaryData.Guid)
+							VideoSummaryData videoSummaryData = value2[i];
+							foreach (KeyValuePair<SquadMsg, UXElement> current3 in this.videoItems)
 							{
-								if (list == null)
+								SqmVideoData videoData = current3.Key.VideoData;
+								if (videoData != null && videoData.VideoId == videoSummaryData.Guid)
 								{
-									list = new List<SquadMsg>();
+									if (list == null)
+									{
+										list = new List<SquadMsg>();
+									}
+									list.Add(current3.Key);
 								}
-								list.Add(current3.get_Key());
 							}
+							i++;
 						}
-						i++;
-					}
-					if (list != null)
-					{
-						int j = 0;
-						int count2 = list.Count;
-						while (j < count2)
+						if (list != null)
 						{
-							SquadMsg squadMsg = list[j];
-							this.RemoveItemForMsg(this.videoItems[squadMsg], squadMsg);
-							this.videoItems.Remove(squadMsg);
-							j++;
+							int j = 0;
+							int count2 = list.Count;
+							while (j < count2)
+							{
+								SquadMsg squadMsg = list[j];
+								this.RemoveItemForMsg(this.videoItems[squadMsg], squadMsg);
+								this.videoItems.Remove(squadMsg);
+								j++;
+							}
 						}
 					}
 				}
@@ -1254,269 +1258,11 @@ namespace StaRTS.Main.Views.UX.Squads
 			if (type == ChatFilterType.ShowAll || this.chatFilterMappings[type].Contains(msg.Type))
 			{
 				elements.parent.Visible = true;
-				return;
 			}
-			elements.parent.Visible = false;
-		}
-
-		protected internal SquadMsgChatDisplay(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).CanShowWarTroopRequest((SqmRequestData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).IsRequestFull((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).OnDeclineClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).OnDonateClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).OnExistingMessagesSetup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).OnJoinAcceptClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).OnJoinRequestAccepted(*(sbyte*)args != 0, GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).OnJoinRequestDeclined(*(sbyte*)args != 0, GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).OnJoinRequestHandled(*(sbyte*)args != 0, (SquadMsg)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).OnReplayClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).ProcessMessage((SquadMsg)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).ProcessMessage((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).ProcessMessageByFilter((ChatFilterType)(*(int*)args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1]), (ChatItemElements)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).RemoveAndCleanupVideoSummaryByUINameID(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).RemoveElementsByCount(*(int*)args));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).RemoveItemForMsg((UXElement)GCHandledObjects.GCHandleToObject(*args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).RemoveMessage((SquadMsg)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).RemoveVideoItemByUXElementIfNecessary((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).ResizeItem((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXLabel)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupBattleReplay((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupChatItemElements((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (UXElement)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupChatItemVideoElements((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (UXElement)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupChatMessage((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), (SqmChatData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupInviteAccepted((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupJoinOrLeave((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (SquadMsgType)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupJoinRequest((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupMatchmakingStarted((ChatItemElements)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupPerkUnlocked((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), (PerkVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupPerkUpgraded((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), (PerkVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupPlayerName((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupPlayerRole((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupRoleChange((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (SquadRole)(*(int*)(args + 2)), (SquadMsgType)(*(int*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupSquadLeveledUp((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupTroopRequest((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupVideo((SqmVideoData)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupWarBuffBaseCaptured((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupWarEnded((ChatItemElements)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupWarPlayerAttacked((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), *(int*)(args + 4));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).UpdateAllTimestamps();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).UpdateExistingJoinRequestActionPermissions();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).UpdateExistingTroopRequestWithDonation((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((SquadMsgChatDisplay)GCHandledObjects.GCHandleToObject(instance)).UpdateJoinRequestActionPermission((ChatItemElements)GCHandledObjects.GCHandleToObject(*args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
+			else
+			{
+				elements.parent.Visible = false;
+			}
 		}
 	}
 }

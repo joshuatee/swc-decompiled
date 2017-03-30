@@ -8,7 +8,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Controls
 {
@@ -95,14 +94,12 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (this.summaryData.Style == VideoSummaryStyle.Holonet)
 			{
 				this.summaryData.Style = VideoSummaryStyle.HolonetError;
-				return;
 			}
-			if (this.summaryData.Style == VideoSummaryStyle.HolonetFeatured)
+			else if (this.summaryData.Style == VideoSummaryStyle.HolonetFeatured)
 			{
 				this.summaryData.Style = VideoSummaryStyle.HolonetFeaturedError;
-				return;
 			}
-			if (this.summaryData.Style == VideoSummaryStyle.SquadChat)
+			else if (this.summaryData.Style == VideoSummaryStyle.SquadChat)
 			{
 				this.summaryData.Style = VideoSummaryStyle.SquadChatError;
 			}
@@ -113,14 +110,12 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (this.summaryData.Style == VideoSummaryStyle.Holonet)
 			{
 				this.summaryData.Style = VideoSummaryStyle.HolonetEmpty;
-				return;
 			}
-			if (this.summaryData.Style == VideoSummaryStyle.HolonetFeatured)
+			else if (this.summaryData.Style == VideoSummaryStyle.HolonetFeatured)
 			{
 				this.summaryData.Style = VideoSummaryStyle.HolonetFeaturedEmpty;
-				return;
 			}
-			if (this.summaryData.Style == VideoSummaryStyle.SquadChat)
+			else if (this.summaryData.Style == VideoSummaryStyle.SquadChat)
 			{
 				this.summaryData.Style = VideoSummaryStyle.SquadChatEmpty;
 			}
@@ -131,14 +126,12 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (this.summaryData.Style == VideoSummaryStyle.HolonetEmpty || this.summaryData.Style == VideoSummaryStyle.HolonetError)
 			{
 				this.summaryData.Style = VideoSummaryStyle.Holonet;
-				return;
 			}
-			if (this.summaryData.Style == VideoSummaryStyle.HolonetFeaturedEmpty || this.summaryData.Style == VideoSummaryStyle.HolonetFeaturedError)
+			else if (this.summaryData.Style == VideoSummaryStyle.HolonetFeaturedEmpty || this.summaryData.Style == VideoSummaryStyle.HolonetFeaturedError)
 			{
 				this.summaryData.Style = VideoSummaryStyle.HolonetFeatured;
-				return;
 			}
-			if (this.summaryData.Style == VideoSummaryStyle.SquadChatEmpty || this.summaryData.Style == VideoSummaryStyle.SquadChatError)
+			else if (this.summaryData.Style == VideoSummaryStyle.SquadChatEmpty || this.summaryData.Style == VideoSummaryStyle.SquadChatError)
 			{
 				this.summaryData.Style = VideoSummaryStyle.SquadChat;
 			}
@@ -152,25 +145,26 @@ namespace StaRTS.Main.Views.UX.Controls
 			}
 			if (this.summaryDisplay == null || this.summaryData == null)
 			{
-				Service.Get<StaRTSLogger>().Error("OnTagQueried called before VideoSummary set up");
+				Service.Get<Logger>().Error("OnTagQueried called before VideoSummary set up");
 				return;
 			}
 			if (videoGuidList == null)
 			{
 				this.SwitchToErrorMessage();
 				this.summaryDisplay.GenerateSummary();
-				return;
 			}
-			if (videoGuidList.Count == 0)
+			else if (videoGuidList.Count == 0)
 			{
 				this.SwitchToNoResultsMessage();
 				this.summaryDisplay.GenerateSummary();
-				return;
 			}
-			this.SwitchToSummaryDisplay();
-			this.videoId = videoGuidList[0];
-			this.summaryData.Guid = this.videoId;
-			this.QueryVideoData();
+			else
+			{
+				this.SwitchToSummaryDisplay();
+				this.videoId = videoGuidList[0];
+				this.summaryData.Guid = this.videoId;
+				this.QueryVideoData();
+			}
 		}
 
 		private void QueryVideoData()
@@ -178,9 +172,11 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (string.IsNullOrEmpty(this.videoId))
 			{
 				Service.Get<VideoDataManager>().GetFeatured(new VideoDataManager.DataListQueryCompleteDelegate(this.OnSearchQueried));
-				return;
 			}
-			Service.Get<VideoDataManager>().GetAllEnvironmentVideos(new VideoDataManager.DataListQueryCompleteDelegate(this.OnSearchQueried));
+			else
+			{
+				Service.Get<VideoDataManager>().GetAllEnvironmentVideos(new VideoDataManager.DataListQueryCompleteDelegate(this.OnSearchQueried));
+			}
 		}
 
 		private void OnSearchQueried(List<string> videoGuidList)
@@ -191,7 +187,7 @@ namespace StaRTS.Main.Views.UX.Controls
 			}
 			if (this.summaryDisplay == null || this.summaryData == null)
 			{
-				Service.Get<StaRTSLogger>().Error("OnSearchQueried called before VideoSummary set up");
+				Service.Get<Logger>().Error("OnSearchQueried called before VideoSummary set up");
 				return;
 			}
 			if (videoGuidList == null)
@@ -256,119 +252,12 @@ namespace StaRTS.Main.Views.UX.Controls
 			else if (id == EventId.UIVideosSourceTypeResponse && this.summaryDisplay != null)
 			{
 				KeyValuePair<List<string>, string> keyValuePair = (KeyValuePair<List<string>, string>)cookie;
-				if (keyValuePair.get_Key().Contains(this.summaryDisplay.GetGuid()))
+				if (keyValuePair.Key.Contains(this.summaryDisplay.GetGuid()))
 				{
-					this.summaryDisplay.UpdateSourceType(keyValuePair.get_Value());
+					this.summaryDisplay.UpdateSourceType(keyValuePair.Value);
 				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal VideoSummary(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).summaryData);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).summaryDisplay);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).thumbSize);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).UIName);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).OnSearchQueried((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).OnTagQueried((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).PopulateDisplay();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).QueryStart();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).QueryVideoData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).summaryData = (VideoSummaryData)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).summaryDisplay = (VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).thumbSize = (ThumbnailSize)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).SetSummary((VideoSummaryData)GCHandledObjects.GCHandleToObject(*args), (VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).SwitchToErrorMessage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).SwitchToNoResultsMessage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((VideoSummary)GCHandledObjects.GCHandleToObject(instance)).SwitchToSummaryDisplay();
-			return -1L;
 		}
 	}
 }

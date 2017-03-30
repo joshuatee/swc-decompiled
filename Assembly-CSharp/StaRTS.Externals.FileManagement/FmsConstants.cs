@@ -21,13 +21,5 @@ namespace StaRTS.Externals.FileManagement
 		public const string TOKEN_VERSION = "{version}";
 
 		public const string URL_FORMAT = "{root}{codename}/{environment}/{relativePath}/{hash}.{filename}";
-
-		public FmsConstants()
-		{
-		}
-
-		protected internal FmsConstants(UIntPtr dummy)
-		{
-		}
 	}
 }

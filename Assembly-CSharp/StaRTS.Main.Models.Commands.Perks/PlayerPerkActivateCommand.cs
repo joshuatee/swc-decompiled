@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Perks
 		public PlayerPerkActivateCommand(PlayerPerkActivateRequest request) : base("player.perks.activate", request, new PlayerPerksDataResponse())
 		{
 		}
-
-		protected internal PlayerPerkActivateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

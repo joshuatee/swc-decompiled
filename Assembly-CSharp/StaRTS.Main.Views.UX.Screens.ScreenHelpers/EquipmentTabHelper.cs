@@ -5,7 +5,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 {
@@ -44,13 +43,13 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 				EquipmentEffectVO optional = dataController.GetOptional<EquipmentEffectVO>(vo.EffectUids[i]);
 				if (optional == null)
 				{
-					Service.Get<StaRTSLogger>().Error("CMS Error: EffectUids is empty for EquipmentEffectVO " + optional.Uid);
+					Service.Get<Logger>().Error("CMS Error: EffectUids is empty for EquipmentEffectVO " + optional.Uid);
 					return false;
 				}
 				switch (selectedTab)
 				{
 				case EquipmentTab.Troops:
-					if (optional.AffectedTroopIds != null && optional.AffectedTroopIds.Length != 0)
+					if (optional.AffectedTroopIds != null && optional.AffectedTroopIds.Length > 0)
 					{
 						int j = 0;
 						int num2 = optional.AffectedTroopIds.Length;
@@ -65,7 +64,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 					}
 					break;
 				case EquipmentTab.Heroes:
-					if (optional.AffectedTroopIds != null && optional.AffectedTroopIds.Length != 0)
+					if (optional.AffectedTroopIds != null && optional.AffectedTroopIds.Length > 0)
 					{
 						int k = 0;
 						int num3 = optional.AffectedTroopIds.Length;
@@ -80,7 +79,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 					}
 					break;
 				case EquipmentTab.Structures:
-					if (optional.AffectedBuildingIds != null && optional.AffectedBuildingIds.Length != 0)
+					if (optional.AffectedBuildingIds != null && optional.AffectedBuildingIds.Length > 0)
 					{
 						return true;
 					}
@@ -89,15 +88,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 				i++;
 			}
 			return false;
-		}
-
-		protected internal EquipmentTabHelper(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EquipmentTabHelper)GCHandledObjects.GCHandleToObject(instance)).IsEquipmentValidForTab((EquipmentVO)GCHandledObjects.GCHandleToObject(*args), (EquipmentTab)(*(int*)(args + 1))));
 		}
 	}
 }

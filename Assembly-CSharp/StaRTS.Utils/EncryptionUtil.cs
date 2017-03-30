@@ -1,7 +1,6 @@
 using System;
-using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -17,7 +16,7 @@ namespace StaRTS.Utils
 			{
 				return null;
 			}
-			string result = "";
+			string result = string.Empty;
 			byte[] bytes = Encoding.UTF8.GetBytes(rawData);
 			int num = bytes.Length;
 			if (num % 16 > 0)
@@ -59,20 +58,23 @@ namespace StaRTS.Utils
 					array3[num3++] = array2[i];
 				}
 			}
+			ICryptoTransform cryptoTransform = new RijndaelManaged
+			{
+				Mode = CipherMode.ECB,
+				Padding = PaddingMode.None,
+				Key = array3
+			}.CreateEncryptor();
+			byte[] array4 = cryptoTransform.TransformFinalBlock(array, 0, array.Length);
+			if (array4 != null && array4.Length > 0)
+			{
+				StringBuilder stringBuilder = new StringBuilder();
+				for (int j = 0; j < array4.Length; j++)
+				{
+					stringBuilder.AppendFormat("{0:x2}", (int)(array4[j] & 255));
+				}
+				result = stringBuilder.ToString();
+			}
 			return result;
-		}
-
-		public EncryptionUtil()
-		{
-		}
-
-		protected internal EncryptionUtil(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(EncryptionUtil.EncryptString(Marshal.PtrToStringUni(*(IntPtr*)args)));
 		}
 	}
 }

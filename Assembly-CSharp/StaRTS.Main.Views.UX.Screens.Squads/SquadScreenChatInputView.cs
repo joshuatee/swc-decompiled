@@ -14,7 +14,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -88,7 +87,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private const float SHARE_DISABLE_SEC = 5f;
 
-		private readonly Color grayOut;
+		private readonly Color grayOut = new Color(0.157f, 0.157f, 0.157f);
 
 		private UXInput chatInputBox;
 
@@ -138,10 +137,8 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private uint shareButtonTimer;
 
-		public SquadScreenChatInputView(SquadSlidingScreen screen)
+		public SquadScreenChatInputView(SquadSlidingScreen screen) : base(screen)
 		{
-			this.grayOut = new Color(0.157f, 0.157f, 0.157f);
-			base..ctor(screen);
 		}
 
 		public override void OnScreenLoaded()
@@ -271,12 +268,13 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 					{
 						this.requestTroopBtn.Visible = true;
 						this.resendRequestTroopBtn.Visible = false;
-						return;
 					}
-					this.requestTroopBtn.Visible = false;
-					this.resendRequestTroopBtn.Visible = true;
-					this.resendRequestTroopCostLabel.Text = troopRequestCrystalCost.ToString();
-					return;
+					else
+					{
+						this.requestTroopBtn.Visible = false;
+						this.resendRequestTroopBtn.Visible = true;
+						this.resendRequestTroopCostLabel.Text = troopRequestCrystalCost.ToString();
+					}
 				}
 				else
 				{
@@ -324,9 +322,11 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (flag)
 			{
 				squadController.ShowTroopRequestScreen(text, false);
-				return;
 			}
-			squadController.SendTroopRequest(text, false);
+			else
+			{
+				squadController.SendTroopRequest(text, false);
+			}
 		}
 
 		private void OnShareReplayClicked(UXButton btn)
@@ -364,9 +364,9 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			bool flag = latest.AttackerID == currentPlayer.PlayerId;
-			string text = flag ? latest.Defender.PlayerName : latest.Attacker.PlayerName;
-			string text2 = flag ? this.lang.Get("SQUAD_OFFENSE", new object[0]) : this.lang.Get("SQUAD_DEFENSE", new object[0]);
-			BattleParticipant battleParticipant = flag ? latest.Attacker : latest.Defender;
+			string text = (!flag) ? latest.Attacker.PlayerName : latest.Defender.PlayerName;
+			string text2 = (!flag) ? this.lang.Get("SQUAD_DEFENSE", new object[0]) : this.lang.Get("SQUAD_OFFENSE", new object[0]);
+			BattleParticipant battleParticipant = (!flag) ? latest.Defender : latest.Attacker;
 			int num = GameUtils.CalcuateMedals(battleParticipant.AttackRating, battleParticipant.DefenseRating);
 			int num2 = GameUtils.CalcuateMedals(battleParticipant.AttackRating + battleParticipant.AttackRatingDelta, battleParticipant.DefenseRating + battleParticipant.DefenseRatingDelta);
 			int value = num2 - num;
@@ -380,9 +380,9 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			this.share1StarSprite.Visible = true;
 			this.share2StarSprite.Visible = true;
 			this.share3StarSprite.Visible = true;
-			this.share1StarSprite.Color = ((latest.EarnedStars > 0) ? Color.white : this.grayOut);
-			this.share2StarSprite.Color = ((latest.EarnedStars > 1) ? Color.white : this.grayOut);
-			this.share3StarSprite.Color = ((latest.EarnedStars > 2) ? Color.white : this.grayOut);
+			this.share1StarSprite.Color = ((latest.EarnedStars <= 0) ? this.grayOut : Color.white);
+			this.share2StarSprite.Color = ((latest.EarnedStars <= 1) ? this.grayOut : Color.white);
+			this.share3StarSprite.Color = ((latest.EarnedStars <= 2) ? this.grayOut : Color.white);
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
@@ -397,92 +397,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		public override bool IsVisible()
 		{
 			return this.chatInputBox.Visible;
-		}
-
-		protected internal SquadScreenChatInputView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).FillOutReplayShare((BattleEntry)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).HideAllInputs();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).HideView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).IsVisible());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).OnChatMessageSend((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).OnChatSubmit();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).OnShareReplayClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).OnTroopRequestClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).ShowView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadScreenChatInputView)GCHandledObjects.GCHandleToObject(instance)).UpdateTroopRequestMode();
-			return -1L;
 		}
 	}
 }

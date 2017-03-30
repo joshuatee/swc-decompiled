@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public GetSquadMemberSyncedWarDataCommand(PlayerIdChecksumRequest request) : base("guild.war.getSyncedParticipant", request, new SquadMemberWarDataResponse())
 		{
 		}
-
-		protected internal GetSquadMemberSyncedWarDataCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

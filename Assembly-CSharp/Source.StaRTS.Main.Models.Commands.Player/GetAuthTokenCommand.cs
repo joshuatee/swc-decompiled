@@ -21,9 +21,5 @@ namespace Source.StaRTS.Main.Models.Commands.Player
 			}
 			return OnCompleteAction.Retry;
 		}
-
-		protected internal GetAuthTokenCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

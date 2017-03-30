@@ -15,11 +15,10 @@ using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.GameStates
 {
-	public class BattleStartState : IGameState, IState, IEventObserver
+	public class BattleStartState : IGameState, IEventObserver, IState
 	{
 		private TransitionCompleteDelegate onComplete;
 
@@ -89,14 +88,15 @@ namespace StaRTS.Main.Controllers.GameStates
 			if (worldTransitioner.IsSoftWiping())
 			{
 				worldTransitioner.ContinueWipe(this, mapDataLoader, new TransitionCompleteDelegate(this.OnWorldTransitionComplete));
-				return;
 			}
-			if (this.battleData.BattleType == BattleType.PvpAttackSquadWar || this.battleData.BattleType == BattleType.PveBuffBase)
+			else if (this.battleData.BattleType == BattleType.PvpAttackSquadWar || this.battleData.BattleType == BattleType.PveBuffBase)
 			{
 				worldTransitioner.StartTransition(new WarboardToWarbaseTransition(this, mapDataLoader, new TransitionCompleteDelegate(this.OnWorldTransitionComplete), false, false));
-				return;
 			}
-			worldTransitioner.StartTransition(new WorldToWorldTransition(this, mapDataLoader, new TransitionCompleteDelegate(this.OnWorldTransitionComplete), false, false));
+			else
+			{
+				worldTransitioner.StartTransition(new WorldToWorldTransition(this, mapDataLoader, new TransitionCompleteDelegate(this.OnWorldTransitionComplete), false, false));
+			}
 		}
 
 		public virtual void OnEnter()
@@ -232,18 +232,16 @@ namespace StaRTS.Main.Controllers.GameStates
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id != EventId.MapDataProcessingStart)
+			switch (id)
 			{
-				if (id == EventId.WorldLoadComplete)
-				{
-					this.OnWorldLoadComplete();
-					Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldLoadComplete);
-				}
-			}
-			else
-			{
+			case EventId.MapDataProcessingStart:
 				this.OnMapProcessingStart();
 				Service.Get<EventManager>().UnregisterObserver(this, EventId.MapDataProcessingStart);
+				break;
+			case EventId.WorldLoadComplete:
+				this.OnWorldLoadComplete();
+				Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldLoadComplete);
+				break;
 			}
 			return EatResponse.NotEaten;
 		}
@@ -251,74 +249,6 @@ namespace StaRTS.Main.Controllers.GameStates
 		public bool CanUpdateHomeContracts()
 		{
 			return false;
-		}
-
-		protected internal BattleStartState(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleStartState)GCHandledObjects.GCHandleToObject(instance)).CanUpdateHomeContracts());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			BattleStartState.GoToBattleStartState((BattleInitializationData)GCHandledObjects.GCHandleToObject(*args), (TransitionCompleteDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			BattleStartState.GoToBattleStartState((BattleStartState)GCHandledObjects.GCHandleToObject(*args), (BattleInitializationData)GCHandledObjects.GCHandleToObject(args[1]), (TransitionCompleteDelegate)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BattleStartState)GCHandledObjects.GCHandleToObject(instance)).OnEnter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleStartState)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BattleStartState)GCHandledObjects.GCHandleToObject(instance)).OnExit((IState)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((BattleStartState)GCHandledObjects.GCHandleToObject(instance)).OnMapProcessingStart();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BattleStartState)GCHandledObjects.GCHandleToObject(instance)).OnWorldLoadComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BattleStartState)GCHandledObjects.GCHandleToObject(instance)).OnWorldTransitionComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BattleStartState)GCHandledObjects.GCHandleToObject(instance)).Setup((BattleInitializationData)GCHandledObjects.GCHandleToObject(*args), (TransitionCompleteDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BattleStartState)GCHandledObjects.GCHandleToObject(instance)).SetupTransition();
-			return -1L;
 		}
 	}
 }

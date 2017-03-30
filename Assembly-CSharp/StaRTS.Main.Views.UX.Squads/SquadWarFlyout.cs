@@ -10,16 +10,11 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Squads
 {
 	public class SquadWarFlyout : AbstractSquadWarBoardElement
 	{
-		private SquadWarParticipantState opponentState;
-
-		private SquadWarBuffBaseData buffBaseData;
-
 		private const string SHOW_TOP = "ShowTop";
 
 		private const string SHOW_BOTTOM = "ShowBottom";
@@ -45,6 +40,10 @@ namespace StaRTS.Main.Views.UX.Squads
 		private const string INFO = "context_Info";
 
 		private const string SCOUT = "SCOUT";
+
+		private SquadWarParticipantState opponentState;
+
+		private SquadWarBuffBaseData buffBaseData;
 
 		private UXButton scoutMemberButton;
 
@@ -195,7 +194,6 @@ namespace StaRTS.Main.Views.UX.Squads
 					if (warManager.ScoutWarMember(squadMemberId))
 					{
 						this.Hide();
-						return;
 					}
 				}
 				else
@@ -217,7 +215,6 @@ namespace StaRTS.Main.Views.UX.Squads
 					if (Service.Get<SquadController>().WarManager.ScoutBuffBase(buffBaseId))
 					{
 						this.Hide();
-						return;
 					}
 				}
 				else
@@ -254,92 +251,6 @@ namespace StaRTS.Main.Views.UX.Squads
 			{
 				base.OnViewFrameTime(dt);
 			}
-		}
-
-		protected internal SquadWarFlyout(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).CloseWarScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).Hide();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).IsShowingBuffBaseOptions((SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).IsShowingParticipantOptions((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).OnBuffBaseInfoClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).OnMemberInfoClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).OnScoutBuffBaseClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).OnScoutMemberClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).PlayShowAudioClip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).ShowBuffBaseOptions((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), (SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadWarFlyout)GCHandledObjects.GCHandleToObject(instance)).ShowParticipantOptions((GameObject)GCHandledObjects.GCHandleToObject(*args), (SquadWarParticipantState)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

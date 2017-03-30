@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Tournament
 		public RedeemTournamentRewardCommand(PlayerIdChecksumRequest request) : base("player.store.tournament.redeem", request, new TournamentResponse())
 		{
 		}
-
-		protected internal RedeemTournamentRewardCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

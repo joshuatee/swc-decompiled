@@ -9,9 +9,5 @@ namespace StaRTS.Main.Controllers.World.Transitions
 		public WarboardToWarbaseTransition(IState transitionToState, IMapDataLoader mapDataLoader, TransitionCompleteDelegate onTransitionComplete, bool skipTransitions, bool zoomOut) : base(transitionToState, mapDataLoader, onTransitionComplete, skipTransitions, zoomOut, WipeTransition.FromWarboardToLoadingScreen, WipeTransition.FromLoadingScreenToBase)
 		{
 		}
-
-		protected internal WarboardToWarbaseTransition(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

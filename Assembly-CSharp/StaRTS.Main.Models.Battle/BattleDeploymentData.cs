@@ -1,8 +1,6 @@
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Battle
 {
@@ -98,7 +96,7 @@ namespace StaRTS.Main.Models.Battle
 				{
 					foreach (KeyValuePair<string, object> current2 in dictionary2)
 					{
-						this.TroopData.Add(current2.get_Key(), Convert.ToInt32(current2.get_Value(), CultureInfo.InvariantCulture));
+						this.TroopData.Add(current2.Key, Convert.ToInt32(current2.Value));
 					}
 				}
 			}
@@ -120,7 +118,7 @@ namespace StaRTS.Main.Models.Battle
 				{
 					foreach (KeyValuePair<string, object> current4 in dictionary3)
 					{
-						this.SpecialAttackData.Add(current4.get_Key(), Convert.ToInt32(current4.get_Value(), CultureInfo.InvariantCulture));
+						this.SpecialAttackData.Add(current4.Key, Convert.ToInt32(current4.Value));
 					}
 				}
 			}
@@ -142,7 +140,7 @@ namespace StaRTS.Main.Models.Battle
 				{
 					foreach (KeyValuePair<string, object> current6 in dictionary4)
 					{
-						this.HeroData.Add(current6.get_Key(), Convert.ToInt32(current6.get_Value(), CultureInfo.InvariantCulture));
+						this.HeroData.Add(current6.Key, Convert.ToInt32(current6.Value));
 					}
 				}
 			}
@@ -164,7 +162,7 @@ namespace StaRTS.Main.Models.Battle
 				{
 					foreach (KeyValuePair<string, object> current8 in dictionary5)
 					{
-						this.ChampionData.Add(current8.get_Key(), Convert.ToInt32(current8.get_Value(), CultureInfo.InvariantCulture));
+						this.ChampionData.Add(current8.Key, Convert.ToInt32(current8.Value));
 					}
 				}
 			}
@@ -265,144 +263,6 @@ namespace StaRTS.Main.Models.Battle
 				battleDeploymentData.ChampionDataList = new List<DeploymentRecord>(deploymentData.ChampionDataList);
 			}
 			return battleDeploymentData;
-		}
-
-		public BattleDeploymentData()
-		{
-		}
-
-		protected internal BattleDeploymentData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BattleDeploymentData.Copy((BattleDeploymentData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BattleDeploymentData.CreateEmpty());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).ChampionData);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).ChampionDataList);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).HeroData);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).HeroDataList);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).SpecialAttackData);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).SpecialAttackDataList);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).SquadData);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).SquadDataList);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).TroopData);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).TroopDataList);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).ChampionData = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).ChampionDataList = (List<DeploymentRecord>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).HeroData = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).HeroDataList = (List<DeploymentRecord>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).SpecialAttackData = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).SpecialAttackDataList = (List<DeploymentRecord>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).SquadData = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).SquadDataList = (List<DeploymentRecord>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).TroopData = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).TroopDataList = (List<DeploymentRecord>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleDeploymentData)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

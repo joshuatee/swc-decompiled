@@ -5,7 +5,6 @@ using StaRTS.Main.Utils;
 using StaRTS.Main.Views.UX.Controls;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -52,10 +51,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			int trapDamageForUIDisplay2 = trapController.GetTrapDamageForUIDisplay(this.maxTrapVO);
 			sliderControl.DescLabel.Text = this.lang.Get("DAMAGE_DPS", new object[]
 			{
-				""
+				string.Empty
 			});
 			sliderControl.CurrentLabel.Text = this.lang.ThousandsSeparated(trapDamageForUIDisplay);
-			sliderControl.CurrentSlider.Value = ((trapDamageForUIDisplay2 == 0) ? 0f : ((float)trapDamageForUIDisplay / (float)trapDamageForUIDisplay2));
+			sliderControl.CurrentSlider.Value = ((trapDamageForUIDisplay2 != 0) ? ((float)trapDamageForUIDisplay / (float)trapDamageForUIDisplay2) : 0f);
 			if (this.useUpgradeGroup && this.nextTrapVO != null)
 			{
 				int trapDamageForUIDisplay3 = trapController.GetTrapDamageForUIDisplay(this.nextTrapVO);
@@ -63,7 +62,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.lang.ThousandsSeparated(trapDamageForUIDisplay3 - trapDamageForUIDisplay)
 				});
-				sliderControl.NextSlider.Value = ((trapDamageForUIDisplay2 == 0) ? 0f : ((float)trapDamageForUIDisplay3 / (float)trapDamageForUIDisplay2));
+				sliderControl.NextSlider.Value = ((trapDamageForUIDisplay2 != 0) ? ((float)trapDamageForUIDisplay3 / (float)trapDamageForUIDisplay2) : 0f);
 			}
 		}
 
@@ -74,7 +73,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			SliderControl sliderControl = this.sliders[1];
 			sliderControl.DescLabel.Text = this.lang.Get("TRAP_TRIGGER_RADIUS", new object[0]);
 			sliderControl.CurrentLabel.Text = this.lang.ThousandsSeparated(trapMaxRadius);
-			sliderControl.CurrentSlider.Value = ((trapMaxRadius2 == 0) ? 0f : ((float)trapMaxRadius / (float)trapMaxRadius2));
+			sliderControl.CurrentSlider.Value = ((trapMaxRadius2 != 0) ? ((float)trapMaxRadius / (float)trapMaxRadius2) : 0f);
 			if (this.useUpgradeGroup && this.nextTrapVO != null)
 			{
 				int trapMaxRadius3 = (int)TrapUtils.GetTrapMaxRadius(this.maxTrapVO);
@@ -82,30 +81,8 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.lang.ThousandsSeparated(trapMaxRadius3 - trapMaxRadius)
 				});
-				sliderControl.NextSlider.Value = ((trapMaxRadius2 == 0) ? 0f : ((float)trapMaxRadius3 / (float)trapMaxRadius2));
+				sliderControl.NextSlider.Value = ((trapMaxRadius2 != 0) ? ((float)trapMaxRadius3 / (float)trapMaxRadius2) : 0f);
 			}
-		}
-
-		protected internal TrapInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TrapInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TrapInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateDps();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TrapInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateRadius();
-			return -1L;
 		}
 	}
 }

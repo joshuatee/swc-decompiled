@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetResourcesCommand(CheatSetResourcesRequest request) : base("cheats.resources.set", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSetResourcesCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

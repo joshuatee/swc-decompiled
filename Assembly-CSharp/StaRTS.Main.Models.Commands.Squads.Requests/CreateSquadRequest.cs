@@ -1,7 +1,6 @@
 using StaRTS.Externals.Manimal.TransferObjects.Request;
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Squads.Requests
 {
@@ -36,15 +35,6 @@ namespace StaRTS.Main.Models.Commands.Squads.Requests
 			serializer.AddString("name", this.name);
 			serializer.AddString("description", this.desc);
 			return serializer.End().ToString();
-		}
-
-		protected internal CreateSquadRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CreateSquadRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

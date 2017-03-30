@@ -11,7 +11,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -106,9 +105,11 @@ namespace StaRTS.FX
 					if (text != null)
 					{
 						Service.Get<AssetManager>().Load(ref this.hitFxHandle, text, new AssetSuccessDelegate(this.OnLoadHitFx), null, cookie);
-						return;
 					}
-					Service.Get<StaRTSLogger>().Error("LightSaber Hit Effect not found");
+					else
+					{
+						Service.Get<Logger>().Error("LightSaber Hit Effect not found");
+					}
 				}
 			}
 		}
@@ -249,9 +250,11 @@ namespace StaRTS.FX
 						if (play)
 						{
 							component.Play();
-							return;
 						}
-						component.Stop();
+						else
+						{
+							component.Stop();
+						}
 					}
 				}
 			}
@@ -368,56 +371,6 @@ namespace StaRTS.FX
 				}
 			}
 			return false;
-		}
-
-		protected internal LightSaberHitEffect(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LightSaberHitEffect)GCHandledObjects.GCHandleToObject(instance)).AttachCenterEffect();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LightSaberHitEffect)GCHandledObjects.GCHandleToObject(instance)).FindClosest((SmartEntity)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LightSaberHitEffect)GCHandledObjects.GCHandleToObject(instance)).InstantiateAndPlace((GameObject)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((LightSaberHitEffect)GCHandledObjects.GCHandleToObject(instance)).OnLoadAdjHitFx(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((LightSaberHitEffect)GCHandledObjects.GCHandleToObject(instance)).OnLoadCircularFx(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((LightSaberHitEffect)GCHandledObjects.GCHandleToObject(instance)).OnLoadHitFx(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((LightSaberHitEffect)GCHandledObjects.GCHandleToObject(instance)).StopFxAndDestroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((LightSaberHitEffect)GCHandledObjects.GCHandleToObject(instance)).StopPlayFx((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
 		}
 	}
 }

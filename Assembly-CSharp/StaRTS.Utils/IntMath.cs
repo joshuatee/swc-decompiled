@@ -1,6 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -341,8 +339,8 @@ namespace StaRTS.Utils
 
 		public static int FastDist(int x1, int y1, int x2, int y2)
 		{
-			int num = (x2 > x1) ? (x2 - x1) : (x1 - x2);
-			int num2 = (y2 > y1) ? (y2 - y1) : (y1 - y2);
+			int num = (x2 <= x1) ? (x1 - x2) : (x2 - x1);
+			int num2 = (y2 <= y1) ? (y1 - y2) : (y2 - y1);
 			int num3;
 			int num4;
 			if (num > num2)
@@ -392,48 +390,48 @@ namespace StaRTS.Utils
 		public static int FloatStrToInt(string floatStr)
 		{
 			int num = 0;
-			int length = floatStr.get_Length();
-			int num2 = 0;
+			int length = floatStr.Length;
+			int i = 0;
 			if (length == 0)
 			{
 				return 0;
 			}
-			while (num2 < length && floatStr.get_Chars(num2) != '.')
+			while (i < length)
 			{
-				int num3 = (int)char.GetNumericValue(floatStr, num2);
-				if (num3 != -1)
+				if (floatStr[i] == '.')
+				{
+					break;
+				}
+				int num2 = (int)char.GetNumericValue(floatStr, i);
+				if (num2 != -1)
 				{
 					num *= 10;
-					num += num3;
+					num += num2;
 				}
-				num2++;
+				i++;
 			}
 			num *= 1024;
-			if (num2 != length)
+			if (i != length)
 			{
-				int num4 = 0;
-				int num5 = 1000;
-				num2++;
-				int num6 = 0;
-				while (num2 < length && num6 < 3)
+				int num3 = 0;
+				int num4 = 1000;
+				i++;
+				int num5 = 0;
+				while (i < length && num5 < 3)
 				{
-					int num7 = (int)char.GetNumericValue(floatStr, num2);
-					if (num7 != -1)
+					int num6 = (int)char.GetNumericValue(floatStr, i);
+					if (num6 != -1)
 					{
-						num4 *= 10;
-						num5 /= 10;
-						num4 += num7;
+						num3 *= 10;
+						num4 /= 10;
+						num3 += num6;
 					}
-					num2++;
-					num6++;
+					i++;
+					num5++;
 				}
-				num += num4 * num5 * 1024 / 1000;
+				num += num3 * num4 * 1024 / 1000;
 			}
-			if (floatStr.get_Chars(0) != '-')
-			{
-				return num;
-			}
-			return -num;
+			return (floatStr[0] != '-') ? num : (-num);
 		}
 
 		public static int GetPercent(int percent, int total)
@@ -443,37 +441,33 @@ namespace StaRTS.Utils
 
 		public static int Atan2Lookup(int x, int y)
 		{
-			if (y != 0)
+			if (y == 0)
 			{
-				int num = 0;
-				if (y < 0)
-				{
-					x = -x;
-					y = -y;
-					num += 4;
-				}
-				if (x <= 0)
-				{
-					int num2 = x;
-					x = y;
-					y = -num2;
-					num += 2;
-				}
-				if (x <= y)
-				{
-					int num2 = y - x;
-					x += y;
-					y = num2;
-					num++;
-				}
-				num *= 4096;
-				return num + (IntMath.atanLUT[y * 128 / x] >> 3);
+				return (x < 0) ? 16384 : 0;
 			}
-			if (x < 0)
+			int num = 0;
+			if (y < 0)
 			{
-				return 16384;
+				x = -x;
+				y = -y;
+				num += 4;
 			}
-			return 0;
+			if (x <= 0)
+			{
+				int num2 = x;
+				x = y;
+				y = -num2;
+				num += 2;
+			}
+			if (x <= y)
+			{
+				int num2 = y - x;
+				x += y;
+				y = num2;
+				num++;
+			}
+			num *= 4096;
+			return num + (IntMath.atanLUT[y * 128 / x] >> 3);
 		}
 
 		public static int sinLookup(int twiceAngle)
@@ -508,54 +502,6 @@ namespace StaRTS.Utils
 				return (int)(-(int)IntMath.sinLUT[540 - twiceAngle]);
 			}
 			return (int)IntMath.sinLUT[twiceAngle - 540];
-		}
-
-		public IntMath()
-		{
-		}
-
-		protected internal IntMath(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(IntMath.Atan2Lookup(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(IntMath.cosLookup(*(int*)args));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(IntMath.FastDist(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(IntMath.FloatStrToInt(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(IntMath.GetPercent(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(IntMath.Normalize(*(int*)args, *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(IntMath.Normalize(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(IntMath.sinLookup(*(int*)args));
 		}
 	}
 }

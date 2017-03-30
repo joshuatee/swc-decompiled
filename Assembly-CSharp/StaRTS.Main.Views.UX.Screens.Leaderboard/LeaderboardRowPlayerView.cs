@@ -1,4 +1,4 @@
-using StaRTS.Externals.FacebookApi;
+using Facebook.Unity;
 using StaRTS.Main.Controllers;
 using StaRTS.Main.Controllers.Squads;
 using StaRTS.Main.Models;
@@ -14,9 +14,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 {
@@ -66,11 +64,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 		protected override void CreateItem()
 		{
 			string playerElementPrefix = this.GetPlayerElementPrefix(this.tab);
-			this.id = string.Format("{0}{1}", new object[]
-			{
-				playerElementPrefix,
-				this.position
-			});
+			this.id = string.Format("{0}{1}", playerElementPrefix, this.position);
 			this.item = this.grid.CloneItem(this.id, this.templateItem);
 		}
 
@@ -103,7 +97,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			this.InitButtons(this.id);
 			this.InitPlanetStats(this.id);
 			this.InitBattleStats(this.id, out leaderboardBattleHistory);
-			int rating = (leaderboardBattleHistory != null) ? GameUtils.CalculateBattleHistoryVictoryRating(leaderboardBattleHistory) : 0;
+			int rating = (leaderboardBattleHistory == null) ? 0 : GameUtils.CalculateBattleHistoryVictoryRating(leaderboardBattleHistory);
 			this.InitIcons(this.id, this.player.Faction, rating);
 			this.InitFacebookData();
 		}
@@ -116,28 +110,31 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			if (this.player.PlayerID == Service.Get<CurrentPlayer>().PlayerId)
 			{
 				this.buttonContainer.Visible = false;
-				return;
 			}
-			SquadStateManager stateManager = Service.Get<SquadController>().StateManager;
-			Squad currentSquad = stateManager.GetCurrentSquad();
-			bool flag = currentSquad != null && currentSquad.SquadID == this.player.SquadID;
-			if (this.CanPlayerBeInvitedToJoinSquad())
+			else
 			{
-				bool flag2 = stateManager.PlayersInvitedToSquad.Contains(this.player.PlayerID);
-				this.secondaryButtonLabel.Text = (flag2 ? Service.Get<Lang>().Get("SQUAD_INVITE_SENT", new object[0]) : Service.Get<Lang>().Get("SQUAD_INVITE", new object[0]));
-				this.secondaryButton.Enabled = !flag2;
-				this.secondaryButton.OnClicked = new UXButtonClickedDelegate(this.OnInviteToSquadClicked);
-				return;
+				SquadStateManager stateManager = Service.Get<SquadController>().StateManager;
+				Squad currentSquad = stateManager.GetCurrentSquad();
+				bool flag = currentSquad != null && currentSquad.SquadID == this.player.SquadID;
+				if (this.CanPlayerBeInvitedToJoinSquad())
+				{
+					bool flag2 = stateManager.PlayersInvitedToSquad.Contains(this.player.PlayerID);
+					this.secondaryButtonLabel.Text = ((!flag2) ? Service.Get<Lang>().Get("SQUAD_INVITE", new object[0]) : Service.Get<Lang>().Get("SQUAD_INVITE_SENT", new object[0]));
+					this.secondaryButton.Enabled = !flag2;
+					this.secondaryButton.OnClicked = new UXButtonClickedDelegate(this.OnInviteToSquadClicked);
+				}
+				else if (!string.IsNullOrEmpty(this.player.SquadID) && !flag)
+				{
+					this.secondaryButtonLabel.Text = Service.Get<Lang>().Get("s_Squad", new object[0]);
+					this.secondaryButton.OnClicked = new UXButtonClickedDelegate(this.screen.ViewSquadInfoClicked);
+					this.secondaryButton.Tag = this.player.SquadID;
+				}
+				else
+				{
+					this.secondaryButton.Visible = false;
+					base.UpdateButtonContainerTween(this.buttonContainer, 1);
+				}
 			}
-			if (!string.IsNullOrEmpty(this.player.SquadID) && !flag)
-			{
-				this.secondaryButtonLabel.Text = Service.Get<Lang>().Get("s_Squad", new object[0]);
-				this.secondaryButton.OnClicked = new UXButtonClickedDelegate(this.screen.ViewSquadInfoClicked);
-				this.secondaryButton.Tag = this.player.SquadID;
-				return;
-			}
-			this.secondaryButton.Visible = false;
-			base.UpdateButtonContainerTween(this.buttonContainer, 1);
 		}
 
 		private bool CanPlayerBeInvitedToJoinSquad()
@@ -161,10 +158,12 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			{
 				this.planetLabel.Text = LangUtils.GetPlanetDisplayName(optional);
 				this.planetBgTexture.LoadTexture(optional.LeaderboardTileTexture);
-				return;
 			}
-			this.planetLabel.Visible = false;
-			this.planetBgTexture.Visible = false;
+			else
+			{
+				this.planetLabel.Visible = false;
+				this.planetBgTexture.Visible = false;
+			}
 		}
 
 		private void InitBattleStats(string id, out LeaderboardBattleHistory battleHistory)
@@ -198,8 +197,8 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				this.medalLabel.Text = Service.Get<Lang>().ThousandsSeparated(this.player.BattleScore);
 				battleHistory = this.player.BattleHistory;
 			}
-			int num = (battleHistory != null) ? battleHistory.AttacksWon : 0;
-			int num2 = (battleHistory != null) ? battleHistory.DefensesWon : 0;
+			int num = (battleHistory == null) ? 0 : battleHistory.AttacksWon;
+			int num2 = (battleHistory == null) ? 0 : battleHistory.DefensesWon;
 			this.attacksLabel.Text = Service.Get<Lang>().Get("ATTACKS_WON", new object[]
 			{
 				num
@@ -218,14 +217,12 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			if (flag)
 			{
 				this.playerFactionSprite.SpriteName = Service.Get<FactionIconUpgradeController>().GetIcon(faction, rating);
-				return;
 			}
-			if (faction == FactionType.Empire)
+			else if (faction == FactionType.Empire)
 			{
 				this.squadFactionSprite.SpriteName = "FactionEmpire";
-				return;
 			}
-			if (faction == FactionType.Rebel)
+			else if (faction == FactionType.Rebel)
 			{
 				this.squadFactionSprite.SpriteName = "FactionRebel";
 			}
@@ -240,9 +237,8 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			if (this.player.PlayerID == Service.Get<CurrentPlayer>().PlayerId && socialDataController.FacebookId != null)
 			{
 				socialDataController.GetSelfPicture(new OnGetProfilePicture(this.OnGetProfilePicture), this.friendTexture);
-				return;
 			}
-			if (playerIdToFriendData != null && playerIdToFriendData.TryGetValue(this.player.PlayerID, out socialFriendData))
+			else if (playerIdToFriendData != null && playerIdToFriendData.TryGetValue(this.player.PlayerID, out socialFriendData))
 			{
 				if (!string.IsNullOrEmpty(socialFriendData.Name))
 				{
@@ -317,7 +313,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			if (playerIdToFriendData != null && playerIdToFriendData.TryGetValue(this.player.PlayerID, out socialFriendData))
 			{
 				fbFriendId = socialFriendData.Id;
-				fbAccessToken = FacebookManager.Instance.getAccessToken();
+				fbAccessToken = AccessToken.CurrentAccessToken.TokenString;
 			}
 			SquadMsg message = SquadMsgUtils.CreateSendInviteMessage(this.player.PlayerID, fbFriendId, fbAccessToken, new SquadController.ActionCallback(this.OnInviteToSquadComplete), null);
 			Service.Get<SquadController>().TakeAction(message);
@@ -334,83 +330,11 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				AlertScreen.ShowModal(false, null, message, null, null);
 				this.secondaryButtonLabel.Text = Service.Get<Lang>().Get("SQUAD_INVITE_SENT", new object[0]);
 				Service.Get<SquadController>().StateManager.PlayersInvitedToSquad.Add(this.player.PlayerID);
-				return;
 			}
-			this.secondaryButton.Enabled = true;
-		}
-
-		protected internal LeaderboardRowPlayerView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).CanPlayerBeInvitedToJoinSquad());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).CreateItem();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).GetPlayerElementPrefix((SocialTabs)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).InitButtons(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).InitFacebookData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).InitIcons(Marshal.PtrToStringUni(*(IntPtr*)args), (FactionType)(*(int*)(args + 1)), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).InitPlanetStats(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).InitView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).OnGetProfilePicture((Texture2D)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).OnInviteToSquadClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((LeaderboardRowPlayerView)GCHandledObjects.GCHandleToObject(instance)).OnInviteToSquadComplete(*(sbyte*)args != 0, GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
+			else
+			{
+				this.secondaryButton.Enabled = true;
+			}
 		}
 	}
 }

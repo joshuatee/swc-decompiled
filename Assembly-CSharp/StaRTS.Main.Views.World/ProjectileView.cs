@@ -8,7 +8,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -181,14 +180,15 @@ namespace StaRTS.Main.Views.World
 			if (this.ProjectileType.IsMultiStage)
 			{
 				this.ViewPath = new ProjectileViewMultiStagePath(this);
-				return;
 			}
-			if (this.ProjectileType.Arcs)
+			else if (this.ProjectileType.Arcs)
 			{
 				this.ViewPath = new ProjectileViewArcPath(this);
-				return;
 			}
-			this.ViewPath = new ProjectileViewLinearPath(this);
+			else
+			{
+				this.ViewPath = new ProjectileViewLinearPath(this);
+			}
 		}
 
 		private void InitMeshTracker(GameObject mesh)
@@ -233,7 +233,7 @@ namespace StaRTS.Main.Views.World
 
 		private void PlayEmitter(ParticleSystem particle)
 		{
-			if (Mathf.Approximately(particle.emission.rate.constantMax, 0f))
+			if (Mathf.Approximately(particle.emissionRate, 0f))
 			{
 				particle.startLifetime = this.LifetimeSeconds;
 			}
@@ -352,243 +352,6 @@ namespace StaRTS.Main.Views.World
 				this.DefaultTrackerObject = null;
 			}
 			this.ViewPath = null;
-		}
-
-		protected internal ProjectileView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).Bullet);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).DefaultTracker);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).Emitter);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).EmitterTracker);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).IsOnGround);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).LifetimeSeconds);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).MeshTracker);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).ProjectileType);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).StartLocation);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).TargetLocation);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).TargetTracker);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).ViewPath);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).GetTransform());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).Init((ProjectileTypeVO)GCHandledObjects.GCHandleToObject(*args), (Bullet)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).InitEmitterTracker((ParticleSystem)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).InitMeshTracker((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).InitMultipleEmitterTracker((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).InitWithEmitter(*(float*)args, *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), (ParticleSystem)GCHandledObjects.GCHandleToObject(args[3]), (Transform)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).InitWithEmitters(*(float*)args, *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), (GameObject)GCHandledObjects.GCHandleToObject(args[3]), (GameObject)GCHandledObjects.GCHandleToObject(args[4]), (Transform)GCHandledObjects.GCHandleToObject(args[5]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).InitWithMesh(*(float*)args, *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), (GameObject)GCHandledObjects.GCHandleToObject(args[3]), (Transform)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).InitWithMeshAndEmitter(*(float*)args, *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), (GameObject)GCHandledObjects.GCHandleToObject(args[3]), (ParticleSystem)GCHandledObjects.GCHandleToObject(args[4]), (Transform)GCHandledObjects.GCHandleToObject(args[5]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).InitWithoutBullet(*(float*)args, *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), (Transform)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).InternalInit(*(float*)args, *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), (Transform)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).OnReturnToPool();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).PlayEmitter((ParticleSystem)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).PlayTrails((ParticleSystem)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).ResetParticle((ParticleSystem)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).Bullet = (Bullet)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).DefaultTracker = (Transform)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).Emitter = (ParticleSystem)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).EmitterTracker = (Transform)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).IsOnGround = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).LifetimeSeconds = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).MeshTracker = (Transform)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).ProjectileType = (ProjectileTypeVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).StartLocation = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).TargetLocation = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).TargetTracker = (Transform)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).ViewPath = (ProjectileViewPath)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((ProjectileView)GCHandledObjects.GCHandleToObject(instance)).SetTargetLocation(*(*(IntPtr*)args));
-			return -1L;
 		}
 	}
 }

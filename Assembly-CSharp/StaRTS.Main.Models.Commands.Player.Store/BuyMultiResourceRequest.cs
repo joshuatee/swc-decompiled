@@ -1,6 +1,5 @@
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player.Store
 {
@@ -30,15 +29,6 @@ namespace StaRTS.Main.Models.Commands.Player.Store
 			startedSerializer.Add<int>("contraband", this.contraband);
 			startedSerializer.AddString("subtype", this.subtype);
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal BuyMultiResourceRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuyMultiResourceRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

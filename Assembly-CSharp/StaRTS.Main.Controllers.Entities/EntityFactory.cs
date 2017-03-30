@@ -19,7 +19,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities
 {
@@ -111,7 +110,7 @@ namespace StaRTS.Main.Controllers.Entities
 			if (isShooter)
 			{
 				smartEntity.ShooterComp.TargetingDelayed = (teamType == TeamType.Attacker);
-				HealthType healthType = troopType.IsHealer ? HealthType.Healing : HealthType.Damaging;
+				HealthType healthType = (!troopType.IsHealer) ? HealthType.Damaging : HealthType.Healing;
 				smartEntity.ShooterComp.AttackFSM = new AttackFSM(Service.Get<BattleController>(), smartEntity, smartEntity.StateComp, smartEntity.ShooterComp, smartEntity.TransformComp, healthType);
 				if (troopType.IsHealer)
 				{
@@ -439,7 +438,7 @@ namespace StaRTS.Main.Controllers.Entities
 				if (component != null)
 				{
 					AssetMeshDataMonoBehaviour component2 = gameObjectViewComponent.MainGameObject.GetComponent<AssetMeshDataMonoBehaviour>();
-					entity.Add<BuildingAnimationComponent>(new BuildingAnimationComponent(component, component2 ? component2.ListOfParticleSystems : null));
+					entity.Add<BuildingAnimationComponent>(new BuildingAnimationComponent(component, (!component2) ? null : component2.ListOfParticleSystems));
 				}
 			}
 			else
@@ -449,96 +448,6 @@ namespace StaRTS.Main.Controllers.Entities
 				entity.Add<TrackingGameObjectViewComponent>(component3);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal EntityFactory(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).AddShieldComponentsToEntity((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).AddTrapComponentsToEntity((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).AddTurretComponentsToEntity((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (TurretTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).CreateBuildingEntity((Building)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).CreateBuildingEntity((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).CreateBuildingEntity((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).CreateChampionEntity((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).CreateDroidEntity((CivilianTypeVO)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).CreateTransportEntity((TransportTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).CreateTroopEntity((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)), (Entity)GCHandledObjects.GCHandleToObject(args[3]), (TroopSpawnMode)(*(int*)(args + 4)), *(sbyte*)(args + 5) != 0, *(sbyte*)(args + 6) != 0));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).CreateWalkerBaseEntity(*(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).DestroyEntity((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).DestroyTransportEntity((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).NewEntity());
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((EntityFactory)GCHandledObjects.GCHandleToObject(instance)).RemoveEntity((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
 		}
 	}
 }

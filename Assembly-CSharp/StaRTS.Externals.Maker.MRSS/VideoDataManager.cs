@@ -5,10 +5,7 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using UnityEngine;
-using WinRTBridge;
+using System.Diagnostics;
 
 namespace StaRTS.Externals.Maker.MRSS
 {
@@ -19,10 +16,6 @@ namespace StaRTS.Externals.Maker.MRSS
 		public delegate void DataListQueryCompleteDelegate(List<string> videoGuidList);
 
 		private delegate void QueryCompleteDelegate(string json, object callback, object data);
-
-		private readonly string[] EmpireFeaturedTags;
-
-		private readonly string[] RebelFeaturedTags;
 
 		private const string SECTION_FEATURED = "featured_videos_section";
 
@@ -44,7 +37,23 @@ namespace StaRTS.Externals.Maker.MRSS
 
 		private const string HN_UI_OFFICIAL = "hn_ui_official";
 
-		public Dictionary<string, string> SourceTypes;
+		private readonly string[] EmpireFeaturedTags = new string[]
+		{
+			"empire"
+		};
+
+		private readonly string[] RebelFeaturedTags = new string[]
+		{
+			"rebel"
+		};
+
+		public Dictionary<string, string> SourceTypes = new Dictionary<string, string>
+		{
+			{
+				"official",
+				"hn_ui_official"
+			}
+		};
 
 		private QueryURLBuilder urlBuilder;
 
@@ -84,22 +93,6 @@ namespace StaRTS.Externals.Maker.MRSS
 
 		public VideoDataManager()
 		{
-			this.EmpireFeaturedTags = new string[]
-			{
-				"empire"
-			};
-			this.RebelFeaturedTags = new string[]
-			{
-				"rebel"
-			};
-			this.SourceTypes = new Dictionary<string, string>
-			{
-				{
-					"official",
-					"hn_ui_official"
-				}
-			};
-			base..ctor();
 			this.VideoDatas = new Dictionary<string, VideoData>();
 			this.Sections = new Dictionary<string, List<string>>();
 			this.Tags = new Dictionary<string, List<string>>();
@@ -128,10 +121,12 @@ namespace StaRTS.Externals.Maker.MRSS
 				{
 					list.Add(current.Guid);
 				}
-				onQueryComplete((list.Count == 0) ? null : list);
-				return;
+				onQueryComplete((list.Count != 0) ? list : null);
 			}
-			Service.Get<Engine>().StartCoroutine(this.Query(this.urlBuilder.UserFeed(), new VideoDataManager.QueryCompleteDelegate(this.ParseFeed), onQueryComplete, null));
+			else
+			{
+				Service.Get<Engine>().StartCoroutine(this.Query(this.urlBuilder.UserFeed(), new VideoDataManager.QueryCompleteDelegate(this.ParseFeed), onQueryComplete, null));
+			}
 		}
 
 		private void ParseFeed(string json, object callback, object data)
@@ -152,12 +147,14 @@ namespace StaRTS.Externals.Maker.MRSS
 		{
 			if (this.IsFeedLoaded)
 			{
-				List<string> videoGuidList = this.Sections.ContainsKey("featured_videos_section") ? this.Sections["featured_videos_section"] : null;
+				List<string> videoGuidList = (!this.Sections.ContainsKey("featured_videos_section")) ? null : this.Sections["featured_videos_section"];
 				onQueryComplete(videoGuidList);
-				return;
 			}
-			this.onFeaturedQueryComplete.Add(onQueryComplete);
-			this.GetFeed(new VideoDataManager.DataListQueryCompleteDelegate(this.OnFeaturedFeedAllLoaded));
+			else
+			{
+				this.onFeaturedQueryComplete.Add(onQueryComplete);
+				this.GetFeed(new VideoDataManager.DataListQueryCompleteDelegate(this.OnFeaturedFeedAllLoaded));
+			}
 		}
 
 		private void OnFeaturedFeedAllLoaded(List<string> videoGuids)
@@ -173,7 +170,7 @@ namespace StaRTS.Externals.Maker.MRSS
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			FactionType faction = currentPlayer.Faction;
-			string[] tags = (faction == FactionType.Empire) ? this.EmpireFeaturedTags : this.RebelFeaturedTags;
+			string[] tags = (faction != FactionType.Empire) ? this.RebelFeaturedTags : this.EmpireFeaturedTags;
 			string[] keywords = new string[0];
 			this.SearchSubCategories(VideoSection.FEATURED, tags, keywords, onQueryComplete);
 		}
@@ -185,14 +182,16 @@ namespace StaRTS.Externals.Maker.MRSS
 			if (list == null)
 			{
 				Service.Get<Engine>().StartCoroutine(this.Query(this.urlBuilder.Tag(tag), new VideoDataManager.QueryCompleteDelegate(this.ParseTag), onQueryComplete, tag));
-				return;
 			}
-			onQueryComplete(list);
+			else
+			{
+				onQueryComplete(list);
+			}
 		}
 
 		private string GetEnvironmentTag()
 		{
-			return string.Empty;
+			return "Production";
 		}
 
 		public void GetAllEnvironmentVideos(VideoDataManager.DataListQueryCompleteDelegate onQueryComplete)
@@ -221,50 +220,49 @@ namespace StaRTS.Externals.Maker.MRSS
 			{
 				this.activeQuery.Active = false;
 			}
-			if (this.activeQuery != null && this.activeQuery.Active)
+			if (this.activeQuery == null || !this.activeQuery.Active)
 			{
-				this.activeQuery.AddCallback(onQueryComplete);
+				this.activeQuery = new QueryData(section, tags, keywords, onQueryComplete);
+				for (int i = 0; i < tags.Length; i++)
+				{
+					List<string> list;
+					this.Tags.TryGetValue(tags[i], out list);
+					if (list == null)
+					{
+						Service.Get<Engine>().StartCoroutine(this.Query(this.urlBuilder.Tag(tags[i]), new VideoDataManager.QueryCompleteDelegate(this.ParseTagWithQuery), this.activeQuery, tags[i]));
+					}
+					else
+					{
+						this.activeQuery.AddResult(new List<string>(list), false);
+						this.activeQuery.FilterResults();
+					}
+				}
+				if (keywords.Length > 0)
+				{
+					string text = string.Join(" ", keywords);
+					List<string> list2;
+					this.Keywords.TryGetValue(text, out list2);
+					if (list2 == null)
+					{
+						Service.Get<Engine>().StartCoroutine(this.Query(this.urlBuilder.Search(text, true, -1, -1), new VideoDataManager.QueryCompleteDelegate(this.ParseKeywords), this.activeQuery, text));
+					}
+					else
+					{
+						this.activeQuery.AddResult(new List<string>(list2), false);
+						this.activeQuery.FilterResults();
+					}
+				}
+				if (section == VideoSection.FEATURED)
+				{
+					this.GetFeaturedAll(new VideoDataManager.DataListQueryCompleteDelegate(this.OnCategoriesQueried));
+				}
+				else if (keywords.Length == 0)
+				{
+					this.GetFeed(new VideoDataManager.DataListQueryCompleteDelegate(this.OnCategoriesQueried));
+				}
 				return;
 			}
-			this.activeQuery = new QueryData(section, tags, keywords, onQueryComplete);
-			for (int i = 0; i < tags.Length; i++)
-			{
-				List<string> list;
-				this.Tags.TryGetValue(tags[i], out list);
-				if (list == null)
-				{
-					Service.Get<Engine>().StartCoroutine(this.Query(this.urlBuilder.Tag(tags[i]), new VideoDataManager.QueryCompleteDelegate(this.ParseTagWithQuery), this.activeQuery, tags[i]));
-				}
-				else
-				{
-					this.activeQuery.AddResult(new List<string>(list), false);
-					this.activeQuery.FilterResults();
-				}
-			}
-			if (keywords.Length != 0)
-			{
-				string text = string.Join(" ", keywords);
-				List<string> list2;
-				this.Keywords.TryGetValue(text, out list2);
-				if (list2 == null)
-				{
-					Service.Get<Engine>().StartCoroutine(this.Query(this.urlBuilder.Search(text, true, -1, -1), new VideoDataManager.QueryCompleteDelegate(this.ParseKeywords), this.activeQuery, text));
-				}
-				else
-				{
-					this.activeQuery.AddResult(new List<string>(list2), false);
-					this.activeQuery.FilterResults();
-				}
-			}
-			if (section == VideoSection.FEATURED)
-			{
-				this.GetFeaturedAll(new VideoDataManager.DataListQueryCompleteDelegate(this.OnCategoriesQueried));
-				return;
-			}
-			if (keywords.Length == 0)
-			{
-				this.GetFeed(new VideoDataManager.DataListQueryCompleteDelegate(this.OnCategoriesQueried));
-			}
+			this.activeQuery.AddCallback(onQueryComplete);
 		}
 
 		private void OnCategoriesQueried(List<string> videoGuidList)
@@ -329,13 +327,15 @@ namespace StaRTS.Externals.Maker.MRSS
 
 		public void GetVideoDetails(string guid, VideoDataManager.DataQueryCompleteDelegate onQueryComplete)
 		{
-			VideoData videoData = this.VideoDatas.ContainsKey(guid) ? this.VideoDatas[guid] : null;
+			VideoData videoData = (!this.VideoDatas.ContainsKey(guid)) ? null : this.VideoDatas[guid];
 			if (videoData != null && videoData.HasDetails)
 			{
 				onQueryComplete(guid);
-				return;
 			}
-			Service.Get<Engine>().StartCoroutine(this.Query(this.urlBuilder.VideoDetails(guid), new VideoDataManager.QueryCompleteDelegate(this.ParseDetails), onQueryComplete, guid));
+			else
+			{
+				Service.Get<Engine>().StartCoroutine(this.Query(this.urlBuilder.VideoDetails(guid), new VideoDataManager.QueryCompleteDelegate(this.ParseDetails), onQueryComplete, guid));
+			}
 		}
 
 		private void ParseDetails(string json, object callback, object data)
@@ -347,9 +347,11 @@ namespace StaRTS.Externals.Maker.MRSS
 			{
 				this.Merge(videoData);
 				dataQueryCompleteDelegate(videoData.Guid);
-				return;
 			}
-			dataQueryCompleteDelegate(null);
+			else
+			{
+				dataQueryCompleteDelegate(null);
+			}
 		}
 
 		private void Merge(VideoData videoData)
@@ -358,32 +360,26 @@ namespace StaRTS.Externals.Maker.MRSS
 			if (this.VideoDatas.TryGetValue(videoData.Guid, out videoData2))
 			{
 				videoData2.Merge(videoData);
-				return;
-			}
-			this.VideoDatas[videoData.Guid] = videoData;
-		}
-
-		[IteratorStateMachine(typeof(VideoDataManager.<Query>d__57))]
-		private IEnumerator Query(string url, VideoDataManager.QueryCompleteDelegate onQueryComplete, object callback, object data)
-		{
-			WWW wWW = new WWW(url);
-			WWWManager.Add(wWW);
-			yield return wWW;
-			if (!WWWManager.Remove(wWW))
-			{
-				yield break;
-			}
-			string error = wWW.error;
-			if (!string.IsNullOrEmpty(error))
-			{
-				onQueryComplete(null, callback, data);
 			}
 			else
 			{
-				onQueryComplete(wWW.text, callback, data);
+				this.VideoDatas[videoData.Guid] = videoData;
 			}
-			wWW.Dispose();
-			yield break;
+		}
+
+		[DebuggerHidden]
+		private IEnumerator Query(string url, VideoDataManager.QueryCompleteDelegate onQueryComplete, object callback, object data)
+		{
+			VideoDataManager.<Query>c__Iterator11 <Query>c__Iterator = new VideoDataManager.<Query>c__Iterator11();
+			<Query>c__Iterator.url = url;
+			<Query>c__Iterator.onQueryComplete = onQueryComplete;
+			<Query>c__Iterator.callback = callback;
+			<Query>c__Iterator.data = data;
+			<Query>c__Iterator.<$>url = url;
+			<Query>c__Iterator.<$>onQueryComplete = onQueryComplete;
+			<Query>c__Iterator.<$>callback = callback;
+			<Query>c__Iterator.<$>data = data;
+			return <Query>c__Iterator;
 		}
 
 		private List<string> LoadVideoDataList(List<VideoData> list)
@@ -404,182 +400,6 @@ namespace StaRTS.Externals.Maker.MRSS
 			{
 				videoData.AddView();
 			}
-		}
-
-		protected internal VideoDataManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).AddView(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).Clear();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).IsFeedLoaded);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).Keywords);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).Sections);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).Tags);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).VideoDatas);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).GetAllEnvironmentVideos((VideoDataManager.DataListQueryCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).GetEnvironmentTag());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).GetFeatured((VideoDataManager.DataListQueryCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).GetFeaturedAll((VideoDataManager.DataListQueryCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).GetFeed((VideoDataManager.DataListQueryCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).GetVideoDetails(Marshal.PtrToStringUni(*(IntPtr*)args), (VideoDataManager.DataQueryCompleteDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).LoadVideoDataList((List<VideoData>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).Merge((VideoData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).OnCategoriesQueried((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).OnFeaturedFeedAllLoaded((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).ParseDetails(Marshal.PtrToStringUni(*(IntPtr*)args), GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).ParseFeed(Marshal.PtrToStringUni(*(IntPtr*)args), GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).ParseKeywords(Marshal.PtrToStringUni(*(IntPtr*)args), GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).ParseTag(Marshal.PtrToStringUni(*(IntPtr*)args), GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).ParseTagWithQuery(Marshal.PtrToStringUni(*(IntPtr*)args), GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).Query(Marshal.PtrToStringUni(*(IntPtr*)args), (VideoDataManager.QueryCompleteDelegate)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]), GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).SearchSubCategories((VideoSection)(*(int*)args), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1]), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[2]), (VideoDataManager.DataListQueryCompleteDelegate)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).SearchSubCategory(Marshal.PtrToStringUni(*(IntPtr*)args), (VideoDataManager.DataListQueryCompleteDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).IsFeedLoaded = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).Keywords = (Dictionary<string, List<string>>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).Sections = (Dictionary<string, List<string>>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).Tags = (Dictionary<string, List<string>>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((VideoDataManager)GCHandledObjects.GCHandleToObject(instance)).VideoDatas = (Dictionary<string, VideoData>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
 		}
 	}
 }

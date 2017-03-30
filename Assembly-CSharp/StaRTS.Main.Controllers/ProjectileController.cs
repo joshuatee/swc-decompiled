@@ -15,7 +15,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -291,7 +290,7 @@ namespace StaRTS.Main.Controllers
 				{
 					Service.Get<EventManager>().SendEvent(EventId.EntityHitByBeam, bullet);
 				}
-				if (bullet.FlashTarget && !healthComponent.IsDead() && (!fromBeam | flag))
+				if (bullet.FlashTarget && !healthComponent.IsDead() && (!fromBeam || flag))
 				{
 					this.entityFlasher.AddFlashing(target, 0.3f, 0f);
 				}
@@ -349,55 +348,18 @@ namespace StaRTS.Main.Controllers
 			if (bullet.ProjectileType.IsMultiStage)
 			{
 				bullet.SetTravelTime(bullet.ProjectileType.Stage1Duration + bullet.ProjectileType.StageTransitionDuration + bullet.ProjectileType.Stage2Duration);
-				return;
 			}
-			int num = bullet.ProjectileType.IsBeam ? ((bullet.ProjectileType.BeamLifeLength - bullet.ProjectileType.BeamInitialZeroes) * 1024) : IntMath.FastDist(bullet.SpawnBoardX, bullet.SpawnBoardZ, targetBoardX, targetBoardZ);
-			uint travelTime = 0u;
-			if (bullet.ProjectileType.MaxSpeed > 0)
+			else
 			{
-				int val = num / bullet.ProjectileType.MaxSpeed;
-				travelTime = (uint)IntMath.Normalize(0, 1024, val, 0, 1000);
+				int num = (!bullet.ProjectileType.IsBeam) ? IntMath.FastDist(bullet.SpawnBoardX, bullet.SpawnBoardZ, targetBoardX, targetBoardZ) : ((bullet.ProjectileType.BeamLifeLength - bullet.ProjectileType.BeamInitialZeroes) * 1024);
+				uint travelTime = 0u;
+				if (bullet.ProjectileType.MaxSpeed > 0)
+				{
+					int val = num / bullet.ProjectileType.MaxSpeed;
+					travelTime = (uint)IntMath.Normalize(0, 1024, val, 0, 1000);
+				}
+				bullet.SetTravelTime(travelTime);
 			}
-			bullet.SetTravelTime(travelTime);
-		}
-
-		protected internal ProjectileController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ProjectileController)GCHandledObjects.GCHandleToObject(instance)).ImpactAreaWithSplash((Bullet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileController)GCHandledObjects.GCHandleToObject(instance)).ImpactBeamTargets((Bullet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ProjectileController)GCHandledObjects.GCHandleToObject(instance)).ImpactProjectile((Bullet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ProjectileController)GCHandledObjects.GCHandleToObject(instance)).ImpactSingleTarget((Bullet)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ProjectileController)GCHandledObjects.GCHandleToObject(instance)).SetProjectileTravelTime((Bullet)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ProjectileController)GCHandledObjects.GCHandleToObject(instance)).SpawnProjectileInternal((Bullet)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
 		}
 	}
 }

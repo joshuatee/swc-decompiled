@@ -14,7 +14,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -127,21 +126,25 @@ namespace StaRTS.Main.Controllers
 			{
 				lootController.UpdateLootOnHealthChange(smartEntity, healthComponent as HealthComponent, delta);
 			}
-			if (!healthComponent.IsDead())
+			if (healthComponent.IsDead())
+			{
+				if (healthComponent != null && healthComponent.ArmorType == ArmorType.Shield && smartEntity.TroopShieldComp != null)
+				{
+					smartEntity.TroopShieldComp.Deactiviate();
+				}
+				else
+				{
+					if (smartEntity.TrapComp != null)
+					{
+						Service.Get<TrapController>().DestroyTrap(smartEntity);
+					}
+					this.KillEntity(smartEntity);
+				}
+			}
+			else
 			{
 				Service.Get<EntityViewManager>().CheckHealthView(smartEntity);
-				return;
 			}
-			if (healthComponent != null && healthComponent.ArmorType == ArmorType.Shield && smartEntity.TroopShieldComp != null)
-			{
-				smartEntity.TroopShieldComp.Deactiviate();
-				return;
-			}
-			if (smartEntity.TrapComp != null)
-			{
-				Service.Get<TrapController>().DestroyTrap(smartEntity);
-			}
-			this.KillEntity(smartEntity);
 		}
 
 		private void ProcBuffOnTarget(Buff buff, SmartEntity target)
@@ -155,7 +158,6 @@ namespace StaRTS.Main.Controllers
 					{
 						HealthComponent healthComp = target.HealthComp;
 						this.ApplyProcMaxHealthChange(healthComp, buff);
-						return;
 					}
 				}
 				else
@@ -171,21 +173,22 @@ namespace StaRTS.Main.Controllers
 					}
 					this.ApplyProcHealthChange(healthComp2, buff);
 				}
-				return;
-			}
-			IHealthComponent arg_4F_0;
-			if (target.TroopShieldComp == null || !target.TroopShieldComp.IsActive())
-			{
-				IHealthComponent healthComponent = target.HealthComp;
-				arg_4F_0 = healthComponent;
 			}
 			else
 			{
-				IHealthComponent healthComponent = target.TroopShieldHealthComp;
-				arg_4F_0 = healthComponent;
+				IHealthComponent arg_6A_0;
+				if (target.TroopShieldComp != null && target.TroopShieldComp.IsActive())
+				{
+					IHealthComponent troopShieldHealthComp = target.TroopShieldHealthComp;
+					arg_6A_0 = troopShieldHealthComp;
+				}
+				else
+				{
+					arg_6A_0 = target.HealthComp;
+				}
+				IHealthComponent healthComp3 = arg_6A_0;
+				this.ApplyProcHealthChange(healthComp3, buff);
 			}
-			IHealthComponent healthComp3 = arg_4F_0;
-			this.ApplyProcHealthChange(healthComp3, buff);
 		}
 
 		private void ApplyProcMaxHealthChange(HealthComponent healthComp, Buff buff)
@@ -215,9 +218,8 @@ namespace StaRTS.Main.Controllers
 			{
 				HealthFragment fragment = new HealthFragment(source, HealthType.Healing, num2);
 				this.ApplyHealthFragment(healthComp, fragment, false);
-				return;
 			}
-			if (num2 < 0)
+			else if (num2 < 0)
 			{
 				HealthFragment fragment2 = new HealthFragment(source, HealthType.Damaging, -num2);
 				this.ApplyHealthFragment(healthComp, fragment2, false);
@@ -263,10 +265,10 @@ namespace StaRTS.Main.Controllers
 					int count = troopTypeVO.DeathAnimations.Count;
 					while (i < count)
 					{
-						string key = troopTypeVO.DeathAnimations[i].get_Key();
+						string key = troopTypeVO.DeathAnimations[i].Key;
 						if (smartEntity.BuffComp.HasBuff(key))
 						{
-							int value = troopTypeVO.DeathAnimations[i].get_Value();
+							int value = troopTypeVO.DeathAnimations[i].Value;
 							stateComp.DeathAnimationID = value;
 							break;
 						}
@@ -384,72 +386,6 @@ namespace StaRTS.Main.Controllers
 			transform.localEulerAngles = gameObject.transform.localEulerAngles + new Vector3(0f, Service.Get<Rand>().ViewRangeFloat(-45f, 45f), 0f);
 			UnityEngine.Object.Destroy(gameObjectViewComponent.MainGameObject);
 			gameObjectViewComponent.MainGameObject = gameObject;
-		}
-
-		protected internal HealthController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthController)GCHandledObjects.GCHandleToObject(instance)).ApplyHealthFragment((IHealthComponent)GCHandledObjects.GCHandleToObject(*args), (HealthFragment)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthController)GCHandledObjects.GCHandleToObject(instance)).ApplyHealthFragment((IHealthComponent)GCHandledObjects.GCHandleToObject(*args), (HealthFragment)GCHandledObjects.GCHandleToObject(args[1]), (List<int>)GCHandledObjects.GCHandleToObject(args[2]), *(int*)(args + 3), *(sbyte*)(args + 4) != 0, *(sbyte*)(args + 5) != 0, (SmartEntity)GCHandledObjects.GCHandleToObject(args[6])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HealthController)GCHandledObjects.GCHandleToObject(instance)).ApplyProcHealthChange((IHealthComponent)GCHandledObjects.GCHandleToObject(*args), (Buff)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((HealthController)GCHandledObjects.GCHandleToObject(instance)).ApplyProcMaxHealthChange((HealthComponent)GCHandledObjects.GCHandleToObject(*args), (Buff)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthController)GCHandledObjects.GCHandleToObject(instance)).GetHealthMultiplier((IHealthComponent)GCHandledObjects.GCHandleToObject(*args), (List<int>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HealthController)GCHandledObjects.GCHandleToObject(instance)).HandleHealthChange((IHealthComponent)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((HealthController)GCHandledObjects.GCHandleToObject(instance)).KillEntity((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((HealthController)GCHandledObjects.GCHandleToObject(instance)).OnFadeOutComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((HealthController)GCHandledObjects.GCHandleToObject(instance)).ProcBuffOnTarget((Buff)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((HealthController)GCHandledObjects.GCHandleToObject(instance)).SwapModelsCallback(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

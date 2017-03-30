@@ -10,13 +10,5 @@ namespace StaRTS.Main.Models.Squads
 		public SquadController.ActionCallback Callback;
 
 		public object Cookie;
-
-		public SqmActionData()
-		{
-		}
-
-		protected internal SqmActionData(UIntPtr dummy)
-		{
-		}
 	}
 }

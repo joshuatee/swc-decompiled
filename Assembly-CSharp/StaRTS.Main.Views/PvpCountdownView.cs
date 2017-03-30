@@ -4,7 +4,6 @@ using StaRTS.Main.Views.UX;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views
 {
@@ -43,7 +42,7 @@ namespace StaRTS.Main.Views
 				this.Destroy();
 				if (this.onCountdownComplete != null)
 				{
-					this.onCountdownComplete.Invoke();
+					this.onCountdownComplete();
 				}
 				return;
 			}
@@ -65,34 +64,6 @@ namespace StaRTS.Main.Views
 		public void Resume()
 		{
 			this.running = true;
-		}
-
-		protected internal PvpCountdownView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PvpCountdownView)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PvpCountdownView)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PvpCountdownView)GCHandledObjects.GCHandleToObject(instance)).Pause();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PvpCountdownView)GCHandledObjects.GCHandleToObject(instance)).Resume();
-			return -1L;
 		}
 	}
 }

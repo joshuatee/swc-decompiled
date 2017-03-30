@@ -10,9 +10,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -93,7 +91,7 @@ namespace StaRTS.FX
 
 		private void OnEffectLoaded(object asset, object cookie)
 		{
-			this.loadedAssets[(int)((CurrencyType)cookie)] = (asset as GameObject);
+			this.loadedAssets[(int)cookie] = (asset as GameObject);
 		}
 
 		private void OnAllEffectsLoaded(object cookie)
@@ -115,17 +113,17 @@ namespace StaRTS.FX
 				{
 					if (buildingType.Type == BuildingType.Resource)
 					{
-						goto IL_69;
+						goto IL_7C;
 					}
 				}
 				else if (!(this.currentSetupType == "setupTypeLooting") || buildingType.IsLootable)
 				{
-					goto IL_69;
+					goto IL_7C;
 				}
-				IL_F4:
+				IL_114:
 				lootNode = lootNode.Next;
 				continue;
-				IL_69:
+				IL_7C:
 				Bounds gameObjectBounds = UnityUtils.GetGameObjectBounds(lootNode.View.MainGameObject);
 				Vector3 position = lootNode.View.MainTransform.position;
 				position.y = gameObjectBounds.center.y;
@@ -135,10 +133,10 @@ namespace StaRTS.FX
 					this.CreateEffect(lootNode.Entity, CurrencyType.Credits, position);
 					this.CreateEffect(lootNode.Entity, CurrencyType.Materials, position);
 					this.CreateEffect(lootNode.Entity, CurrencyType.Contraband, position);
-					goto IL_F4;
+					goto IL_114;
 				}
 				this.CreateEffect(lootNode.Entity, currency, position);
-				goto IL_F4;
+				goto IL_114;
 			}
 		}
 
@@ -146,7 +144,7 @@ namespace StaRTS.FX
 		{
 			if (this.loadedAssets[(int)currencyType] == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Cannot create effect for " + currencyType);
+				Service.Get<Logger>().Error("Cannot create effect for " + currencyType);
 				return;
 			}
 			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.loadedAssets[(int)currencyType]);
@@ -226,7 +224,7 @@ namespace StaRTS.FX
 			}
 			foreach (KeyValuePair<Entity, CurrencyEffectData> current in this.effects)
 			{
-				current.get_Value().Destroy();
+				current.Value.Destroy();
 			}
 			this.effects.Clear();
 		}
@@ -248,7 +246,7 @@ namespace StaRTS.FX
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("{0} is not a valid setup type.", new object[]
+				Service.Get<Logger>().WarnFormat("{0} is not a valid setup type.", new object[]
 				{
 					setupType
 				});
@@ -259,68 +257,6 @@ namespace StaRTS.FX
 		private IAssetVO GetAssetType(string uid)
 		{
 			return this.sdc.Get<EffectsTypeVO>(uid);
-		}
-
-		protected internal CurrencyEffects(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).CreateEffect((Entity)GCHandledObjects.GCHandleToObject(*args), (CurrencyType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).GetAssetType(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).GetEffectAssetTypes(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).InitializeEffects(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).OnAllEffectsLoaded(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).OnEffectLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).PlaceEffects();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).PlayEffect((Entity)GCHandledObjects.GCHandleToObject(*args), (CurrencyType)(*(int*)(args + 1)), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((CurrencyEffects)GCHandledObjects.GCHandleToObject(instance)).TransferEffects((Entity)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

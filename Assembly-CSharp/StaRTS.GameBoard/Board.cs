@@ -1,4 +1,3 @@
-using Net.RichardLord.Ash.Core;
 using StaRTS.GameBoard.Components;
 using StaRTS.Main.Models.Entities.Components;
 using StaRTS.Main.Models.Entities.Shared;
@@ -7,7 +6,6 @@ using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.GameBoard
 {
@@ -71,6 +69,30 @@ namespace StaRTS.GameBoard
 			{
 				return this.children;
 			}
+		}
+
+		public Board(int boardSize, int flaggableBoardSize, uint defaultCellFlags)
+		{
+			this.boardSize = boardSize;
+			this.flaggableMinAbs = (boardSize - flaggableBoardSize) / 2;
+			this.flaggableMaxAbs = boardSize - this.flaggableMinAbs;
+			this.centerOffset = boardSize / 2;
+			this.Cells = new BoardCell<T>[boardSize, boardSize];
+			for (int i = 0; i < boardSize; i++)
+			{
+				for (int j = 0; j < boardSize; j++)
+				{
+					this.Cells[i, j] = new BoardCell<T>(this, this.AbsToRel(i), this.AbsToRel(j), null, defaultCellFlags);
+				}
+			}
+			this.upperRightX = (this.upperRightZ = (this.upperRightXNoWall = (this.upperRightZNoWall = boardSize - 1)));
+			this.Cells[this.upperRightX, this.upperRightZ].Clearance = 1;
+			this.Cells[this.upperRightXNoWall, this.upperRightZNoWall].ClearanceNoWall = 1;
+			this.clearanceMapDirty = true;
+			this.clearanceMapNoWallDirty = true;
+			this.RefreshClearanceMap();
+			this.RefreshClearanceMapNoWall();
+			this.children = new LinkedList<BoardItem<T>>();
 		}
 
 		public int GetMaxSquaredDistance()
@@ -182,30 +204,6 @@ namespace StaRTS.GameBoard
 				}
 			}
 			this.clearanceMapNoWallDirty = false;
-		}
-
-		public Board(int boardSize, int flaggableBoardSize, uint defaultCellFlags)
-		{
-			this.boardSize = boardSize;
-			this.flaggableMinAbs = (boardSize - flaggableBoardSize) / 2;
-			this.flaggableMaxAbs = boardSize - this.flaggableMinAbs;
-			this.centerOffset = boardSize / 2;
-			this.Cells = new BoardCell<T>[boardSize, boardSize];
-			for (int i = 0; i < boardSize; i++)
-			{
-				for (int j = 0; j < boardSize; j++)
-				{
-					this.Cells[i, j] = new BoardCell<T>(this, this.AbsToRel(i), this.AbsToRel(j), null, defaultCellFlags);
-				}
-			}
-			this.upperRightX = (this.upperRightZ = (this.upperRightXNoWall = (this.upperRightZNoWall = boardSize - 1)));
-			this.Cells[this.upperRightX, this.upperRightZ].Clearance = 1;
-			this.Cells[this.upperRightXNoWall, this.upperRightZNoWall].ClearanceNoWall = 1;
-			this.clearanceMapDirty = true;
-			this.clearanceMapNoWallDirty = true;
-			this.RefreshClearanceMap();
-			this.RefreshClearanceMapNoWall();
-			this.children = new LinkedList<BoardItem<T>>();
 		}
 
 		public void MakeCoordinatesAbsolute(ref int x, ref int z)
@@ -435,7 +433,7 @@ namespace StaRTS.GameBoard
 				{
 					BoardCell<T> cellAt = this.GetCellAt(i, j);
 					bool flag = cellAt.AddChild(child, x, z, true);
-					if (boardCell == null & flag)
+					if (boardCell == null && flag)
 					{
 						boardCell = cellAt;
 					}
@@ -488,11 +486,11 @@ namespace StaRTS.GameBoard
 			}
 			if (child.LinkedListNode == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Error removing board child - LinkedListNode is null.");
+				Service.Get<Logger>().Error("Error removing board child - LinkedListNode is null.");
 			}
 			else if (child.LinkedListNode.List != this.children)
 			{
-				Service.Get<StaRTSLogger>().Error("Error removing board child - LinkedList does not match.");
+				Service.Get<Logger>().Error("Error removing board child - LinkedList does not match.");
 			}
 			else
 			{
@@ -802,102 +800,6 @@ namespace StaRTS.GameBoard
 		private void GetCellsInSquareCallback(BoardCell<T> cell, List<BoardCell<T>> cookie)
 		{
 			cookie.Add(cell);
-		}
-
-		protected internal Board(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).AbsToRel(*(int*)args));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).AddConstraintRegion((ConstraintRegion)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).AddFlagStamp((FlagStamp)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).ClampToBoard(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).ClampToDeployableBoard(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).ClampToFlaggableArea(*(int*)args));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).DirtyClearanceMap(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).DirtyClearanceMapNoWall(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).DoesBoardCellHasBlockerAround(*(int*)args, *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).BoardSize);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).CenterOffset);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).GetMaxSquaredDistance());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).IsCellOutsideFlaggableArea(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).RefreshClearanceMap();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).RefreshClearanceMapNoWall();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).RelToAbs(*(int*)args));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((Board<Entity>)GCHandledObjects.GCHandleToObject(instance)).RemoveFlagStamp((FlagStamp)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -8,8 +8,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.VictoryConditions
 {
@@ -39,7 +37,7 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 
 		public OwnUnitCondition(ConditionVO vo, IConditionParent parent, ConditionMatchType matchType, TroopType troopType) : base(vo, parent)
 		{
-			this.threshold = Convert.ToInt32(this.prepareArgs[0], CultureInfo.InvariantCulture);
+			this.threshold = Convert.ToInt32(this.prepareArgs[0]);
 			this.unitId = this.prepareArgs[1];
 			this.matchType = matchType;
 			this.troopType = troopType;
@@ -47,14 +45,15 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 			if (matchType == ConditionMatchType.Uid)
 			{
 				this.level = Service.Get<IDataController>().Get<TroopTypeVO>(this.unitId).Lvl;
-				return;
 			}
-			if (!this.any && this.prepareArgs.Length > 2)
+			else if (!this.any && this.prepareArgs.Length > 2)
 			{
-				this.level = Convert.ToInt32(this.prepareArgs[2], CultureInfo.InvariantCulture);
-				return;
+				this.level = Convert.ToInt32(this.prepareArgs[2]);
 			}
-			this.level = 0;
+			else
+			{
+				this.level = 0;
+			}
 		}
 
 		public override void Start()
@@ -62,13 +61,15 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 			if (this.IsConditionSatisfied())
 			{
 				this.parent.ChildSatisfied(this);
-				return;
 			}
-			this.events.RegisterObserver(this, EventId.InventoryTroopUpdated, EventPriority.Default);
-			this.events.RegisterObserver(this, EventId.InventorySpecialAttackUpdated, EventPriority.Default);
-			this.events.RegisterObserver(this, EventId.InventoryHeroUpdated, EventPriority.Default);
-			this.events.RegisterObserver(this, EventId.InventoryChampionUpdated, EventPriority.Default);
-			this.observingEvents = true;
+			else
+			{
+				this.events.RegisterObserver(this, EventId.InventoryTroopUpdated, EventPriority.Default);
+				this.events.RegisterObserver(this, EventId.InventorySpecialAttackUpdated, EventPriority.Default);
+				this.events.RegisterObserver(this, EventId.InventoryHeroUpdated, EventPriority.Default);
+				this.events.RegisterObserver(this, EventId.InventoryChampionUpdated, EventPriority.Default);
+				this.observingEvents = true;
+			}
 		}
 
 		public override void Destroy()
@@ -142,12 +143,14 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 					}
 					i++;
 				}
-				return;
 			}
-			Dictionary<string, InventoryEntry> internalStorage = inventoryStorage.GetInternalStorage();
-			foreach (InventoryEntry current3 in internalStorage.Values)
+			else
 			{
-				current += current3.Amount;
+				Dictionary<string, InventoryEntry> internalStorage = inventoryStorage.GetInternalStorage();
+				foreach (InventoryEntry current3 in internalStorage.Values)
+				{
+					current += current3.Amount;
+				}
 			}
 		}
 
@@ -166,32 +169,6 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 				this.parent.ChildSatisfied(this);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal OwnUnitCondition(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((OwnUnitCondition)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((OwnUnitCondition)GCHandledObjects.GCHandleToObject(instance)).IsConditionSatisfied());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((OwnUnitCondition)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((OwnUnitCondition)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

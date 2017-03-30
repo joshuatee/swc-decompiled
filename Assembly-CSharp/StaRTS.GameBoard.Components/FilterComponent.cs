@@ -1,5 +1,4 @@
 using System;
-using WinRTBridge;
 
 namespace StaRTS.GameBoard.Components
 {
@@ -69,49 +68,6 @@ namespace StaRTS.GameBoard.Components
 			}
 			this.categoryBits = otherFilter.categoryBits;
 			this.maskBits = otherFilter.maskBits;
-		}
-
-		protected internal FilterComponent(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FilterComponent)GCHandledObjects.GCHandleToObject(instance)).CollidesWith((FilterComponent)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FilterComponent)GCHandledObjects.GCHandleToObject(instance)).Category);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FilterComponent)GCHandledObjects.GCHandleToObject(instance)).Mask);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((FilterComponent)GCHandledObjects.GCHandleToObject(instance)).Merge((FilterComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((FilterComponent)GCHandledObjects.GCHandleToObject(instance)).Set((FilterComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((FilterComponent)GCHandledObjects.GCHandleToObject(instance)).Category = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((FilterComponent)GCHandledObjects.GCHandleToObject(instance)).Mask = *(int*)args;
-			return -1L;
 		}
 	}
 }

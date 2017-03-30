@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Construct
 		public BuildingConstructCommand(BuildingConstructRequest request) : base("player.building.construct", request, new DefaultResponse())
 		{
 		}
-
-		protected internal BuildingConstructCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

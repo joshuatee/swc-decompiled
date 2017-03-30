@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Tournament
 		public GetTournamentRankCommand(TournamentRankRequest request) : base("player.leaderboard.tournament.getRank", request, new TournamentRankResponse())
 		{
 		}
-
-		protected internal GetTournamentRankCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

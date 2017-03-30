@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Campaign
 		public CampaignStoreBuyCommand(CampaignStoreBuyRequest request) : base("player.campaignStore.buy", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CampaignStoreBuyCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

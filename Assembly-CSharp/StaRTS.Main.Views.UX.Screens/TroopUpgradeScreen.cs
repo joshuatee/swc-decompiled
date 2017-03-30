@@ -19,9 +19,7 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -309,7 +307,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void SetResearchMode(TroopUpgradeScreenMode researchMode)
 		{
 			this.researchMode = researchMode;
-			base.GetElement<UXLabel>("LabelSelectTroop").Text = ((researchMode == TroopUpgradeScreenMode.Troops) ? this.lang.Get("UPGRADE_UPGRADE_TROOPS", new object[0]) : this.lang.Get("UPGRADE_EQUIPMENT", new object[0]));
+			base.GetElement<UXLabel>("LabelSelectTroop").Text = ((researchMode != TroopUpgradeScreenMode.Troops) ? this.lang.Get("UPGRADE_EQUIPMENT", new object[0]) : this.lang.Get("UPGRADE_UPGRADE_TROOPS", new object[0]));
 			this.RefreshFilterTabs();
 			this.RefreshGrids();
 		}
@@ -356,16 +354,17 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.troopGrid.Clear();
 			Service.Get<Engine>().ForceGarbageCollection(null);
 			TroopUpgradeScreenMode troopUpgradeScreenMode = this.researchMode;
-			if (troopUpgradeScreenMode == TroopUpgradeScreenMode.Troops)
+			if (troopUpgradeScreenMode != TroopUpgradeScreenMode.Troops)
+			{
+				if (troopUpgradeScreenMode == TroopUpgradeScreenMode.Equipment)
+				{
+					this.PopulateEquipmentGrid();
+				}
+			}
+			else
 			{
 				this.PopulateTroopGrid();
-				return;
 			}
-			if (troopUpgradeScreenMode != TroopUpgradeScreenMode.Equipment)
-			{
-				return;
-			}
-			this.PopulateEquipmentGrid();
 		}
 
 		private void DisableTimers()
@@ -386,18 +385,19 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.troopTabLabel.TextColor = UXUtils.COLOR_NAV_TAB_DISABLED;
 			this.equipmentTabLabel.TextColor = UXUtils.COLOR_NAV_TAB_DISABLED;
 			TroopUpgradeScreenMode troopUpgradeScreenMode = this.researchMode;
-			if (troopUpgradeScreenMode == TroopUpgradeScreenMode.Troops)
+			if (troopUpgradeScreenMode != TroopUpgradeScreenMode.Troops)
+			{
+				if (troopUpgradeScreenMode == TroopUpgradeScreenMode.Equipment)
+				{
+					this.equipmentTabLabel.TextColor = UXUtils.COLOR_NAV_TAB_ENABLED;
+					this.SetFilterToEquipment();
+				}
+			}
+			else
 			{
 				this.troopTabLabel.TextColor = UXUtils.COLOR_NAV_TAB_ENABLED;
 				this.SetFilterToTroops();
-				return;
 			}
-			if (troopUpgradeScreenMode != TroopUpgradeScreenMode.Equipment)
-			{
-				return;
-			}
-			this.equipmentTabLabel.TextColor = UXUtils.COLOR_NAV_TAB_ENABLED;
-			this.SetFilterToEquipment();
 		}
 
 		private void SetFilterToTroops()
@@ -428,7 +428,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			Dictionary<int, string> dictionary2 = new Dictionary<int, string>();
 			foreach (KeyValuePair<TroopTab, string> current in dictionary)
 			{
-				dictionary2[(int)current.get_Key()] = current.get_Value();
+				dictionary2[(int)current.Key] = current.Value;
 			}
 			this.filterHelper.CreateTabs(this, new Action(this.RefreshGrids), dictionary2, 0);
 		}
@@ -440,11 +440,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				while (enumerator.MoveNext())
 				{
-					EquipmentTab key = (EquipmentTab)enumerator.get_Current();
-					string text = key.ToString();
+					EquipmentTab equipmentTab = (EquipmentTab)((int)enumerator.Current);
+					string text = equipmentTab.ToString();
 					StringBuilder stringBuilder = new StringBuilder("EQUIPMENT_TAB_");
 					stringBuilder.Append(text.ToUpper());
-					dictionary.Add((int)key, this.lang.Get(stringBuilder.ToString(), new object[0]));
+					dictionary.Add((int)equipmentTab, this.lang.Get(stringBuilder.ToString(), new object[0]));
 				}
 			}
 			this.filterHelper = new EquipmentTabHelper();
@@ -464,15 +464,21 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					troopTypeVO = this.troopUpgradeCatalog.GetMaxLevel(current);
 				}
-				if ((troopTypeVO.PlayerFacing || (byLevel != null && byLevel.PlayerFacing)) && troopTypeVO.Type != TroopType.Champion && troopTypeVO.Faction == this.buildingInfo.Faction)
+				if (troopTypeVO.PlayerFacing || (byLevel != null && byLevel.PlayerFacing))
 				{
-					TroopUpgradeScreen.DeployableUpgradeData deployableUpgradeData = new TroopUpgradeScreen.DeployableUpgradeData();
-					deployableUpgradeData.UpgradeType = troopTypeVO;
-					deployableUpgradeData.CurrentType = byLevel;
-					this.eligibleDeployables.Add(deployableUpgradeData);
-					if (!this.eligibleTroopTypes.Contains(troopTypeVO.Type))
+					if (troopTypeVO.Type != TroopType.Champion)
 					{
-						this.eligibleTroopTypes.Add(troopTypeVO.Type);
+						if (troopTypeVO.Faction == this.buildingInfo.Faction)
+						{
+							TroopUpgradeScreen.DeployableUpgradeData deployableUpgradeData = new TroopUpgradeScreen.DeployableUpgradeData();
+							deployableUpgradeData.UpgradeType = troopTypeVO;
+							deployableUpgradeData.CurrentType = byLevel;
+							this.eligibleDeployables.Add(deployableUpgradeData);
+							if (!this.eligibleTroopTypes.Contains(troopTypeVO.Type))
+							{
+								this.eligibleTroopTypes.Add(troopTypeVO.Type);
+							}
+						}
 					}
 				}
 			}
@@ -485,13 +491,16 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					specialAttackTypeVO = this.starshipUpgradeCatalog.GetMaxLevel(current2);
 				}
-				if ((specialAttackTypeVO.PlayerFacing || (byLevel2 != null && byLevel2.PlayerFacing)) && specialAttackTypeVO.Faction == this.buildingInfo.Faction)
+				if (specialAttackTypeVO.PlayerFacing || (byLevel2 != null && byLevel2.PlayerFacing))
 				{
-					TroopUpgradeScreen.DeployableUpgradeData deployableUpgradeData2 = new TroopUpgradeScreen.DeployableUpgradeData();
-					deployableUpgradeData2.UpgradeType = specialAttackTypeVO;
-					deployableUpgradeData2.CurrentType = byLevel2;
-					this.eligibleDeployables.Add(deployableUpgradeData2);
-					this.hasStarships = true;
+					if (specialAttackTypeVO.Faction == this.buildingInfo.Faction)
+					{
+						TroopUpgradeScreen.DeployableUpgradeData deployableUpgradeData2 = new TroopUpgradeScreen.DeployableUpgradeData();
+						deployableUpgradeData2.UpgradeType = specialAttackTypeVO;
+						deployableUpgradeData2.CurrentType = byLevel2;
+						this.eligibleDeployables.Add(deployableUpgradeData2);
+						this.hasStarships = true;
+					}
 				}
 			}
 		}
@@ -500,7 +509,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			List<TroopUpgradeScreen.DeployableUpgradeData> list = new List<TroopUpgradeScreen.DeployableUpgradeData>();
 			this.contractHidden = (this.activeContract != null);
-			string text = "";
+			string a = string.Empty;
 			int i = 0;
 			int count = this.eligibleDeployables.Count;
 			while (i < count)
@@ -511,17 +520,15 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					if (currentTab == TroopTab.All || currentTab == TroopTab.Starship)
 					{
-						if (!this.contractHidden)
+						if (this.contractHidden)
 						{
-							goto IL_115;
+							SpecialAttackTypeVO nextLevel = Service.Get<StarshipUpgradeCatalog>().GetNextLevel((SpecialAttackTypeVO)deployableUpgradeData.CurrentType);
+							if (nextLevel != null && nextLevel.PlayerFacing)
+							{
+								a = nextLevel.Uid;
+							}
 						}
-						SpecialAttackTypeVO nextLevel = Service.Get<StarshipUpgradeCatalog>().GetNextLevel((SpecialAttackTypeVO)deployableUpgradeData.CurrentType);
-						if (nextLevel != null && nextLevel.PlayerFacing)
-						{
-							text = nextLevel.Uid;
-							goto IL_115;
-						}
-						goto IL_115;
+						goto IL_13F;
 					}
 				}
 				else if (currentTab != TroopTab.Starship)
@@ -533,36 +540,36 @@ namespace StaRTS.Main.Views.UX.Screens
 						TroopTab troopTab = troopTabHelper.ConvertTroopTypeToTab(type);
 						if (currentTab != troopTab)
 						{
-							goto IL_13F;
+							goto IL_16F;
 						}
 					}
 					if (!this.contractHidden)
 					{
-						goto IL_115;
+						goto IL_13F;
 					}
 					TroopTypeVO nextLevel2 = Service.Get<TroopUpgradeCatalog>().GetNextLevel((TroopTypeVO)deployableUpgradeData.CurrentType);
 					if (nextLevel2 != null && nextLevel2.PlayerFacing)
 					{
-						text = nextLevel2.Uid;
-						goto IL_115;
+						a = nextLevel2.Uid;
+						goto IL_13F;
 					}
-					goto IL_115;
+					goto IL_13F;
 				}
-				IL_13F:
+				IL_16F:
 				i++;
 				continue;
-				IL_115:
-				if (this.contractHidden && text == this.activeContract.ProductUid)
+				IL_13F:
+				if (this.contractHidden && a == this.activeContract.ProductUid)
 				{
 					this.contractHidden = false;
 				}
 				list.Add(deployableUpgradeData);
-				goto IL_13F;
+				goto IL_16F;
 			}
 			list.Sort(new Comparison<TroopUpgradeScreen.DeployableUpgradeData>(this.CompareUpgradeDataBySortOrder));
 			int num = 2;
 			int count2 = list.Count;
-			int num2 = (count2 % num == 0) ? (count2 / num) : (count2 / num + 1);
+			int num2 = (count2 % num != 0) ? (count2 / num + 1) : (count2 / num);
 			this.troopGrid.MaxItemsPerLine = num2;
 			if (count2 % num == 1)
 			{
@@ -594,9 +601,12 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					equipmentVO = catalog.GetMaxLevel(current);
 				}
-				if (equipmentVO.PlayerFacing && equipmentVO.Faction == player.Faction)
+				if (equipmentVO.PlayerFacing)
 				{
-					this.equipmentToDisplay.Add(equipmentVO);
+					if (equipmentVO.Faction == player.Faction)
+					{
+						this.equipmentToDisplay.Add(equipmentVO);
+					}
 				}
 			}
 			this.equipmentToDisplay.Sort(new Comparison<EquipmentVO>(this.CompareBySortOrder));
@@ -739,18 +749,14 @@ namespace StaRTS.Main.Views.UX.Screens
 			int upgradeShards = equipment.UpgradeShards;
 			if (upgradeShards == 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
+				Service.Get<Logger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
 				{
 					equipment.Uid
 				});
 				return 0f;
 			}
 			float num = (float)currentShards / (float)upgradeShards;
-			if (num <= 1f)
-			{
-				return num;
-			}
-			return 1f;
+			return (num <= 1f) ? num : 1f;
 		}
 
 		private void OnEquipmentButtonClicked(UXButton button)
@@ -780,7 +786,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.timerActive = true;
 					Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
-					return;
 				}
 			}
 			else
@@ -852,7 +857,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (!subElement2.Visible)
 				{
 					subElement2.Visible = true;
-					return;
 				}
 			}
 			else
@@ -882,7 +886,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			int num = a.Order - b.Order;
 			if (num == 0)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Upgradable {0} matches order ({1}) of {2}", new object[]
+				Service.Get<Logger>().WarnFormat("Upgradable {0} matches order ({1}) of {2}", new object[]
 				{
 					a.Uid,
 					a.Order,
@@ -926,7 +930,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				flag2 = Service.Get<UnlockController>().CanDeployableBeUpgraded(currentTroop, nextTroop, out text, out text2);
 			}
 			this.troopGrid.GetSubElement<UXSprite>(uid, "SpriteDim").Visible = !flag2;
-			this.troopGrid.GetSubElement<UXSprite>(uid, "SpriteIconLockedTroop").Visible = !flag2;
+			this.troopGrid.GetSubElement<UXSprite>(uid, "SpriteIconLockedTroop").Visible = (!flag2 && !flag);
 			UXSprite subElement4 = this.troopGrid.GetSubElement<UXSprite>(uid, "SpriteFragmentTroop");
 			bool flag3 = !string.IsNullOrEmpty(currentTroop.UpgradeShardUid);
 			if (flag3)
@@ -993,7 +997,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (isMaxLevel)
 			{
 				subElement3.Text = string.Empty;
-				subElement.Value = 1f;
+				subElement.Value = 0f;
 				this.troopGrid.GetSubElement<UXElement>(itemUid, "IconUpgradeQuality").Visible = false;
 				return;
 			}
@@ -1006,22 +1010,24 @@ namespace StaRTS.Main.Views.UX.Screens
 			});
 			if (upgradeShardCount == 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
+				Service.Get<Logger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
 				{
 					troopType.Uid
 				});
 				return;
 			}
 			float num = (float)shardAmount / (float)upgradeShardCount;
-			subElement.Value = ((num > 1f) ? 1f : num);
+			subElement.Value = ((num <= 1f) ? num : 1f);
 			UXElement subElement4 = this.troopGrid.GetSubElement<UXElement>(itemUid, "IconUpgradeQuality");
 			subElement4.Visible = (shardAmount >= upgradeShardCount);
 			if (subElement4.Visible)
 			{
 				subElement2.Color = UXUtils.COLOR_SHARD_COMPLETE;
-				return;
 			}
-			subElement2.Color = UXUtils.COLOR_SHARD_INPROGRESS;
+			else
+			{
+				subElement2.Color = UXUtils.COLOR_SHARD_INPROGRESS;
+			}
 		}
 
 		private void OnTroopCardClicked(UXButton button)
@@ -1096,207 +1102,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.eligibleTroopTypes = null;
 			this.activeContract = null;
 			base.OnDestroyElement();
-		}
-
-		protected internal TroopUpgradeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).AddSpacerElement(*(int*)args, (UXGrid)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).AddUpgradeableItemToTroopGrid((IDeployableVO)GCHandledObjects.GCHandleToObject(*args), (IDeployableVO)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).CalculateProgress(*(int*)args, (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).CheckActiveContract();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).CompareBySortOrder((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args), (IUpgradeableVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).CompareTagBySortOrder((TroopUpgradeTag)GCHandledObjects.GCHandleToObject(*args), (TroopUpgradeTag)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).CompareUpgradeDataBySortOrder((TroopUpgradeScreen.DeployableUpgradeData)GCHandledObjects.GCHandleToObject(*args), (TroopUpgradeScreen.DeployableUpgradeData)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).DisableTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).FetchEquipmentCardGridItem((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1]), (EquipmentUpgradeCatalog)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).FindAllUpgradableEquipment((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentUpgradeCatalog)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).FinishEquipmentGridSetup((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).FinishTroopGridSetup((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).GetPrevLevel((TroopUpgradeTag)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnEquipmentButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnEquipmentTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnEquipmentTabDimClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnTroopCardClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnTroopsTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).PopulateEquipmentGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).PopulateTroopGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshDeployableData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshFilterTabs();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshGrids();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).SetFilterToEquipment();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).SetFilterToTroops();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).SetResearchMode((TroopUpgradeScreenMode)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).SetupPerksButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTroopShardProgressBar(Marshal.PtrToStringUni(*(IntPtr*)args), (IDeployableVO)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((TroopUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateContractTimers();
-			return -1L;
 		}
 	}
 }

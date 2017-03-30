@@ -11,7 +11,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.CombatTriggers
 {
@@ -114,7 +113,7 @@ namespace StaRTS.Main.Controllers.CombatTriggers
 				return;
 			}
 			IntPosition position = this.DetermineSpawnPosition();
-			TroopSpawnData troopSpawnData = new TroopSpawnData(this.Troop, position, this.Leashed ? TroopSpawnMode.LeashedToBuilding : TroopSpawnMode.Unleashed, this.TroopCount);
+			TroopSpawnData troopSpawnData = new TroopSpawnData(this.Troop, position, (!this.Leashed) ? TroopSpawnMode.Unleashed : TroopSpawnMode.LeashedToBuilding, this.TroopCount);
 			Service.Get<SimTimerManager>().CreateSimTimer(this.InitialDelay, false, new TimerDelegate(this.OnSpawnTimer), troopSpawnData);
 		}
 
@@ -165,9 +164,7 @@ namespace StaRTS.Main.Controllers.CombatTriggers
 			{
 				return;
 			}
-			int num = troopSpawnData.Amount - 1;
-			troopSpawnData.Amount = num;
-			if (num > 0)
+			if (--troopSpawnData.Amount > 0)
 			{
 				Service.Get<SimTimerManager>().CreateSimTimer(this.Stagger, false, new TimerDelegate(this.OnSpawnTimer), troopSpawnData);
 			}
@@ -186,109 +183,6 @@ namespace StaRTS.Main.Controllers.CombatTriggers
 		public bool IsAlreadyTriggered()
 		{
 			return this.triggered;
-		}
-
-		protected internal DefendedBuildingCombatTrigger(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).ActivateChampion();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).DetermineSpawnPosition());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).Leashed);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).Owner);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).Troop);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).TroopCount);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).TroopsHurt);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).TroopsHurtable);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).Type);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).IsAlreadyTriggered());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).Leashed = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).Owner = GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).Troop = (TroopTypeVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).TroopCount = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).TroopsHurt = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).TroopsHurtable = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).Type = (CombatTriggerType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((DefendedBuildingCombatTrigger)GCHandledObjects.GCHandleToObject(instance)).Trigger((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

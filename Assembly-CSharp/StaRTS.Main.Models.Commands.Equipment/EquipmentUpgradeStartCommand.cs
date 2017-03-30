@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Equipment
 		public EquipmentUpgradeStartCommand(EquipmentUpgradeStartRequest request) : base("player.equipment.upgrade.start", request, new DefaultResponse())
 		{
 		}
-
-		protected internal EquipmentUpgradeStartCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -1,5 +1,4 @@
 using System;
-using WinRTBridge;
 
 namespace Net.RichardLord.Ash.Core
 {
@@ -22,20 +21,6 @@ namespace Net.RichardLord.Ash.Core
 		public void AccumulateDT(uint dt)
 		{
 			this.DT += dt;
-		}
-
-		protected SimSystemBase()
-		{
-		}
-
-		protected internal SimSystemBase(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SimSystemBase)GCHandledObjects.GCHandleToObject(instance)).Update();
-			return -1L;
 		}
 	}
 }

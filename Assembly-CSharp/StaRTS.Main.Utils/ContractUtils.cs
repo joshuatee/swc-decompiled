@@ -13,9 +13,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -211,7 +209,7 @@ namespace StaRTS.Main.Utils
 			case DeliveryType.ClearClearable:
 				return ContractType.Clear;
 			default:
-				Service.Get<StaRTSLogger>().ErrorFormat("Unhandled case for Contract Type mapping: {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Unhandled case for Contract Type mapping: {0}", new object[]
 				{
 					deliveryType
 				});
@@ -315,7 +313,7 @@ namespace StaRTS.Main.Utils
 				credits = troopTypeVO.Credits;
 				materials = troopTypeVO.Materials;
 				contraband = troopTypeVO.Contraband;
-				goto IL_1A2;
+				goto IL_1B5;
 			}
 			case DeliveryType.Starship:
 			{
@@ -323,7 +321,7 @@ namespace StaRTS.Main.Utils
 				credits = specialAttackTypeVO.Credits;
 				materials = specialAttackTypeVO.Materials;
 				contraband = specialAttackTypeVO.Contraband;
-				goto IL_1A2;
+				goto IL_1B5;
 			}
 			case DeliveryType.UpgradeBuilding:
 			{
@@ -331,7 +329,7 @@ namespace StaRTS.Main.Utils
 				credits = buildingTypeVO.UpgradeCredits;
 				materials = buildingTypeVO.UpgradeMaterials;
 				contraband = buildingTypeVO.UpgradeContraband;
-				goto IL_1A2;
+				goto IL_1B5;
 			}
 			case DeliveryType.SwapBuilding:
 			{
@@ -339,7 +337,7 @@ namespace StaRTS.Main.Utils
 				credits = buildingTypeVO2.SwapCredits;
 				materials = buildingTypeVO2.SwapMaterials;
 				contraband = buildingTypeVO2.SwapContraband;
-				goto IL_1A2;
+				goto IL_1B5;
 			}
 			case DeliveryType.UpgradeTroop:
 			{
@@ -347,7 +345,7 @@ namespace StaRTS.Main.Utils
 				credits = troopTypeVO2.UpgradeCredits;
 				materials = troopTypeVO2.UpgradeMaterials;
 				contraband = troopTypeVO2.UpgradeContraband;
-				goto IL_1A2;
+				goto IL_1B5;
 			}
 			case DeliveryType.UpgradeStarship:
 			{
@@ -355,21 +353,21 @@ namespace StaRTS.Main.Utils
 				credits = specialAttackTypeVO2.UpgradeCredits;
 				materials = specialAttackTypeVO2.UpgradeMaterials;
 				contraband = specialAttackTypeVO2.UpgradeContraband;
-				goto IL_1A2;
+				goto IL_1B5;
 			}
 			case DeliveryType.UpgradeEquipment:
-				goto IL_1A2;
+				goto IL_1B5;
 			case DeliveryType.ClearClearable:
 			{
 				BuildingTypeVO buildingTypeVO3 = Service.Get<IDataController>().Get<BuildingTypeVO>(productUid);
 				credits = buildingTypeVO3.Credits;
 				materials = buildingTypeVO3.Materials;
 				contraband = buildingTypeVO3.Contraband;
-				goto IL_1A2;
+				goto IL_1B5;
 			}
 			}
-			Service.Get<StaRTSLogger>().Error("DeliveryType has no cost: " + deliveryType);
-			IL_1A2:
+			Service.Get<Logger>().Error("DeliveryType has no cost: " + deliveryType);
+			IL_1B5:
 			ContractType contractType = ContractUtils.GetContractType(deliveryType);
 			if (ContractUtils.IsTroopType(contractType) && buildingVO != null && contractPerkIds != null && contractPerkIds.Count > 0)
 			{
@@ -383,12 +381,12 @@ namespace StaRTS.Main.Utils
 		{
 			if (selectedBuilding == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsBuildingClearing: SelectedBuilding = null");
+				Service.Get<Logger>().Error("ContractUtils.IsBuildingClearing: SelectedBuilding = null");
 				return false;
 			}
 			if (selectedBuilding.Get<BuildingComponent>() == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsBuildingClearing: selectedBuilding.BuildingComponent = null");
+				Service.Get<Logger>().Error("ContractUtils.IsBuildingClearing: selectedBuilding.BuildingComponent = null");
 				return false;
 			}
 			BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
@@ -400,12 +398,12 @@ namespace StaRTS.Main.Utils
 		{
 			if (selectedBuilding == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsBuildingConstructing: SelectedBuilding = null");
+				Service.Get<Logger>().Error("ContractUtils.IsBuildingConstructing: SelectedBuilding = null");
 				return false;
 			}
 			if (selectedBuilding.Get<BuildingComponent>() == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsBuildingConstructing: selectedBuilding.BuildingComponent = null");
+				Service.Get<Logger>().Error("ContractUtils.IsBuildingConstructing: selectedBuilding.BuildingComponent = null");
 				return false;
 			}
 			BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
@@ -422,12 +420,12 @@ namespace StaRTS.Main.Utils
 		{
 			if (selectedBuilding == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsChampionRepairing: SelectedBuilding = null");
+				Service.Get<Logger>().Error("ContractUtils.IsChampionRepairing: SelectedBuilding = null");
 				return false;
 			}
 			if (selectedBuilding.Get<BuildingComponent>() == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsChampionRepairing: selectedBuilding.BuildingComponent = null");
+				Service.Get<Logger>().Error("ContractUtils.IsChampionRepairing: selectedBuilding.BuildingComponent = null");
 				return false;
 			}
 			BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
@@ -443,12 +441,12 @@ namespace StaRTS.Main.Utils
 		{
 			if (selectedBuilding == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsBuildingUpgrading: SelectedBuilding = null");
+				Service.Get<Logger>().Error("ContractUtils.IsBuildingUpgrading: SelectedBuilding = null");
 				return false;
 			}
 			if (selectedBuilding.Get<BuildingComponent>() == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsBuildingUpgrading: selectedBuilding.BuildingComponent = null");
+				Service.Get<Logger>().Error("ContractUtils.IsBuildingUpgrading: selectedBuilding.BuildingComponent = null");
 				return false;
 			}
 			BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
@@ -467,36 +465,36 @@ namespace StaRTS.Main.Utils
 			Contract contract = Service.Get<ISupportController>().FindCurrentContract(buildingComponent.BuildingTO.Key);
 			string productUid = contract.ProductUid;
 			IDeployableVO optional = dataController.GetOptional<TroopTypeVO>(productUid);
-			string text = null;
+			string value = null;
 			if (optional != null)
 			{
-				text = optional.UpgradeShardUid;
+				value = optional.UpgradeShardUid;
 			}
 			else
 			{
 				optional = dataController.GetOptional<SpecialAttackTypeVO>(productUid);
 				if (optional != null)
 				{
-					text = optional.UpgradeShardUid;
+					value = optional.UpgradeShardUid;
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().Error("CanCancelDeployableContract: Unsupported deployable type, not troop or special attack " + productUid);
+					Service.Get<Logger>().Error("CanCancelDeployableContract: Unsupported deployable type, not troop or special attack " + productUid);
 				}
 			}
-			return string.IsNullOrEmpty(text);
+			return string.IsNullOrEmpty(value);
 		}
 
 		public static bool IsArmyUpgrading(Entity selectedBuilding)
 		{
 			if (selectedBuilding == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsArmyUpgrading: SelectedBuilding = null");
+				Service.Get<Logger>().Error("ContractUtils.IsArmyUpgrading: SelectedBuilding = null");
 				return false;
 			}
 			if (selectedBuilding.Get<BuildingComponent>() == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsArmyUpgrading: selectedBuilding.BuildingComponent = null");
+				Service.Get<Logger>().Error("ContractUtils.IsArmyUpgrading: selectedBuilding.BuildingComponent = null");
 				return false;
 			}
 			BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
@@ -508,12 +506,12 @@ namespace StaRTS.Main.Utils
 		{
 			if (selectedBuilding == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsEquipmentUpgrading: SelectedBuilding = null");
+				Service.Get<Logger>().Error("ContractUtils.IsEquipmentUpgrading: SelectedBuilding = null");
 				return false;
 			}
 			if (selectedBuilding.Get<BuildingComponent>() == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsEquipmentUpgrading: selectedBuilding.BuildingComponent = null");
+				Service.Get<Logger>().Error("ContractUtils.IsEquipmentUpgrading: selectedBuilding.BuildingComponent = null");
 				return false;
 			}
 			BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
@@ -525,12 +523,12 @@ namespace StaRTS.Main.Utils
 		{
 			if (selectedBuilding == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsBuildingSwapping: SelectedBuilding = null");
+				Service.Get<Logger>().Error("ContractUtils.IsBuildingSwapping: SelectedBuilding = null");
 				return false;
 			}
 			if (selectedBuilding.Get<BuildingComponent>() == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ContractUtils.IsBuildingSwapping: selectedBuilding.BuildingComponent = null");
+				Service.Get<Logger>().Error("ContractUtils.IsBuildingSwapping: selectedBuilding.BuildingComponent = null");
 				return false;
 			}
 			BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
@@ -547,19 +545,19 @@ namespace StaRTS.Main.Utils
 			case DeliveryType.Starship:
 				storage = currentPlayer.Inventory.SpecialAttack;
 				size = dataController.Get<SpecialAttackTypeVO>(contract.ProductUid).Size;
-				return;
+				break;
 			case DeliveryType.Hero:
 				storage = currentPlayer.Inventory.Hero;
 				size = dataController.Get<TroopTypeVO>(contract.ProductUid).Size;
-				return;
+				break;
 			case DeliveryType.Champion:
 				storage = currentPlayer.Inventory.Champion;
 				size = dataController.Get<TroopTypeVO>(contract.ProductUid).Size;
-				return;
+				break;
 			default:
 				storage = currentPlayer.Inventory.Troop;
 				size = dataController.Get<TroopTypeVO>(contract.ProductUid).Size;
-				return;
+				break;
 			}
 		}
 
@@ -692,171 +690,6 @@ namespace StaRTS.Main.Utils
 				i++;
 			}
 			return result;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.CalculateDroidsInUse());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.CalculateNumTroopsQueued((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.CalculateRemainingTimeOfAllTroopContracts((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.CalculateSpaceOccupiedByQueuedTroops((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.CanCancelDeployableContract((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.ContractTypeConsumesDroid((ContractType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.FindBuildingToFinish());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.GetBuildingContractTotalTime(Marshal.PtrToStringUni(*(IntPtr*)args), (DeliveryType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.GetContractType((DeliveryType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.GetCrystalCostToFinishContract((Contract)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.GetDeliveryTypeForBuildingContract(Marshal.PtrToStringUni(*(IntPtr*)args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.GetDeliveryTypeForTroopContract((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.GetTroopContractTotalTime(Marshal.PtrToStringUni(*(IntPtr*)args), (DeliveryType)(*(int*)(args + 1)), (List<string>)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.GetTroopContractTypeByBuilding((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.HasCapacityForTroop((Entity)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.HasExistingHeroContract(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.InstantFreeupDroid());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsArmyContractValid((Contract)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsArmyContractValid((Contract)GCHandledObjects.GCHandleToObject(*args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsArmyUpgrading((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsBuildingClearing((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsBuildingConstructing((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsBuildingConstructing(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsBuildingSwapping((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsBuildingType((ContractType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsBuildingUpgrading((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsChampionRepairing((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsEquipmentUpgrading((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsTroopType((ContractType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsUpgradeEquipmentContractValid((Contract)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsUpgradeStarshipContractValid((Contract)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.IsUpgradeTroopContractValid((Contract)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractUtils.MinimumCostToFinish());
 		}
 	}
 }

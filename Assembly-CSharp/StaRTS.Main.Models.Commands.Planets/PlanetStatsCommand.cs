@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Planets
 		public PlanetStatsCommand(PlanetStatsRequest request) : base("player.planet.stats", request, new PlanetStatsResponse())
 		{
 		}
-
-		protected internal PlanetStatsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

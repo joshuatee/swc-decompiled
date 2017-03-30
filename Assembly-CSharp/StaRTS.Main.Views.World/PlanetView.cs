@@ -13,7 +13,6 @@ using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -26,6 +25,16 @@ namespace StaRTS.Main.Views.World
 		private const float TOP_DOWN_STEEPNESS = 0.6f;
 
 		private const float DEFAULT_GROUND_SIZE = 500f;
+
+		private const string LOCATOR_NEAR_L = "locator_lowerLeft";
+
+		private const string LOCATOR_NEAR_R = "locator_lowerRight";
+
+		private const string LOCATOR_FAR_L = "locator_upperLeft";
+
+		private const string LOCATOR_FAR_R = "locator_upperRight";
+
+		private const string GRID_ASSET = "visible_grid_plane";
 
 		private static readonly Vector3 MAP_CORNER_NEAR_L = new Vector3(-0.43f, 0f, -0.02f);
 
@@ -42,16 +51,6 @@ namespace StaRTS.Main.Views.World
 			PlanetView.MAP_CORNER_FAR_L * 500f,
 			PlanetView.MAP_CORNER_FAR_R * 500f
 		};
-
-		private const string LOCATOR_NEAR_L = "locator_lowerLeft";
-
-		private const string LOCATOR_NEAR_R = "locator_lowerRight";
-
-		private const string LOCATOR_FAR_L = "locator_upperLeft";
-
-		private const string LOCATOR_FAR_R = "locator_upperRight";
-
-		private const string GRID_ASSET = "visible_grid_plane";
 
 		private AssetHandle planetAssetHandle;
 
@@ -135,7 +134,7 @@ namespace StaRTS.Main.Views.World
 			this.currentPlanet = planet;
 			this.Reset();
 			List<string> list = new List<string>();
-			string text = HardwareProfile.IsLowEndDevice() ? (planet.AssetName + "-lod1") : planet.AssetName;
+			string text = (!HardwareProfile.IsLowEndDevice()) ? planet.AssetName : (planet.AssetName + "-lod1");
 			list.Add(text);
 			assetManager.RegisterPreloadableAsset(text);
 			List<object> list2 = new List<object>();
@@ -153,12 +152,12 @@ namespace StaRTS.Main.Views.World
 
 		public void PanToLocation(Vector3 worldLocation)
 		{
-			this.mapManipulator.PanToLocation(worldLocation, false);
+			this.mapManipulator.PanToLocation(worldLocation);
 		}
 
-		public void ZoomIn(bool immediate = false)
+		public void ZoomIn()
 		{
-			this.mapManipulator.ZoomIn(immediate);
+			this.mapManipulator.ZoomIn(false);
 		}
 
 		public void ZoomOut()
@@ -205,7 +204,7 @@ namespace StaRTS.Main.Views.World
 			Vector3[] array;
 			if (!this.TryGetLocator(gameObject, "locator_lowerLeft", out vector) || !this.TryGetLocator(gameObject, "locator_lowerRight", out vector2) || !this.TryGetLocator(gameObject, "locator_upperLeft", out vector3) || !this.TryGetLocator(gameObject, "locator_upperRight", out vector4))
 			{
-				Service.Get<StaRTSLogger>().Warn("Unable to find corner locators");
+				Service.Get<Logger>().Warn("Unable to find corner locators");
 				array = PlanetView.DEFAULT_CORNER_LOCATORS;
 			}
 			else
@@ -305,10 +304,9 @@ namespace StaRTS.Main.Views.World
 			this.worldGrid = (asset as GameObject);
 			this.worldGrid.transform.localPosition = Vector3.zero;
 			GameObject gameObject = UnityUtils.FindGameObject(this.worldGrid, "userGrid");
-			gameObject.transform.localPosition = new Vector3(0f, 0.0300000012f, 0f);
+			gameObject.transform.localPosition = new Vector3(0f, 0.06f, 0f);
 			LightingEffectsController lightingEffectsController = Service.Get<LightingEffectsController>();
 			Color currentLightingColor = lightingEffectsController.GetCurrentLightingColor(LightingColorType.GridColor);
-			currentLightingColor.a *= 0.5f;
 			gameObject.GetComponent<Renderer>().sharedMaterial.SetColor("_TintColor", currentLightingColor);
 		}
 
@@ -344,6 +342,31 @@ namespace StaRTS.Main.Views.World
 			}
 		}
 
+		public void ComputeCornerLocators()
+		{
+			Vector3 vector;
+			Vector3 vector2;
+			Vector3 vector3;
+			Vector3 vector4;
+			Vector3[] array;
+			if (!this.TryGetLocator(this.groundAsset, "locator_lowerLeft", out vector) || !this.TryGetLocator(this.groundAsset, "locator_lowerRight", out vector2) || !this.TryGetLocator(this.groundAsset, "locator_upperLeft", out vector3) || !this.TryGetLocator(this.groundAsset, "locator_upperRight", out vector4))
+			{
+				Service.Get<Logger>().Warn("Unable to find corner locators");
+				array = PlanetView.DEFAULT_CORNER_LOCATORS;
+			}
+			else
+			{
+				array = new Vector3[]
+				{
+					vector,
+					vector2,
+					vector3,
+					vector4
+				};
+			}
+			this.SetCornerLocators(array);
+		}
+
 		private void Reset()
 		{
 			this.SetYToHypotenuse(MathUtils.SQRT3);
@@ -354,138 +377,6 @@ namespace StaRTS.Main.Views.World
 				this.groundAsset = null;
 				Service.Get<PlanetEffectController>().UnloadAllFx();
 			}
-		}
-
-		protected internal PlanetView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).AssetSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).DestroyWorldGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).DrawWorldGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetView)GCHandledObjects.GCHandleToObject(instance)).HeroIdentifier);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetView)GCHandledObjects.GCHandleToObject(instance)).Scaffolding);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetView)GCHandledObjects.GCHandleToObject(instance)).SpawnProtection);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetView)GCHandledObjects.GCHandleToObject(instance)).TargetIdentifier);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).OnGridSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).PanToLocation(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).Prepare((PlanetVO)GCHandledObjects.GCHandleToObject(*args), (AssetsCompleteDelegate)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).ResetCameraImmediate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).SetCornerLocators((Vector3[])GCHandledObjects.GCHandleToPinnedArrayObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).SetEditModeVantage(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).SetIsoVantage((CameraFeel)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).SetVantage(*(sbyte*)args != 0, (CameraFeel)(*(int*)(args + 1)), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(*(IntPtr*)(args + 4)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).SetYToHypotenuse(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).StartMapManipulation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).ZoomIn(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).ZoomOut();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).ZoomOutImmediate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((PlanetView)GCHandledObjects.GCHandleToObject(instance)).ZoomTo(*(float*)args);
-			return -1L;
 		}
 	}
 }

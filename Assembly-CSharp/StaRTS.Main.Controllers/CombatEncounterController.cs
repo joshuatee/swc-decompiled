@@ -14,8 +14,6 @@ using StaRTS.Utils.IO;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -40,7 +38,7 @@ namespace StaRTS.Main.Controllers
 
 		public void LoadMeta(BattleTypeVO battle)
 		{
-			string json = FileUtils.Read(FileUtils.GetAbsFilePathInMyDocuments(battle.AssetName + ".json", "/src/starts-game-assets/trunk/battles"));
+			string json = FileUtils.Read(FileUtils.GetAbsFilePathInMyDocuments(battle.AssetName + ".json", "/src/starts-game-assets/develop/battles"));
 			object obj = new JsonParser(json).Parse();
 			CombatEncounter combatEncounter = new CombatEncounter().FromObject(obj) as CombatEncounter;
 			Service.Get<CurrentPlayer>().Map = combatEncounter.map;
@@ -67,31 +65,31 @@ namespace StaRTS.Main.Controllers
 			}
 			string text = this.Serialize(currentCombatEncounter);
 			FileUtils.Write(FileUtils.GetAbsFilePathInMyDocuments(fileName, "/src/maps"), text);
-			Service.Get<StaRTSLogger>().Debug("Json Saved: " + text);
+			Service.Get<Logger>().Debug("Json Saved: " + text);
 		}
 
 		public void Verify(string fileName)
 		{
-			StaRTSLogger staRTSLogger = Service.Get<StaRTSLogger>();
-			staRTSLogger.Debug("Using data path: " + fileName);
+			Logger logger = Service.Get<Logger>();
+			logger.Debug("Using data path: " + fileName);
 			string text = FileUtils.Read(FileUtils.GetAbsFilePathInMyDocuments(fileName, "/src/maps"));
-			staRTSLogger.Debug("Read json: " + text);
+			logger.Debug("Read json: " + text);
 			CombatEncounter data = this.Deserialize(text);
-			staRTSLogger.Debug("De-serialized json to model...");
+			logger.Debug("De-serialized json to model...");
 			string text2 = this.Serialize(data);
-			staRTSLogger.Debug("Serialized model to json...");
+			logger.Debug("Serialized model to json...");
 			FileUtils.Write(FileUtils.GetAbsFilePathInMyDocuments(fileName, "/src/maps"), text2);
-			staRTSLogger.Debug("Saved json: " + text2);
+			logger.Debug("Saved json: " + text2);
 			text = text.Replace(" ", string.Empty).Trim();
 			text2 = text2.Replace(" ", string.Empty).Trim();
 			if (text.Equals(text2))
 			{
-				staRTSLogger.Debug("Verification passed");
+				logger.Debug("Verification passed");
 				return;
 			}
-			staRTSLogger.Debug(text);
-			staRTSLogger.Debug(text2);
-			staRTSLogger.Debug("Verification failed");
+			logger.Debug(text);
+			logger.Debug(text2);
+			logger.Debug("Verification failed");
 		}
 
 		public string Serialize(CombatEncounter data)
@@ -134,49 +132,6 @@ namespace StaRTS.Main.Controllers
 			}
 			combatEncounter.map.Planet = Service.Get<CurrentPlayer>().Map.Planet;
 			return combatEncounter;
-		}
-
-		protected internal CombatEncounterController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CombatEncounterController)GCHandledObjects.GCHandleToObject(instance)).Deserialize(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CombatEncounterController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentCombatEncounter());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CombatEncounterController)GCHandledObjects.GCHandleToObject(instance)).Load(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CombatEncounterController)GCHandledObjects.GCHandleToObject(instance)).LoadMeta((BattleTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((CombatEncounterController)GCHandledObjects.GCHandleToObject(instance)).Save(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CombatEncounterController)GCHandledObjects.GCHandleToObject(instance)).Serialize((CombatEncounter)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((CombatEncounterController)GCHandledObjects.GCHandleToObject(instance)).Verify(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Rearm
 		public RearmTrapCommand(RearmTrapRequest request) : base("player.building.rearm", request, new DefaultResponse())
 		{
 		}
-
-		protected internal RearmTrapCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

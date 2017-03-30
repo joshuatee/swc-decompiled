@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public GetSquadInvitesSentCommand(GetSquadInvitesSentRequest request) : base("guild.invite.sent", request, new GetSquadInvitesSentResponse())
 		{
 		}
-
-		protected internal GetSquadInvitesSentCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

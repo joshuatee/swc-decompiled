@@ -5,12 +5,5 @@ namespace StaRTS.Main.Models.Entities.Components
 {
 	public class BarracksComponent : ComponentBase
 	{
-		public BarracksComponent()
-		{
-		}
-
-		protected internal BarracksComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

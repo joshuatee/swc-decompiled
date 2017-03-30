@@ -26,7 +26,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -75,9 +74,11 @@ namespace StaRTS.Main.Controllers
 				if (value == null)
 				{
 					this.buildingSelector.EnsureDeselectSelectedBuilding();
-					return;
 				}
-				this.buildingSelector.SelectBuilding(value, Vector3.zero);
+				else
+				{
+					this.buildingSelector.SelectBuilding(value, Vector3.zero);
+				}
 			}
 		}
 
@@ -105,21 +106,7 @@ namespace StaRTS.Main.Controllers
 		{
 			get
 			{
-				if (!this.purchasingBuilding)
-				{
-					return null;
-				}
-				return this.buildingSelector.SelectedBuilding;
-			}
-		}
-
-		private void OnHQUpgraded()
-		{
-			if (Service.Get<ScreenController>().GetHighestLevelScreen<HQCelebScreen>() == null)
-			{
-				ScreenBase screenBase = new HQCelebScreen();
-				screenBase.IsAlwaysOnTop = true;
-				Service.Get<ScreenController>().AddScreen(screenBase, true, true);
+				return (!this.purchasingBuilding) ? null : this.buildingSelector.SelectedBuilding;
 			}
 		}
 
@@ -157,6 +144,16 @@ namespace StaRTS.Main.Controllers
 			eventManager.RegisterObserver(this, EventId.ContractCompleted, EventPriority.Default);
 		}
 
+		private void OnHQUpgraded()
+		{
+			if (Service.Get<ScreenController>().GetHighestLevelScreen<HQCelebScreen>() == null)
+			{
+				ScreenBase screenBase = new HQCelebScreen();
+				screenBase.IsAlwaysOnTop = true;
+				Service.Get<ScreenController>().AddScreen(screenBase, true, true);
+			}
+		}
+
 		public void EnterSelectMode()
 		{
 			this.buildingMover.Enabled = false;
@@ -188,11 +185,6 @@ namespace StaRTS.Main.Controllers
 			return this.buildingMover;
 		}
 
-		public BuildingSelector GetBuildingSelector()
-		{
-			return this.buildingSelector;
-		}
-
 		public void ExitAllModes()
 		{
 			this.buildingMover.EnsureLoweredLiftedBuilding();
@@ -212,8 +204,7 @@ namespace StaRTS.Main.Controllers
 				return;
 			}
 			bool flag = ContractUtils.IsBuildingUpgrading(building);
-			bool flag2 = ContractUtils.IsBuildingConstructing(building);
-			if (flag2 | flag)
+			if (ContractUtils.IsBuildingConstructing(building) || flag)
 			{
 				return;
 			}
@@ -226,12 +217,14 @@ namespace StaRTS.Main.Controllers
 				if (perkManager.IsPerkAppliedToBuilding(buildingType))
 				{
 					this.entityShaderSwapper.HighlightForPerk(building);
-					return;
 				}
-				bool flag3 = this.entityShaderSwapper.ResetToOriginal(building);
-				if (flag3)
+				else
 				{
-					Service.Get<EventManager>().SendEvent(EventId.ShaderResetOnEntity, building);
+					bool flag2 = this.entityShaderSwapper.ResetToOriginal(building);
+					if (flag2)
+					{
+						Service.Get<EventManager>().SendEvent(EventId.ShaderResetOnEntity, building);
+					}
 				}
 			}
 		}
@@ -276,79 +269,78 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.BuildingConstructed)
+			switch (id)
 			{
-				if (id != EventId.ClearableCleared)
+			case EventId.BuildingLevelUpgraded:
+			case EventId.BuildingSwapped:
+			{
+				Entity entity = (cookie as ContractEventData).Entity;
+				if (entity != null)
 				{
-					switch (id)
+					bool flag = this.buildingSelector.IsPartOfSelection(entity);
+					if (entity != null && flag)
 					{
-					case EventId.BuildingLevelUpgraded:
-					case EventId.BuildingSwapped:
+						this.buildingSelector.DeselectSelectedBuilding();
+					}
+					Entity entity2 = this.ReplaceBuildingAfterTOChange(entity);
+					if (flag && entity2 != null)
 					{
-						Entity entity = (cookie as ContractEventData).Entity;
-						if (entity != null)
+						this.buildingSelector.SelectBuilding(entity2, Vector3.zero);
+					}
+					Service.Get<AchievementController>().TryUnlockAchievementById(AchievementType.BuildingLevel, entity2.Get<BuildingComponent>().BuildingType.Uid);
+					this.CheckStarportFullness(entity2);
+				}
+				break;
+			}
+			case EventId.BuildingConstructed:
+				this.CheckStarportFullness(((ContractEventData)cookie).Entity);
+				break;
+			default:
+				if (id != EventId.ContractCompleted)
+				{
+					if (id != EventId.ContractCompletedForStoryAction)
+					{
+						if (id == EventId.ClearableCleared)
 						{
-							bool flag = this.buildingSelector.IsPartOfSelection(entity);
-							if (entity != null & flag)
+							Entity entity3 = (cookie as ContractEventData).Entity;
+							if (entity3 != null && this.buildingSelector.SelectedBuilding == entity3)
 							{
 								this.buildingSelector.DeselectSelectedBuilding();
 							}
-							Entity entity2 = this.ReplaceBuildingAfterTOChange(entity);
-							if (flag && entity2 != null)
-							{
-								this.buildingSelector.SelectBuilding(entity2, Vector3.zero);
-							}
-							Service.Get<AchievementController>().TryUnlockAchievementById(AchievementType.BuildingLevel, entity2.Get<BuildingComponent>().BuildingType.Uid);
-							this.CheckStarportFullness(entity2);
+							Service.Get<EntityFactory>().DestroyEntity(entity3, true, true);
 						}
-						break;
 					}
-					case EventId.BuildingConstructed:
-						this.CheckStarportFullness(((ContractEventData)cookie).Entity);
-						break;
+					else
+					{
+						ContractTO contractTO = (ContractTO)cookie;
+						if (contractTO.ContractType == ContractType.Upgrade)
+						{
+							BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(contractTO.Uid);
+							if (buildingTypeVO.Type == BuildingType.HQ)
+							{
+								this.OnHQUpgraded();
+							}
+						}
 					}
 				}
 				else
 				{
-					Entity entity3 = (cookie as ContractEventData).Entity;
-					if (entity3 != null && this.buildingSelector.SelectedBuilding == entity3)
+					ContractEventData contractEventData = cookie as ContractEventData;
+					ContractType contractType = contractEventData.Contract.ContractTO.ContractType;
+					if (contractType == ContractType.Upgrade || contractType == ContractType.Build)
 					{
-						this.buildingSelector.DeselectSelectedBuilding();
-					}
-					Service.Get<EntityFactory>().DestroyEntity(entity3, true, true);
-				}
-			}
-			else if (id != EventId.ContractCompleted)
-			{
-				if (id == EventId.ContractCompletedForStoryAction)
-				{
-					ContractTO contractTO = (ContractTO)cookie;
-					if (contractTO.ContractType == ContractType.Upgrade)
-					{
-						BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(contractTO.Uid);
-						if (buildingTypeVO.Type == BuildingType.HQ)
+						BuildingTypeVO buildingTypeVO2 = Service.Get<IDataController>().Get<BuildingTypeVO>(contractEventData.Contract.ProductUid);
+						if (buildingTypeVO2.Type == BuildingType.NavigationCenter)
 						{
-							this.OnHQUpgraded();
+							Service.Get<CurrentPlayer>().AddUnlockedPlanet(contractEventData.Contract.Tag);
+						}
+						if (buildingTypeVO2.Type == BuildingType.HQ && buildingTypeVO2.Lvl >= GameConstants.OBJECTIVES_UNLOCKED)
+						{
+							Service.Get<ObjectiveManager>().RefreshFromServer();
 						}
 					}
 				}
-			}
-			else
-			{
-				ContractEventData contractEventData = cookie as ContractEventData;
-				ContractType contractType = contractEventData.Contract.ContractTO.ContractType;
-				if (contractType == ContractType.Upgrade || contractType == ContractType.Build)
-				{
-					BuildingTypeVO buildingTypeVO2 = Service.Get<IDataController>().Get<BuildingTypeVO>(contractEventData.Contract.ProductUid);
-					if (buildingTypeVO2.Type == BuildingType.NavigationCenter)
-					{
-						Service.Get<CurrentPlayer>().AddUnlockedPlanet(contractEventData.Contract.Tag);
-					}
-					if (buildingTypeVO2.Type == BuildingType.HQ && buildingTypeVO2.Lvl >= GameConstants.OBJECTIVES_UNLOCKED)
-					{
-						Service.Get<ObjectiveManager>().RefreshFromServer();
-					}
-				}
+				break;
 			}
 			return EatResponse.NotEaten;
 		}
@@ -412,14 +404,16 @@ namespace StaRTS.Main.Controllers
 				num -= this.stampingCellsX[1];
 				num2 -= this.stampingCellsZ[1];
 			}
-			int num3 = (num >= 0) ? 1 : -1;
-			int num4 = (num2 >= 0) ? 1 : -1;
+			int num3 = (num < 0) ? -1 : 1;
+			int num4 = (num2 < 0) ? -1 : 1;
 			if (num3 * num >= num4 * num2)
 			{
 				cx += num3 * 1;
-				return;
 			}
-			cz += num4 * 1;
+			else
+			{
+				cz += num4 * 1;
+			}
 		}
 
 		public void PrepareAndPurchaseNewBuilding(BuildingTypeVO buildingType)
@@ -446,7 +440,7 @@ namespace StaRTS.Main.Controllers
 		{
 			Service.Get<EventManager>().SendEvent(EventId.BuildingPurchaseModeStarted, null);
 			Entity entity = Service.Get<EntityFactory>().CreateBuildingEntity(buildingType, true, true, true);
-			Service.Get<StaRTSLogger>().DebugFormat("Purchasing building type {0}, ID {1}, W/H {2}x{3}", new object[]
+			Service.Get<Logger>().DebugFormat("Purchasing building type {0}, ID {1}, W/H {2}x{3}", new object[]
 			{
 				buildingType.Uid,
 				entity.ID.ToString(),
@@ -473,7 +467,7 @@ namespace StaRTS.Main.Controllers
 		public void PlaceRewardedBuilding(BuildingTypeVO buildingType)
 		{
 			Entity entity = Service.Get<EntityFactory>().CreateBuildingEntity(buildingType, true, true, true);
-			Service.Get<StaRTSLogger>().DebugFormat("Purchasing building type {0}, ID {1}, W/H {2}x{3}", new object[]
+			Service.Get<Logger>().DebugFormat("Purchasing building type {0}, ID {1}, W/H {2}x{3}", new object[]
 			{
 				buildingType.Uid,
 				entity.ID.ToString(),
@@ -587,7 +581,7 @@ namespace StaRTS.Main.Controllers
 			BuildingType type2 = buildingType.Type;
 			bool flag = type == BuildingType.Wall || type == BuildingType.Trap;
 			bool flag2 = type2 == BuildingType.Wall || type2 == BuildingType.Trap;
-			if (!(flag & flag2))
+			if (!flag || !flag2)
 			{
 				if (num == 1 && num2 == 1)
 				{
@@ -612,9 +606,9 @@ namespace StaRTS.Main.Controllers
 				int credits = buildingType.Credits;
 				int materials = buildingType.Materials;
 				int contraband = buildingType.Contraband;
-				string text = StringUtils.ToLowerCaseUnderscoreSeperated(buildingType.Type.ToString());
+				string value = StringUtils.ToLowerCaseUnderscoreSeperated(buildingType.Type.ToString());
 				StringBuilder stringBuilder = new StringBuilder();
-				stringBuilder.Append(text);
+				stringBuilder.Append(value);
 				stringBuilder.Append("|");
 				stringBuilder.Append(buildingType.BuildingID);
 				stringBuilder.Append("|");
@@ -686,9 +680,7 @@ namespace StaRTS.Main.Controllers
 					{
 						Service.Get<EventManager>().SendEvent(EventId.BuildingPurchaseSuccess, building);
 						Service.Get<ISupportController>().InstantBuildingConstruct(buildingType, building, x, z, tag);
-						int num = this.purchasingStampable - 1;
-						this.purchasingStampable = num;
-						if (num > 0)
+						if (--this.purchasingStampable > 0)
 						{
 							stampBuilding = this.purchasingBuildingType;
 							this.SaveLastStampLocation(boardCell.X, boardCell.Z);
@@ -710,236 +702,6 @@ namespace StaRTS.Main.Controllers
 			this.stampingCellsX[0] = x;
 			this.stampingCellsZ[0] = z;
 			this.stampingValidCount++;
-		}
-
-		protected internal BuildingController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).CancelEditModeTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).CheckStarportFullness((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).ClearBuildingHighlight((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).ConfirmClearingBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).DisableUnstashStampingState();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).EnsureDeselectSelectedBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).EnsureLoweredLiftedBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).EnterMoveMode(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).EnterSelectMode();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).ExitAllModes();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).FoundFirstEmptySpaceFor((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).IsPurchasing);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).NumSelectedBuildings);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).PurchasingBuilding);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).SelectedBuilding);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).UnstashStampingEnabled);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).GetAdditionalSelectedBuildings());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingMoverForCombineMeshManager());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingSelector());
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).HighlightBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).IsLifted((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).isOverlapping((Building)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).OnHQUpgraded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForDroidResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).PlaceRewardedBuilding((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).PositionUnstashedBuilding((Entity)GCHandledObjects.GCHandleToObject(*args), (Position)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).PrepareAndPurchaseNewBuilding((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).RedrawRadiusForSelectedBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingController)GCHandledObjects.GCHandleToObject(instance)).ReplaceBuildingAfterTOChange((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).ResetStampLocations();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).RotateCurrentSelection((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).SaveLastStampLocation(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).SelectAdjacentWalls((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).SelectedBuilding = (Entity)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).UnstashStampingEnabled = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).StartClearingSelectedBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).StartPurchaseBuilding((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((BuildingController)GCHandledObjects.GCHandleToObject(instance)).UpdateBuildingHighlightForPerks((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

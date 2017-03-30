@@ -4,9 +4,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.World
 {
@@ -30,10 +28,10 @@ namespace StaRTS.Main.Controllers.World
 		{
 			if (this.numAssetsRemainingToLoad != 0)
 			{
-				Service.Get<StaRTSLogger>().Error("WorldPreloader.Load() is called when it's still loading!");
+				Service.Get<Logger>().Error("WorldPreloader.Load() is called when it's still loading!");
 				return;
 			}
-			int num = (assetsToLoad == null) ? 0 : assetsToLoad.Count;
+			int num = (assetsToLoad != null) ? assetsToLoad.Count : 0;
 			if (num == 0)
 			{
 				onPreloadSuccess();
@@ -120,45 +118,10 @@ namespace StaRTS.Main.Controllers.World
 				WorldPreloadAsset worldPreloadAsset = (WorldPreloadAsset)cookie;
 				worldPreloadAsset.GameObj = gameObject;
 			}
-			int num = this.numAssetsRemainingToLoad - 1;
-			this.numAssetsRemainingToLoad = num;
-			if (num == 0)
+			if (--this.numAssetsRemainingToLoad == 0)
 			{
 				this.onPreloadSuccess();
 			}
-		}
-
-		protected internal WorldPreloader(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldPreloader)GCHandledObjects.GCHandleToObject(instance)).GetPreloadedAsset(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((WorldPreloader)GCHandledObjects.GCHandleToObject(instance)).Load((List<IAssetVO>)GCHandledObjects.GCHandleToObject(*args), (WorldPreloader.PreloadSuccessDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((WorldPreloader)GCHandledObjects.GCHandleToObject(instance)).OnAssetLoadFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((WorldPreloader)GCHandledObjects.GCHandleToObject(instance)).OnAssetLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((WorldPreloader)GCHandledObjects.GCHandleToObject(instance)).Unload();
-			return -1L;
 		}
 	}
 }

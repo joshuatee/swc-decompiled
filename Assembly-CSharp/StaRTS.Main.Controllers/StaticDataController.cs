@@ -3,7 +3,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.MetaData;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -52,7 +51,7 @@ namespace StaRTS.Main.Controllers
 				{
 					staticDataWrapper.Flush();
 					this.staticDataWrapperList.RemoveAt(i);
-					return;
+					break;
 				}
 				i++;
 			}
@@ -73,11 +72,11 @@ namespace StaRTS.Main.Controllers
 			{
 				foreach (KeyValuePair<string, Row> current in allRows)
 				{
-					Row value = current.get_Value();
-					T vo = Activator.CreateInstance<T>();
+					Row value = current.Value;
+					T vo = (default(T) == null) ? Activator.CreateInstance<T>() : default(T);
 					vo.ReadRow(value);
 					value.Invalidate();
-					this.Add<T>(current.get_Key(), vo);
+					this.Add<T>(current.Key, vo);
 				}
 			}
 			sheet.Invalidate();
@@ -95,26 +94,12 @@ namespace StaRTS.Main.Controllers
 
 		public T GetOptional<T>(string uid) where T : IValueObject
 		{
-			if (!StaticDataController.StaticDataWrapper<T>.StaticData.ContainsKey(uid))
-			{
-				return default(T);
-			}
-			return StaticDataController.StaticDataWrapper<T>.StaticData[uid];
+			return (!StaticDataController.StaticDataWrapper<T>.StaticData.ContainsKey(uid)) ? default(T) : StaticDataController.StaticDataWrapper<T>.StaticData[uid];
 		}
 
 		public Dictionary<string, T>.ValueCollection GetAll<T>() where T : IValueObject
 		{
 			return StaticDataController.StaticDataWrapper<T>.StaticData.Values;
-		}
-
-		protected internal StaticDataController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StaticDataController)GCHandledObjects.GCHandleToObject(instance)).Exterminate();
-			return -1L;
 		}
 	}
 }

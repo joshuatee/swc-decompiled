@@ -12,9 +12,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -72,13 +70,9 @@ namespace StaRTS.FX
 
 		private const string TOP_ATTACH = "top";
 
-		private Dictionary<Entity, uint> delayTimers;
-
 		private const float INITIAL_DELAY = 0.5f;
 
 		private const float DELAY_INTERVAL = 0.65f;
-
-		private Dictionary<FactionType, List<GameObject>> impactPool;
 
 		private const string IMPACT_EMPIRE_POOL_NAME = "ImpactEmpirePool";
 
@@ -88,9 +82,13 @@ namespace StaRTS.FX
 
 		private const string IMPACT_REBEL_GO = "shield_sparkle";
 
-		private Dictionary<Entity, ShieldBuildingInfo> buildings;
-
 		private const float IMPACT_CLEANUP_DELAY = 1.2f;
+
+		private Dictionary<Entity, uint> delayTimers;
+
+		private Dictionary<FactionType, List<GameObject>> impactPool;
+
+		private Dictionary<Entity, ShieldBuildingInfo> buildings;
 
 		public ShieldEffects()
 		{
@@ -162,8 +160,8 @@ namespace StaRTS.FX
 		{
 			GameObject value = asset as GameObject;
 			KeyValuePair<string, ShieldBuildingInfo> keyValuePair = (KeyValuePair<string, ShieldBuildingInfo>)cookie;
-			string key = keyValuePair.get_Key();
-			ShieldBuildingInfo value2 = keyValuePair.get_Value();
+			string key = keyValuePair.Key;
+			ShieldBuildingInfo value2 = keyValuePair.Value;
 			value2.EffectAssets[key] = value;
 		}
 
@@ -321,34 +319,30 @@ namespace StaRTS.FX
 		private GameObject InstantiateEffect(ShieldBuildingInfo info, string effectUid)
 		{
 			GameObject gameObject = info.EffectAssets[effectUid];
-			if (!(gameObject == null))
-			{
-				return UnityEngine.Object.Instantiate<GameObject>(gameObject);
-			}
-			return null;
+			return (!(gameObject == null)) ? UnityEngine.Object.Instantiate<GameObject>(gameObject) : null;
 		}
 
 		private GameObject InstantiateShield(ShieldBuildingInfo info, FactionType faction)
 		{
-			string effectUid = (faction == FactionType.Empire) ? "effect160" : "effect161";
+			string effectUid = (faction != FactionType.Empire) ? "effect161" : "effect160";
 			return this.InstantiateEffect(info, effectUid);
 		}
 
 		private GameObject InstantiateGenerator(ShieldBuildingInfo info, FactionType faction)
 		{
-			string effectUid = (faction == FactionType.Empire) ? "effect159" : "effect164";
+			string effectUid = (faction != FactionType.Empire) ? "effect164" : "effect159";
 			return this.InstantiateEffect(info, effectUid);
 		}
 
 		private GameObject InstantiateTop(ShieldBuildingInfo info, FactionType faction)
 		{
-			string effectUid = (faction == FactionType.Empire) ? "effect158" : "effect167";
+			string effectUid = (faction != FactionType.Empire) ? "effect167" : "effect158";
 			return this.InstantiateEffect(info, effectUid);
 		}
 
 		private GameObject InstantiateSpark(ShieldBuildingInfo info, FactionType faction)
 		{
-			string effectUid = (faction == FactionType.Empire) ? "effect39" : "effect166";
+			string effectUid = (faction != FactionType.Empire) ? "effect166" : "effect39";
 			return this.InstantiateEffect(info, effectUid);
 		}
 
@@ -518,8 +512,8 @@ namespace StaRTS.FX
 
 		public void PlayAllEffects(bool idle)
 		{
-			float num = idle ? 0f : 0.5f;
-			float num2 = idle ? 0f : 0.65f;
+			float num = (!idle) ? 0.5f : 0f;
+			float num2 = (!idle) ? 0.65f : 0f;
 			int num3 = 0;
 			NodeList<ShieldGeneratorNode> shieldGeneratorNodeList = Service.Get<BuildingLookupController>().ShieldGeneratorNodeList;
 			for (ShieldGeneratorNode shieldGeneratorNode = shieldGeneratorNodeList.Head; shieldGeneratorNode != null; shieldGeneratorNode = shieldGeneratorNode.Next)
@@ -752,161 +746,6 @@ namespace StaRTS.FX
 		private IAssetVO GetAssetType(string uid)
 		{
 			return Service.Get<IDataController>().Get<EffectsTypeVO>(uid);
-		}
-
-		protected internal ShieldEffects(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).ApplyHitEffect((Entity)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).CleanupShield((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).CreateEffect((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).DestroyDissolver((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, (ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).GetAssetType(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).GetEffectAssetTypes());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).GetFactionType((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).GetImpactFromPool((ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(*args), (FactionType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).GetShieldBuildingInfo((Entity)GCHandledObjects.GCHandleToObject(*args), (ShieldLoadReason)(*(int*)(args + 1)), GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).InstantiateEffect((ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).InstantiateGenerator((ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(*args), (FactionType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).InstantiateShield((ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(*args), (FactionType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).InstantiateSpark((ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(*args), (FactionType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).InstantiateTop((ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(*args), (FactionType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).InternalPowerDown((ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).LoadEffectsForBuilding((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).OnEffectLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).OnEffectsComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).PlayAllEffects(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).PlayDestructionEffect((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).PlayEffect((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(float*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).PowerDownShieldEffect((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).PowerDownShieldEffectComplete((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, (ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).ReturnImpactToPool((FactionType)(*(int*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).StopEffect((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((ShieldEffects)GCHandledObjects.GCHandleToObject(instance)).UpdateShieldScale((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -1,10 +1,7 @@
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 public class InAppPurchaseReceipt
 {
@@ -28,25 +25,30 @@ public class InAppPurchaseReceipt
 	{
 		InAppPurchaseReceipt inAppPurchaseReceipt = new InAppPurchaseReceipt();
 		IDictionary<string, object> dictionary = new JsonParser(value).Parse() as Dictionary<string, object>;
-		if (dictionary.ContainsKey("userSandbox") && dictionary.get_Item("useSandbox") != null)
+		if (dictionary.ContainsKey("userSandbox") && dictionary["useSandbox"] != null)
 		{
-			inAppPurchaseReceipt.useSandbox = (bool)dictionary.get_Item("useSandbox");
+			inAppPurchaseReceipt.useSandbox = (bool)dictionary["useSandbox"];
 		}
-		inAppPurchaseReceipt.errorCode = Convert.ToUInt32(dictionary.get_Item("errorCode") as string, CultureInfo.InvariantCulture);
-		inAppPurchaseReceipt.price = (dictionary.get_Item("price") as string);
-		inAppPurchaseReceipt.transactionId = (dictionary.get_Item("transactionId") as string);
-		inAppPurchaseReceipt.rawData = (dictionary.get_Item("rawData") as string);
-		inAppPurchaseReceipt.productId = (dictionary.get_Item("productId") as string);
+		inAppPurchaseReceipt.errorCode = Convert.ToUInt32(dictionary["errorCode"] as string);
+		inAppPurchaseReceipt.price = (dictionary["price"] as string);
+		inAppPurchaseReceipt.transactionId = (dictionary["transactionId"] as string);
+		inAppPurchaseReceipt.rawData = (dictionary["rawData"] as string);
+		inAppPurchaseReceipt.productId = (dictionary["productId"] as string);
 		if (dictionary.ContainsKey("signature"))
 		{
-			inAppPurchaseReceipt.signature = (dictionary.get_Item("signature") as string);
+			inAppPurchaseReceipt.signature = (dictionary["signature"] as string);
 		}
 		return inAppPurchaseReceipt;
 	}
 
 	public string GetManimalReceiptString()
 	{
-		return "";
+		string empty = string.Empty;
+		Serializer serializer = Serializer.Start();
+		serializer.AddString("signedData", this.rawData.Replace("\"", "\\\""));
+		serializer.AddString("signature", this.signature);
+		serializer.End();
+		return serializer.ToString();
 	}
 
 	public override string ToString()
@@ -67,28 +69,5 @@ public class InAppPurchaseReceipt
 			stringBuilder.Append(this.signature);
 		}
 		return stringBuilder.ToString();
-	}
-
-	public InAppPurchaseReceipt()
-	{
-	}
-
-	protected internal InAppPurchaseReceipt(UIntPtr dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((InAppPurchaseReceipt)GCHandledObjects.GCHandleToObject(instance)).GetManimalReceiptString());
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(InAppPurchaseReceipt.Parse(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((InAppPurchaseReceipt)GCHandledObjects.GCHandleToObject(instance)).ToString());
 	}
 }

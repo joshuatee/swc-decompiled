@@ -1,6 +1,7 @@
 using Net.RichardLord.Ash.Core;
 using StaRTS.Externals.IAP;
 using StaRTS.Externals.Manimal;
+using StaRTS.Externals.Tapjoy;
 using StaRTS.Main.Controllers;
 using StaRTS.Main.Models;
 using StaRTS.Main.Models.Entities.Components;
@@ -20,9 +21,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -164,8 +163,6 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private const string CRATE_STORE_LEI_EXPIRATION_TIMER = "CRATE_STORE_LEI_EXPIRATION_TIMER";
 
-		private const string ITEM_ICON_ASSET_PREFIX = "treasureicon_neu-mod_";
-
 		private const string ITEM_ICON_PROTECTION = "protection";
 
 		private const string ITEM_PACK_CRYSTALS = "PACK_CRYSTALS{0}";
@@ -259,7 +256,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private bool gridInitialized;
 
-		private bool gridScrollable;
+		private bool gridScrollable = true;
 
 		private uint delayedInitTimerId;
 
@@ -291,10 +288,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 		}
 
-		public StoreScreen()
+		public StoreScreen() : base("gui_store")
 		{
-			this.gridScrollable = true;
-			base..ctor("gui_store");
 			this.delayedInitTimerId = 0u;
 			this.changingInventory = false;
 			this.enableTimer = false;
@@ -384,7 +379,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.categoryLabel = base.GetElement<UXLabel>("DialogStoreCategoryTitle");
 			this.turretLabel = base.GetElement<UXLabel>("LabelTurretCount");
 			this.turretLabelGroup = base.GetElement<UXElement>("TurretCount");
-			this.turretLabel.Text = "";
+			this.turretLabel.Text = string.Empty;
 			this.turretLabelGroup.Visible = false;
 		}
 
@@ -396,11 +391,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			bool flag = true;
 			for (int i = 1; i <= array.Length; i++)
 			{
-				string text = string.Format("{0}_{1}", new object[]
-				{
-					"protection",
-					i
-				});
+				string text = string.Format("{0}_{1}", "protection", i);
 				UXButton subElement = this.itemGrid.GetSubElement<UXButton>(text, "ButtonItemCard");
 				StoreItemTag storeItemTag = subElement.Tag as StoreItemTag;
 				if (!storeItemTag.CanPurchase)
@@ -414,8 +405,11 @@ namespace StaRTS.Main.Views.UX.Screens
 					}
 					else
 					{
-						storeItemTag.CanPurchase = (storeItemTag.ReqMet = true);
-						subElement2.Text = "";
+						StoreItemTag arg_BC_0 = storeItemTag;
+						bool flag2 = true;
+						storeItemTag.ReqMet = flag2;
+						arg_BC_0.CanPurchase = flag2;
+						subElement2.Text = string.Empty;
 						UXSprite subElement3 = this.itemGrid.GetSubElement<UXSprite>(text, "SpriteDim");
 						subElement3.Visible = false;
 						UXUtils.SetupCostElements(this, "Cost", text, 0, 0, 0, storeItemTag.Price, false, null);
@@ -488,7 +482,7 @@ namespace StaRTS.Main.Views.UX.Screens
 					element.Visible = true;
 					element2.Visible = true;
 					base.GetElement<UXElement>(bgName).Visible = false;
-					return;
+					break;
 				}
 				i++;
 			}
@@ -508,18 +502,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				if (faction == FactionType.Rebel)
 				{
-					assetName = string.Format(textureAssetNameFormat, new object[]
-					{
-						"rbl"
-					});
+					assetName = string.Format(textureAssetNameFormat, "rbl");
 				}
 			}
 			else
 			{
-				assetName = string.Format(textureAssetNameFormat, new object[]
-				{
-					"emp"
-				});
+				assetName = string.Format(textureAssetNameFormat, "emp");
 			}
 			base.GetElement<UXTexture>(textureHolderName).LoadTexture(assetName);
 			this.SetupTab(tab, base.GetElement<UXButton>(tabName));
@@ -561,7 +549,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.promoGroup.Visible = this.showingPromo;
 				this.movedDown = !this.showingPromo;
-				float amount = (float)(show ? 1 : -1) * this.promoGroup.Height * 0.5f;
+				float amount = (float)((!show) ? -1 : 1) * this.promoGroup.Height * 0.5f;
 				this.MoveUp(this.itemGridParent, amount);
 				this.MoveUp(this.tabsParent, amount);
 			}
@@ -581,7 +569,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				return;
 			}
-			bool flag = tab > StoreTab.NotInStore;
+			bool flag = tab != StoreTab.NotInStore;
 			this.primaryPage.Visible = !flag;
 			this.secondaryPage.Visible = flag;
 			this.titleLabel.Visible = !flag;
@@ -593,7 +581,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					int value = StoreScreen.AddOrCountBuildingItems(null, tab, null);
 					this.tabJewels[tab].Value = value;
-					return;
 				}
 			}
 			else
@@ -610,9 +597,11 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (this.Visible)
 				{
 					this.SetupCurTabElements();
-					return;
 				}
-				this.resetCurrentTabOnVisible = true;
+				else
+				{
+					this.resetCurrentTabOnVisible = true;
+				}
 			}
 		}
 
@@ -781,13 +770,13 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (storeItemTag.CanPurchase)
 			{
 				UXLabel subElement8 = this.itemGrid.GetSubElement<UXLabel>(uid, "LabelItemCount");
-				subElement8.Text = ((this.turretSwappingUnlocked && buildingInfo.Type == BuildingType.Turret) ? this.lang.Get("TROOP_MULTIPLIER", new object[]
-				{
-					storeItemTag.CurQuantity
-				}) : this.lang.Get("FRACTION", new object[]
+				subElement8.Text = ((!this.turretSwappingUnlocked || buildingInfo.Type != BuildingType.Turret) ? this.lang.Get("FRACTION", new object[]
 				{
 					storeItemTag.CurQuantity,
 					storeItemTag.MaxQuantity
+				}) : this.lang.Get("TROOP_MULTIPLIER", new object[]
+				{
+					storeItemTag.CurQuantity
 				}));
 			}
 			UXLabel subElement9 = this.itemGrid.GetSubElement<UXLabel>(uid, "LabelCurrencyAmount");
@@ -843,7 +832,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				subElement3.Visible = false;
 				UXSprite subElement4 = this.itemGrid.GetSubElement<UXSprite>(uid, "SpriteDim");
 				subElement4.Visible = !storeItemTag.ReqMet;
-				int crystals = storeItemTag.ReqMet ? storeItemTag.Price : 0;
+				int crystals = (!storeItemTag.ReqMet) ? 0 : storeItemTag.Price;
 				UXUtils.SetupCostElements(this, "Cost", uid, 0, 0, 0, crystals, false, null);
 				this.itemGrid.GetSubElement<UXLabel>(uid, "LabelBuildTime").Visible = false;
 				this.itemGrid.GetSubElement<UXSprite>(uid, "SpriteItemTimeIcon").Visible = false;
@@ -987,7 +976,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				for (int i = 0; i < num; i++)
 				{
 					int num4 = StoreScreen.SOFT_CURRENCY_PERCENTS[i];
-					int num5 = (num4 == 100) ? (num3 - num2) : (num3 * num4 / 100);
+					int num5 = (num4 != 100) ? (num3 * num4 / 100) : (num3 - num2);
 					array3[i] = num5;
 					int num6 = 0;
 					switch (currencyType)
@@ -1015,40 +1004,36 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				int num8 = j + 1;
 				StoreItemTag storeItemTag = new StoreItemTag();
-				storeItemTag.Amount = (forProtection ? num8 : array3[j]);
+				storeItemTag.Amount = ((!forProtection) ? array3[j] : num8);
 				storeItemTag.Price = array4[j];
 				storeItemTag.Currency = currencyType;
 				storeItemTag.ReqMet = (forProtection || array2[j]);
 				if (forProtection)
 				{
-					storeItemTag.CanPurchase = (storeItemTag.ReqMet = this.IsProtectionPackAvailable(num8));
+					StoreItemTag arg_21C_0 = storeItemTag;
+					bool flag = this.IsProtectionPackAvailable(num8);
+					storeItemTag.ReqMet = flag;
+					arg_21C_0.CanPurchase = flag;
 				}
 				if (!forProtection && array != null)
 				{
 					storeItemTag.Uid = array[j];
 				}
-				string text = string.Format("{0}_{1}", new object[]
-				{
-					forProtection ? "protection" : currencyType.ToString(),
-					num8
-				});
+				string text = string.Format("{0}_{1}", (!forProtection) ? currencyType.ToString() : "protection", num8);
 				UXElement uXElement = this.itemGrid.CloneTemplateItem(text);
 				uXElement.Tag = storeItemTag;
 				storeItemTag.MainElement = this.itemGrid.GetSubElement<UXElement>(text, "ItemInfo");
 				UXLabel subElement = this.itemGrid.GetSubElement<UXLabel>(text, "LabelName");
-				string text2;
+				string format;
 				if (forProtection)
 				{
-					text2 = "PACK_PROTECTION{0}";
+					format = "PACK_PROTECTION{0}";
 				}
 				else
 				{
-					text2 = "PACK_CURRENCY{0}";
+					format = "PACK_CURRENCY{0}";
 				}
-				subElement.Text = this.lang.Get(string.Format(text2, new object[]
-				{
-					num8
-				}), new object[]
+				subElement.Text = this.lang.Get(string.Format(format, num8), new object[]
 				{
 					this.lang.Get(currencyType.ToString().ToUpper(), new object[0])
 				});
@@ -1057,9 +1042,9 @@ namespace StaRTS.Main.Views.UX.Screens
 				UXButton subElement2 = this.itemGrid.GetSubElement<UXButton>(text, "BtnItemInfo");
 				subElement2.Visible = false;
 				UXSprite subElement3 = this.itemGrid.GetSubElement<UXSprite>(text, "SpriteItemImage");
-				string text3 = forProtection ? "protection" : currencyType.ToString();
-				UXUtils.SetupGeometryForIcon(subElement3, text3, num8);
-				storeItemTag.IconName = UXUtils.GetCurrencyItemAssetName(text3, num8);
+				string text2 = (!forProtection) ? currencyType.ToString() : "protection";
+				UXUtils.SetupGeometryForIcon(subElement3, text2, num8);
+				storeItemTag.IconName = UXUtils.GetCurrencyItemAssetName(text2, num8);
 				string name = UXUtils.FormatAppendedName("Items", text);
 				JewelControl.Create(this, name);
 				UXLabel subElement4 = this.itemGrid.GetSubElement<UXLabel>(text, "LabelItemRequirement");
@@ -1067,7 +1052,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					subElement4.Text = this.lang.Get("STORE_TREASURE_LIMIT", new object[0]);
 				}
-				else if (!storeItemTag.ReqMet & forProtection)
+				else if (!storeItemTag.ReqMet && forProtection)
 				{
 					this.AddProtectionCooldownTimer();
 				}
@@ -1081,7 +1066,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					subElement5.Visible = true;
 				}
-				int crystals = storeItemTag.ReqMet ? storeItemTag.Price : 0;
+				int crystals = (!storeItemTag.ReqMet) ? 0 : storeItemTag.Price;
 				UXUtils.SetupCostElements(this, "Cost", text, 0, 0, 0, crystals, false, null);
 				UXLabel subElement6 = this.itemGrid.GetSubElement<UXLabel>(text, "LabelBuildTime");
 				subElement6.Visible = false;
@@ -1126,6 +1111,50 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void AddOffersButton(List<UXElement> list)
 		{
+			if (!TapjoyManager.IsEnabled())
+			{
+				return;
+			}
+			if (!TapjoyManager.DidConnectSucceed)
+			{
+				return;
+			}
+			StoreItemTag storeItemTag = new StoreItemTag();
+			storeItemTag.Uid = "tapjoy";
+			UXElement uXElement = this.itemGrid.CloneTemplateItem(storeItemTag.Uid);
+			uXElement.Tag = storeItemTag;
+			storeItemTag.MainElement = this.itemGrid.GetSubElement<UXElement>(storeItemTag.Uid, "ItemInfo");
+			UXLabel subElement = this.itemGrid.GetSubElement<UXLabel>(storeItemTag.Uid, "LabelName");
+			subElement.Text = this.lang.Get("tapjoy_title", new object[0]);
+			storeItemTag.InfoLabel = this.itemGrid.GetSubElement<UXLabel>(storeItemTag.Uid, "LabelItemInfo");
+			storeItemTag.InfoLabel.Visible = false;
+			UXButton subElement2 = this.itemGrid.GetSubElement<UXButton>(storeItemTag.Uid, "BtnItemInfo");
+			subElement2.Visible = false;
+			string name = UXUtils.FormatAppendedName("Items", storeItemTag.Uid);
+			JewelControl.Create(this, name);
+			UXSprite subElement3 = this.itemGrid.GetSubElement<UXSprite>(storeItemTag.Uid, "SpriteItemImage");
+			UXUtils.SetupGeometryForIcon(subElement3, "specialoffer", 1);
+			UXLabel subElement4 = this.itemGrid.GetSubElement<UXLabel>(storeItemTag.Uid, "LabelItemRequirement");
+			subElement4.Visible = false;
+			UXUtils.SetupCostElements(this, "Cost", storeItemTag.Uid, 0, 0, 0, 0, false, this.lang.Get("tapjoy_cost", new object[0]));
+			UXLabel subElement5 = this.itemGrid.GetSubElement<UXLabel>(storeItemTag.Uid, "LabelBuildTime");
+			subElement5.Visible = false;
+			UXSprite subElement6 = this.itemGrid.GetSubElement<UXSprite>(storeItemTag.Uid, "SpriteItemTimeIcon");
+			subElement6.Visible = false;
+			UXLabel subElement7 = this.itemGrid.GetSubElement<UXLabel>(storeItemTag.Uid, "LabelItemCount");
+			subElement7.Visible = false;
+			UXLabel subElement8 = this.itemGrid.GetSubElement<UXLabel>(storeItemTag.Uid, "LabelCurrencyAmount");
+			subElement8.Text = this.lang.Get("tapjoy_desc", new object[0]);
+			UXSprite subElement9 = this.itemGrid.GetSubElement<UXSprite>(storeItemTag.Uid, "SpriteDim");
+			subElement9.Visible = false;
+			UXButton subElement10 = this.itemGrid.GetSubElement<UXButton>(storeItemTag.Uid, "ButtonItemCard");
+			subElement10.OnClicked = new UXButtonClickedDelegate(this.OnOffersButtonClicked);
+			subElement10.Tag = storeItemTag;
+			subElement10.Enabled = true;
+			this.itemGrid.GetSubElement<UXElement>(storeItemTag.Uid, "PackageBadge").Visible = false;
+			this.itemGrid.GetSubElement<UXElement>(storeItemTag.Uid, "CrystalBonus").Visible = false;
+			this.HideLEIElements(storeItemTag.Uid);
+			list.Add(uXElement);
 		}
 
 		private List<SaleItemTypeVO> GetCurrentItemsOnSale()
@@ -1176,9 +1205,11 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					num - tag.Amount
 				});
-				return;
 			}
-			this.itemGrid.GetSubElement<UXElement>(itemUid, "CrystalBonus").Visible = false;
+			else
+			{
+				this.itemGrid.GetSubElement<UXElement>(itemUid, "CrystalBonus").Visible = false;
+			}
 		}
 
 		private void RemoveSaleTitle()
@@ -1191,7 +1222,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			InAppPurchaseController inAppPurchaseController = Service.Get<InAppPurchaseController>();
 			List<InAppPurchaseTypeVO> validIAPTypes = inAppPurchaseController.GetValidIAPTypes();
-			CurrencyType currency = CurrencyType.Crystals;
+			CurrencyType currencyType = CurrencyType.Crystals;
 			List<SaleItemTypeVO> currentItemsOnSale = this.GetCurrentItemsOnSale();
 			int count = validIAPTypes.Count;
 			for (int i = 0; i < count; i++)
@@ -1202,7 +1233,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				string text2 = this.lang.Get("iap_desc_" + inAppPurchaseTypeVO.Uid, new object[0]);
 				StoreItemTag storeItemTag = new StoreItemTag();
 				storeItemTag.Amount = inAppPurchaseTypeVO.Amount;
-				storeItemTag.Currency = currency;
+				storeItemTag.Currency = currencyType;
 				storeItemTag.IAPType = inAppPurchaseTypeVO;
 				storeItemTag.IAPProduct = iAPProduct;
 				string uid = inAppPurchaseTypeVO.Uid;
@@ -1233,7 +1264,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				subElement8.Text = this.lang.Get("CURRENCY_VALUE_NAME", new object[]
 				{
 					this.lang.ThousandsSeparated(storeItemTag.Amount),
-					this.lang.Get(currency.ToString().ToUpper(), new object[0])
+					this.lang.Get(currencyType.ToString().ToUpper(), new object[0])
 				});
 				UXSprite subElement9 = this.itemGrid.GetSubElement<UXSprite>(uid, "SpriteDim");
 				subElement9.Visible = false;
@@ -1283,11 +1314,29 @@ namespace StaRTS.Main.Views.UX.Screens
 			BuildingLookupController buildingLookupController = Service.Get<BuildingLookupController>();
 			List<LimitedEditionItemVO> validLEIs = Service.Get<LimitedEditionItemController>().ValidLEIs;
 			StoreTab storeTab = this.curTab;
-			switch (storeTab)
+			if (storeTab != StoreTab.Treasure)
 			{
-			case StoreTab.NotInStore:
-				break;
-			case StoreTab.Treasure:
+				if (storeTab != StoreTab.Protection)
+				{
+					if (storeTab != StoreTab.EventPrizes)
+					{
+						this.AddLEItems(list, this.curTab, validLEIs);
+						StoreScreen.AddOrCountBuildingItems(list, this.curTab, new StoreScreen.AddBuildingItemDelegate(this.AddBuildingItem));
+					}
+					else
+					{
+						this.AddLEItems(list, this.curTab, validLEIs);
+						this.AddEventPrizeItems(list);
+					}
+				}
+				else
+				{
+					this.AddLEItems(list, this.curTab, validLEIs);
+					this.AddCurrencyOrProtectionItems(list, true, CurrencyType.Crystals);
+				}
+			}
+			else
+			{
 				this.AddIAPItems(list);
 				this.AddLEItems(list, this.curTab, validLEIs);
 				this.AddSupplyCrates(list);
@@ -1301,23 +1350,10 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 				this.AddCurrencyOrProtectionItems(list, false, CurrencyType.Credits);
 				this.AddCurrencyOrProtectionItems(list, false, CurrencyType.Materials);
-				break;
-			case StoreTab.Protection:
-				this.AddLEItems(list, this.curTab, validLEIs);
-				this.AddCurrencyOrProtectionItems(list, true, CurrencyType.Crystals);
-				break;
-			default:
-				if (storeTab != StoreTab.EventPrizes)
+				if (!GameConstants.TAPJOY_AFTER_IAP)
 				{
-					this.AddLEItems(list, this.curTab, validLEIs);
-					StoreScreen.AddOrCountBuildingItems(list, this.curTab, new StoreScreen.AddBuildingItemDelegate(this.AddBuildingItem));
+					this.AddOffersButton(list);
 				}
-				else
-				{
-					this.AddLEItems(list, this.curTab, validLEIs);
-					this.AddEventPrizeItems(list);
-				}
-				break;
 			}
 			if (this.curTab == StoreTab.Decorations && list.Count > 0 && this.turretSwappingUnlocked)
 			{
@@ -1346,7 +1382,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			else
 			{
 				this.turretLabelGroup.Visible = false;
-				this.turretLabel.Text = "";
+				this.turretLabel.Text = string.Empty;
 			}
 			UXUtils.SortListForTwoRowGrids(list, this.itemGrid);
 			int j = 0;
@@ -1386,7 +1422,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			int num = buildingInfo.Order - buildingInfo2.Order;
 			if (num == 0)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Building {0} matches order ({1}) of {2}", new object[]
+				Service.Get<Logger>().WarnFormat("Building {0} matches order ({1}) of {2}", new object[]
 				{
 					buildingInfo.Uid,
 					buildingInfo.Order,
@@ -1413,7 +1449,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.itemGrid.RepositionItems();
 					this.itemGrid.ScrollToItem(i);
-					return;
+					break;
 				}
 				i++;
 			}
@@ -1430,7 +1466,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void OnTabButtonClicked(UXButton button)
 		{
-			StoreTab storeTab = (StoreTab)button.Tag;
+			StoreTab storeTab = (StoreTab)((int)button.Tag);
 			if (storeTab != this.curTab)
 			{
 				if (storeTab != StoreTab.Treasure)
@@ -1443,11 +1479,13 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					Service.Get<EventManager>().SendEvent(EventId.BackButtonClicked, null);
 					base.InitDefaultBackDelegate();
-					return;
 				}
-				Service.Get<EventManager>().SendEvent(EventId.StoreCategorySelected, storeTab);
-				base.CurrentBackDelegate = new UXButtonClickedDelegate(this.OnTabButtonClicked);
-				base.CurrentBackButton = this.backButton;
+				else
+				{
+					Service.Get<EventManager>().SendEvent(EventId.StoreCategorySelected, storeTab);
+					base.CurrentBackDelegate = new UXButtonClickedDelegate(this.OnTabButtonClicked);
+					base.CurrentBackButton = this.backButton;
+				}
 			}
 		}
 
@@ -1528,13 +1566,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			StoreTab storeTab = this.curTab;
 			if (storeTab != StoreTab.Treasure)
 			{
-				if (storeTab != StoreTab.Protection)
+				if (storeTab == StoreTab.Protection)
 				{
-					return;
-				}
-				if (this.enableTimer)
-				{
-					this.RefreshProtectionCooldownTimer();
+					if (this.enableTimer)
+					{
+						this.RefreshProtectionCooldownTimer();
+					}
 				}
 			}
 			else if (this.visibleSale != null)
@@ -1543,15 +1580,16 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.requiresRefresh = true;
 					this.RefreshView();
-					return;
 				}
-				UXLabel element = base.GetElement<UXLabel>("CyrstalBonusLabelExpire");
-				int secondsRemaining = TimedEventUtils.GetSecondsRemaining(this.visibleSale);
-				element.Text = this.lang.Get("crystal_bonus_ends_in", new object[]
+				else
 				{
-					LangUtils.FormatTime((long)secondsRemaining)
-				});
-				return;
+					UXLabel element = base.GetElement<UXLabel>("CyrstalBonusLabelExpire");
+					int secondsRemaining = TimedEventUtils.GetSecondsRemaining(this.visibleSale);
+					element.Text = this.lang.Get("crystal_bonus_ends_in", new object[]
+					{
+						LangUtils.FormatTime((long)secondsRemaining)
+					});
+				}
 			}
 		}
 
@@ -1586,11 +1624,22 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void OnOffersButtonClicked(UXButton button)
 		{
+			bool flag = TapjoyManager.IsEnabled();
+			if (flag)
+			{
+				Service.Get<EventManager>().SendEvent(EventId.TapjoyOfferWallSelect, "tapjoy");
+				TapjoyManager.Instance.ShowOffers();
+			}
 			this.Close(null);
 		}
 
 		private void OnIAPItemButtonClicked(UXButton button)
 		{
+			if (GameConstants.IAP_DISABLED_ANDROID)
+			{
+				AlertScreen.ShowModal(false, this.lang.Get("IAP_DISABLED_ANDROID_TITLE", new object[0]), this.lang.Get("IAP_DISABLED_ANDROID_DESCRIPTION", new object[0]), null, null, null, true, false);
+				return;
+			}
 			StoreItemTag storeItemTag = button.Tag as StoreItemTag;
 			Service.Get<EventManager>().SendEvent(EventId.InAppPurchaseSelect, storeItemTag.IAPType.ProductId);
 			Service.Get<InAppPurchaseController>().PurchaseProduct(storeItemTag.IAPType.ProductId);
@@ -1609,9 +1658,11 @@ namespace StaRTS.Main.Views.UX.Screens
 					storeItemTag.Price
 				});
 				AlertScreen.ShowModalWithImage(false, null, message, storeItemTag.IconName, new OnScreenModalResult(this.OnPurchaseSoftCurrency), storeItemTag);
-				return;
 			}
-			GameUtils.ShowNotEnoughStorageMessage(storeItemTag.Currency);
+			else
+			{
+				GameUtils.ShowNotEnoughStorageMessage(storeItemTag.Currency);
+			}
 		}
 
 		private void OnProtectionItemButtonClicked(UXButton button)
@@ -1624,10 +1675,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			string message = this.lang.Get("PURCHASE_PROTECTION", new object[]
 			{
-				this.lang.Get(string.Format("PACK_PROTECTION{0}", new object[]
-				{
-					storeItemTag.Amount
-				}), new object[0]),
+				this.lang.Get(string.Format("PACK_PROTECTION{0}", storeItemTag.Amount), new object[0]),
 				storeItemTag.Price
 			});
 			AlertScreen.ShowModalWithImage(false, null, message, storeItemTag.IconName, new OnScreenModalResult(this.OnPurchaseProtection), storeItemTag);
@@ -1648,9 +1696,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (CrateUtils.IsPurchasableInStore(crateVO))
 			{
 				this.EnterCratePurchaseFlow(crateVO);
-				return;
 			}
-			AlertScreen.ShowModal(false, null, this.lang.Get("ALL_CRATES_ALREADY_PURCHASED", new object[0]), null, null);
+			else
+			{
+				AlertScreen.ShowModal(false, null, this.lang.Get("ALL_CRATES_ALREADY_PURCHASED", new object[0]), null, null);
+			}
 		}
 
 		private void OpenCrateModalFlyoutForStore(string crateId, string planetID)
@@ -1747,449 +1797,63 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		public override EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.EquipmentUnlocked)
+			if (id != EventId.ShardUnitUpgraded)
 			{
-				if (id <= EventId.ButtonHighlightActivated)
+				if (id != EventId.DeployableUnlockCelebrationPlayed)
 				{
-					if (id != EventId.InventoryResourceUpdated)
+					if (id == EventId.InventoryResourceUpdated)
 					{
-						if (id == EventId.ButtonHighlightActivated)
+						if (!this.changingInventory)
 						{
-							base.GetOptionalElement<UXElement>("ContainerJewel" + StoreTab.Resources.ToString()).Visible = false;
-							base.GetOptionalElement<UXElement>("ContainerJewel" + StoreTab.Army.ToString()).Visible = false;
-							base.GetOptionalElement<UXElement>("ContainerJewel" + StoreTab.Defenses.ToString()).Visible = false;
-							base.GetOptionalElement<UXElement>("ContainerJewel" + StoreTab.Decorations.ToString()).Visible = false;
+							this.RefreshAfterCurrencyChange();
 						}
+						goto IL_17C;
 					}
-					else if (!this.changingInventory)
+					if (id == EventId.ButtonHighlightActivated)
 					{
-						this.RefreshAfterCurrencyChange();
+						base.GetOptionalElement<UXElement>("ContainerJewel" + StoreTab.Resources.ToString()).Visible = false;
+						base.GetOptionalElement<UXElement>("ContainerJewel" + StoreTab.Army.ToString()).Visible = false;
+						base.GetOptionalElement<UXElement>("ContainerJewel" + StoreTab.Defenses.ToString()).Visible = false;
+						base.GetOptionalElement<UXElement>("ContainerJewel" + StoreTab.Decorations.ToString()).Visible = false;
+						goto IL_17C;
 					}
-				}
-				else if (id != EventId.PlayerFactionChanged)
-				{
+					if (id == EventId.PlayerFactionChanged)
+					{
+						this.SetTab(this.curTab);
+						goto IL_17C;
+					}
 					if (id == EventId.EquipmentUnlocked)
 					{
 						if (Service.Get<ArmoryController>().AllowUnlockCelebration)
 						{
 							this.UnregisterForCrateFlyoutReOpen();
 						}
+						goto IL_17C;
 					}
-				}
-				else
-				{
-					this.SetTab(this.curTab);
-				}
-			}
-			else
-			{
-				if (id <= EventId.ShardUnitUpgraded)
-				{
 					if (id != EventId.EquipmentUnlockCelebrationPlayed)
 					{
-						if (id != EventId.ShardUnitUpgraded)
+						if (id != EventId.InventoryCrateCollectionClosed)
 						{
-							goto IL_19E;
+							goto IL_17C;
 						}
-						IDeployableVO deployableVO = (IDeployableVO)cookie;
-						if (deployableVO != null && deployableVO.Lvl > 1)
-						{
-							this.UnregisterForCrateFlyoutReOpen();
-							goto IL_19E;
-						}
-						goto IL_19E;
-					}
-				}
-				else if (id != EventId.DeployableUnlockCelebrationPlayed)
-				{
-					if (id == EventId.InventoryCrateCollectionClosed)
-					{
 						string planetId = Service.Get<CurrentPlayer>().PlanetId;
 						this.OpenCrateModalFlyoutForStore(this.crateToReOpenInFlyout, planetId);
 						this.UnregisterForCrateFlyoutReOpen();
-						goto IL_19E;
+						goto IL_17C;
 					}
-					goto IL_19E;
 				}
 				this.Close(null);
 			}
-			IL_19E:
+			else
+			{
+				IDeployableVO deployableVO = (IDeployableVO)cookie;
+				if (deployableVO != null && deployableVO.Lvl > 1)
+				{
+					this.UnregisterForCrateFlyoutReOpen();
+				}
+			}
+			IL_17C:
 			return base.OnEvent(id, cookie);
-		}
-
-		public void RestoreIcons()
-		{
-			this.SetupCurTabElements();
-		}
-
-		protected internal StoreScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).AddBuildingItem((List<UXElement>)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2]), *(sbyte*)(args + 3) != 0, *(int*)(args + 4), *(int*)(args + 5));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).AddCurrencyOrProtectionItems((List<UXElement>)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, (CurrencyType)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).AddEventPrizeItems((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).AddIAPItems((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).AddLEItems((List<UXElement>)GCHandledObjects.GCHandleToObject(*args), (StoreTab)(*(int*)(args + 1)), (List<LimitedEditionItemVO>)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).AddOffersButton((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StoreScreen.AddOrCountBuildingItems((List<UXElement>)GCHandledObjects.GCHandleToObject(*args), (StoreTab)(*(int*)(args + 1)), (StoreScreen.AddBuildingItemDelegate)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).AddProtectionCooldownTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).AddSupplyCrates((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StoreScreen.CompareBuildingItem((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).CompareCrates((CrateVO)GCHandledObjects.GCHandleToObject(*args), (CrateVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StoreScreen.CountUnlockedUnbuiltBuildings());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).EnableScrollListMovement(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).EnterCratePurchaseFlow((CrateVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).ShowCurrencyTray);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).Visible);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).GetCurrentItemsOnSale());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).GetProtectionCooldownRemainingInSeconds(*(int*)args));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).GetProtectionPackDuration(*(int*)args));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).HideLEIElements(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).InitGrids();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).IsProtectionPackAvailable(*(int*)args));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StoreScreen.IsTurretMax((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).MoveUp((UXElement)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnBuildingItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnIAPItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnInfoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnLEItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnOffersButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnProtectionItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnPurchaseProtection(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnPurchaseSoftCurrency(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).onScreenTransitionInComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnSoftCurrencyItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnSupplyCrateItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnTabButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).OpenCrateModalFlyoutForStore(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshAfterCurrencyChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshProtectionCooldownTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).RegisterForCrateFlyoutReOpen(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).RemoveProtectionCooldownTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).RemoveSaleTitle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).ResetCurrentTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).RestoreIcons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).ScrollToItem(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).Visible = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).SetTab((StoreTab)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).SetupCurTabElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).SetupJewel((StoreTab)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).SetupLimitedEditionTab((StoreTab)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).SetupSaleItem(Marshal.PtrToStringUni(*(IntPtr*)args), (SaleItemTypeVO)GCHandledObjects.GCHandleToObject(args[1]), (StoreItemTag)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTab((StoreTab)(*(int*)args), (UXButton)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTab((StoreTab)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTabForFaction((StoreTab)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).ShowPromos(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			((StoreScreen)GCHandledObjects.GCHandleToObject(instance)).UnregisterForCrateFlyoutReOpen();
-			return -1L;
 		}
 	}
 }

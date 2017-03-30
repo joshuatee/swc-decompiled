@@ -16,9 +16,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -75,91 +73,80 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.SpecialAttackSpawned)
+			switch (id)
 			{
-				if (id <= EventId.RemovingBuff)
+			case EventId.EntityHit:
+				this.ApplyBuffFromBullet((Bullet)cookie);
+				return EatResponse.NotEaten;
+			case EventId.EntityHealthChanged:
+			case EventId.EntityHitByBeam:
+			{
+				IL_21:
+				if (id == EventId.TroopAbilityActivate)
 				{
-					if (id != EventId.BuildingPlacedOnBoard)
-					{
-						switch (id)
-						{
-						case EventId.EntityHit:
-							this.ApplyBuffFromBullet((Bullet)cookie);
-							break;
-						case EventId.AddedBuff:
-						{
-							BuffEventData buffEventData = (BuffEventData)cookie;
-							this.OnAddedBuff(buffEventData.BuffObj, buffEventData.Target);
-							break;
-						}
-						case EventId.RemovingBuff:
-						{
-							BuffEventData buffEventData = (BuffEventData)cookie;
-							this.OnRemovingBuff(buffEventData.BuffObj, buffEventData.Target);
-							break;
-						}
-						}
-					}
-					else
-					{
-						SmartEntity entity = cookie as SmartEntity;
-						this.ApplyEntityWarBuffs(entity);
-						this.ApplyBuildingEquipmentBuffs(entity);
-					}
+					this.AddTroopAbilitySelfBuff((SmartEntity)cookie);
+					return EatResponse.NotEaten;
 				}
-				else if (id != EventId.TroopPlacedOnBoard)
+				if (id == EventId.TroopAbilityDeactivate)
 				{
-					if (id == EventId.SpecialAttackSpawned)
-					{
-						SpecialAttack specialAttack = cookie as SpecialAttack;
-						this.ApplySpecialAttackWarBuffs(specialAttack);
-						this.ApplySpecialAttackEquipmentBuffs(specialAttack);
-					}
+					this.RemoveTroopAbilitySelfBuff((SmartEntity)cookie);
+					return EatResponse.NotEaten;
 				}
-				else
+				if (id == EventId.BuildingPlacedOnBoard)
+				{
+					SmartEntity entity = cookie as SmartEntity;
+					this.ApplyEntityWarBuffs(entity);
+					this.ApplyBuildingEquipmentBuffs(entity);
+					return EatResponse.NotEaten;
+				}
+				if (id == EventId.TroopPlacedOnBoard)
 				{
 					SmartEntity smartEntity = cookie as SmartEntity;
 					this.AddBuffsOnSpawn(smartEntity);
 					this.ApplyEntityWarBuffs(smartEntity);
 					this.ApplyTroopEquipmentBuffs(smartEntity);
+					return EatResponse.NotEaten;
 				}
-			}
-			else if (id <= EventId.TroopAbilityActivate)
-			{
-				if (id != EventId.BattleLoadedForDefend)
+				if (id == EventId.SpecialAttackSpawned)
 				{
-					if (id == EventId.TroopAbilityActivate)
-					{
-						this.AddTroopAbilitySelfBuff((SmartEntity)cookie);
-					}
+					SpecialAttack specialAttack = cookie as SpecialAttack;
+					this.ApplySpecialAttackWarBuffs(specialAttack);
+					this.ApplySpecialAttackEquipmentBuffs(specialAttack);
+					return EatResponse.NotEaten;
 				}
-				else
+				if (id == EventId.BattleLoadedForDefend)
 				{
 					this.ApplyEquipmentBuffsToExistingBuildings();
 					this.RemoveAllEquipmentBuffShader(GameConstants.EQUIPMENT_SHADER_DELAY_DEFENSE);
+					return EatResponse.NotEaten;
 				}
-			}
-			else if (id != EventId.TroopAbilityDeactivate)
-			{
-				if (id == EventId.EquipmentBuffShaderRemove)
+				if (id != EventId.EquipmentBuffShaderRemove)
 				{
-					int timeDelayInMS = (int)cookie;
-					this.RemoveAllEquipmentBuffShader(timeDelayInMS);
+					return EatResponse.NotEaten;
 				}
+				int timeDelayInMS = (int)cookie;
+				this.RemoveAllEquipmentBuffShader(timeDelayInMS);
+				return EatResponse.NotEaten;
 			}
-			else
+			case EventId.AddedBuff:
 			{
-				this.RemoveTroopAbilitySelfBuff((SmartEntity)cookie);
+				BuffEventData buffEventData = (BuffEventData)cookie;
+				this.OnAddedBuff(buffEventData.BuffObj, buffEventData.Target);
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			case EventId.RemovingBuff:
+			{
+				BuffEventData buffEventData = (BuffEventData)cookie;
+				this.OnRemovingBuff(buffEventData.BuffObj, buffEventData.Target);
+				return EatResponse.NotEaten;
+			}
+			}
+			goto IL_21;
 		}
 
 		public static string MakeFXAttachmentTag(string buffId)
 		{
-			return string.Format("BuffEffect_{0}", new object[]
-			{
-				buffId
-			});
+			return string.Format("BuffEffect_{0}", buffId);
 		}
 
 		private void AddEntityToRecheckVisualAfterLoadList(SmartEntity entity, Buff buff)
@@ -170,9 +157,8 @@ namespace StaRTS.Main.Controllers
 			if (buildingComp != null)
 			{
 				buffComp.RegisterForVisualReAddOnBuilding(buff);
-				return;
 			}
-			if (troopComp != null)
+			else if (troopComp != null)
 			{
 				buffComp.RegisterForVisualReAddOnTroop(buff);
 			}
@@ -192,11 +178,8 @@ namespace StaRTS.Main.Controllers
 				{
 					if (!flag)
 					{
-						int num = (sizeComp.Width <= sizeComp.Depth) ? sizeComp.Width : sizeComp.Depth;
-						string assetName = string.Format(buff.BuffType.AssetName, new object[]
-						{
-							num
-						});
+						int num = (sizeComp.Width > sizeComp.Depth) ? sizeComp.Depth : sizeComp.Width;
+						string assetName = string.Format(buff.BuffType.AssetName, num);
 						Vector3 offset = BuffController.DeduceBuffAssetOffset(buff.BuffType, target);
 						bool pinToCenterOfMass = buff.BuffType.OffsetType == BuffAssetOffset.Top;
 						Service.Get<FXManager>().CreateAndAttachFXToEntity(target, assetName, BuffController.MakeFXAttachmentTag(buff.BuffType.BuffID), null, pinToCenterOfMass, offset, true);
@@ -234,7 +217,6 @@ namespace StaRTS.Main.Controllers
 					if (shader != null)
 					{
 						this.SwapShadersForAppliedBuff(target, shader);
-						return;
 					}
 				}
 				else
@@ -248,7 +230,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (entity == null || shader == null)
 			{
-				Service.Get<StaRTSLogger>().Error("SwapShadersForAppliedBuff: Missing Entity or Shader");
+				Service.Get<Logger>().Error("SwapShadersForAppliedBuff: Missing Entity or Shader");
 				return;
 			}
 			AssetMeshDataMonoBehaviour component = entity.GameObjectViewComp.MainGameObject.GetComponent<AssetMeshDataMonoBehaviour>();
@@ -260,7 +242,7 @@ namespace StaRTS.Main.Controllers
 					GameObject gameObject = component.SelectableGameObjects[i];
 					if (gameObject == null)
 					{
-						Service.Get<StaRTSLogger>().ErrorFormat("No game object found for buff application {0}, skipping", new object[]
+						Service.Get<Logger>().ErrorFormat("No game object found for buff application {0}, skipping", new object[]
 						{
 							i
 						});
@@ -274,7 +256,7 @@ namespace StaRTS.Main.Controllers
 							Material material = UnityUtils.EnsureMaterialCopy(component2);
 							if (material == null)
 							{
-								Service.Get<StaRTSLogger>().ErrorFormat("No material found on renderer for {0}, skipping buff application", new object[]
+								Service.Get<Logger>().ErrorFormat("No material found on renderer for {0}, skipping buff application", new object[]
 								{
 									gameObject.name
 								});
@@ -303,7 +285,7 @@ namespace StaRTS.Main.Controllers
 								}
 								if (component2.gameObject == null)
 								{
-									Service.Get<StaRTSLogger>().ErrorFormat("No game object found on renderer for {0}", new object[]
+									Service.Get<Logger>().ErrorFormat("No game object found on renderer for {0}", new object[]
 									{
 										gameObject.name
 									});
@@ -323,7 +305,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (entity == null)
 			{
-				Service.Get<StaRTSLogger>().Error("RestoreShadersAfterBuff: Missing Entity");
+				Service.Get<Logger>().Error("RestoreShadersAfterBuff: Missing Entity");
 				return;
 			}
 			if (entity.BuffComp == null)
@@ -332,7 +314,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (entity.GameObjectViewComp == null || entity.GameObjectViewComp.MainGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Error("RestoreShadersAfterBuff: Has No Game Object");
+				Service.Get<Logger>().Error("RestoreShadersAfterBuff: Has No Game Object");
 				return;
 			}
 			AssetMeshDataMonoBehaviour component = entity.GameObjectViewComp.MainGameObject.GetComponent<AssetMeshDataMonoBehaviour>();
@@ -468,26 +450,26 @@ namespace StaRTS.Main.Controllers
 				{
 					if (buffTypeVO.ApplyToSelf)
 					{
-						goto IL_B9;
+						goto IL_FC;
 					}
 				}
 				else if (flag2)
 				{
 					if (buffTypeVO.ApplyToAllies)
 					{
-						goto IL_B9;
+						goto IL_FC;
 					}
 				}
 				else if (buffTypeVO.ApplyToEnemies)
 				{
-					goto IL_B9;
+					goto IL_FC;
 				}
-				IL_C4:
+				IL_107:
 				i++;
 				continue;
-				IL_B9:
+				IL_FC:
 				this.TryAddBuffStack(target, buffTypeVO, armorType, BuffVisualPriority.Default);
-				goto IL_C4;
+				goto IL_107;
 			}
 		}
 
@@ -655,7 +637,7 @@ namespace StaRTS.Main.Controllers
 		{
 			IDataController dataController = Service.Get<IDataController>();
 			List<EquipmentEffectVO> equipmentBuffsForTeam = this.GetEquipmentBuffsForTeam(specialAttack.TeamType);
-			int num = (equipmentBuffsForTeam != null) ? equipmentBuffsForTeam.Count : 0;
+			int num = (equipmentBuffsForTeam == null) ? 0 : equipmentBuffsForTeam.Count;
 			for (int i = 0; i < num; i++)
 			{
 				EquipmentEffectVO equipmentEffectVO = equipmentBuffsForTeam[i];
@@ -691,7 +673,7 @@ namespace StaRTS.Main.Controllers
 			}
 			IDataController dataController = Service.Get<IDataController>();
 			List<EquipmentEffectVO> equipmentBuffsForTeam = this.GetEquipmentBuffsForTeam(entity.TeamComp.TeamType);
-			int num = (equipmentBuffsForTeam != null) ? equipmentBuffsForTeam.Count : 0;
+			int num = (equipmentBuffsForTeam == null) ? 0 : equipmentBuffsForTeam.Count;
 			for (int i = 0; i < num; i++)
 			{
 				EquipmentEffectVO equipmentEffectVO = equipmentBuffsForTeam[i];
@@ -728,7 +710,7 @@ namespace StaRTS.Main.Controllers
 			}
 			IDataController dataController = Service.Get<IDataController>();
 			List<EquipmentEffectVO> equipmentBuffsForTeam = this.GetEquipmentBuffsForTeam(entity.TeamComp.TeamType);
-			int num = (equipmentBuffsForTeam != null) ? equipmentBuffsForTeam.Count : 0;
+			int num = (equipmentBuffsForTeam == null) ? 0 : equipmentBuffsForTeam.Count;
 			for (int i = 0; i < num; i++)
 			{
 				EquipmentEffectVO equipmentEffectVO = equipmentBuffsForTeam[i];
@@ -774,12 +756,15 @@ namespace StaRTS.Main.Controllers
 			{
 				SmartEntity smartEntity = (SmartEntity)buildingNode.Entity;
 				BuffComponent buffComp = smartEntity.BuffComp;
-				if (buffComp != null && buffComp.Buffs.Count != 0)
+				if (buffComp != null)
 				{
-					this.RestoreShadersAfterBuff(smartEntity);
-					if (this.shaderSwappedBuffs.ContainsKey(smartEntity))
+					if (buffComp.Buffs.Count != 0)
 					{
-						this.shaderSwappedBuffs.Remove(smartEntity);
+						this.RestoreShadersAfterBuff(smartEntity);
+						if (this.shaderSwappedBuffs.ContainsKey(smartEntity))
+						{
+							this.shaderSwappedBuffs.Remove(smartEntity);
+						}
 					}
 				}
 			}
@@ -957,230 +942,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			return true;
-		}
-
-		protected internal BuffController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddAttackerEquipmentBuff((EquipmentEffectVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddAttackerWarBuff((WarBuffVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddBuffsOnSpawn((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddDefenderEquipmentBuff((EquipmentEffectVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddDefenderWarBuff((WarBuffVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddEntityToRecheckVisualAfterLoadList((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (Buff)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddHealthRegenerationWarBuff((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (WarBuffVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddInfantryDamageBuff((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (WarBuffVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddMaxHealthWarBuff((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (WarBuffVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddShieldRegenerationWarBuff((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (WarBuffVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddSpecialAttackDamageBuff((SpecialAttack)GCHandledObjects.GCHandleToObject(*args), (WarBuffVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddTroopAbilitySelfBuff((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).AddVehicleDamageBuff((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (WarBuffVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).ApplyBuffFromBullet((Bullet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).ApplyBuildingEquipmentBuffs((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).ApplyEntityWarBuffs((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).ApplyEquipmentBuffsToExistingBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).ApplySpecialAttackEquipmentBuffs((SpecialAttack)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).ApplySpecialAttackWarBuffs((SpecialAttack)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).ApplyTroopEquipmentBuffs((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuffController)GCHandledObjects.GCHandleToObject(instance)).BuildingShieldStarted((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1]), (SmartEntity)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).ClearEquipmentBuffs();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).ClearWarBuffs();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BuffController.DeduceArmorType((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BuffController.DeduceBuffAssetOffset((BuffTypeVO)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuffController)GCHandledObjects.GCHandleToObject(instance)).GetEquipmentBuffsForTeam((TeamType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuffController)GCHandledObjects.GCHandleToObject(instance)).GetListOfWarBuffsBasedOnTeam((TeamType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuffController)GCHandledObjects.GCHandleToObject(instance)).GetTroopAbilitySelfBuffType((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BuffController.MakeFXAttachmentTag(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).OnAddedBuff((Buff)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuffController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).OnRemovingBuff((Buff)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).RemoveAllEquipmentBuffShader(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).RemoveBuffStack((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (BuffTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).RemoveTroopAbilitySelfBuff((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).RestoreShadersAfterBuff((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).SwapShadersForAppliedBuff((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (Shader)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((BuffController)GCHandledObjects.GCHandleToObject(instance)).TryAddBuffStack((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (BuffTypeVO)GCHandledObjects.GCHandleToObject(args[1]), (ArmorType)(*(int*)(args + 2)), (BuffVisualPriority)(*(int*)(args + 3)));
-			return -1L;
 		}
 	}
 }

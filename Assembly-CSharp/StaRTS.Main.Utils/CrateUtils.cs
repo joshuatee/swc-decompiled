@@ -4,9 +4,7 @@ using StaRTS.Main.Models.Static;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
+using System.Collections.Generic;
 
 namespace StaRTS.Main.Utils
 {
@@ -63,18 +61,39 @@ namespace StaRTS.Main.Utils
 			{
 				return false;
 			}
-			if (condition == "ownsArmory")
+			if (condition != null)
 			{
-				return ArmoryUtils.PlayerHasArmory();
-			}
-			if (condition == "hasAvailableEquipment")
-			{
-				return CrateUtils.PlayerHasEquipmentAvailable();
+				if (CrateUtils.<>f__switch$map12 == null)
+				{
+					CrateUtils.<>f__switch$map12 = new Dictionary<string, int>(2)
+					{
+						{
+							"ownsArmory",
+							0
+						},
+						{
+							"hasAvailableEquipment",
+							1
+						}
+					};
+				}
+				int num;
+				if (CrateUtils.<>f__switch$map12.TryGetValue(condition, out num))
+				{
+					if (num == 0)
+					{
+						return ArmoryUtils.PlayerHasArmory();
+					}
+					if (num == 1)
+					{
+						return CrateUtils.PlayerHasEquipmentAvailable();
+					}
+				}
 			}
 			if (condition.StartsWith("hq"))
 			{
-				string value = condition.Substring("hq".get_Length());
-				int level = Convert.ToInt32(value, CultureInfo.InvariantCulture);
+				string value = condition.Substring("hq".Length);
+				int level = Convert.ToInt32(value);
 				return CrateUtils.PlayerHasAtLeastHqLevel(level);
 			}
 			return false;
@@ -97,41 +116,6 @@ namespace StaRTS.Main.Utils
 				}
 			}
 			return false;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateUtils.AllConditionsMet((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateUtils.ConditionMet(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateUtils.HasVisibleCrateStoreItems());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateUtils.IsPurchasableInStore((CrateVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateUtils.IsVisibleInStore((CrateVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateUtils.PlayerHasAtLeastHqLevel(*(int*)args));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateUtils.PlayerHasEquipmentAvailable());
 		}
 	}
 }

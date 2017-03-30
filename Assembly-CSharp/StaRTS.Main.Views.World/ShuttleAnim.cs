@@ -8,7 +8,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -151,7 +150,7 @@ namespace StaRTS.Main.Views.World
 				{
 					if (this.state == ShuttleState.Landing)
 					{
-						Service.Get<ViewTimerManager>().CreateViewTimer(this.IsContrabandShuttle ? 3f : 0.2f, false, new TimerDelegate(this.CallbackPlayParticle), this.LandingEffect);
+						Service.Get<ViewTimerManager>().CreateViewTimer((!this.IsContrabandShuttle) ? 0.2f : 3f, false, new TimerDelegate(this.CallbackPlayParticle), this.LandingEffect);
 					}
 					else if (this.state == ShuttleState.LiftOff)
 					{
@@ -166,7 +165,7 @@ namespace StaRTS.Main.Views.World
 						{
 							if (enumerator.MoveNext())
 							{
-								AnimationState animationState = (AnimationState)enumerator.get_Current();
+								AnimationState animationState = (AnimationState)enumerator.Current;
 								num = animationState.length;
 							}
 						}
@@ -175,9 +174,11 @@ namespace StaRTS.Main.Views.World
 					{
 						Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
 						this.timerId = Service.Get<ViewTimerManager>().CreateViewTimer(num, false, new TimerDelegate(this.OnAnimationFinished), null);
-						return;
 					}
-					this.DequeueState();
+					else
+					{
+						this.DequeueState();
+					}
 				}
 			}
 		}
@@ -279,172 +280,6 @@ namespace StaRTS.Main.Views.World
 				this.shuttleOutline.RemoveOutline();
 				this.shuttleOutline = null;
 			}
-		}
-
-		protected internal ShuttleAnim(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).DequeueState();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).EnqueueState((ShuttleState)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).Anim);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).CenterOfMass);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).GameObj);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).IsArmoryShuttle);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).IsContrabandShuttle);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).LandingEffect);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).Percentage);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).ShadowGameObject);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).ShadowMaterial);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).Starport);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).State);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).TakeOffEffect);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).PlayParticle((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).PulseOutline();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).Anim = (Animation)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).CenterOfMass = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).GameObj = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).IsArmoryShuttle = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).IsContrabandShuttle = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).LandingEffect = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).Percentage = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).ShadowGameObject = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).ShadowMaterial = (Material)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).Starport = (Entity)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).TakeOffEffect = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((ShuttleAnim)GCHandledObjects.GCHandleToObject(instance)).Stop();
-			return -1L;
 		}
 	}
 }

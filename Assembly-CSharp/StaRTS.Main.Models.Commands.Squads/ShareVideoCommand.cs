@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public ShareVideoCommand(ShareVideoRequest request) : base("guild.link.share", request, new DefaultResponse())
 		{
 		}
-
-		protected internal ShareVideoCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

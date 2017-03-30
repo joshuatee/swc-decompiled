@@ -3,7 +3,6 @@ using StaRTS.Main.Views.UX.Controls;
 using StaRTS.Main.Views.UX.Elements;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Projectors
 {
@@ -19,7 +18,7 @@ namespace StaRTS.Main.Views.Projectors
 
 		public bool closeup;
 
-		public int SnapshotFrameDelay;
+		public int SnapshotFrameDelay = 2;
 
 		public AnimationPreference AnimPreference;
 
@@ -33,11 +32,11 @@ namespace StaRTS.Main.Views.Projectors
 
 		public bool Outline;
 
-		public float OutlineOuter;
+		public float OutlineOuter = 0.01f;
 
-		public float OutlineInner;
+		public float OutlineInner = 0.01f;
 
-		public Color Tint;
+		public Color Tint = Color.white;
 
 		public string TrackerName;
 
@@ -45,7 +44,7 @@ namespace StaRTS.Main.Views.Projectors
 
 		public UXSprite FrameSprite;
 
-		public float Sharpness;
+		public float Sharpness = 1f;
 
 		public Action<RenderTexture, ProjectorConfig> RenderCallback;
 
@@ -122,37 +121,6 @@ namespace StaRTS.Main.Views.Projectors
 			this.FrameSprite = null;
 			this.RenderCallback = null;
 			this.MainAsset = null;
-		}
-
-		public ProjectorConfig()
-		{
-			this.SnapshotFrameDelay = 2;
-			this.OutlineOuter = 0.01f;
-			this.OutlineInner = 0.01f;
-			this.Tint = Color.white;
-			this.Sharpness = 1f;
-			base..ctor();
-		}
-
-		protected internal ProjectorConfig(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ProjectorConfig)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectorConfig)GCHandledObjects.GCHandleToObject(instance)).IsEquivalentTo((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ProjectorConfig)GCHandledObjects.GCHandleToObject(instance)).MakeEquivalentTo((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

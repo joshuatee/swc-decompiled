@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Pvp
 		public PvpBattleStartCommand(PvpBattleStartRequest request) : base("player.pvp.battle.start", request, new DefaultResponse())
 		{
 		}
-
-		protected internal PvpBattleStartCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

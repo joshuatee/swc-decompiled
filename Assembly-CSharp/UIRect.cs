@@ -1,13 +1,10 @@
 using System;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
-public abstract class UIRect : MonoBehaviour, IUnitySerializable
+public abstract class UIRect : MonoBehaviour
 {
-	[System.Serializable]
-	public class AnchorPoint : IUnitySerializable
+	[Serializable]
+	public class AnchorPoint
 	{
 		public Transform target;
 
@@ -15,10 +12,10 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 
 		public int absolute;
 
-		[System.NonSerialized]
+		[NonSerialized]
 		public UIRect rect;
 
-		[System.NonSerialized]
+		[NonSerialized]
 		public Camera targetCam;
 
 		public AnchorPoint()
@@ -56,14 +53,15 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 			if (num < num2 && num < num3)
 			{
 				this.Set(rel0, abs0);
-				return;
 			}
-			if (num2 < num && num2 < num3)
+			else if (num2 < num && num2 < num3)
 			{
 				this.Set(rel1, abs1);
-				return;
 			}
-			this.Set(rel2, abs2);
+			else
+			{
+				this.Set(rel2, abs2);
+			}
 		}
 
 		public void SetHorizontal(Transform parent, float localPos)
@@ -73,14 +71,16 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 				Vector3[] sides = this.rect.GetSides(parent);
 				float num = Mathf.Lerp(sides[0].x, sides[2].x, this.relative);
 				this.absolute = Mathf.FloorToInt(localPos - num + 0.5f);
-				return;
 			}
-			Vector3 vector = this.target.position;
-			if (parent != null)
+			else
 			{
-				vector = parent.InverseTransformPoint(vector);
+				Vector3 position = this.target.position;
+				if (parent != null)
+				{
+					position = parent.InverseTransformPoint(position);
+				}
+				this.absolute = Mathf.FloorToInt(localPos - position.x + 0.5f);
 			}
-			this.absolute = Mathf.FloorToInt(localPos - vector.x + 0.5f);
 		}
 
 		public void SetVertical(Transform parent, float localPos)
@@ -90,14 +90,16 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 				Vector3[] sides = this.rect.GetSides(parent);
 				float num = Mathf.Lerp(sides[3].y, sides[1].y, this.relative);
 				this.absolute = Mathf.FloorToInt(localPos - num + 0.5f);
-				return;
 			}
-			Vector3 vector = this.target.position;
-			if (parent != null)
+			else
 			{
-				vector = parent.InverseTransformPoint(vector);
+				Vector3 position = this.target.position;
+				if (parent != null)
+				{
+					position = parent.InverseTransformPoint(position);
+				}
+				this.absolute = Mathf.FloorToInt(localPos - position.y + 0.5f);
 			}
-			this.absolute = Mathf.FloorToInt(localPos - vector.y + 0.5f);
 		}
 
 		public Vector3[] GetSides(Transform relativeTo)
@@ -115,140 +117,6 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 			}
 			return null;
 		}
-
-		public override void Unity_Serialize(int depth)
-		{
-			if (depth <= 7)
-			{
-				SerializedStateWriter.Instance.WriteUnityEngineObject(this.target);
-			}
-			SerializedStateWriter.Instance.WriteSingle(this.relative);
-			SerializedStateWriter.Instance.WriteInt32(this.absolute);
-		}
-
-		public override void Unity_Deserialize(int depth)
-		{
-			if (depth <= 7)
-			{
-				this.target = (SerializedStateReader.Instance.ReadUnityEngineObject() as Transform);
-			}
-			this.relative = SerializedStateReader.Instance.ReadSingle();
-			this.absolute = SerializedStateReader.Instance.ReadInt32();
-		}
-
-		public override void Unity_RemapPPtrs(int depth)
-		{
-			if (this.target != null)
-			{
-				this.target = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.target) as Transform);
-			}
-		}
-
-		public unsafe override void Unity_NamedSerialize(int depth)
-		{
-			byte[] var_0_cp_0;
-			int var_0_cp_1;
-			if (depth <= 7)
-			{
-				ISerializedNamedStateWriter arg_23_0 = SerializedNamedStateWriter.Instance;
-				UnityEngine.Object arg_23_1 = this.target;
-				var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-				var_0_cp_1 = 0;
-				arg_23_0.WriteUnityEngineObject(arg_23_1, &var_0_cp_0[var_0_cp_1] + 265);
-			}
-			SerializedNamedStateWriter.Instance.WriteSingle(this.relative, &var_0_cp_0[var_0_cp_1] + 2548);
-			SerializedNamedStateWriter.Instance.WriteInt32(this.absolute, &var_0_cp_0[var_0_cp_1] + 2557);
-		}
-
-		public unsafe override void Unity_NamedDeserialize(int depth)
-		{
-			byte[] var_0_cp_0;
-			int var_0_cp_1;
-			if (depth <= 7)
-			{
-				ISerializedNamedStateReader arg_1E_0 = SerializedNamedStateReader.Instance;
-				var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-				var_0_cp_1 = 0;
-				this.target = (arg_1E_0.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 265) as Transform);
-			}
-			this.relative = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 2548);
-			this.absolute = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2557);
-		}
-
-		protected internal AnchorPoint(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).GetSides((Transform)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).Set(*(float*)args, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).Set((Transform)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).SetHorizontal((Transform)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).SetToNearest(*(float*)args, *(float*)(args + 1), *(float*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).SetToNearest(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3), *(float*)(args + 4), *(float*)(args + 5));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).SetVertical((Transform)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-			return -1L;
-		}
 	}
 
 	public enum AnchorUpdate
@@ -258,56 +126,56 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 		OnStart
 	}
 
-	public UIRect.AnchorPoint leftAnchor;
+	public UIRect.AnchorPoint leftAnchor = new UIRect.AnchorPoint();
 
-	public UIRect.AnchorPoint rightAnchor;
+	public UIRect.AnchorPoint rightAnchor = new UIRect.AnchorPoint(1f);
 
-	public UIRect.AnchorPoint bottomAnchor;
+	public UIRect.AnchorPoint bottomAnchor = new UIRect.AnchorPoint();
 
-	public UIRect.AnchorPoint topAnchor;
+	public UIRect.AnchorPoint topAnchor = new UIRect.AnchorPoint(1f);
 
-	public UIRect.AnchorUpdate updateAnchors;
+	public UIRect.AnchorUpdate updateAnchors = UIRect.AnchorUpdate.OnUpdate;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected GameObject mGo;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected Transform mTrans;
 
-	[System.NonSerialized]
-	protected BetterList<UIRect> mChildren;
+	[NonSerialized]
+	protected BetterList<UIRect> mChildren = new BetterList<UIRect>();
 
-	[System.NonSerialized]
-	protected bool mChanged;
+	[NonSerialized]
+	protected bool mChanged = true;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected bool mParentFound;
 
-	[System.NonSerialized]
-	private bool mUpdateAnchors;
+	[NonSerialized]
+	private bool mUpdateAnchors = true;
 
-	[System.NonSerialized]
-	private int mUpdateFrame;
+	[NonSerialized]
+	private int mUpdateFrame = -1;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mAnchorsCached;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private UIRoot mRoot;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private UIRect mParent;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mRootSet;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected Camera mCam;
 
 	protected bool mStarted;
 
-	[System.NonSerialized]
-	public float finalAlpha;
+	[NonSerialized]
+	public float finalAlpha = 1f;
 
 	protected static Vector3[] mSides = new Vector3[4];
 
@@ -647,7 +515,7 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 
 	public void SetAnchor(GameObject go)
 	{
-		Transform target = (go != null) ? go.transform : null;
+		Transform target = (!(go != null)) ? null : go.transform;
 		this.leftAnchor.target = target;
 		this.rightAnchor.target = target;
 		this.topAnchor.target = target;
@@ -658,7 +526,7 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 
 	public void SetAnchor(GameObject go, int left, int bottom, int right, int top)
 	{
-		Transform target = (go != null) ? go.transform : null;
+		Transform target = (!(go != null)) ? null : go.transform;
 		this.leftAnchor.target = target;
 		this.rightAnchor.target = target;
 		this.topAnchor.target = target;
@@ -678,10 +546,10 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 	public void ResetAnchors()
 	{
 		this.mAnchorsCached = true;
-		this.leftAnchor.rect = (this.leftAnchor.target ? this.leftAnchor.target.GetComponent<UIRect>() : null);
-		this.bottomAnchor.rect = (this.bottomAnchor.target ? this.bottomAnchor.target.GetComponent<UIRect>() : null);
-		this.rightAnchor.rect = (this.rightAnchor.target ? this.rightAnchor.target.GetComponent<UIRect>() : null);
-		this.topAnchor.rect = (this.topAnchor.target ? this.topAnchor.target.GetComponent<UIRect>() : null);
+		this.leftAnchor.rect = ((!this.leftAnchor.target) ? null : this.leftAnchor.target.GetComponent<UIRect>());
+		this.bottomAnchor.rect = ((!this.bottomAnchor.target) ? null : this.bottomAnchor.target.GetComponent<UIRect>());
+		this.rightAnchor.rect = ((!this.rightAnchor.target) ? null : this.rightAnchor.target.GetComponent<UIRect>());
+		this.topAnchor.rect = ((!this.topAnchor.target) ? null : this.topAnchor.target.GetComponent<UIRect>());
 		this.mCam = NGUITools.FindCameraForLayer(this.cachedGameObject.layer);
 		this.FindCameraFor(this.leftAnchor);
 		this.FindCameraFor(this.bottomAnchor);
@@ -703,9 +571,11 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 		if (ap.target == null || ap.rect != null)
 		{
 			ap.targetCam = null;
-			return;
 		}
-		ap.targetCam = NGUITools.FindCameraForLayer(ap.target.gameObject.layer);
+		else
+		{
+			ap.targetCam = NGUITools.FindCameraForLayer(ap.target.gameObject.layer);
+		}
 	}
 
 	public virtual void ParentHasChanged()
@@ -731,479 +601,5 @@ public abstract class UIRect : MonoBehaviour, IUnitySerializable
 
 	protected virtual void OnUpdate()
 	{
-	}
-
-	public UIRect()
-	{
-		this.leftAnchor = new UIRect.AnchorPoint();
-		this.rightAnchor = new UIRect.AnchorPoint(1f);
-		this.bottomAnchor = new UIRect.AnchorPoint();
-		this.topAnchor = new UIRect.AnchorPoint(1f);
-		this.updateAnchors = UIRect.AnchorUpdate.OnUpdate;
-		this.mChildren = new BetterList<UIRect>();
-		this.mChanged = true;
-		this.mUpdateAnchors = true;
-		this.mUpdateFrame = -1;
-		this.finalAlpha = 1f;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			this.leftAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			this.rightAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			this.bottomAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			this.topAnchor.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.WriteInt32((int)this.updateAnchors);
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			this.leftAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			this.rightAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			this.bottomAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			this.topAnchor.Unity_Deserialize(depth + 1);
-		}
-		this.updateAnchors = (UIRect.AnchorUpdate)SerializedStateReader.Instance.ReadInt32();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor != null)
-			{
-				this.leftAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor != null)
-			{
-				this.rightAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor != null)
-			{
-				this.bottomAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor != null)
-			{
-				this.topAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_3F_0 = this.leftAnchor;
-			ISerializedNamedStateWriter arg_37_0 = SerializedNamedStateWriter.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_37_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2296);
-			arg_3F_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_82_0 = this.rightAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2307);
-			arg_82_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_C5_0 = this.bottomAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2319);
-			arg_C5_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_108_0 = this.topAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2332);
-			arg_108_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.updateAnchors, &var_0_cp_0[var_0_cp_1] + 741);
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_3F_0 = this.leftAnchor;
-			ISerializedNamedStateReader arg_37_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_37_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2296);
-			arg_3F_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_82_0 = this.rightAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2307);
-			arg_82_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_C5_0 = this.bottomAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2319);
-			arg_C5_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_108_0 = this.topAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2332);
-			arg_108_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		this.updateAnchors = (UIRect.AnchorUpdate)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 741);
-	}
-
-	protected internal UIRect(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).Awake();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).CalculateFinalAlpha(*(int*)args));
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).FindCameraFor((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).alpha);
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).anchorCamera);
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).cachedGameObject);
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).cachedTransform);
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).cameraRayDistance);
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).canBeAnchored);
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).isAnchored);
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).isAnchoredHorizontally);
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).isAnchoredVertically);
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).isFullyAnchored);
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).localCorners);
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).parent);
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).root);
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).worldCorners);
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).GetLocalPos((UIRect.AnchorPoint)GCHandledObjects.GCHandleToObject(*args), (Transform)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIRect)GCHandledObjects.GCHandleToObject(instance)).GetSides((Transform)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).Invalidate(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).OnAnchor();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).OnDisable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).OnEnable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).OnInit();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).OnStart();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).OnUpdate();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).ParentHasChanged();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).ResetAnchors();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).ResetAndUpdateAnchors();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).alpha = *(float*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).SetAnchor((GameObject)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).SetAnchor((Transform)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).SetAnchor((GameObject)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).SetRect(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke38(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke39(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke40(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).Update();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke41(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).UpdateAnchors();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke42(long instance, long* args)
-	{
-		((UIRect)GCHandledObjects.GCHandleToObject(instance)).UpdateAnchorsInternal(*(int*)args);
-		return -1L;
 	}
 }

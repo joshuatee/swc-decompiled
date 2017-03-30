@@ -1,3 +1,4 @@
+using StaRTS.Externals.EnvironmentManager;
 using StaRTS.Externals.Manimal;
 using StaRTS.Main.Models;
 using StaRTS.Main.Utils;
@@ -9,13 +10,12 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
-	public class GameIdleController : IUserInputObserver, IEventObserver, IViewClockTimeObserver
+	public class GameIdleController : IEventObserver, IUserInputObserver, IViewClockTimeObserver
 	{
-		public bool Enabled;
+		public bool Enabled = true;
 
 		private DateTime lastInput;
 
@@ -23,10 +23,8 @@ namespace StaRTS.Main.Controllers
 
 		public GameIdleController()
 		{
-			this.Enabled = true;
-			base..ctor();
 			Service.Set<GameIdleController>(this);
-			this.lastInput = DateTime.get_Now();
+			this.lastInput = DateTime.Now;
 			Service.Get<EventManager>().RegisterObserver(this, EventId.ApplicationPauseToggled, EventPriority.Default);
 			Service.Get<UserInputManager>().RegisterObserver(this, UserInputLayer.Screen);
 			Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
@@ -34,7 +32,7 @@ namespace StaRTS.Main.Controllers
 
 		public void OnViewClockTime(float dt)
 		{
-			double totalSeconds = (DateTime.get_Now() - this.lastInput).get_TotalSeconds();
+			double totalSeconds = (DateTime.Now - this.lastInput).TotalSeconds;
 			if (this.Enabled && totalSeconds > (double)GameConstants.IDLE_RELOAD_TIME && this.CanShowIdleAlert())
 			{
 				this.ShowIdleAlert();
@@ -62,11 +60,12 @@ namespace StaRTS.Main.Controllers
 			{
 				if ((bool)cookie)
 				{
-					this.lastPause = DateTime.get_Now();
+					this.lastPause = DateTime.Now;
 				}
 				else
 				{
-					double totalSeconds = (DateTime.get_Now() - this.lastPause).get_TotalSeconds();
+					Service.Get<EnvironmentController>().SetupAutoRotation();
+					double totalSeconds = (DateTime.Now - this.lastPause).TotalSeconds;
 					if (this.Enabled && totalSeconds > (double)GameConstants.PAUSED_RELOAD_TIME)
 					{
 						Service.Get<Engine>().Reload();
@@ -82,13 +81,13 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnPress(int id, GameObject target, Vector2 screenPosition, Vector3 groundPosition)
 		{
-			this.lastInput = DateTime.get_Now();
+			this.lastInput = DateTime.Now;
 			return EatResponse.NotEaten;
 		}
 
 		public EatResponse OnDrag(int id, GameObject target, Vector2 screenPosition, Vector3 groundPosition)
 		{
-			this.lastInput = DateTime.get_Now();
+			this.lastInput = DateTime.Now;
 			return EatResponse.NotEaten;
 		}
 
@@ -99,54 +98,8 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnScroll(float delta, Vector2 screenPosition)
 		{
-			this.lastInput = DateTime.get_Now();
+			this.lastInput = DateTime.Now;
 			return EatResponse.NotEaten;
-		}
-
-		protected internal GameIdleController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameIdleController)GCHandledObjects.GCHandleToObject(instance)).CanShowIdleAlert());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameIdleController)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameIdleController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameIdleController)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameIdleController)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameIdleController)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((GameIdleController)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((GameIdleController)GCHandledObjects.GCHandleToObject(instance)).ShowIdleAlert();
-			return -1L;
 		}
 	}
 }

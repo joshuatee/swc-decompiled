@@ -9,8 +9,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player.Misc
 {
@@ -219,9 +217,12 @@ namespace StaRTS.Main.Models.Player.Misc
 			foreach (Mission current in this.missions.Values)
 			{
 				CampaignMissionVO optional = dataController.GetOptional<CampaignMissionVO>(current.Uid);
-				if (optional != null && this.IsMissionInProgress(optional) && !optional.IsCombatMission())
+				if (optional != null)
 				{
-					list.Add(optional);
+					if (this.IsMissionInProgress(optional) && !optional.IsCombatMission())
+					{
+						list.Add(optional);
+					}
 				}
 			}
 			return list;
@@ -418,20 +419,12 @@ namespace StaRTS.Main.Models.Player.Misc
 
 		public int GetMissionEarnedStars(CampaignMissionVO missionType)
 		{
-			if (!this.missions.ContainsKey(missionType.Uid))
-			{
-				return 0;
-			}
-			return this.missions[missionType.Uid].EarnedStars;
+			return (!this.missions.ContainsKey(missionType.Uid)) ? 0 : this.missions[missionType.Uid].EarnedStars;
 		}
 
 		public Dictionary<string, int> GetMissionCounters(CampaignMissionVO missionType)
 		{
-			if (!this.missions.ContainsKey(missionType.Uid))
-			{
-				return null;
-			}
-			return this.missions[missionType.Uid].Counters;
+			return (!this.missions.ContainsKey(missionType.Uid)) ? null : this.missions[missionType.Uid].Counters;
 		}
 
 		public bool UpdateMissionCounter(CampaignMissionVO missionType, string key, int delta)
@@ -457,7 +450,7 @@ namespace StaRTS.Main.Models.Player.Misc
 			{
 				Dictionary<string, int> counters = this.missions[mission.Uid].Counters;
 				ConditionVO conditionVO = mission.Conditions[i];
-				int startingValue = (counters != null && counters.ContainsKey(conditionVO.Uid)) ? counters[conditionVO.Uid] : 0;
+				int startingValue = (counters == null || !counters.ContainsKey(conditionVO.Uid)) ? 0 : counters[conditionVO.Uid];
 				AbstractCondition abstractCondition = ConditionFactory.GenerateCondition(conditionVO, null, startingValue);
 				int num;
 				int num2;
@@ -553,8 +546,8 @@ namespace StaRTS.Main.Models.Player.Misc
 				foreach (KeyValuePair<string, object> current in dictionary2)
 				{
 					Campaign campaign = new Campaign();
-					campaign.FromObject(current.get_Value());
-					this.campaigns.Add(current.get_Key(), campaign);
+					campaign.FromObject(current.Value);
+					this.campaigns.Add(current.Key, campaign);
 				}
 			}
 			if (dictionary.ContainsKey("missions"))
@@ -563,8 +556,8 @@ namespace StaRTS.Main.Models.Player.Misc
 				foreach (KeyValuePair<string, object> current2 in dictionary3)
 				{
 					Mission mission = new Mission();
-					mission.FromObject(current2.get_Value());
-					this.missions.Add(current2.get_Key(), mission);
+					mission.FromObject(current2.Value);
+					this.missions.Add(current2.Key, mission);
 				}
 			}
 			if (dictionary.ContainsKey("isFueInProgress"))
@@ -580,226 +573,6 @@ namespace StaRTS.Main.Models.Player.Misc
 			{
 				this.missions.Remove(missionType.Uid);
 			}
-		}
-
-		protected internal CampaignProgress(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).AddCampaign(Marshal.PtrToStringUni(*(IntPtr*)args), (Campaign)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).AddMission(Marshal.PtrToStringUni(*(IntPtr*)args), (Mission)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).CanReplay((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).CollectCampaign(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).CollectMission(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).CompleteCampaign(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).CompleteMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).EraseMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).Campaigns);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).FueInProgress);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).Missions);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetAllMissionsInProgress());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetMissionCounters((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetMissionEarnedStars((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetMissionLootContrabandRemaining((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetMissionLootCreditsRemaining((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetMissionLootCurrencyRemaining((CurrencyType)(*(int*)args), (CampaignMissionVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetMissionLootMaterialsRemaining((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetOffsetSeconds((ITimedEventVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetRetriesLeft((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetTimedEvent(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetTotalAttackDefendCampaignStarsEarned((CampaignVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetTotalCampaignMissionsCompleted((CampaignVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetTotalCampaignStarsEarned((CampaignVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).GetTotalCampaignStarsEarnedInAllCampaigns());
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).HasCampaign((CampaignVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).HasSeenIntro(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).IsCampaignCollected(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).IsGrindComplete((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).IsMissionCollected((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).IsMissionCompleted((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).IsMissionInProgress((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).IsMissionLocked((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).IsNewSpecOp((CampaignVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).RemainingCampaignPointsForMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).RemoveMissingMissionData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).FueInProgress = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).StartMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).ToJson());
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).UpdateMissionCounter((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignProgress)GCHandledObjects.GCHandleToObject(instance)).UpdateMissionLoot(Marshal.PtrToStringUni(*(IntPtr*)args), (CurrentBattle)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

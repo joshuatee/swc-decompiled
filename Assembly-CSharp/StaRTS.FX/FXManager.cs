@@ -8,9 +8,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -109,10 +107,7 @@ namespace StaRTS.FX
 			GameObject original = asset as GameObject;
 			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(original);
 			this.UpdateSpeed(gameObject);
-			gameObject.name = string.Format("DestructionFX {0}", new object[]
-			{
-				this.destructionInstances.Count
-			});
+			gameObject.name = string.Format("DestructionFX {0}", this.destructionInstances.Count);
 			gameObject.transform.position = new Vector3(vector.x, vector.y, vector.z);
 			gameObject.SetActive(true);
 			this.destructionInstances.Add(gameObject);
@@ -326,7 +321,7 @@ namespace StaRTS.FX
 			{
 				float delay = 0f;
 				ParticleSystem[] componentsInChildren = attachedGameObject.GetComponentsInChildren<ParticleSystem>(true);
-				if (componentsInChildren != null && componentsInChildren.Length != 0)
+				if (componentsInChildren != null && componentsInChildren.Length > 0)
 				{
 					delay = 5f;
 					int i = 0;
@@ -349,9 +344,11 @@ namespace StaRTS.FX
 				}
 				uint value = Service.Get<ViewTimerManager>().CreateViewTimer(delay, false, new TimerDelegate(this.RemoveAttachedFXFromEntityAfterDelay), dictionary);
 				this.activeTimers.Add(text, value);
-				return;
 			}
-			this.UnloadByAssetKey(text);
+			else
+			{
+				this.UnloadByAssetKey(text);
+			}
 		}
 
 		private void RemoveAttachedFXFromEntityAfterDelay(uint id, object cookie)
@@ -364,12 +361,14 @@ namespace StaRTS.FX
 			{
 				string attachmentKey = (string)dictionary["attachmentKey"];
 				this.RemoveAttachedFXFromEntity(smartEntity, attachmentKey);
-				return;
 			}
-			GameObject gameObject = (GameObject)dictionary["gameObject"];
-			this.fxInstances.Remove(gameObject);
-			UnityEngine.Object.Destroy(gameObject);
-			this.UnloadByAssetKey(text);
+			else
+			{
+				GameObject gameObject = (GameObject)dictionary["gameObject"];
+				this.fxInstances.Remove(gameObject);
+				UnityEngine.Object.Destroy(gameObject);
+				this.UnloadByAssetKey(text);
+			}
 		}
 
 		public void RemoveAttachedFXFromEntity(Entity entity, string attachmentKey)
@@ -397,12 +396,12 @@ namespace StaRTS.FX
 		{
 			foreach (KeyValuePair<string, AssetHandle> current in this.assetHandles)
 			{
-				Service.Get<AssetManager>().Unload(current.get_Value());
+				Service.Get<AssetManager>().Unload(current.Value);
 			}
 			this.assetHandles.Clear();
 			foreach (KeyValuePair<string, uint> current2 in this.activeTimers)
 			{
-				Service.Get<ViewTimerManager>().KillViewTimer(current2.get_Value());
+				Service.Get<ViewTimerManager>().KillViewTimer(current2.Value);
 			}
 			this.activeTimers.Clear();
 			int i = 0;
@@ -472,7 +471,7 @@ namespace StaRTS.FX
 		{
 			if (this.assetHandles.ContainsKey(assetKey))
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Attempted to add duplicate attachment: key:{0} asset:{1} at {2}", new object[]
+				Service.Get<Logger>().WarnFormat("Attempted to add duplicate attachment: key:{0} asset:{1} at {2}", new object[]
 				{
 					assetKey,
 					assetName,
@@ -481,139 +480,6 @@ namespace StaRTS.FX
 				return false;
 			}
 			return true;
-		}
-
-		protected internal FXManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).CreateAndAttachFXEntityInternal(Marshal.PtrToStringUni(*(IntPtr*)args), (Dictionary<string, object>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).CreateAndAttachFXToEntity((Entity)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (FXManager.AttachedFXLoadedCallback)GCHandledObjects.GCHandleToObject(args[3]), *(sbyte*)(args + 4) != 0, *(*(IntPtr*)(args + 5)), *(sbyte*)(args + 6) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).CreateAndAttachFXToEntity((Entity)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (FXManager.AttachedFXLoadedCallback)GCHandledObjects.GCHandleToObject(args[3]), *(float*)(args + 4), *(sbyte*)(args + 5) != 0, *(*(IntPtr*)(args + 6)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).CreateAndAttachRubbleToEntity((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).CreateDestructionFX((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).CreateFXAtPosition(Marshal.PtrToStringUni(*(IntPtr*)args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).CreateFXAtPosition(Marshal.PtrToStringUni(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).CreateRubbleAtEntityPosition((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FXManager)GCHandledObjects.GCHandleToObject(instance)).EnsureUniqueFX(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FXManager)GCHandledObjects.GCHandleToObject(instance)).EnsureUniqueFX(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FXManager)GCHandledObjects.GCHandleToObject(instance)).InitFXInstanceOnLoad(GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).OnAttachedFXLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).OnDestructionFXLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).OnFXWithPositionLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).RemoveAttachedFXFromEntity((Entity)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).RemoveAttachedRubbleFromEntity((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).ResetSpeed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).SetSpeed(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).StopParticlesAndRemoveAttachedFXFromEntity((Entity)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).UnloadByAssetKey(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((FXManager)GCHandledObjects.GCHandleToObject(instance)).UpdateSpeed((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetObjectivesProgressCommand(CheatSetObjectivesProgressRequest request) : base("cheats.objectiveProgress.set", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSetObjectivesProgressCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -8,7 +8,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -134,7 +133,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.rewardsGrid.SetTemplateItem("RewardItem");
 			RewardVO rewardVO = Service.Get<IDataController>().Get<RewardVO>(this.meta.Reward);
 			List<RewardComponentTag> rewardComponents = RewardUtils.GetRewardComponents(rewardVO);
-			for (int i = 0; i < rewardComponents.Count; i++)
+			int i = 0;
+			while (i < rewardComponents.Count)
 			{
 				RewardComponentTag rewardComponentTag = rewardComponents[i];
 				string itemUid = rewardVO.Uid + i;
@@ -142,20 +142,28 @@ namespace StaRTS.Main.Views.UX.Screens
 				uXElement.Tag = rewardComponentTag;
 				UXLabel subElement = this.rewardsGrid.GetSubElement<UXLabel>(itemUid, "LabelRewardCount");
 				subElement.Text = rewardComponentTag.Quantity;
-				RewardType type = rewardComponentTag.Type;
 				UXSprite subElement2;
-				if (type == RewardType.Currency || type == RewardType.Building)
+				switch (rewardComponentTag.Type)
 				{
+				case RewardType.Currency:
+				case RewardType.Building:
 					subElement2 = this.rewardsGrid.GetSubElement<UXSprite>(itemUid, "SpriteReward");
+					break;
+				case RewardType.Troop:
+					goto IL_D9;
+				default:
+					goto IL_D9;
 				}
-				else
-				{
-					subElement2 = this.rewardsGrid.GetSubElement<UXSprite>(itemUid, "SpriteTroop");
-				}
+				IL_F2:
 				RewardUtils.SetRewardIcon(subElement2, rewardComponentTag.RewardGeometryConfig, AnimationPreference.NoAnimation);
 				this.rewardsGrid.AddItem(uXElement, rewardComponentTag.Order);
 				this.rewardsGrid.RepositionItems();
 				this.rewardsGrid.Scroll(0.5f);
+				i++;
+				continue;
+				IL_D9:
+				subElement2 = this.rewardsGrid.GetSubElement<UXSprite>(itemUid, "SpriteTroop");
+				goto IL_F2;
 			}
 			this.rewardsGrid.RepositionItems();
 			this.rewardsGrid.Scroll(0.5f);
@@ -165,9 +173,15 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			foreach (CampaignVO current in Service.Get<IDataController>().GetAll<CampaignVO>())
 			{
-				if (current.Faction == this.meta.Faction && !current.Timed && current.UnlockOrder == prev.UnlockOrder + 1)
+				if (current.Faction == this.meta.Faction)
 				{
-					return current;
+					if (!current.Timed)
+					{
+						if (current.UnlockOrder == prev.UnlockOrder + 1)
+						{
+							return current;
+						}
+					}
 				}
 			}
 			return prev;
@@ -181,57 +195,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.rewardsGrid = null;
 			}
 			base.OnDestroyElement();
-		}
-
-		protected internal CampaignCompleteScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).GetNextCampaign((CampaignVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CampaignCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CampaignCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).InitElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CampaignCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((CampaignCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).InitRewardsGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((CampaignCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((CampaignCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).OnNextChapterButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((CampaignCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
 		}
 	}
 }

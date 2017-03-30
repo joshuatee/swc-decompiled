@@ -4,7 +4,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -38,28 +37,12 @@ namespace StaRTS.Main.Story.Actions
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("No element of name {0} exists in the UI currently!", new object[]
+				Service.Get<Logger>().WarnFormat("No element of name {0} exists in the UI currently!", new object[]
 				{
 					this.elementName
 				});
 			}
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal ShowUIElementStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShowUIElementStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ShowUIElementStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

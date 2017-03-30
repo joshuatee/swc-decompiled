@@ -5,7 +5,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Objectives
 {
@@ -27,10 +26,10 @@ namespace StaRTS.Main.Controllers.Objectives
 				IDataController dataController = Service.Get<IDataController>();
 				foreach (KeyValuePair<string, int> current in dictionary)
 				{
-					TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(current.get_Key());
+					TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(current.Key);
 					if (troopTypeVO.Type == this.troopType)
 					{
-						this.parent.Progress(this, current.get_Value() * troopTypeVO.Size);
+						this.parent.Progress(this, current.Value * troopTypeVO.Size);
 					}
 				}
 			}
@@ -41,21 +40,6 @@ namespace StaRTS.Main.Controllers.Objectives
 		{
 			Service.Get<EventManager>().UnregisterObserver(this, EventId.SquadTroopsDonatedByCurrentPlayer);
 			base.Destroy();
-		}
-
-		protected internal DonateTroopTypeObjectiveProcessor(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DonateTroopTypeObjectiveProcessor)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DonateTroopTypeObjectiveProcessor)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

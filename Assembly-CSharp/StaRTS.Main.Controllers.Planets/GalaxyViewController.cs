@@ -17,9 +17,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Planets
 {
@@ -145,20 +143,6 @@ namespace StaRTS.Main.Controllers.Planets
 
 		private GalaxyTransitionData currentTranstion;
 
-		private float cachedCameraFOV_Galaxy;
-
-		private float newScreenWidth;
-
-		private float newScreenHeight;
-
-		private bool doInstantTransition;
-
-		private bool doRescaleGalaxy;
-
-		private bool bDisableRescale;
-
-		private string PlanetToLoad;
-
 		public GalaxyViewController()
 		{
 			EventManager eventManager = Service.Get<EventManager>();
@@ -171,7 +155,6 @@ namespace StaRTS.Main.Controllers.Planets
 			this.galaxyToStarAdjust = new Vector3(10000f, 0f, 0f);
 			this.galaxyOffsetScreen = mainCamera.WorldPositionToScreenPoint(Vector3.zero);
 			eventManager.RegisterObserver(this, EventId.WorldLoadComplete, EventPriority.Default);
-			Service.Get<EventManager>().RegisterObserver(this, EventId.UIAttackScreenSelection, EventPriority.Default);
 			this.galaxySpiralHandle = AssetHandle.Invalid;
 			this.galaxyStarsHandle = AssetHandle.Invalid;
 			this.galaxyGridHandle = AssetHandle.Invalid;
@@ -238,7 +221,6 @@ namespace StaRTS.Main.Controllers.Planets
 			mainCamera.Camera.clearFlags = CameraClearFlags.Depth;
 			this.cachedCameraFOV = mainCamera.Camera.fieldOfView;
 			mainCamera.SetFov(this.cameraManager.StarsCamera.fieldOfView);
-			this.cachedCameraFOV_Galaxy = mainCamera.Camera.fieldOfView;
 			mainCamera.SetRotationFeel(CameraFeel.Medium);
 			this.planetViewLookAtRotation = Quaternion.identity;
 			float num = GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET + this.zoomDist;
@@ -271,17 +253,16 @@ namespace StaRTS.Main.Controllers.Planets
 
 		public void GoToPlanetView(string planetUID, CampaignScreenSection section)
 		{
-			this.bDisableRescale = false;
 			EventManager eventManager = Service.Get<EventManager>();
 			PlanetVO optional = Service.Get<IDataController>().GetOptional<PlanetVO>(planetUID);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Planet Details Screen: '" + planetUID + "' not found.");
+				Service.Get<Logger>().Warn("Planet Details Screen: '" + planetUID + "' not found.");
 				return;
 			}
 			if (!optional.PlayerFacing)
 			{
-				Service.Get<StaRTSLogger>().Warn("Planet Details Screen: '" + planetUID + "' PlayerFacing == false");
+				Service.Get<Logger>().Warn("Planet Details Screen: '" + planetUID + "' PlayerFacing == false");
 				return;
 			}
 			if (this.IsPlanetDetailsScreenOpen())
@@ -324,19 +305,18 @@ namespace StaRTS.Main.Controllers.Planets
 			PlanetVO optional = Service.Get<IDataController>().GetOptional<PlanetVO>(planetUID);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("GoToGalaxyView: '" + planetUID + "' not found.");
+				Service.Get<Logger>().Warn("GoToGalaxyView: '" + planetUID + "' not found.");
 				return;
 			}
 			if (!optional.PlayerFacing)
 			{
-				Service.Get<StaRTSLogger>().Warn("GoToGalaxyView: '" + planetUID + "' PlayerFacing == false");
+				Service.Get<Logger>().Warn("GoToGalaxyView: '" + planetUID + "' PlayerFacing == false");
 				return;
 			}
-			this.bDisableRescale = false;
 			this.initialZoomComplete = false;
 			this.galaxyClosing = false;
 			this.planetScreen = null;
-			this.planetViewUID = "";
+			this.planetViewUID = string.Empty;
 			this.ignoreSwipes = false;
 			this.galaxyViewState = GalaxyViewState.Loading;
 			if (this.spiral != null)
@@ -368,10 +348,6 @@ namespace StaRTS.Main.Controllers.Planets
 			float num = this.CalculateGalaxyRotation(positionOnGalaxyPlane, foregroundPositonOnGalaxyPlane);
 			num += mainCamera.RotationSpring.Position.x;
 			mainCamera.UpdateRotationImmediatelyTo(num);
-			this.newScreenWidth = (float)Screen.width;
-			this.newScreenHeight = (float)Screen.height;
-			this.RescaleSpiral();
-			this.RescaleGalaxyPlanets();
 		}
 
 		public void GoToHome()
@@ -381,7 +357,6 @@ namespace StaRTS.Main.Controllers.Planets
 
 		public void GoToHome(bool playWipe, WipeCompleteDelegate completeCallback, object completeCookie)
 		{
-			this.bDisableRescale = false;
 			if (!this.galaxyClosing && Service.Get<GameStateMachine>().CurrentState is GalaxyState)
 			{
 				this.ClearEasing();
@@ -397,7 +372,7 @@ namespace StaRTS.Main.Controllers.Planets
 				this.UnregisterForPlanetScreenEvents();
 				this.initialZoomComplete = false;
 				this.planetScreen = null;
-				this.planetViewUID = "";
+				this.planetViewUID = string.Empty;
 				this.ignoreSwipes = false;
 				MainCamera mainCamera = this.cameraManager.MainCamera;
 				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
@@ -414,7 +389,7 @@ namespace StaRTS.Main.Controllers.Planets
 				this.ClearForegroundUI();
 				Service.Get<UXController>().MiscElementsManager.HideGalaxyPlanetUI();
 				HomeState.GoToHomeState(null, false);
-				Service.Get<WorldInitializer>().View.ZoomIn(false);
+				Service.Get<WorldInitializer>().View.ZoomIn();
 				Service.Get<GalaxyPlanetController>().DestroyAllPlanets();
 				Service.Get<UXController>().MiscElementsManager.SetGalaxyCloseButtonVisible(false);
 				this.DestroyGalaxyGrid();
@@ -431,7 +406,7 @@ namespace StaRTS.Main.Controllers.Planets
 				Service.Get<UXController>().HUD.SetSquadScreenAlwaysOnTop(false);
 				this.softSnappedToPlanet = false;
 				this.planetScreen = null;
-				this.planetViewUID = "";
+				this.planetViewUID = string.Empty;
 				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
 				mainCamera.SetFov(this.cachedCameraFOV);
 				this.stars.SetActive(false);
@@ -470,8 +445,10 @@ namespace StaRTS.Main.Controllers.Planets
 
 		private float CalculateGalaxyRotation(Vector3 curPos, Vector3 prevPos)
 		{
-			float num = Mathf.Atan2(curPos.z * prevPos.x - prevPos.z * curPos.x, Vector3.Dot(prevPos, curPos));
-			return 57.2957764f * num;
+			Vector3 rhs = curPos;
+			Vector3 lhs = prevPos;
+			float num = Mathf.Atan2(rhs.z * lhs.x - lhs.z * rhs.x, Vector3.Dot(lhs, rhs));
+			return 57.29578f * num;
 		}
 
 		private Vector3 GetPlanetPositionOnGalaxyPlane(Planet planet)
@@ -576,10 +553,6 @@ namespace StaRTS.Main.Controllers.Planets
 		public void TranstionPlanetToGalaxy()
 		{
 			MainCamera mainCamera = this.cameraManager.MainCamera;
-			this.newScreenWidth = (float)Screen.width;
-			this.newScreenHeight = (float)Screen.height;
-			this.RescaleSpiral();
-			this.RescaleGalaxyPlanets();
 			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
 			this.UnregisterForPlanetScreenEvents();
 			this.zoomTime = 0f;
@@ -665,7 +638,6 @@ namespace StaRTS.Main.Controllers.Planets
 		{
 			MainCamera mainCamera = this.cameraManager.MainCamera;
 			GalaxyPlanetController galaxyPlanetController = Service.Get<GalaxyPlanetController>();
-			galaxyPlanetController.UpdatePlanets();
 			this.UpdateSpiral(dt);
 			this.UpdateStarCamera();
 			if (this.IsDoingInitialZoom())
@@ -699,12 +671,6 @@ namespace StaRTS.Main.Controllers.Planets
 					break;
 				case GalaxyViewState.ManualRotate:
 					this.AttemptSoftSnapToCurrentPlanet();
-					if (this.doRescaleGalaxy)
-					{
-						this.RescaleSpiral();
-						this.RescaleGalaxyPlanets();
-						this.doRescaleGalaxy = false;
-					}
 					break;
 				case GalaxyViewState.PlanetTransitionWithinGalaxy:
 				{
@@ -723,16 +689,7 @@ namespace StaRTS.Main.Controllers.Planets
 				case GalaxyViewState.PlanetTransitionTowardCamera:
 					if (this.planetScreen != null && this.planetScreen.IsLoaded())
 					{
-						bool flag;
-						if (this.doInstantTransition)
-						{
-							flag = this.InterpolatePlanetCamera(this.currentTranstion.TransitionDuration, this.currentTranstion);
-							this.doInstantTransition = false;
-						}
-						else
-						{
-							flag = this.InterpolatePlanetCamera(dt, this.currentTranstion);
-						}
+						bool flag = this.InterpolatePlanetCamera(dt, this.currentTranstion);
 						if (flag)
 						{
 							this.planetScreen.UpdateCurrentPlanet(galaxyPlanetController.ForegroundedPlanet);
@@ -915,9 +872,11 @@ namespace StaRTS.Main.Controllers.Planets
 				if (PlanetIntroStoryUtil.ShouldPlanetIntroStoryBePlayed(uid))
 				{
 					PlanetIntroStoryUtil.PlayPlanetIntroStoryChain(uid);
-					return;
 				}
-				this.HandlePlanetClicked(component.Planet);
+				else
+				{
+					this.HandlePlanetClicked(component.Planet);
+				}
 			}
 		}
 
@@ -1080,8 +1039,6 @@ namespace StaRTS.Main.Controllers.Planets
 		public void SwitchToObjectiveDetails(bool newPlanet)
 		{
 			MainCamera mainCamera = this.cameraManager.MainCamera;
-			this.bDisableRescale = false;
-			mainCamera.SetFov(this.cachedCameraFOV_Galaxy);
 			this.zoomTime = 0f;
 			Service.Get<UXController>().MiscElementsManager.HideEventsTickerView();
 			this.galaxyViewState = GalaxyViewState.PlanetTransitionTowardLeft;
@@ -1098,12 +1055,9 @@ namespace StaRTS.Main.Controllers.Planets
 				this.currentTranstion.SetTransitionRotation(this.planetStartRotation, this.planetTargetRotaion);
 			}
 			this.currentTranstion.SetTransitionLookAt(this.planetViewLookPos, this.GetObjectiveDetailOffset(mainCamera, rotation));
-			if (newPlanet)
-			{
-				float prevAngle = this.PrepareCameraForDistanceCalculation(this.planetViewLookPos);
-				this.planetViewLookAtRotation = this.planetScreen.GetTransitionLookOffset();
-				this.ResetCameraAfterDistanceCalculation(prevAngle);
-			}
+			float prevAngle = this.PrepareCameraForDistanceCalculation(this.planetViewLookPos);
+			this.planetViewLookAtRotation = this.planetScreen.GetTransitionLookOffset();
+			this.ResetCameraAfterDistanceCalculation(prevAngle);
 		}
 
 		public void SwitchFromObjectiveDetails()
@@ -1221,10 +1175,12 @@ namespace StaRTS.Main.Controllers.Planets
 				{
 					this.easeTargetRotation = num;
 					this.easeVelocity = 0f;
-					return;
 				}
-				this.planetStartRotation = mainCamera.RotationSpring.Position.x;
-				this.planetTargetRotaion = num;
+				else
+				{
+					this.planetStartRotation = mainCamera.RotationSpring.Position.x;
+					this.planetTargetRotaion = num;
+				}
 			}
 		}
 
@@ -1299,9 +1255,6 @@ namespace StaRTS.Main.Controllers.Planets
 
 		private void GoToPlanetScreen()
 		{
-			this.bDisableRescale = false;
-			MainCamera mainCamera = this.cameraManager.MainCamera;
-			mainCamera.SetFov(this.cachedCameraFOV_Galaxy);
 			this.ClearForegroundUI();
 			Service.Get<UXController>().MiscElementsManager.HideEventsTickerView();
 			PlanetDetailsScreen screen = new PlanetDetailsScreen(Service.Get<GalaxyPlanetController>().ForegroundedPlanet, true);
@@ -1368,13 +1321,13 @@ namespace StaRTS.Main.Controllers.Planets
 			this.galaxyOverlayGrid = (GameObject)asset;
 			Transform transform = this.galaxyOverlayGrid.transform;
 			transform.SetParent(mainCamera.MainRotCameraHarness.transform);
-			Vector3 eulerAngles = mainCamera.Camera.transform.rotation.eulerAngles;
-			transform.rotation = Quaternion.Euler(0f, eulerAngles.y, 0f);
+			transform.rotation = Quaternion.Euler(0f, mainCamera.Camera.transform.rotation.eulerAngles.y, 0f);
 			transform.position = this.galaxyPosOffset;
 			transform.localPosition += new Vector3(0f, 0f, -8f);
-			GalaxyViewState galaxyViewState = this.galaxyViewState;
-			if (galaxyViewState == GalaxyViewState.PlanetTransitionInstantStart || galaxyViewState == GalaxyViewState.PlanetView)
+			switch (this.galaxyViewState)
 			{
+			case GalaxyViewState.PlanetTransitionInstantStart:
+			case GalaxyViewState.PlanetView:
 				this.DeactivateGrid();
 				return;
 			}
@@ -1432,16 +1385,9 @@ namespace StaRTS.Main.Controllers.Planets
 		{
 			if (id != EventId.WorldLoadComplete)
 			{
-				if (id != EventId.UIAttackScreenSelection)
+				if (id == EventId.InventoryCrateCollectionClosed)
 				{
-					if (id == EventId.InventoryCrateCollectionClosed)
-					{
-						this.GoToHome();
-					}
-				}
-				else
-				{
-					this.bDisableRescale = true;
+					this.GoToHome();
 				}
 			}
 			else
@@ -1449,552 +1395,6 @@ namespace StaRTS.Main.Controllers.Planets
 				this.InitGalaxyView();
 			}
 			return EatResponse.NotEaten;
-		}
-
-		private void RescalePlanetView()
-		{
-			if (this.bDisableRescale || this.planetScreen == null || this.planetScreen.currentSection == CampaignScreenSection.Campaign)
-			{
-				return;
-			}
-			Planet currentPlanet = this.planetScreen.CurrentPlanet;
-			this.zoomTime = 0f;
-			this.planetViewLookAtRotation = Quaternion.identity;
-			this.AdjustCameraPosition(GameConstants.GALAXY_CAMERA_DISTANCE_OFFSET, GameConstants.GALAXY_CAMERA_HEIGHT_OFFSET, this.galaxyPosOffset);
-			Service.Get<GalaxyPlanetController>().UpdatePlanets();
-			this.RotatePlanetToForeground(currentPlanet, false);
-			this.doInstantTransition = true;
-			this.galaxyViewState = GalaxyViewState.PlanetTransitionTowardCamera;
-			this.planetScreen.UpdateCurrentPlanet(currentPlanet);
-		}
-
-		private void RescaleSpiral()
-		{
-			float num = 1.77777779f;
-			float num2 = this.newScreenWidth / this.newScreenHeight;
-			float d = num / num2;
-			this.spiral.transform.localScale = Vector3.one / d;
-		}
-
-		private void RescaleGalaxyPlanets()
-		{
-			float num = 1.77777779f;
-			float num2 = this.newScreenWidth / this.newScreenHeight;
-			float num3 = num / num2;
-			MainCamera mainCamera = this.cameraManager.MainCamera;
-			mainCamera.SetFov(this.cachedCameraFOV_Galaxy * num3);
-		}
-
-		public void OnScreenSizeChanged(int w, int h)
-		{
-			this.newScreenWidth = (float)w;
-			this.newScreenHeight = (float)h;
-			this.doRescaleGalaxy = true;
-		}
-
-		protected internal GalaxyViewController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ActivateGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).AdjustCameraPosition(*(float*)args, *(float*)(args + 1), *(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).AttachForegroundUIToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).AttemptSoftSnapToCurrentPlanet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).CalculateGalaxyRotation(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).CanRotatePlanetToFront());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ClearEasing();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ClearForegroundUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).DeactivateGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).DestroyGalaxyGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).EaseGalaxyRotation(*(float*)args, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetForegroundPositonOnGalaxyPlane());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetGalaxyScreenPos(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetObjectiveDetailOffset((MainCamera)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetDistToForeground((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetPositionOnGalaxyPlane((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetScaleFactor((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetScreenPos((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GetPositionOnGalaxyPlane(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToGalaxyView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToGalaxyView(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToHome();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToHome(*(sbyte*)args != 0, (WipeCompleteDelegate)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToPlanetScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).GoToPlanetView(Marshal.PtrToStringUni(*(IntPtr*)args), (CampaignScreenSection)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).HandlePlanetClicked((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).HideBackgroundPlanetUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).HidePlanetLockedUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitFinalPlanetPositions();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitForegroundPos();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitGalaxy(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitGalaxyGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitGalaxyView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InitInitialCameraPos();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InObjectivesState());
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InstantlySetCameraForPlanetView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).InterpolatePlanetCamera(*(float*)args, (GalaxyTransitionData)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsDoingInitialZoom());
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsDraggable());
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsEaseDone());
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsInPlanetScreen());
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsPlanetDetailsScreenOpen());
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsPlanetDetailsScreenOpeningOrOpen());
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsPlanetForegrounded((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).IsPlanetUIForegrounded((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnGalaxyObjectClicked((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnGalaxyStarsSpiralLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnGridLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnScreenSizeChanged(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnSpiralLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnStarsLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnTouchReleased((GalaxySwipeType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).OpenPlanetDetailsForPlanet(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).PanToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).PrepareCameraForDistanceCalculation(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RegisterForPlanetScreenEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RescaleGalaxyPlanets();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RescalePlanetView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RescaleSpiral();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ResetCameraAfterDistanceCalculation(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ResetCameraForBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ReturnPlanetScreenToMainSelect();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).RotatePlanetToForeground((Planet)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SetObjectivesVariables();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SetupCamera();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SetupTransitionTowardCamera();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ShouldAnimateCurrent((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ShowBackgroundPlanetUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ShowForegroundPlanetUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).ShowPlanetLockedUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).StartPlanetTransition();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SwitchFromObjectiveDetails();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SwitchToObjectiveDetails(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SwitchToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).SwitchToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).Transitioning());
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).TransitionToNextPlanet());
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).TransitionToPlanet((Planet)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).TransitionToPrevPlanet());
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).TranstionPlanetToGalaxy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UnregisterForPlanetScreenEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateGalaxyConstants();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateGalaxyRotation(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetUI(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateSpiral(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke87(long instance, long* args)
-		{
-			((GalaxyViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateStarCamera();
-			return -1L;
 		}
 	}
 }

@@ -25,9 +25,5 @@ namespace StaRTS.Main.Controllers.Performance
 			this.average = 0f;
 			this.peakTime = 0f;
 		}
-
-		protected internal NamedSample(UIntPtr dummy)
-		{
-		}
 	}
 }

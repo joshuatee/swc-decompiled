@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public LoginCommand(LoginRequest request) : base("player.login", request, new LoginResponse())
 		{
 		}
-
-		protected internal LoginCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

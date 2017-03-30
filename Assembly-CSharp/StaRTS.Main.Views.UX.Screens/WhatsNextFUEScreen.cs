@@ -4,7 +4,6 @@ using StaRTS.Main.Utils;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -40,26 +39,17 @@ namespace StaRTS.Main.Views.UX.Screens
 			FactionType faction = Service.Get<CurrentPlayer>().Faction;
 			UXLabel element2 = base.GetElement<UXLabel>("LabelWhatNext");
 			element2.Text = LangUtils.ProcessStringWithNewlines(this.lang.Get("s_WhatsNextDescription_" + faction.ToString(), new object[0]));
+			FactionType factionType = faction;
 			string assetName;
-			if (faction == FactionType.Empire)
-			{
-				assetName = "WhatsNextEmpire";
-			}
-			else
+			if (factionType != FactionType.Empire)
 			{
 				assetName = "WhatsNextRebel";
 			}
+			else
+			{
+				assetName = "WhatsNextEmpire";
+			}
 			base.GetElement<UXTexture>("SpriteNextImage").LoadTexture(assetName);
-		}
-
-		protected internal WhatsNextFUEScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((WhatsNextFUEScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
 		}
 	}
 }

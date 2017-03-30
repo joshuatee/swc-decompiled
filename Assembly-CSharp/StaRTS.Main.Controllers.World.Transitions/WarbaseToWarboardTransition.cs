@@ -1,7 +1,6 @@
 using StaRTS.Main.Views.Cameras;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.World.Transitions
 {
@@ -14,16 +13,6 @@ namespace StaRTS.Main.Controllers.World.Transitions
 		protected override void StartTransitionIn()
 		{
 			this.StartTransitionInContinueSetup();
-		}
-
-		protected internal WarbaseToWarboardTransition(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((WarbaseToWarboardTransition)GCHandledObjects.GCHandleToObject(instance)).StartTransitionIn();
-			return -1L;
 		}
 	}
 }

@@ -6,7 +6,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Main.Views.UX.Controls;
 using StaRTS.Main.Views.UX.Elements;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 {
@@ -170,7 +169,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 						subElement11.Text = base.RManager.GetRewardString(current.Reward);
 					}
 					UXSlider subElement14 = this.campaignGrid.GetSubElement<UXSlider>(uid, "ChapterPbar");
-					subElement14.Value = ((totalMissions == 0) ? 0f : ((float)totalCampaignMissionsCompleted / (float)totalMissions));
+					subElement14.Value = ((totalMissions != 0) ? ((float)totalCampaignMissionsCompleted / (float)totalMissions) : 0f);
 					this.campaignGrid.AddItem(uXElement, current.UnlockOrder);
 				}
 			}
@@ -207,52 +206,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				this.campaignGrid.Clear();
 				this.campaignGrid = null;
 			}
-		}
-
-		protected internal PlanetDetailsChaptersViewModule(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetDetailsChaptersViewModule)GCHandledObjects.GCHandleToObject(instance)).CloseCampaignClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetDetailsChaptersViewModule)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetDetailsChaptersViewModule)GCHandledObjects.GCHandleToObject(instance)).InitCampaignGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetDetailsChaptersViewModule)GCHandledObjects.GCHandleToObject(instance)).OnBackButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetDetailsChaptersViewModule)GCHandledObjects.GCHandleToObject(instance)).OnCampaignItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetDetailsChaptersViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetDetailsChaptersViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshScreenForPlanetChange();
-			return -1L;
 		}
 	}
 }

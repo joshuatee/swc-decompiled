@@ -15,6 +15,6 @@ namespace StaRTS.Main.Configs
 
 		public const string ENV = "local";
 
-		public const string BATTLE_VERSION = "21.0";
+		public const string BATTLE_VERSION = "22.0";
 	}
 }

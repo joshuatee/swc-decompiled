@@ -2,9 +2,6 @@ using StaRTS.Externals.Manimal.TransferObjects.Response;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.TargetedBundleOffers
 {
@@ -22,10 +19,6 @@ namespace StaRTS.Main.Models.Commands.TargetedBundleOffers
 			private set;
 		}
 
-		public TriggerTargetedOfferResponse()
-		{
-		}
-
 		public override ISerializable FromObject(object obj)
 		{
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
@@ -35,33 +28,13 @@ namespace StaRTS.Main.Models.Commands.TargetedBundleOffers
 			}
 			if (dictionary.ContainsKey("offerUid"))
 			{
-				this.OfferId = Convert.ToString(dictionary["offerUid"], CultureInfo.InvariantCulture);
+				this.OfferId = Convert.ToString(dictionary["offerUid"]);
 			}
 			if (dictionary.ContainsKey("triggerDate"))
 			{
-				this.TriggerDate = Convert.ToUInt32(dictionary["triggerDate"], CultureInfo.InvariantCulture);
+				this.TriggerDate = Convert.ToUInt32(dictionary["triggerDate"]);
 			}
 			return this;
-		}
-
-		protected internal TriggerTargetedOfferResponse(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TriggerTargetedOfferResponse)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TriggerTargetedOfferResponse)GCHandledObjects.GCHandleToObject(instance)).OfferId);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TriggerTargetedOfferResponse)GCHandledObjects.GCHandleToObject(instance)).OfferId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
 		}
 	}
 }

@@ -5,8 +5,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Trigger
 {
@@ -26,18 +24,26 @@ namespace StaRTS.Main.Story.Trigger
 			if (this.IsSatisfied())
 			{
 				this.parent.SatisfyTrigger(this);
-				return;
 			}
-			Service.Get<EventManager>().RegisterObserver(this, EventId.SquadJoinedByCurrentPlayer);
-			Service.Get<EventManager>().RegisterObserver(this, EventId.SquadUpdated);
+			else
+			{
+				Service.Get<EventManager>().RegisterObserver(this, EventId.SquadJoinedByCurrentPlayer);
+				Service.Get<EventManager>().RegisterObserver(this, EventId.SquadUpdated);
+			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if ((id == EventId.SquadUpdated || id == EventId.SquadJoinedByCurrentPlayer) && this.IsSatisfied())
+			switch (id)
 			{
-				this.UnregisterObservers();
-				this.parent.SatisfyTrigger(this);
+			case EventId.SquadUpdated:
+			case EventId.SquadJoinedByCurrentPlayer:
+				if (this.IsSatisfied())
+				{
+					this.UnregisterObservers();
+					this.parent.SatisfyTrigger(this);
+				}
+				break;
 			}
 			return EatResponse.NotEaten;
 		}
@@ -45,8 +51,8 @@ namespace StaRTS.Main.Story.Trigger
 		private bool IsSatisfied()
 		{
 			bool result = false;
-			int num = Convert.ToInt32(this.prepareArgs[0], CultureInfo.InvariantCulture);
-			int num2 = Convert.ToInt32(this.prepareArgs[1], CultureInfo.InvariantCulture);
+			int num = Convert.ToInt32(this.prepareArgs[0]);
+			int num2 = Convert.ToInt32(this.prepareArgs[1]);
 			SquadController squadController = Service.Get<SquadController>();
 			Squad currentSquad = squadController.StateManager.GetCurrentSquad();
 			if (currentSquad == null)
@@ -70,38 +76,6 @@ namespace StaRTS.Main.Story.Trigger
 		{
 			Service.Get<EventManager>().UnregisterObserver(this, EventId.SquadJoinedByCurrentPlayer);
 			Service.Get<EventManager>().UnregisterObserver(this, EventId.SquadUpdated);
-		}
-
-		protected internal SquadActiveMembersStoryTrigger(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadActiveMembersStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Activate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadActiveMembersStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadActiveMembersStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).IsSatisfied());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadActiveMembersStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadActiveMembersStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).UnregisterObservers();
-			return -1L;
 		}
 	}
 }

@@ -8,7 +8,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 {
@@ -38,14 +37,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 
 		private const int BUFFER_BETWEEN_IMAGES = 115;
 
-		private List<UXLabel> newLabels;
+		private List<UXLabel> newLabels = new List<UXLabel>();
 
 		private UXTable notesTable;
 
-		public DevNotesHolonetTab(HolonetScreen screen, HolonetControllerType holonetControllerType)
+		public DevNotesHolonetTab(HolonetScreen screen, HolonetControllerType holonetControllerType) : base(screen, holonetControllerType)
 		{
-			this.newLabels = new List<UXLabel>();
-			base..ctor(screen, holonetControllerType);
 			base.InitializeTab("NotesTab", "hn_devnotes_tab");
 			this.notesTable = screen.GetElement<UXTable>("NotesTable");
 			this.notesTable.SetTemplateItem("NotesItem");
@@ -69,16 +66,16 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				MiscElementsManager miscElementsManager = Service.Get<UXController>().MiscElementsManager;
 				if (text.Contains("src="))
 				{
-					string[] array = new string[]
+					string[] separator = new string[]
 					{
 						"[img]"
 					};
-					string[] array2 = text.Split(array, 0);
+					string[] array = text.Split(separator, StringSplitOptions.None);
 					int j = 0;
-					int num = array2.Length;
+					int num = array.Length;
 					while (j < num)
 					{
-						list.Add(array2[j]);
+						list.Add(array[j]);
 						j++;
 					}
 					this.notesTable.GetSubElement<UXLabel>(devNoteEntryVO.Uid, "NotesItemLabelBody").Text = string.Empty;
@@ -94,32 +91,32 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 					if (list[k].Contains("src="))
 					{
 						UXTexture uXTexture = miscElementsManager.CloneUXTexture(subElement3, "newImage #" + k, subElement3.Root.transform.parent.gameObject);
-						string[] array3 = list[k].Split(new char[]
+						string[] array2 = list[k].Split(new char[]
 						{
 							'='
 						});
-						string assetName = array3[1];
+						string assetName = array2[1];
 						uXTexture.Visible = true;
 						uXTexture.LoadTexture(assetName);
 						list2.Add(uXTexture);
-						string text2 = "[img]" + list[k] + "[img]";
-						text = text.Replace(text2, "*");
+						string oldValue = "[img]" + list[k] + "[img]";
+						text = text.Replace(oldValue, "*");
 					}
 					k++;
 				}
 				if (text.Contains("*"))
 				{
-					string[] array4 = text.Split(new char[]
+					string[] array3 = text.Split(new char[]
 					{
 						'*'
 					});
 					int l = 0;
-					int num2 = array4.Length;
+					int num2 = array3.Length;
 					while (l < num2)
 					{
 						UXLabel uXLabel = miscElementsManager.CloneUXLabel(this.notesTable.GetSubElement<UXLabel>(devNoteEntryVO.Uid, "NotesItemLabelBody"), "thisLabel #" + l, subElement3.Root.transform.parent.gameObject);
 						uXLabel.LocalPosition = new Vector2(this.notesTable.GetSubElement<UXLabel>(devNoteEntryVO.Uid, "NotesItemLabelBody").LocalPosition.x, this.notesTable.GetSubElement<UXLabel>(devNoteEntryVO.Uid, "NotesItemLabelBody").LocalPosition.y);
-						uXLabel.Text = array4[l];
+						uXLabel.Text = array3[l];
 						if (list2.Count > 0)
 						{
 							list2[0].LocalPosition = new Vector2(uXLabel.LocalPosition.x - 115f * uXLabel.UXCamera.Camera.transform.localScale.x, uXLabel.LocalPosition.y - uXLabel.Height);
@@ -210,51 +207,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		public override string GetBITabName()
 		{
 			return "dev_notes";
-		}
-
-		protected internal DevNotesHolonetTab(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DevNotesHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ClickedLink((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DevNotesHolonetTab)GCHandledObjects.GCHandleToObject(instance)).FeaturedButton1Clicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DevNotesHolonetTab)GCHandledObjects.GCHandleToObject(instance)).FeaturedButton2Clicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DevNotesHolonetTab)GCHandledObjects.GCHandleToObject(instance)).GetBITabName());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((DevNotesHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnDestroyTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((DevNotesHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnTabOpen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((DevNotesHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetVisibleByTabButton((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
 		}
 	}
 }

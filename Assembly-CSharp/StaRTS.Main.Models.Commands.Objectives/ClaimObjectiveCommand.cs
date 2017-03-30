@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Objectives
 		public ClaimObjectiveCommand(PlayerIdRequest request) : base("player.objective.claim", request, new CrateDataResponse())
 		{
 		}
-
-		protected internal ClaimObjectiveCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -7,11 +7,10 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.GameStates
 {
-	public class IntroCameraState : IGameState, IState, IEventObserver
+	public class IntroCameraState : IGameState, IEventObserver, IState
 	{
 		private IntroCameraAnimation animation;
 
@@ -50,52 +49,18 @@ namespace StaRTS.Main.Controllers.GameStates
 				{
 					Service.Get<GameStateMachine>().SetState(new FueBattleStartState(GameConstants.FUE_BATTLE));
 					Service.Get<BattleController>().PrepareWorldForBattle();
-					return;
 				}
-				GameServicesManager.OnReady();
-				HomeState.GoToHomeState(null, true);
+				else
+				{
+					GameServicesManager.OnReady();
+					HomeState.GoToHomeState(null, true);
+				}
 			}
 		}
 
 		public bool CanUpdateHomeContracts()
 		{
 			return true;
-		}
-
-		public IntroCameraState()
-		{
-		}
-
-		protected internal IntroCameraState(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((IntroCameraState)GCHandledObjects.GCHandleToObject(instance)).CanUpdateHomeContracts());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((IntroCameraState)GCHandledObjects.GCHandleToObject(instance)).Done();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((IntroCameraState)GCHandledObjects.GCHandleToObject(instance)).OnEnter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((IntroCameraState)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((IntroCameraState)GCHandledObjects.GCHandleToObject(instance)).OnExit((IState)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

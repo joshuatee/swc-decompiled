@@ -6,7 +6,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -106,24 +105,24 @@ namespace StaRTS.Main.Views.UX.Screens
 			UXLabel element4 = base.GetElement<UXLabel>("LabelCollectSquadWarEndCeleb");
 			UXTexture element5 = base.GetElement<UXTexture>("TextureFactionIconSquadWarEndCeleb");
 			element.Text = lang.Get("WAR_END_RESULTS_TITLE", new object[0]);
-			element5.LoadTexture((this.playerFaction == FactionType.Empire) ? "squadwars_end_celeb_empire" : "squadwars_end_celeb_rebel");
+			element5.LoadTexture((this.playerFaction != FactionType.Empire) ? "squadwars_end_celeb_rebel" : "squadwars_end_celeb_empire");
 			string id = "sfx_stinger_war_end_draw";
 			if (this.squadWarResult == 1)
 			{
-				id = ((this.playerFaction == FactionType.Empire) ? "sfx_stinger_war_end_win_empire" : "sfx_stinger_war_end_win_rebel");
-				element2.Text = lang.Get((this.playerFaction == FactionType.Empire) ? "WAR_END_RESULTS_EMPIRE_WIN" : "WAR_END_RESULTS_REBELS_WIN", new object[]
+				id = ((this.playerFaction != FactionType.Empire) ? "sfx_stinger_war_end_win_rebel" : "sfx_stinger_war_end_win_empire");
+				element2.Text = lang.Get((this.playerFaction != FactionType.Empire) ? "WAR_END_RESULTS_REBELS_WIN" : "WAR_END_RESULTS_EMPIRE_WIN", new object[]
 				{
 					this.playerSquadName
 				});
 				element3.Visible = false;
 				element4.Text = lang.Get("WAR_END_RESULTS_WIN_CTA", new object[0]);
 				this.ResetAllTriggers();
-				this.animator.SetTrigger((this.playerFaction == FactionType.Empire) ? "ShowWinEmpire" : "ShowWinRebel");
+				this.animator.SetTrigger((this.playerFaction != FactionType.Empire) ? "ShowWinRebel" : "ShowWinEmpire");
 			}
 			else if (this.squadWarResult == -1)
 			{
 				id = "sfx_stinger_war_end_loss";
-				element2.Text = lang.Get((this.playerFaction == FactionType.Empire) ? "WAR_END_RESULTS_EMPIRE_LOSS" : "WAR_END_RESULTS_REBELS_LOSS", new object[0]);
+				element2.Text = lang.Get((this.playerFaction != FactionType.Empire) ? "WAR_END_RESULTS_REBELS_LOSS" : "WAR_END_RESULTS_EMPIRE_LOSS", new object[0]);
 				element3.Text = lang.Get("WAR_END_RESULTS_LOSS_REWARD", new object[0]);
 				element4.Text = lang.Get("WAR_END_RESULTS_LOSS_CTA", new object[0]);
 				this.ResetAllTriggers();
@@ -170,48 +169,17 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (flag)
 			{
 				button.Enabled = false;
-				return;
 			}
-			this.Close(null);
+			else
+			{
+				this.Close(null);
+			}
 		}
 
 		public void PlayCloseAnimation()
 		{
 			this.ResetAllTriggers();
 			this.animator.SetTrigger("Close");
-		}
-
-		protected internal SquadWarEndCelebrationScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarEndCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadWarEndCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnCollectButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadWarEndCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadWarEndCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).PlayCloseAnimation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadWarEndCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).ResetAllTriggers();
-			return -1L;
 		}
 	}
 }

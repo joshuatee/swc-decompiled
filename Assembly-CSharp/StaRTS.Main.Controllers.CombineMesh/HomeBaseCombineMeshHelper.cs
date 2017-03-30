@@ -9,13 +9,19 @@ using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.CombineMesh
 {
 	public class HomeBaseCombineMeshHelper : AbstractCombineMeshHelper
 	{
-		private readonly HashSet<BuildingType> HOME_SUPPORTED_BUILDING_TYPES;
+		private readonly HashSet<BuildingType> HOME_SUPPORTED_BUILDING_TYPES = new HashSet<BuildingType>(new BuildingType[]
+		{
+			BuildingType.Starport,
+			BuildingType.Wall,
+			BuildingType.Storage,
+			BuildingType.ShieldGenerator,
+			BuildingType.Clearable
+		});
 
 		public override HashSet<BuildingType> GetEligibleBuildingTypes()
 		{
@@ -60,7 +66,6 @@ namespace StaRTS.Main.Controllers.CombineMesh
 					if (buildingTypeFromBuilding == buildingType)
 					{
 						buildingMoverForCombineMeshManager.SelectBuildingAfterCombiningMesh(selectedBuilding, zero);
-						return;
 					}
 				}
 				else
@@ -97,66 +102,6 @@ namespace StaRTS.Main.Controllers.CombineMesh
 		private bool IsStorageBuildingEligibleForHomeCombineMesh(SmartEntity entity)
 		{
 			return entity.BuildingComp.BuildingType.Currency != CurrencyType.Credits;
-		}
-
-		public HomeBaseCombineMeshHelper()
-		{
-			this.HOME_SUPPORTED_BUILDING_TYPES = new HashSet<BuildingType>(new BuildingType[]
-			{
-				BuildingType.Starport,
-				BuildingType.Wall,
-				BuildingType.Storage,
-				BuildingType.ShieldGenerator,
-				BuildingType.Clearable
-			});
-			base..ctor();
-		}
-
-		protected internal HomeBaseCombineMeshHelper(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HomeBaseCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).CombineAllMeshTypes((Dictionary<BuildingType, MeshCombiner>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HomeBaseCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).CombineMesh((BuildingType)(*(int*)args), (MeshCombiner)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeBaseCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).GetBuildingEntityListByType((BuildingType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeBaseCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).GetEligibleBuildingTypes());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeBaseCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).IsEntityEligibleForEligibleBuildingType((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeBaseCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).IsHomeCombiningEligible());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeBaseCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).IsStorageBuildingEligibleForHomeCombineMesh((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((HomeBaseCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).UncombineMesh((BuildingType)(*(int*)args), (MeshCombiner)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

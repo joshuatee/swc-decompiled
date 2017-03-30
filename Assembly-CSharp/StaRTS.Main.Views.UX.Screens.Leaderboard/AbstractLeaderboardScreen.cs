@@ -15,9 +15,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 {
@@ -91,9 +89,9 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 
 		protected const int SEARCH_SCROLL_ARROW_ANCHOR = -175;
 
-		private static readonly Vector3 OFFSCREEN_GRID_POSITION = new Vector3(3000f, 0f, 0f);
-
 		private const string GENERIC_SQUAD_INFO_ISSUE = "GENERIC_SQUAD_INFO_ISSUE";
+
+		private static readonly Vector3 OFFSCREEN_GRID_POSITION = new Vector3(3000f, 0f, 0f);
 
 		protected GridLoadHelper gridLoadHelper;
 
@@ -137,16 +135,14 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 
 		protected UXSprite scrollDown;
 
-		protected SocialTabs curTab;
+		protected SocialTabs curTab = SocialTabs.Empty;
 
 		private int currentPlayerTileIndex;
 
 		private float currentScrollOffset;
 
-		public AbstractLeaderboardScreen()
+		public AbstractLeaderboardScreen() : base("gui_leaderboards")
 		{
-			this.curTab = SocialTabs.Empty;
-			base..ctor("gui_leaderboards");
 			Service.Get<BuildingController>().CancelEditModeTimer();
 			this.backButtonHelper = new BackButtonHelper(this);
 			this.squadInfoView = new SquadInfoView(this);
@@ -174,9 +170,11 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			{
 				base.CurrentBackDelegate = new UXButtonClickedDelegate(this.GoBackDelagate);
 				base.CurrentBackButton = this.backButtonHelper.GetBackButton();
-				return;
 			}
-			base.InitDefaultBackDelegate();
+			else
+			{
+				base.InitDefaultBackDelegate();
+			}
 		}
 
 		private void GoBackDelagate(UXButton btn)
@@ -243,7 +241,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			UXGrid grid = gridLoadHelper.GetGrid();
 			grid.Enabled = isEnabled;
 			grid.Visible = isEnabled;
-			grid.LocalPosition = (isEnabled ? Vector3.zero : AbstractLeaderboardScreen.OFFSCREEN_GRID_POSITION);
+			grid.LocalPosition = ((!isEnabled) ? AbstractLeaderboardScreen.OFFSCREEN_GRID_POSITION : Vector3.zero);
 		}
 
 		protected void ResetGrid()
@@ -264,20 +262,20 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				this.curTab = clickedTab;
 				SocialTabInfo tabInfo = this.GetTabInfo(clickedTab);
 				this.DoTabClickedReset(tabInfo.TabGridLoadHelper);
-				tabInfo.LoadAction.Invoke();
-				string cookie = (tabInfo.EventActionId != null) ? tabInfo.EventActionId : this.GetSelectedFactionString();
+				tabInfo.LoadAction();
+				string cookie = (tabInfo.EventActionId == null) ? this.GetSelectedFactionString() : tabInfo.EventActionId;
 				Service.Get<EventManager>().SendEvent(tabInfo.TabEventId, cookie);
 				Service.Get<UXController>().MiscElementsManager.TryCloseNonFatalAlertScreen();
 				this.PositionScrollViewForTop50();
 				foreach (KeyValuePair<SocialTabs, SocialTabInfo> current in this.tabs)
 				{
-					if (current.get_Key() == clickedTab)
+					if (current.Key == clickedTab)
 					{
-						current.get_Value().TabLabel.TextColor = UXUtils.COLOR_NAV_TAB_ENABLED;
+						current.Value.TabLabel.TextColor = UXUtils.COLOR_NAV_TAB_ENABLED;
 					}
 					else
 					{
-						current.get_Value().TabLabel.TextColor = UXUtils.COLOR_NAV_TAB_DISABLED;
+						current.Value.TabLabel.TextColor = UXUtils.COLOR_NAV_TAB_DISABLED;
 					}
 				}
 			}
@@ -287,7 +285,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 		{
 			foreach (KeyValuePair<SocialTabs, SocialTabInfo> current in this.tabs)
 			{
-				current.get_Value().TabButton.Selected = false;
+				current.Value.TabButton.Selected = false;
 			}
 			this.GetTabInfo(tab).TabButton.Selected = true;
 			this.TabClicked(true, tab);
@@ -429,16 +427,19 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			if (this.selectedRow != row)
 			{
 				this.selectedRow = row;
-				return;
 			}
-			this.selectedRow = null;
+			else
+			{
+				this.selectedRow = null;
+			}
 		}
 
 		protected abstract FactionToggle GetSelectedFaction();
 
 		protected string GetSelectedFactionString()
 		{
-			return this.GetSelectedFaction().ToString().ToLower();
+			FactionToggle selectedFaction = this.GetSelectedFaction();
+			return selectedFaction.ToString().ToLower();
 		}
 
 		protected abstract string GetSelectedPlanetId();
@@ -496,9 +497,11 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 					i++;
 				}
 				Service.Get<SquadController>().CheckSquadInvitesSentToPlayers(list, populateItemsCallback);
-				return;
 			}
-			populateItemsCallback.Invoke();
+			else
+			{
+				populateItemsCallback();
+			}
 		}
 
 		public virtual void OnVisitClicked(UXButton button)
@@ -536,20 +539,24 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			{
 				return;
 			}
-			if (!success)
+			if (success)
+			{
+				if (squad != null)
+				{
+					string detailsString;
+					bool showRequestButton = SquadUtils.CanCurrentPlayerJoinSquad(Service.Get<CurrentPlayer>(), Service.Get<SquadController>().StateManager.GetCurrentSquad(), squad, Service.Get<Lang>(), out detailsString);
+					this.DisplaySquadInfoView(squad, showRequestButton, detailsString);
+				}
+				else
+				{
+					success = false;
+				}
+			}
+			else
 			{
 				string message = this.lang.Get("GENERIC_SQUAD_INFO_ISSUE", new object[0]);
 				AlertScreen.ShowModal(false, null, message, null, null);
-				return;
 			}
-			if (squad != null)
-			{
-				string detailsString;
-				bool showRequestButton = SquadUtils.CanCurrentPlayerJoinSquad(Service.Get<CurrentPlayer>(), Service.Get<SquadController>().StateManager.GetCurrentSquad(), squad, Service.Get<Lang>(), out detailsString);
-				this.DisplaySquadInfoView(squad, showRequestButton, detailsString);
-				return;
-			}
-			success = false;
 		}
 
 		private void DisplaySquadInfoView(Squad squad, bool showRequestButton, string detailsString)
@@ -561,6 +568,10 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 
 		protected void AddFBConnectItem(SocialTabs socialTab)
 		{
+			if (GameConstants.NO_FB_FACTION_CHOICE_ANDROID)
+			{
+				return;
+			}
 			if (Service.Get<EnvironmentController>().IsRestrictedProfile())
 			{
 				return;
@@ -618,9 +629,11 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			if (this.currentScrollOffset > 0f)
 			{
 				this.scrollView.MoveRelative(new Vector3(0f, 30f));
-				return;
 			}
-			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			else
+			{
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			}
 		}
 
 		protected void DestroyGridLoadHelper(GridLoadHelper tmpGridLoadHelper, bool isDestroyGrid)
@@ -681,265 +694,9 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			this.squadInfoView.Destroy();
 			foreach (KeyValuePair<SocialTabs, SocialTabInfo> current in this.tabs)
 			{
-				this.DestroyGridLoadHelper(current.get_Value().TabGridLoadHelper, true);
+				this.DestroyGridLoadHelper(current.Value.TabGridLoadHelper, true);
 			}
 			base.OnDestroyElement();
-		}
-
-		protected internal AbstractLeaderboardScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).AddFBConnectItem((SocialTabs)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).AddPlayerRow((PlayerLBEntity)GCHandledObjects.GCHandleToObject(*args), (SocialTabs)(*(int*)(args + 1)), (FactionToggle)(*(int*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), *(int*)(args + 4)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).AddSquadInviteRow((SquadInvite)GCHandledObjects.GCHandleToObject(*args), (SocialTabs)(*(int*)(args + 1)), (FactionToggle)(*(int*)(args + 2)), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).AddSquadRow((Squad)GCHandledObjects.GCHandleToObject(*args), (SocialTabs)(*(int*)(args + 1)), (FactionToggle)(*(int*)(args + 2)), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).CancelLoaderAndResetGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).CheckBackButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).CleanupRowViews();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).CreateGridLoadHelperByCloningGrid((UXGrid)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).CreateUXElementFromGridItem(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).DestroyGridLoadHelper((GridLoadHelper)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).DisplaySquadInfoView((Squad)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).DoTabClickedReset((GridLoadHelper)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).EnableGridLoadHelper((GridLoadHelper)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).ForceSwitchTab((SocialTabs)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).GetSelectedFaction());
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).GetSelectedFactionString());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).GetSelectedPlanetId());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).GetTabInfo((SocialTabs)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).GetTabString());
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).GoBackDelagate((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).InitIndividualGrids((UXGrid)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).InitTabInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).IsClosedOrClosing());
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).IsFactionToggleValidFactionType((FactionToggle)(*(int*)args), (FactionType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).LoadFriends();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).OnFacebookLoggedIn();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).OnFriendsListLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).OnPlayersListLoaded((List<PlayerLBEntity>)GCHandledObjects.GCHandleToObject(*args), (Action)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).OnRowSelected((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).OnSquadDetailsUpdated((Squad)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).OnVisitClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).PopulateFriendsOnGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).PositionScrollViewForFindMe();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).PositionScrollViewForTop50();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).RemoveAndDestroyRow((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).RepositionGridItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).ResetGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).TabClicked(*(sbyte*)args != 0, (SocialTabs)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).ViewSquadInfoClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((AbstractLeaderboardScreen)GCHandledObjects.GCHandleToObject(instance)).ViewSquadInfoInviteClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

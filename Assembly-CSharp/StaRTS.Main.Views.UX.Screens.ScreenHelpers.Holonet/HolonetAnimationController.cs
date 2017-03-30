@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 {
@@ -144,106 +143,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		{
 			this.screen = null;
 			this.anim = null;
-		}
-
-		protected internal HolonetAnimationController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).CloseHolonet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).OpenToCommandCenter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).OpenToIncomingTransmission();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ResetAllTriggers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowBlank();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowCommandCenter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowCommandCenterFromPostView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowDevNotes();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowMoreVideos();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowMoreVideosFromPostView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowTransmissionLog();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowVideoPostView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowVideos();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowVideosFromMoreVideos();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((HolonetAnimationController)GCHandledObjects.GCHandleToObject(instance)).ShowVideosFromPostView();
-			return -1L;
 		}
 	}
 }

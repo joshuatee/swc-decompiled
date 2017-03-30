@@ -2,7 +2,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Projectors
 {
@@ -36,21 +35,6 @@ namespace StaRTS.Main.Views.Projectors
 				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal ProjectorForceReloadHelper(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ProjectorForceReloadHelper)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectorForceReloadHelper)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

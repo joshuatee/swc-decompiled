@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Pve
 		public PveMissionCollectCommand(MissionIdRequest request) : base("player.pve.collect", request, new DefaultResponse())
 		{
 		}
-
-		protected internal PveMissionCollectCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

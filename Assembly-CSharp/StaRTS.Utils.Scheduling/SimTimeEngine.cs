@@ -2,7 +2,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Utils.Scheduling
 {
@@ -94,7 +93,7 @@ namespace StaRTS.Utils.Scheduling
 		public void OnUpdate()
 		{
 			uint num = this.Now();
-			uint num2 = (num < this.timeLast) ? (num + 60000u - this.timeLast) : (num - this.timeLast);
+			uint num2 = (num >= this.timeLast) ? (num - this.timeLast) : (num + 60000u - this.timeLast);
 			this.timeLast = num;
 			num2 *= this.scale;
 			this.timeAccumulator += num2;
@@ -140,39 +139,6 @@ namespace StaRTS.Utils.Scheduling
 				this.rolloverNext += 60f;
 			}
 			return (uint)Mathf.Floor(num * 1000f);
-		}
-
-		protected internal SimTimeEngine(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SimTimeEngine)GCHandledObjects.GCHandleToObject(instance)).IsPaused());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SimTimeEngine)GCHandledObjects.GCHandleToObject(instance)).OnUpdate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SimTimeEngine)GCHandledObjects.GCHandleToObject(instance)).RegisterSimTimeObserver((ISimTimeObserver)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SimTimeEngine)GCHandledObjects.GCHandleToObject(instance)).UnregisterAll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SimTimeEngine)GCHandledObjects.GCHandleToObject(instance)).UnregisterSimTimeObserver((ISimTimeObserver)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

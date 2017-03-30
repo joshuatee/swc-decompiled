@@ -17,9 +17,5 @@ namespace StaRTS.Externals.BI
 			this.postData = null;
 			this.headers = null;
 		}
-
-		protected internal BILogData(UIntPtr dummy)
-		{
-		}
 	}
 }

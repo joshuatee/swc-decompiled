@@ -2,8 +2,6 @@ using StaRTS.Assets;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Utils.MetaData
 {
@@ -23,11 +21,7 @@ namespace StaRTS.Utils.MetaData
 
 		public Sheet GetSheet(string sheetName)
 		{
-			if (!this.sheets.ContainsKey(sheetName))
-			{
-				return null;
-			}
-			return this.sheets[sheetName];
+			return (!this.sheets.ContainsKey(sheetName)) ? null : this.sheets[sheetName];
 		}
 
 		public void PatchData(string catalogFile, Catalog.CatalogDelegate completeCallback)
@@ -60,8 +54,8 @@ namespace StaRTS.Utils.MetaData
 		private void ProcessJoe(JoeFile joe, object cookie)
 		{
 			KeyValuePair<string, Catalog.CatalogDelegate> keyValuePair = (KeyValuePair<string, Catalog.CatalogDelegate>)cookie;
-			string text = keyValuePair.get_Key();
-			Catalog.CatalogDelegate value = keyValuePair.get_Value();
+			string text = keyValuePair.Key;
+			Catalog.CatalogDelegate value = keyValuePair.Value;
 			Service.Get<AssetManager>().Unload(this.assetHandles[text]);
 			this.assetHandles.Remove(text);
 			if (joe != null)
@@ -98,45 +92,6 @@ namespace StaRTS.Utils.MetaData
 				}
 				i++;
 			}
-		}
-
-		protected internal Catalog(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((Catalog)GCHandledObjects.GCHandleToObject(instance)).AssetFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((Catalog)GCHandledObjects.GCHandleToObject(instance)).AssetSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Catalog)GCHandledObjects.GCHandleToObject(instance)).GetSheet(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((Catalog)GCHandledObjects.GCHandleToObject(instance)).ParseCatalog((JoeFile)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((Catalog)GCHandledObjects.GCHandleToObject(instance)).PatchData(Marshal.PtrToStringUni(*(IntPtr*)args), (Catalog.CatalogDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((Catalog)GCHandledObjects.GCHandleToObject(instance)).ProcessJoe((JoeFile)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

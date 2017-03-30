@@ -6,7 +6,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World.Deploying
 {
@@ -40,34 +39,6 @@ namespace StaRTS.Main.Views.World.Deploying
 				Service.Get<SquadTroopAttackController>().DeploySquadTroops(boardPos);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		public SquadTroopDeployer()
-		{
-		}
-
-		protected internal SquadTroopDeployer(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadTroopDeployer)GCHandledObjects.GCHandleToObject(instance)).EnterPlacementMode());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadTroopDeployer)GCHandledObjects.GCHandleToObject(instance)).OnDrag((GameObject)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadTroopDeployer)GCHandledObjects.GCHandleToObject(instance)).OnPress((GameObject)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadTroopDeployer)GCHandledObjects.GCHandleToObject(instance)).OnRelease());
 		}
 	}
 }

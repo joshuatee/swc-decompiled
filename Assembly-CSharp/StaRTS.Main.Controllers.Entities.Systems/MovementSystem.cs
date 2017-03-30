@@ -8,7 +8,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Main.Views.Entities;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities.Systems
 {
@@ -17,10 +16,6 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 		private EntityController entityController;
 
 		private NodeList<MovementNode> nodeList;
-
-		public MovementSystem()
-		{
-		}
 
 		public override void AddToGame(IGame game)
 		{
@@ -68,7 +63,7 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 							if (boardCell != null)
 							{
 								bool flag = smartEntity.TransformComp.X != boardCell.X && smartEntity.TransformComp.Z != boardCell.Z;
-								smartEntity.PathingComp.TimeToMove += (flag ? 1414 : 1000) * smartEntity.PathingComp.TimePerBoardCellMs / 1000;
+								smartEntity.PathingComp.TimeToMove += ((!flag) ? 1000 : 1414) * smartEntity.PathingComp.TimePerBoardCellMs / 1000;
 							}
 							else
 							{
@@ -82,22 +77,6 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 					}
 				}
 			}
-		}
-
-		protected internal MovementSystem(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((MovementSystem)GCHandledObjects.GCHandleToObject(instance)).AddToGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((MovementSystem)GCHandledObjects.GCHandleToObject(instance)).RemoveFromGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

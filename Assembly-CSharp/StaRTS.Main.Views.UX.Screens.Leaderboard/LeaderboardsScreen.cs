@@ -14,7 +14,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 {
@@ -192,11 +191,13 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 					base.ResetGrid();
 				}
 				this.AddItemsToLeaderboardGrid();
-				return;
 			}
-			base.ResetGrid();
-			ProcessingScreen.Show();
-			Service.Get<LeaderboardController>().UpdateTopSquads(new LeaderboardController.OnUpdateData(this.OnGetLBSquads));
+			else
+			{
+				base.ResetGrid();
+				ProcessingScreen.Show();
+				Service.Get<LeaderboardController>().UpdateTopSquads(new LeaderboardController.OnUpdateData(this.OnGetLBSquads));
+			}
 		}
 
 		private void OnGetLBSquads(bool success)
@@ -211,7 +212,6 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				if (this.curTab == SocialTabs.Squads)
 				{
 					this.AddItemsToLeaderboardGrid();
-					return;
 				}
 			}
 			else
@@ -223,7 +223,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 		private void LoadLeaders()
 		{
 			PlanetVO selectedPlanet = this.planetSelectionDropDown.GetSelectedPlanet();
-			string planetId = (selectedPlanet == null) ? null : selectedPlanet.Uid;
+			string planetId = (selectedPlanet != null) ? selectedPlanet.Uid : null;
 			ProcessingScreen.Show();
 			if (!Service.Get<LeaderboardController>().ShouldRefreshData(PlayerListType.Leaders, planetId))
 			{
@@ -232,11 +232,13 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 					base.ResetGrid();
 				}
 				LeaderboardList<PlayerLBEntity> leaderboardList = this.GetLeaderboardList();
-				base.OnPlayersListLoaded((leaderboardList != null) ? leaderboardList.List : null, new Action(this.PopulatePlayersOnGrid));
-				return;
+				base.OnPlayersListLoaded((leaderboardList == null) ? null : leaderboardList.List, new Action(this.PopulatePlayersOnGrid));
 			}
-			base.ResetGrid();
-			Service.Get<LeaderboardController>().UpdateLeaders(selectedPlanet, new LeaderboardController.OnUpdateData(this.OnGetLBPlayers));
+			else
+			{
+				base.ResetGrid();
+				Service.Get<LeaderboardController>().UpdateLeaders(selectedPlanet, new LeaderboardController.OnUpdateData(this.OnGetLBPlayers));
+			}
 		}
 
 		private void OnGetLBPlayers(bool success)
@@ -254,7 +256,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			if (this.curTab == SocialTabs.Leaders)
 			{
 				LeaderboardList<PlayerLBEntity> leaderboardList = this.GetLeaderboardList();
-				base.OnPlayersListLoaded((leaderboardList != null) ? leaderboardList.List : null, new Action(this.PopulatePlayersOnGrid));
+				base.OnPlayersListLoaded((leaderboardList == null) ? null : leaderboardList.List, new Action(this.PopulatePlayersOnGrid));
 			}
 		}
 
@@ -267,7 +269,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 		public void LoadTournamentLeaders()
 		{
 			PlanetVO selectedPlanet = this.planetSelectionDropDown.GetSelectedPlanet();
-			string text = (selectedPlanet == null) ? null : selectedPlanet.Uid;
+			string text = (selectedPlanet != null) ? selectedPlanet.Uid : null;
 			if (string.IsNullOrEmpty(text))
 			{
 				return;
@@ -279,11 +281,13 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 					base.ResetGrid();
 				}
 				this.AddItemsToLeaderboardGrid();
-				return;
 			}
-			base.ResetGrid();
-			ProcessingScreen.Show();
-			Service.Get<LeaderboardController>().UpdateTournamentLeaders(selectedPlanet, new LeaderboardController.OnUpdateData(this.OnGetLBTournament));
+			else
+			{
+				base.ResetGrid();
+				ProcessingScreen.Show();
+				Service.Get<LeaderboardController>().UpdateTournamentLeaders(selectedPlanet, new LeaderboardController.OnUpdateData(this.OnGetLBTournament));
+			}
 		}
 
 		private void OnGetLBTournament(bool success)
@@ -309,9 +313,11 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			if (this.top50Button.Enabled)
 			{
 				this.DisplayPlayersNearMe();
-				return;
 			}
-			this.DisplayTop50Players();
+			else
+			{
+				this.DisplayTop50Players();
+			}
 		}
 
 		public bool EnableFindMeButton()
@@ -448,10 +454,12 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				this.top50Button.Enabled = true;
 				this.findMeButton.Enabled = false;
 				this.ShowFindMeFailMessage(leaderboardList.List.Count);
-				return;
 			}
-			TweenAlpha.Begin(this.scrollView.transform.gameObject, 0.5f, 0f);
-			Service.Get<ViewTimerManager>().CreateViewTimer(0.5f, false, new TimerDelegate(this.OnTimerCallbackFindMe), null);
+			else
+			{
+				TweenAlpha.Begin(this.scrollView.transform.gameObject, 0.5f, 0f);
+				Service.Get<ViewTimerManager>().CreateViewTimer(0.5f, false, new TimerDelegate(this.OnTimerCallbackFindMe), null);
+			}
 		}
 
 		private void OnTimerCallbackFindMe(uint id, object cookie)
@@ -534,7 +542,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			}
 			Service.Get<EventManager>().SendEvent(EventId.SquadSelect, null);
 			SocialTabInfo tabInfo = base.GetTabInfo(this.curTab);
-			tabInfo.LoadAction.Invoke();
+			tabInfo.LoadAction();
 			this.top50Button.Enabled = false;
 			this.findMeButton.Enabled = true;
 			this.LogLeaderboardPlanetSelection();
@@ -606,7 +614,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 		{
 			base.CancelLoaderAndResetGrid();
 			SocialTabInfo tabInfo = base.GetTabInfo(this.curTab);
-			tabInfo.LoadAction.Invoke();
+			tabInfo.LoadAction();
 		}
 
 		public override void ViewSquadInfoClicked(UXButton button)
@@ -620,227 +628,6 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			base.CleanupScreenTransition(false);
 			this.planetSelectionDropDown.DestroyGrid();
 			base.OnDestroyElement();
-		}
-
-		protected internal LeaderboardsScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).AddItemsToLeaderboardGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).DisplayPlayersNearMe();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).DisplayTop50Players();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).EnableFindMeButton());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).FactionChanged((FactionToggle)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).FeatureSquadButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).FindMeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).FriendsTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).GetLeaderboardList());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).GetSelectedFaction());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).GetSelectedPlanetId());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).InitIndividualGrids((UXGrid)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).InitTabInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).LeadersTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).LoadLeaders();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).LoadSquads();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).LoadTournamentLeaders();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).LogLeaderboardFactionUpdate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).LogLeaderboardPlanetSelection();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).OnDataUpdateFailure();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).OnGetLBPlayers(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).OnGetLBSquads(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).OnGetLBTournament(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).OnRowSelected((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).OnVisitClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).PlanetChanged((PlanetVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).PopulatePlayersOnGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).ReloadCurrentTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).ShowFindMeFailMessage(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).SquadsTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).Top50ButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).TournamentTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((LeaderboardsScreen)GCHandledObjects.GCHandleToObject(instance)).ViewSquadInfoClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

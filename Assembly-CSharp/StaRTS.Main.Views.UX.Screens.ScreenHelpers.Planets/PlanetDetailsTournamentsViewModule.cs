@@ -6,7 +6,6 @@ using StaRTS.Main.Models.Player.Misc;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Utils;
 using StaRTS.Main.Utils.Events;
-using StaRTS.Main.Views.UserInput;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Main.Views.UX.Screens.Leaderboard;
 using StaRTS.Utils;
@@ -15,9 +14,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 {
@@ -359,7 +356,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		private TournamentVO currentTournamentVO;
 
-		private TimedEventState currentEventState;
+		private TimedEventState currentEventState = TimedEventState.Hidden;
 
 		private bool observingClockTime;
 
@@ -377,10 +374,8 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		private Color planetActiveTextGlowColor;
 
-		public PlanetDetailsTournamentsViewModule(PlanetDetailsScreen screen)
+		public PlanetDetailsTournamentsViewModule(PlanetDetailsScreen screen) : base(screen)
 		{
-			this.currentEventState = TimedEventState.Hidden;
-			base..ctor(screen);
 			base.EvtManager.RegisterObserver(this, EventId.TournamentRedeemed, EventPriority.Default);
 			base.EvtManager.RegisterObserver(this, EventId.GalaxyPlanetInfoButton, EventPriority.Default);
 			base.EvtManager.RegisterObserver(this, EventId.ScreenClosing, EventPriority.Default);
@@ -412,18 +407,9 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			this.comingSoonTopRewardLabel = this.screen.GetElement<UXLabel>("LabelPrizeNameComingSoon");
 			this.comingSoonTopRewardSprite = this.screen.GetElement<UXSprite>("SpriteTopLeagueComingSoonItemImage");
 			this.comingSoonTopRewardCrateSprite = this.screen.GetElement<UXSprite>("SpriteTopLeagueComingSoonCrate");
-			this.comingSoonTopRewardItemCardBasic = this.screen.GetElement<UXElement>(string.Format("TopLeagueComingSoonItemCardQ{0}", new object[]
-			{
-				1
-			}));
-			this.comingSoonTopRewardItemCardAdvanced = this.screen.GetElement<UXElement>(string.Format("TopLeagueComingSoonItemCardQ{0}", new object[]
-			{
-				2
-			}));
-			this.comingSoonTopRewardItemCardElite = this.screen.GetElement<UXElement>(string.Format("TopLeagueComingSoonItemCardQ{0}", new object[]
-			{
-				3
-			}));
+			this.comingSoonTopRewardItemCardBasic = this.screen.GetElement<UXElement>(string.Format("TopLeagueComingSoonItemCardQ{0}", 1));
+			this.comingSoonTopRewardItemCardAdvanced = this.screen.GetElement<UXElement>(string.Format("TopLeagueComingSoonItemCardQ{0}", 2));
+			this.comingSoonTopRewardItemCardElite = this.screen.GetElement<UXElement>(string.Format("TopLeagueComingSoonItemCardQ{0}", 3));
 			this.comingSoonBg = this.screen.GetElement<UXSprite>("SpriteComingSoonOutline");
 			this.comingSoonBgGlow = this.screen.GetElement<UXSprite>("SpriteComingSoonOutlineBgGlow");
 			this.comingSoonDividerLeft = this.screen.GetElement<UXSprite>("SpriteComingSoonDividerLeft");
@@ -449,18 +435,9 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			this.inProgressCurrentRewardLabel = this.screen.GetElement<UXLabel>("LabelCurrentLeagueCount");
 			this.inProgressCurrentRewardSprite = this.screen.GetElement<UXSprite>("SpriteCurrentLeagueItemImage");
 			this.inProgressCurrentRewardCrateSprite = this.screen.GetElement<UXSprite>("SpriteCurrentLeagueCrate");
-			this.inProgressCurrentRewardItemCardBasic = this.screen.GetElement<UXElement>(string.Format("CurrentLeagueItemCardQ{0}", new object[]
-			{
-				1
-			}));
-			this.inProgressCurrentRewardItemCardAdvanced = this.screen.GetElement<UXElement>(string.Format("CurrentLeagueItemCardQ{0}", new object[]
-			{
-				2
-			}));
-			this.inProgressCurrentRewardItemCardElite = this.screen.GetElement<UXElement>(string.Format("CurrentLeagueItemCardQ{0}", new object[]
-			{
-				3
-			}));
+			this.inProgressCurrentRewardItemCardBasic = this.screen.GetElement<UXElement>(string.Format("CurrentLeagueItemCardQ{0}", 1));
+			this.inProgressCurrentRewardItemCardAdvanced = this.screen.GetElement<UXElement>(string.Format("CurrentLeagueItemCardQ{0}", 2));
+			this.inProgressCurrentRewardItemCardElite = this.screen.GetElement<UXElement>(string.Format("CurrentLeagueItemCardQ{0}", 3));
 			this.inProgressCurrentRewardDataFragSprite = this.screen.GetElement<UXSprite>("SpriteCurrentLeagueDataFragIcon");
 			this.inProgressNextTierLabel = this.screen.GetElement<UXLabel>("LabelNextLeagueLevel");
 			this.inProgressNextTierPercentLabel = this.screen.GetElement<UXLabel>("LabelNextLeaguePercent");
@@ -468,18 +445,9 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			this.inProgressNextRewardLabel = this.screen.GetElement<UXLabel>("LabelNextLeagueCount");
 			this.inProgressNextRewardSprite = this.screen.GetElement<UXSprite>("SpriteNextLeagueItemImage");
 			this.inProgressNextRewardCrateSprite = this.screen.GetElement<UXSprite>("SpriteNextLeagueCrate");
-			this.inProgressNextRewardItemCardBasic = this.screen.GetElement<UXElement>(string.Format("NextLeagueItemCardQ{0}", new object[]
-			{
-				1
-			}));
-			this.inProgressNextRewardItemCardAdvanced = this.screen.GetElement<UXElement>(string.Format("NextLeagueItemCardQ{0}", new object[]
-			{
-				2
-			}));
-			this.inProgressNextRewardItemCardElite = this.screen.GetElement<UXElement>(string.Format("NextLeagueItemCardQ{0}", new object[]
-			{
-				3
-			}));
+			this.inProgressNextRewardItemCardBasic = this.screen.GetElement<UXElement>(string.Format("NextLeagueItemCardQ{0}", 1));
+			this.inProgressNextRewardItemCardAdvanced = this.screen.GetElement<UXElement>(string.Format("NextLeagueItemCardQ{0}", 2));
+			this.inProgressNextRewardItemCardElite = this.screen.GetElement<UXElement>(string.Format("NextLeagueItemCardQ{0}", 3));
 			this.inProgressNextRewardDataFragSprite = this.screen.GetElement<UXSprite>("SpriteNextLeagueDataFragIcon");
 			this.inProgressTopTierLabel = this.screen.GetElement<UXLabel>("LabelTopLeagueLevel");
 			this.inProgressTopTierPercentLabel = this.screen.GetElement<UXLabel>("LabelTopLeaguePercent");
@@ -487,18 +455,9 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			this.inProgressTopRewardLabel = this.screen.GetElement<UXLabel>("LabelTopLeagueCount");
 			this.inProgressTopRewardSprite = this.screen.GetElement<UXSprite>("SpriteTopLeagueItemImage");
 			this.inProgressTopRewardCrateSprite = this.screen.GetElement<UXSprite>("SpriteTopLeagueCrate");
-			this.inProgressTopRewardItemCardBasic = this.screen.GetElement<UXElement>(string.Format("TopLeagueItemCardQ{0}", new object[]
-			{
-				1
-			}));
-			this.inProgressTopRewardItemCardAdvanced = this.screen.GetElement<UXElement>(string.Format("TopLeagueItemCardQ{0}", new object[]
-			{
-				2
-			}));
-			this.inProgressTopRewardItemCardElite = this.screen.GetElement<UXElement>(string.Format("TopLeagueItemCardQ{0}", new object[]
-			{
-				3
-			}));
+			this.inProgressTopRewardItemCardBasic = this.screen.GetElement<UXElement>(string.Format("TopLeagueItemCardQ{0}", 1));
+			this.inProgressTopRewardItemCardAdvanced = this.screen.GetElement<UXElement>(string.Format("TopLeagueItemCardQ{0}", 2));
+			this.inProgressTopRewardItemCardElite = this.screen.GetElement<UXElement>(string.Format("TopLeagueItemCardQ{0}", 3));
 			this.inProgressTopRewardDataFragSprite = this.screen.GetElement<UXSprite>("SpriteTopLeagueDataFragIcon");
 			this.endedGroup = this.screen.GetElement<UXElement>("Ended");
 			this.endedTierTitleLabel = this.screen.GetElement<UXLabel>("LabelEndedTierTitle");
@@ -534,22 +493,56 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			if (tournamentFinalRank != null && !string.IsNullOrEmpty(tournamentFinalRank.TierUid))
 			{
 				this.OnTournamentRankUpdated(null, tournamentFinalRank, this.currentTournamentVO.Uid);
-				return;
 			}
-			this.endedTierLabel.Text = (this.inProgressCurrentTierLabel.Text = (this.inProgressNextTierLabel.Text = (this.inProgressTopTierLabel.Text = base.LangController.Get("CONFLICT_TIER_LOADING", new object[0]))));
-			this.inProgressCurrentRewardLabel.Text = (this.inProgressNextRewardLabel.Text = (this.inProgressTopRewardLabel.Text = base.LangController.Get("s_Loading", new object[0])));
-			this.inProgressNextTierIconSprite.SpriteName = (this.inProgressCurrentTierIconSprite.SpriteName = (this.inProgressTopTierIconSprite.SpriteName = (this.inProgressCurrentRewardSprite.SpriteName = (this.inProgressNextRewardSprite.SpriteName = (this.inProgressTopRewardSprite.SpriteName = (this.endedTierIconSprite.SpriteName = string.Empty))))));
-			this.endedTierPercentLabel.Text = (this.inProgressCurrentTierPercentLabel.Text = (this.inProgressNextTierPercentLabel.Text = (this.inProgressTopTierPercentLabel.Text = string.Empty)));
-			this.inProgressCurrentRewardItemCardBasic.Visible = false;
-			this.inProgressCurrentRewardItemCardAdvanced.Visible = false;
-			this.inProgressCurrentRewardItemCardElite.Visible = false;
-			this.inProgressNextRewardItemCardBasic.Visible = false;
-			this.inProgressNextRewardItemCardAdvanced.Visible = false;
-			this.inProgressNextRewardItemCardElite.Visible = false;
-			this.inProgressTopRewardItemCardBasic.Visible = false;
-			this.inProgressTopRewardItemCardAdvanced.Visible = false;
-			this.inProgressTopRewardItemCardElite.Visible = false;
-			this.tournamentController.UpdatePlayerRank(new TournamentController.PlayerRankUpdatedCallback(this.OnTournamentRankUpdated), this.currentTournamentVO);
+			else
+			{
+				UXLabel arg_90_0 = this.endedTierLabel;
+				string text = base.LangController.Get("CONFLICT_TIER_LOADING", new object[0]);
+				this.inProgressTopTierLabel.Text = text;
+				text = text;
+				this.inProgressNextTierLabel.Text = text;
+				text = text;
+				this.inProgressCurrentTierLabel.Text = text;
+				arg_90_0.Text = text;
+				UXLabel arg_CD_0 = this.inProgressCurrentRewardLabel;
+				text = base.LangController.Get("s_Loading", new object[0]);
+				this.inProgressTopRewardLabel.Text = text;
+				text = text;
+				this.inProgressNextRewardLabel.Text = text;
+				arg_CD_0.Text = text;
+				UXSprite arg_131_0 = this.inProgressNextTierIconSprite;
+				text = string.Empty;
+				this.endedTierIconSprite.SpriteName = text;
+				text = text;
+				this.inProgressTopRewardSprite.SpriteName = text;
+				text = text;
+				this.inProgressNextRewardSprite.SpriteName = text;
+				text = text;
+				this.inProgressCurrentRewardSprite.SpriteName = text;
+				text = text;
+				this.inProgressTopTierIconSprite.SpriteName = text;
+				text = text;
+				this.inProgressCurrentTierIconSprite.SpriteName = text;
+				arg_131_0.SpriteName = text;
+				UXLabel arg_16B_0 = this.endedTierPercentLabel;
+				text = string.Empty;
+				this.inProgressTopTierPercentLabel.Text = text;
+				text = text;
+				this.inProgressNextTierPercentLabel.Text = text;
+				text = text;
+				this.inProgressCurrentTierPercentLabel.Text = text;
+				arg_16B_0.Text = text;
+				this.inProgressCurrentRewardItemCardBasic.Visible = false;
+				this.inProgressCurrentRewardItemCardAdvanced.Visible = false;
+				this.inProgressCurrentRewardItemCardElite.Visible = false;
+				this.inProgressNextRewardItemCardBasic.Visible = false;
+				this.inProgressNextRewardItemCardAdvanced.Visible = false;
+				this.inProgressNextRewardItemCardElite.Visible = false;
+				this.inProgressTopRewardItemCardBasic.Visible = false;
+				this.inProgressTopRewardItemCardAdvanced.Visible = false;
+				this.inProgressTopRewardItemCardElite.Visible = false;
+				this.tournamentController.UpdatePlayerRank(new TournamentController.PlayerRankUpdatedCallback(this.OnTournamentRankUpdated), this.currentTournamentVO);
+			}
 		}
 
 		private void OnTournamentRankUpdated(TournamentRank oldRank, TournamentRank rank, string tournamentUID)
@@ -562,35 +555,39 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			{
 				this.endedTierTitleLabel.Text = base.LangController.Get("CONFLICT_YOUR_LEAGUE", new object[0]);
 				this.UpdateEndedUI();
-				return;
 			}
-			if (this.currentTournamentVO == null || this.currentTournamentVO.Uid != tournamentUID)
+			else
 			{
-				return;
-			}
-			TournamentTierVO optional = base.Sdc.GetOptional<TournamentTierVO>(rank.TierUid);
-			TournamentTierVO vOForNextTier = TournamentController.GetVOForNextTier(optional);
-			TournamentTierVO idForTopTier = TournamentController.GetIdForTopTier();
-			Dictionary<string, TournamentRewardsVO> tierRewardMap = TimedEventPrizeUtils.GetTierRewardMap(this.currentTournamentVO.RewardGroupId);
-			TournamentRewardsVO rewardGroup = null;
-			TournamentRewardsVO rewardGroup2 = null;
-			TournamentRewardsVO rewardGroup3 = null;
-			if (optional != null && vOForNextTier != null && idForTopTier != null && tierRewardMap.TryGetValue(optional.Uid, out rewardGroup) && tierRewardMap.TryGetValue(vOForNextTier.Uid, out rewardGroup2) && tierRewardMap.TryGetValue(idForTopTier.Uid, out rewardGroup3))
-			{
-				this.UpdateTierInfoUI(optional, optional.Percentage, this.inProgressCurrentTierIconSprite, this.inProgressCurrentTierLabel, this.inProgressCurrentTierPercentLabel);
-				this.inProgressCurrentTierPercentLabel.Text = base.LangController.Get("CONFLICT_TIER_PERCENTILE", new object[]
+				if (this.currentTournamentVO == null || this.currentTournamentVO.Uid != tournamentUID)
 				{
-					Math.Round(rank.Percentile, 2)
-				});
-				this.UpdateTierInfoUI(vOForNextTier, vOForNextTier.Percentage, this.inProgressNextTierIconSprite, this.inProgressNextTierLabel, this.inProgressNextTierPercentLabel);
-				this.UpdateTierInfoUI(idForTopTier, idForTopTier.Percentage, this.inProgressTopTierIconSprite, this.inProgressTopTierLabel, this.inProgressTopTierPercentLabel);
-				TimedEventPrizeUtils.TrySetupConflictItemRewardView(rewardGroup, this.inProgressCurrentRewardLabel, this.inProgressCurrentRewardSprite, this.inProgressCurrentRewardCrateSprite, this.inProgressCurrentRewardItemCardBasic, this.inProgressCurrentRewardItemCardAdvanced, this.inProgressCurrentRewardItemCardElite, this.currentCrateCount, this.inProgressCurrentRewardDataFragSprite, null);
-				TimedEventPrizeUtils.TrySetupConflictItemRewardView(rewardGroup2, this.inProgressNextRewardLabel, this.inProgressNextRewardSprite, this.inProgressNextRewardCrateSprite, this.inProgressNextRewardItemCardBasic, this.inProgressNextRewardItemCardAdvanced, this.inProgressNextRewardItemCardElite, this.nextCrateCount, this.inProgressNextRewardDataFragSprite, null);
-				TimedEventPrizeUtils.TrySetupConflictItemRewardView(rewardGroup3, this.inProgressTopRewardLabel, this.inProgressTopRewardSprite, this.inProgressTopRewardCrateSprite, this.inProgressTopRewardItemCardBasic, this.inProgressTopRewardItemCardAdvanced, this.inProgressTopRewardItemCardElite, this.topCrateCount, this.inProgressTopRewardDataFragSprite, null);
-				this.AnimateShowNext();
-				return;
+					return;
+				}
+				TournamentTierVO optional = base.Sdc.GetOptional<TournamentTierVO>(rank.TierUid);
+				TournamentTierVO vOForNextTier = TournamentController.GetVOForNextTier(optional);
+				TournamentTierVO idForTopTier = TournamentController.GetIdForTopTier();
+				Dictionary<string, TournamentRewardsVO> tierRewardMap = TimedEventPrizeUtils.GetTierRewardMap(this.currentTournamentVO.RewardGroupId);
+				TournamentRewardsVO rewardGroup = null;
+				TournamentRewardsVO rewardGroup2 = null;
+				TournamentRewardsVO rewardGroup3 = null;
+				if (optional != null && vOForNextTier != null && idForTopTier != null && tierRewardMap.TryGetValue(optional.Uid, out rewardGroup) && tierRewardMap.TryGetValue(vOForNextTier.Uid, out rewardGroup2) && tierRewardMap.TryGetValue(idForTopTier.Uid, out rewardGroup3))
+				{
+					this.UpdateTierInfoUI(optional, optional.Percentage, this.inProgressCurrentTierIconSprite, this.inProgressCurrentTierLabel, this.inProgressCurrentTierPercentLabel);
+					this.inProgressCurrentTierPercentLabel.Text = base.LangController.Get("CONFLICT_TIER_PERCENTILE", new object[]
+					{
+						Math.Round(rank.Percentile, 2)
+					});
+					this.UpdateTierInfoUI(vOForNextTier, vOForNextTier.Percentage, this.inProgressNextTierIconSprite, this.inProgressNextTierLabel, this.inProgressNextTierPercentLabel);
+					this.UpdateTierInfoUI(idForTopTier, idForTopTier.Percentage, this.inProgressTopTierIconSprite, this.inProgressTopTierLabel, this.inProgressTopTierPercentLabel);
+					TimedEventPrizeUtils.TrySetupConflictItemRewardView(rewardGroup, this.inProgressCurrentRewardLabel, this.inProgressCurrentRewardSprite, this.inProgressCurrentRewardCrateSprite, this.inProgressCurrentRewardItemCardBasic, this.inProgressCurrentRewardItemCardAdvanced, this.inProgressCurrentRewardItemCardElite, this.currentCrateCount, this.inProgressCurrentRewardDataFragSprite, null);
+					TimedEventPrizeUtils.TrySetupConflictItemRewardView(rewardGroup2, this.inProgressNextRewardLabel, this.inProgressNextRewardSprite, this.inProgressNextRewardCrateSprite, this.inProgressNextRewardItemCardBasic, this.inProgressNextRewardItemCardAdvanced, this.inProgressNextRewardItemCardElite, this.nextCrateCount, this.inProgressNextRewardDataFragSprite, null);
+					TimedEventPrizeUtils.TrySetupConflictItemRewardView(rewardGroup3, this.inProgressTopRewardLabel, this.inProgressTopRewardSprite, this.inProgressTopRewardCrateSprite, this.inProgressTopRewardItemCardBasic, this.inProgressTopRewardItemCardAdvanced, this.inProgressTopRewardItemCardElite, this.topCrateCount, this.inProgressTopRewardDataFragSprite, null);
+					this.AnimateShowNext();
+				}
+				else
+				{
+					Service.Get<Logger>().ErrorFormat("Unable to load InProgress UI, invalid tiers meta data for tournamentUID: " + tournamentUID, new object[0]);
+				}
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("Unable to load InProgress UI, invalid tiers meta data for tournamentUID: " + tournamentUID, new object[0]);
 		}
 
 		public void OnViewClockTime(float dt)
@@ -666,26 +663,27 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			int secondsRemaining = TimedEventUtils.GetSecondsRemaining(this.currentTournamentVO);
 			string text = LangUtils.FormatTime((long)secondsRemaining);
 			TimedEventState timedEventState = this.currentEventState;
-			if (timedEventState == TimedEventState.Upcoming)
+			if (timedEventState != TimedEventState.Upcoming)
+			{
+				if (timedEventState == TimedEventState.Live)
+				{
+					this.inProgressEventTimerLabel.Text = base.LangController.Get("CAMPAIGN_ENDS_IN", new object[]
+					{
+						text
+					});
+					this.comingSoonEventTimerLabel.Text = base.LangController.Get("CAMPAIGN_ENDS_IN", new object[]
+					{
+						text
+					});
+				}
+			}
+			else
 			{
 				this.comingSoonEventTimerLabel.Text = base.LangController.Get("CAMPAIGN_BEGINS_IN", new object[]
 				{
 					text
 				});
-				return;
 			}
-			if (timedEventState != TimedEventState.Live)
-			{
-				return;
-			}
-			this.inProgressEventTimerLabel.Text = base.LangController.Get("CAMPAIGN_ENDS_IN", new object[]
-			{
-				text
-			});
-			this.comingSoonEventTimerLabel.Text = base.LangController.Get("CAMPAIGN_ENDS_IN", new object[]
-			{
-				text
-			});
 		}
 
 		public void RefreshView()
@@ -746,9 +744,11 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				TournamentRewardsVO rewardGroup = tierRewardMap[idForTopTier.Uid];
 				TimedEventPrizeUtils.TrySetupConflictItemRewardView(rewardGroup, this.comingSoonTopRewardIconLabel, this.comingSoonTopRewardSprite, this.comingSoonTopRewardCrateSprite, this.comingSoonTopRewardItemCardBasic, this.comingSoonTopRewardItemCardAdvanced, this.comingSoonTopRewardItemCardElite, this.comingSoonCrateCount, this.comingSoonTopRewardDataFragIcon, this.comingSoonTopRewardLabel);
 				this.AnimateShowNext();
-				return;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("No Tournament to display reward on planet " + this.screen.viewingPlanetVO.Uid, new object[0]);
+			else
+			{
+				Service.Get<Logger>().ErrorFormat("No Tournament to display reward on planet " + this.screen.viewingPlanetVO.Uid, new object[0]);
+			}
 		}
 
 		private void UpdatePlanetViewDetailWithAnimation()
@@ -782,14 +782,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				if (this.inProgressGroup.Visible)
 				{
 					component.SetTrigger("ShowInProgress");
-					return;
 				}
-				if (this.endedGroup.Visible)
+				else if (this.endedGroup.Visible)
 				{
 					component.SetTrigger("ShowEnded");
-					return;
 				}
-				if (this.comingSoonGroup.Visible)
+				else if (this.comingSoonGroup.Visible)
 				{
 					component.SetTrigger("ShowComingSoon");
 				}
@@ -862,7 +860,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 		{
 			if (this.currentTournamentVO == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("There is no Tournament to display reward on planet " + this.screen.viewingPlanetVO.Uid, new object[0]);
+				Service.Get<Logger>().ErrorFormat("There is no Tournament to display reward on planet " + this.screen.viewingPlanetVO.Uid, new object[0]);
 				return;
 			}
 			Tournament tournament = Service.Get<CurrentPlayer>().TournamentProgress.GetTournament(this.currentTournamentVO.Uid);
@@ -892,14 +890,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		private void OnTournamentTiersButtonClicked(UXButton button)
 		{
-			Service.Get<UserInputInhibitor>().DenyAll();
 			this.screen.AnimateHideUI();
 			Service.Get<ViewTimerManager>().CreateViewTimer(0.1f, false, new TimerDelegate(this.OnTierButtonTimerCallback), null);
 		}
 
 		private void OnLeaderboardButtonClicked(UXButton button)
 		{
-			Service.Get<UserInputInhibitor>().DenyAll();
 			this.screen.AnimateHideUI();
 			Service.Get<ViewTimerManager>().CreateViewTimer(0.1f, false, new TimerDelegate(this.OnLeaderboardButtonTimerCallback), null);
 		}
@@ -909,13 +905,11 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			Tournament tournament = base.Player.TournamentProgress.GetTournament(this.currentTournamentVO.Uid);
 			base.ScrController.AddScreen(new TournamentTiersScreen(this.currentTournamentVO, tournament));
 			base.EvtManager.SendEvent(EventId.UIAttackScreenSelection, new ActionMessageBIData("prizes", this.currentTournamentVO.Uid));
-			Service.Get<UserInputInhibitor>().AllowAll();
 		}
 
 		private void OnLeaderboardButtonTimerCallback(uint id, object cookie)
 		{
 			Service.Get<UXController>().HUD.OpenConflictLeaderBoardWithPlanet(this.currentTournamentVO.PlanetId);
-			Service.Get<UserInputInhibitor>().AllowAll();
 		}
 
 		public void Destroy()
@@ -938,128 +932,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				base.LangController.Get(tierVO.RankName, new object[0]),
 				base.LangController.Get(tierVO.DivisionSmall, new object[0])
 			});
-		}
-
-		protected internal PlanetDetailsTournamentsViewModule(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).AnimateShowNext();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).GetTierTitleString((TournamentTierVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).OnAnimateShowUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).OnLeaderboardButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).OnTournamentRankUpdated((TournamentRank)GCHandledObjects.GCHandleToObject(*args), (TournamentRank)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).OnTournamentTiersButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshScreenForPlanetChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).ShowTimedEventDetails(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).StartObservingTime();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).UpdateComingSoonUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentTournamentTier();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).UpdateEndedUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetViewDetailWithAnimation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).UpdateTierInfoUI((TournamentTierVO)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), (UXSprite)GCHandledObjects.GCHandleToObject(args[2]), (UXLabel)GCHandledObjects.GCHandleToObject(args[3]), (UXLabel)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((PlanetDetailsTournamentsViewModule)GCHandledObjects.GCHandleToObject(instance)).UpdateTimeRemaining();
-			return -1L;
 		}
 	}
 }

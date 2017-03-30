@@ -4,7 +4,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -25,16 +24,6 @@ namespace StaRTS.Main.Views.Entities
 			PlanetVO planet = Service.Get<CurrentPlayer>().Planet;
 			material.SetColor("_Color", planet.PlanetPerkShaderColor);
 			material.SetFloat("_VerticalRate", 1f);
-		}
-
-		protected internal PerkHighlightedEntity(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PerkHighlightedEntity)GCHandledObjects.GCHandleToObject(instance)).SetMaterialCustomProperties((Material)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

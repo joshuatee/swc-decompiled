@@ -4,7 +4,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -45,7 +44,7 @@ namespace StaRTS.Main.Story.Actions
 				}
 				catch (KeyNotFoundException ex)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Error in Story Action {0}.  Could not find Action {1}.", new object[]
+					Service.Get<Logger>().ErrorFormat("Error in Story Action {0}.  Could not find Action {1}.", new object[]
 					{
 						this.vo.Uid,
 						array[i]
@@ -54,7 +53,7 @@ namespace StaRTS.Main.Story.Actions
 				}
 				if (storyActionVO.Uid == this.vo.Uid)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Error in Story Action {0}.  ClusterAND cannot contain itself as a child.", new object[]
+					Service.Get<Logger>().ErrorFormat("Error in Story Action {0}.  ClusterAND cannot contain itself as a child.", new object[]
 					{
 						this.vo.Uid
 					});
@@ -72,9 +71,9 @@ namespace StaRTS.Main.Story.Actions
 				this.children.Add(storyAction, 0);
 				array2[i] = storyAction;
 			}
-			if (flag & flag2)
+			if (flag && flag2)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("ClusterAND {0} contains both ShowHolo and AnimateHolo. {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("ClusterAND {0} contains both ShowHolo and AnimateHolo. {1}", new object[]
 				{
 					this.vo.Uid,
 					"Please only animate holograms AFTER ShowHolo is complete"
@@ -123,34 +122,6 @@ namespace StaRTS.Main.Story.Actions
 				}
 			}
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal ClusterANDStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ClusterANDStoryAction)GCHandledObjects.GCHandleToObject(instance)).ChildComplete((IStoryAction)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ClusterANDStoryAction)GCHandledObjects.GCHandleToObject(instance)).ChildPrepared((IStoryAction)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ClusterANDStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ClusterANDStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

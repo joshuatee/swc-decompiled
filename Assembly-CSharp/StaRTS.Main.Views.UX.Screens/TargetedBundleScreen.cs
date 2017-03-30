@@ -11,7 +11,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -304,9 +303,11 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.currentOffer.Discount.ToString()
 				});
-				return;
 			}
-			Service.Get<StaRTSLogger>().Error("No current offer available for targeted bundle screen");
+			else
+			{
+				Service.Get<Logger>().Error("No current offer available for targeted bundle screen");
+			}
 		}
 
 		private void SetupCurrencyCostOffer(TargetedBundleVO currentOffer)
@@ -342,7 +343,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.purchaseButton.Visible = false;
 				this.purchaseIAPButtonLabel.Visible = false;
-				Service.Get<StaRTSLogger>().Error("No iap available for targeted bundle screen: " + currentOffer.Uid);
+				Service.Get<Logger>().Error("No iap available for targeted bundle screen: " + currentOffer.Uid);
 			}
 		}
 
@@ -357,57 +358,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			targetedBundleController.MakeTargetedBundlePurchase(this.currentOffer, iapId);
 			this.Close(null);
-		}
-
-		protected internal TargetedBundleScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetedBundleScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TargetedBundleScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TargetedBundleScreen)GCHandledObjects.GCHandleToObject(instance)).OnPurchaseButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TargetedBundleScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TargetedBundleScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TargetedBundleScreen)GCHandledObjects.GCHandleToObject(instance)).SetupCurrencyCostOffer((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TargetedBundleScreen)GCHandledObjects.GCHandleToObject(instance)).SetupIAPLinkedOffer((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TargetedBundleScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateElements();
-			return -1L;
 		}
 	}
 }

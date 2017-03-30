@@ -3,7 +3,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -35,15 +34,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal ServerController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

@@ -5,7 +5,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands
 {
@@ -41,12 +40,12 @@ namespace StaRTS.Main.Models.Commands
 			this.seededTroopsDeployed = seededTroopsDeployed;
 			this.defendingUnitsKilled = defendingUnitsKilled;
 			this.attackingUnitsKilled = attackingUnitsKilled;
-			this.defenderGuildUnitsSpent = ((defenderGuildUnitsSpent != null) ? defenderGuildUnitsSpent : new Dictionary<string, int>());
-			this.attackerGuildUnitsSpent = ((attackerGuildUnitsSpent != null) ? attackerGuildUnitsSpent : new Dictionary<string, int>());
-			this.lootEarned = ((lootEarned != null) ? lootEarned : new Dictionary<string, int>());
+			this.defenderGuildUnitsSpent = ((defenderGuildUnitsSpent == null) ? new Dictionary<string, int>() : defenderGuildUnitsSpent);
+			this.attackerGuildUnitsSpent = ((attackerGuildUnitsSpent == null) ? new Dictionary<string, int>() : attackerGuildUnitsSpent);
+			this.lootEarned = ((lootEarned == null) ? new Dictionary<string, int>() : lootEarned);
 			this.buildingHealthMap = buildingHealthMap;
 			this.buildingUids = buildingUids;
-			this.unarmedTraps = ((unarmedTraps != null) ? unarmedTraps : new List<string>());
+			this.unarmedTraps = ((unarmedTraps == null) ? new List<string>() : unarmedTraps);
 			this.replayData = replayData;
 			this.planetId = Service.Get<CurrentPlayer>().PlanetId;
 		}
@@ -76,15 +75,6 @@ namespace StaRTS.Main.Models.Commands
 			startedSerializer.AddBool("isUserEnded", this.battle.Canceled);
 			startedSerializer.AddString("planetId", this.planetId);
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal BattleEndRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

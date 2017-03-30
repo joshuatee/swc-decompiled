@@ -15,7 +15,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -150,7 +149,6 @@ namespace StaRTS.Main.Controllers
 				if (flag)
 				{
 					this.OnPathingComplete(smartEntity, smartEntity.SecondaryTargetsComp, smartEntity.StateComp, smartEntity.ShooterComp, this.shooterController.GetPrimaryTarget(smartEntity.ShooterComp));
-					return;
 				}
 			}
 			else
@@ -230,7 +228,7 @@ namespace StaRTS.Main.Controllers
 				entity.ShooterComp.AttackFSM.StopAttacking(true);
 				bool flag = false;
 				bool flag2 = Service.Get<PathingManager>().RestartPathing(entity, out flag, false);
-				if (flag2 & flag)
+				if (flag2 && flag)
 				{
 					SmartEntity primaryTarget = this.shooterController.GetPrimaryTarget(entity.ShooterComp);
 					onTroopTargetingDone(entity);
@@ -267,9 +265,7 @@ namespace StaRTS.Main.Controllers
 			{
 				if (shooterComp.TargetingDelayAmount > 0)
 				{
-					ShooterComponent expr_5B = shooterComp;
-					int targetingDelayAmount = expr_5B.TargetingDelayAmount;
-					expr_5B.TargetingDelayAmount = targetingDelayAmount - 1;
+					shooterComp.TargetingDelayAmount--;
 					return false;
 				}
 				flag2 = this.FindTargetForTroopNode(entity, false);
@@ -377,7 +373,7 @@ namespace StaRTS.Main.Controllers
 			int z = transformComp.Z;
 			BoardCell<Entity> cellAt = boardController.Board.GetCellAt(x, z);
 			int num = defenderComp.PatrolLoc;
-			int num2 = (defenderComp.SpawnBuilding == null) ? 8 : 4;
+			int num2 = (defenderComp.SpawnBuilding != null) ? 4 : 8;
 			int viewRange = (int)entity.ShooterComp.ShooterVO.ViewRange;
 			for (int i = 0; i < num2; i++)
 			{
@@ -393,12 +389,15 @@ namespace StaRTS.Main.Controllers
 				{
 					boardCell = defenderComp.SpawnBuilding.FindNextPatrolPoint(entity.SizeComp.Width, ref num);
 				}
-				if (boardCell.IsWalkable() && Service.Get<PathingManager>().StartPathingWorkerOrPatrol(entity, null, cellAt, boardCell, entity.SizeComp.Width, entity.TroopComp != null && entity.TroopComp.TroopType.CrushesWalls))
+				if (boardCell.IsWalkable())
 				{
-					Service.Get<ShooterController>().StartMoving(entity);
-					defenderComp.PatrolLoc = num;
-					Service.Get<ShooterController>().StopSearch(entity.ShooterComp);
-					return;
+					if (Service.Get<PathingManager>().StartPathingWorkerOrPatrol(entity, null, cellAt, boardCell, entity.SizeComp.Width, entity.TroopComp != null && entity.TroopComp.TroopType.CrushesWalls))
+					{
+						Service.Get<ShooterController>().StartMoving(entity);
+						defenderComp.PatrolLoc = num;
+						Service.Get<ShooterController>().StopSearch(entity.ShooterComp);
+						return;
+					}
 				}
 			}
 			entity.StateComp.CurState = EntityState.Idle;
@@ -522,13 +521,19 @@ namespace StaRTS.Main.Controllers
 				if (healthComp != null && !healthComp.IsDead())
 				{
 					BuildingComponent buildingComp = element.BuildingComp;
-					if (buildingComp.BuildingType.Type != BuildingType.Blocker && (element.TrapComp == null || element.TrapComp.CurrentState == TrapState.Armed) && hashSet.Add(buildingComp.BuildingType.BuildingID))
+					if (buildingComp.BuildingType.Type != BuildingType.Blocker)
 					{
-						int num = this.CalculateWeight(shooterComp, null, healthComp.ArmorType, elementPriorityPair.Priority);
-						if (num > maxWeight)
+						if (element.TrapComp == null || element.TrapComp.CurrentState == TrapState.Armed)
 						{
-							maxWeight = num;
-							result = element;
+							if (hashSet.Add(buildingComp.BuildingType.BuildingID))
+							{
+								int num = this.CalculateWeight(shooterComp, null, healthComp.ArmorType, elementPriorityPair.Priority);
+								if (num > maxWeight)
+								{
+									maxWeight = num;
+									result = element;
+								}
+							}
 						}
 					}
 				}
@@ -802,7 +807,7 @@ namespace StaRTS.Main.Controllers
 			TroopComponent troopComp = troopEntity.TroopComp;
 			if (troopComp == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Non troop entity checking for alternative target in TargetingSystem");
+				Service.Get<Logger>().Error("Non troop entity checking for alternative target in TargetingSystem");
 				return false;
 			}
 			return troopEntity.DefenderComp == null && !troopComp.TroopType.IsHealer;
@@ -893,18 +898,14 @@ namespace StaRTS.Main.Controllers
 				{
 					if (current.Children != null)
 					{
-						using (IEnumerator<BoardItem<Entity>> enumerator2 = current.Children.GetEnumerator())
+						foreach (BoardItem<Entity> current2 in current.Children)
 						{
-							while (enumerator2.MoveNext())
+							if (validator((SmartEntity)current2.Data, caller))
 							{
-								BoardItem<Entity> current2 = enumerator2.get_Current();
-								if (validator((SmartEntity)current2.Data, caller))
+								list2.Add((SmartEntity)current2.Data);
+								if (returnFirstFound)
 								{
-									list2.Add((SmartEntity)current2.Data);
-									if (returnFirstFound)
-									{
-										return list2;
-									}
+									return list2;
 								}
 							}
 						}
@@ -932,166 +933,6 @@ namespace StaRTS.Main.Controllers
 				secondaryTargetsComp.WallTargets = null;
 				secondaryTargetsComp.CurrentWallTarget = null;
 			}
-		}
-
-		protected internal TargetingController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).AddTurretTarget((ShooterComponent)GCHandledObjects.GCHandleToObject(*args), (TurretShooterComponent)GCHandledObjects.GCHandleToObject(args[1]), (SmartEntity)GCHandledObjects.GCHandleToObject(args[2]), *(int*)(args + 3), (HashSet<ShooterComponent>)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).CalculateWeight((ShooterComponent)GCHandledObjects.GCHandleToObject(*args), (HealthComponent)GCHandledObjects.GCHandleToObject(args[1]), (ArmorType)(*(int*)(args + 2)), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).CanBeHealed((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).FindBestTargetForHealer((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).FindOffensiveTroopAsTarget((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).FindTargetForAttacker((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).FindTargetForTroopNode((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).InformTurretsAboutTroop((List<ElementPriorityPair<Entity>>)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]), (HashSet<ShooterComponent>)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).InvalidateCurrentTarget((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).IsAttacker((SmartEntity)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).IsAttackerThenFlag((SmartEntity)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).IsEnemy((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).IsHealable((SmartEntity)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).OnPathingComplete((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (SecondaryTargetsComponent)GCHandledObjects.GCHandleToObject(args[1]), (StateComponent)GCHandledObjects.GCHandleToObject(args[2]), (ShooterComponent)GCHandledObjects.GCHandleToObject(args[3]), (SmartEntity)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).OnTroopAcquiredFirstTarget((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).RandomizeTargetingDelay((ShooterComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).ReevaluateTarget((ShooterComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).ShouldSeekAlternativeTarget((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).StopSearchIfTargetFound((ShooterComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).TraverseSpiralToFindTarget(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), (TargetingController.TargetValidator)GCHandledObjects.GCHandleToObject(args[3]), GCHandledObjects.GCHandleToObject(args[4])));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TargetingController.TraverseSpiralToFindTargets(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), (TargetingController.TargetValidator)GCHandledObjects.GCHandleToObject(args[3]), GCHandledObjects.GCHandleToObject(args[4]), *(sbyte*)(args + 5) != 0));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).TroopWandering((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).UpdateAlterantiveTargets((SecondaryTargetsComponent)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]), (SmartEntity)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((TargetingController)GCHandledObjects.GCHandleToObject(instance)).UpdateNearbyTroops(*(int*)args, *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).UpdateNode((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (TargetingController.OnTargetingDone)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).UpdateShooterTarget(*(sbyte*)args != 0, (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]), (SmartEntity)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).UpdateShooterTargetIfDistinct((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).UpdateShooterTargetIfNotNull((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetingController)GCHandledObjects.GCHandleToObject(instance)).UpdateWallBreakingTroops((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (TargetingController.OnTargetingDone)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

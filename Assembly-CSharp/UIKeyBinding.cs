@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/Interaction/Key Binding")]
-public class UIKeyBinding : MonoBehaviour, IUnitySerializable
+public class UIKeyBinding : MonoBehaviour
 {
 	public enum Action
 	{
@@ -32,13 +29,13 @@ public class UIKeyBinding : MonoBehaviour, IUnitySerializable
 
 	public UIKeyBinding.Action action;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mIgnoreUp;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mIsInput;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mPress;
 
 	public static bool IsBound(KeyCode key)
@@ -142,7 +139,7 @@ public class UIKeyBinding : MonoBehaviour, IUnitySerializable
 				UICamera.currentKey = this.keyCode;
 				this.OnBindingPress(true);
 			}
-			if (this.mPress & flag2)
+			if (this.mPress && flag2)
 			{
 				UICamera.currentKey = this.keyCode;
 				this.OnBindingPress(false);
@@ -178,134 +175,5 @@ public class UIKeyBinding : MonoBehaviour, IUnitySerializable
 	protected virtual void OnBindingClick()
 	{
 		UICamera.Notify(base.gameObject, "OnClick", null);
-	}
-
-	public UIKeyBinding()
-	{
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		SerializedStateWriter.Instance.WriteInt32((int)this.keyCode);
-		SerializedStateWriter.Instance.WriteInt32((int)this.modifier);
-		SerializedStateWriter.Instance.WriteInt32((int)this.action);
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		this.keyCode = (KeyCode)SerializedStateReader.Instance.ReadInt32();
-		this.modifier = (UIKeyBinding.Modifier)SerializedStateReader.Instance.ReadInt32();
-		this.action = (UIKeyBinding.Action)SerializedStateReader.Instance.ReadInt32();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		ISerializedNamedStateWriter arg_1F_0 = SerializedNamedStateWriter.Instance;
-		int arg_1F_1 = (int)this.keyCode;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		arg_1F_0.WriteInt32(arg_1F_1, &var_0_cp_0[var_0_cp_1] + 1045);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.modifier, &var_0_cp_0[var_0_cp_1] + 1053);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.action, &var_0_cp_0[var_0_cp_1] + 1062);
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		ISerializedNamedStateReader arg_1A_0 = SerializedNamedStateReader.Instance;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		this.keyCode = (KeyCode)arg_1A_0.ReadInt32(&var_0_cp_0[var_0_cp_1] + 1045);
-		this.modifier = (UIKeyBinding.Modifier)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 1053);
-		this.action = (UIKeyBinding.Action)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 1062);
-	}
-
-	protected internal UIKeyBinding(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIKeyBinding.IsBound((KeyCode)(*(int*)args)));
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).IsModifierActive());
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).OnBindingClick();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).OnBindingPress(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).OnDisable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).OnEnable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).OnSubmit();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UIKeyBinding)GCHandledObjects.GCHandleToObject(instance)).Update();
-		return -1L;
 	}
 }

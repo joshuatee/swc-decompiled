@@ -227,13 +227,5 @@ namespace StaRTS.Audio
 		public const string SFX_TRANS_HYPERSPACE = "sfx_trans_hyperspace";
 
 		public const string SFX_PLACEMENT_SKINNED = "sfx_placement_skinned_notify_01";
-
-		public AudioConstants()
-		{
-		}
-
-		protected internal AudioConstants(UIntPtr dummy)
-		{
-		}
 	}
 }

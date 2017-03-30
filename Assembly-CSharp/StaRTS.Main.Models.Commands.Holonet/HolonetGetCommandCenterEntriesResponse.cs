@@ -5,7 +5,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Holonet
 {
@@ -15,10 +14,6 @@ namespace StaRTS.Main.Models.Commands.Holonet
 		{
 			get;
 			private set;
-		}
-
-		public HolonetGetCommandCenterEntriesResponse()
-		{
 		}
 
 		public override ISerializable FromObject(object obj)
@@ -39,26 +34,6 @@ namespace StaRTS.Main.Models.Commands.Holonet
 				}
 			}
 			return this;
-		}
-
-		protected internal HolonetGetCommandCenterEntriesResponse(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolonetGetCommandCenterEntriesResponse)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolonetGetCommandCenterEntriesResponse)GCHandledObjects.GCHandleToObject(instance)).CCVOs);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HolonetGetCommandCenterEntriesResponse)GCHandledObjects.GCHandleToObject(instance)).CCVOs = (List<CommandCenterVO>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
 		}
 	}
 }

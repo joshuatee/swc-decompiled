@@ -22,13 +22,11 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 {
-	public class CommandCenterHolonetTab : AbstractHolonetTab, IViewFrameTimeObserver, IEventObserver, IViewClockTimeObserver
+	public class CommandCenterHolonetTab : AbstractHolonetTab, IEventObserver, IViewClockTimeObserver, IViewFrameTimeObserver
 	{
 		private const int devNoteLength = 120;
 
@@ -468,23 +466,24 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			{
 				string text = this.lang.Get(devNotes[0].BodyText, new object[0]);
 				StringBuilder stringBuilder = new StringBuilder();
-				string[] array = new string[]
+				string text2 = string.Empty;
+				string[] separator = new string[]
 				{
 					"[img]"
 				};
-				string[] array2 = text.Split(array, 0);
+				string[] array = text.Split(separator, StringSplitOptions.None);
 				int i = 0;
-				int num = array2.Length;
+				int num = array.Length;
 				while (i < num)
 				{
-					if (!array2[i].StartsWith("src="))
+					if (!array[i].StartsWith("src="))
 					{
-						stringBuilder.Append(array2[i]);
+						stringBuilder.Append(array[i]);
 					}
 					i++;
 				}
-				string text2 = stringBuilder.ToString();
-				if (text2.get_Length() >= 120)
+				text2 = stringBuilder.ToString();
+				if (text2.Length >= 120)
 				{
 					int num2 = text2.LastIndexOf(' ', 120);
 					if (num2 == -1)
@@ -569,7 +568,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 					break;
 				}
 				default:
-					Service.Get<StaRTSLogger>().Warn("Holonet Command Layout: " + featuredItems[j].Layout + " not supported.");
+					Service.Get<Logger>().Warn("Holonet Command Layout: " + featuredItems[j].Layout + " not supported.");
 					uXElement = null;
 					break;
 				}
@@ -619,29 +618,29 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			this.dailyCratePanel.Visible = true;
 			this.dailyCratePanelBG.Visible = true;
 			this.dailyCrateSprite.Visible = true;
-			string text;
+			string text = string.Empty;
 			string text2;
 			if (!flag)
 			{
 				InventoryCrates crates = Service.Get<CurrentPlayer>().Prizes.Crates;
-				text = crates.GetNextDailyCrateId();
-				text2 = this.lang.Get("hn_ui_daily_crate_next_available", new object[0]);
+				text2 = crates.GetNextDailyCrateId();
+				text = this.lang.Get("hn_ui_daily_crate_next_available", new object[0]);
 			}
 			else
 			{
-				text2 = this.lang.Get("hn_ui_daily_crate_available", new object[0]);
-				text = this.dailyCrate.CrateId;
+				text = this.lang.Get("hn_ui_daily_crate_available", new object[0]);
+				text2 = this.dailyCrate.CrateId;
 			}
-			element.Text = text2;
-			if (string.IsNullOrEmpty(text))
+			element.Text = text;
+			if (string.IsNullOrEmpty(text2))
 			{
-				Service.Get<StaRTSLogger>().Error("CommandCenterHolonetTab.SetupDailyCratePanel Daily Crate Data missing crate CMS UID");
+				Service.Get<Logger>().Error("CommandCenterHolonetTab.SetupDailyCratePanel Daily Crate Data missing crate CMS UID");
 				return;
 			}
-			CrateVO optional = dataController.GetOptional<CrateVO>(text);
+			CrateVO optional = dataController.GetOptional<CrateVO>(text2);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().Error("CommandCenterHolonetTab.SetupDailyCratePanel Daily Crate Data has invalid crate CMS UID " + text);
+				Service.Get<Logger>().Error("CommandCenterHolonetTab.SetupDailyCratePanel Daily Crate Data has invalid crate CMS UID " + text2);
 				return;
 			}
 			string text3 = optional.HoloCrateShadowTextureName;
@@ -677,13 +676,15 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				this.crateShadow.Visible = false;
 				this.UpdateNextDailyCrateTimeLabel();
 				element2.OnClicked = new UXButtonClickedDelegate(this.OnGetCrateClicked);
-				return;
 			}
-			element4.Visible = true;
-			element5.Visible = true;
-			this.crateShadow.Visible = true;
-			element4.OnClicked = new UXButtonClickedDelegate(this.OnOpenCrateClicked);
-			this.ScheduleDailyCrateParticleActivation(optional);
+			else
+			{
+				element4.Visible = true;
+				element5.Visible = true;
+				this.crateShadow.Visible = true;
+				element4.OnClicked = new UXButtonClickedDelegate(this.OnOpenCrateClicked);
+				this.ScheduleDailyCrateParticleActivation(optional);
+			}
 		}
 
 		private void UpdateNextDailyCrateTimeLabel()
@@ -719,10 +720,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				IDataController dataController = Service.Get<IDataController>();
 				CrateVO optional = dataController.GetOptional<CrateVO>(this.dailyCrate.CrateId);
 				this.ScheduleDailyCrateParticleActivation(optional);
-				return;
 			}
-			Service.Get<HolonetController>().RegisterForHolonetToReopenAfterCrateReward();
-			this.screen.Close(null);
+			else
+			{
+				Service.Get<HolonetController>().RegisterForHolonetToReopenAfterCrateReward();
+				this.screen.Close(null);
+			}
 		}
 
 		private void CancelDailyCrateParticleFXTimer()
@@ -749,19 +752,19 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			this.dailyParticleTimer = 0u;
 			if (crateVO == null)
 			{
-				Service.Get<StaRTSLogger>().Error("CommandCenterHolonetTab.OnCrateParticleTimerDone Patricle crate timer cookie not a CrateVO");
+				Service.Get<Logger>().Error("CommandCenterHolonetTab.OnCrateParticleTimerDone Patricle crate timer cookie not a CrateVO");
 				return;
 			}
 			string holoParticleEffectId = crateVO.HoloParticleEffectId;
 			if (string.IsNullOrEmpty(holoParticleEffectId))
 			{
-				Service.Get<StaRTSLogger>().Error("CommandCenterHolonetTab.OnCrateParticleTimerDone Daily Crate missing holonet FX in crate: " + crateVO.Uid);
+				Service.Get<Logger>().Error("CommandCenterHolonetTab.OnCrateParticleTimerDone Daily Crate missing holonet FX in crate: " + crateVO.Uid);
 				return;
 			}
 			this.dailyCrateParticleFX = this.screen.GetOptionalElement<UXElement>(holoParticleEffectId);
 			if (this.dailyCrateParticleFX == null)
 			{
-				Service.Get<StaRTSLogger>().Error("CommandCenterHolonetTab.OnCrateParticleTimerDone Could not find crate fx id in UI " + holoParticleEffectId + " in " + crateVO.Uid);
+				Service.Get<Logger>().Error("CommandCenterHolonetTab.OnCrateParticleTimerDone Could not find crate fx id in UI " + holoParticleEffectId + " in " + crateVO.Uid);
 				return;
 			}
 			this.dailyCrateParticleFX.Visible = true;
@@ -812,7 +815,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			case SquadWarStatusType.PhaseOpen:
 				this.squadWarStart.Visible = true;
 				element2.Text = this.lang.Get("WAR_START_TITLE", new object[0]);
-				text = (flag ? GameConstants.HOLONET_TEXTURE_WAR_EMPIRE_OPEN : GameConstants.HOLONET_TEXTURE_WAR_REBEL_OPEN);
+				text = ((!flag) ? GameConstants.HOLONET_TEXTURE_WAR_REBEL_OPEN : GameConstants.HOLONET_TEXTURE_WAR_EMPIRE_OPEN);
 				break;
 			case SquadWarStatusType.PhasePrep:
 			case SquadWarStatusType.PhasePrepGrace:
@@ -827,8 +830,8 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				SquadWarSquadData squadWarSquadData4 = squadWarSquadData2;
 				SquadWarSquadType squadType = SquadWarSquadType.PLAYER_SQUAD;
 				SquadWarSquadType squadType2 = SquadWarSquadType.OPPONENT_SQUAD;
-				this.squadWarLeftIcon.SpriteName = ((squadWarSquadData.Faction == FactionType.Rebel) ? "FactionRebel" : "FactionEmpire");
-				this.squadWarRightIcon.SpriteName = ((squadWarSquadData2.Faction == FactionType.Rebel) ? "FactionRebel" : "FactionEmpire");
+				this.squadWarLeftIcon.SpriteName = ((squadWarSquadData.Faction != FactionType.Rebel) ? "FactionEmpire" : "FactionRebel");
+				this.squadWarRightIcon.SpriteName = ((squadWarSquadData2.Faction != FactionType.Rebel) ? "FactionEmpire" : "FactionRebel");
 				int currentSquadScore = warManager.GetCurrentSquadScore(squadType);
 				int currentSquadScore2 = warManager.GetCurrentSquadScore(squadType2);
 				this.squadWarLabelLeftName.Text = squadWarSquadData3.SquadName;
@@ -853,12 +856,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				if (currentStatus == SquadWarStatusType.PhasePrep || currentStatus == SquadWarStatusType.PhasePrepGrace)
 				{
 					element2.Text = this.lang.Get("WAR_HOLONET_PREPARE", new object[0]);
-					text = (flag ? GameConstants.HOLONET_TEXTURE_WAR_EMPIRE_PREP : GameConstants.HOLONET_TEXTURE_WAR_REBEL_PREP);
+					text = ((!flag) ? GameConstants.HOLONET_TEXTURE_WAR_REBEL_PREP : GameConstants.HOLONET_TEXTURE_WAR_EMPIRE_PREP);
 				}
 				else
 				{
 					element2.Text = this.lang.Get("WAR_HOLONET_ACTION", new object[0]);
-					text = (flag ? GameConstants.HOLONET_TEXTURE_WAR_EMPIRE_ACTION : GameConstants.HOLONET_TEXTURE_WAR_REBEL_ACTION);
+					text = ((!flag) ? GameConstants.HOLONET_TEXTURE_WAR_REBEL_ACTION : GameConstants.HOLONET_TEXTURE_WAR_EMPIRE_ACTION);
 				}
 				Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
 				break;
@@ -866,7 +869,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			case SquadWarStatusType.PhaseCooldown:
 			{
 				this.squadWarReward.Visible = true;
-				text = (flag ? GameConstants.HOLONET_TEXTURE_WAR_EMPIRE_COOLDOWN : GameConstants.HOLONET_TEXTURE_WAR_REBEL_COOLDOWN);
+				text = ((!flag) ? GameConstants.HOLONET_TEXTURE_WAR_REBEL_COOLDOWN : GameConstants.HOLONET_TEXTURE_WAR_EMPIRE_COOLDOWN);
 				element.Text = this.lang.Get("WAR_END_NEWSPAPER_TITLE", new object[0]);
 				UXLabel element4 = this.screen.GetElement<UXLabel>("SquadWarLabelWinner");
 				element4.Text = this.lang.Get("WAR_END_NEWSPAPER_DESC", new object[0]);
@@ -923,10 +926,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				this.leaderboardIsSetup = true;
 				Service.Get<EventManager>().RegisterObserver(this, EventId.HolonetLeaderBoardUpdated);
 				Service.Get<LeaderboardController>().TopPlayer(Service.Get<CurrentPlayer>().Planet);
-				return;
 			}
-			this.leadersPanelContainer.Visible = true;
-			this.videoPanelFeaturedLabel.Visible = true;
+			else
+			{
+				this.leadersPanelContainer.Visible = true;
+				this.videoPanelFeaturedLabel.Visible = true;
+			}
 		}
 
 		private void QuarterButtonSetup(CommandCenterVO vo, UXTable buttonsTable, int index, string btn)
@@ -1112,7 +1117,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			{
 				foreach (KeyValuePair<string, List<UXButton>> current in this.ctaButtonList)
 				{
-					current.get_Value().Clear();
+					current.Value.Clear();
 				}
 			}
 			this.ctaButtonList.Clear();
@@ -1121,7 +1126,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			{
 				foreach (KeyValuePair<string, List<UXLabel>> current2 in this.ctaLabelList)
 				{
-					current2.get_Value().Clear();
+					current2.Value.Clear();
 				}
 			}
 			this.ctaLabelList.Clear();
@@ -1230,7 +1235,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 					this.eventManager.SendEvent(EventId.HolonetCommandCenterFeature, cookie);
 				}
 			}
-			if (Service.Get<UserInputManager>().IsPressed() || (GameConstants.IsMakerVideoEnabled() && VideoPlayerKeepAlive.Instance.IsDisplayed()))
+			if (Service.Get<UserInputManager>().IsPressed() || VideoPlayerKeepAlive.Instance.IsDisplayed())
 			{
 				this.featureSwipeTimer = 0f;
 				this.nextAutoElement = null;
@@ -1240,7 +1245,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				this.featureSwipeTimer += dt;
 			}
 			float carouselAutoSwipe = (centeredElement.Tag as CommandCenterVO).CarouselAutoSwipe;
-			float num2 = (carouselAutoSwipe > 0f) ? carouselAutoSwipe : GameConstants.HOLONET_FEATURE_CAROUSEL_AUTO_SWIPE;
+			float num2 = (carouselAutoSwipe <= 0f) ? GameConstants.HOLONET_FEATURE_CAROUSEL_AUTO_SWIPE : carouselAutoSwipe;
 			if (this.featureSwipeTimer >= num2)
 			{
 				this.featureSwipeTimer = 0f;
@@ -1259,88 +1264,75 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ScreenLoaded)
+			if (id != EventId.ScreenClosing)
 			{
-				if (id == EventId.HolonetLeaderBoardUpdated)
-				{
-					this.MakeLeaderBoardExcerpt();
-					return EatResponse.NotEaten;
-				}
-				if (id != EventId.ScreenClosing)
-				{
-					if (id != EventId.ScreenLoaded)
-					{
-						return EatResponse.NotEaten;
-					}
-				}
-				else
-				{
-					if (this.dailyCrateParticleFX != null)
-					{
-						this.dailyCrateParticleFX.Visible = true;
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
-			}
-			else if (id <= EventId.UIVideosViewBegin)
-			{
-				if (id != EventId.UIVideosQueryResponse)
+				if (id != EventId.ScreenLoaded)
 				{
 					if (id != EventId.UIVideosViewBegin)
 					{
-						return EatResponse.NotEaten;
+						if (id != EventId.UIVideosViewComplete)
+						{
+							if (id != EventId.HolonetLeaderBoardUpdated)
+							{
+								if (id != EventId.UIVideosQueryResponse)
+								{
+									if (id == EventId.CrateInventoryUpdated)
+									{
+										InventoryCrates crates = Service.Get<CurrentPlayer>().Prizes.Crates;
+										this.dailyCrate = crates.GetDailyCrateIfAvailable();
+										this.SetupDailyCratePanel();
+									}
+								}
+								else
+								{
+									KeyValuePair<VideoSummaryStyle, List<VideoSummaryData>> keyValuePair = (KeyValuePair<VideoSummaryStyle, List<VideoSummaryData>>)cookie;
+									if (keyValuePair.Key == VideoSummaryStyle.HolonetEmpty && this.videoSummary != null)
+									{
+										foreach (VideoSummaryData current in keyValuePair.Value)
+										{
+											if (current == this.videoSummary.summaryData)
+											{
+												this.ShowLeaderboardInfo();
+											}
+										}
+									}
+								}
+							}
+							else
+							{
+								this.MakeLeaderBoardExcerpt();
+							}
+						}
+						else
+						{
+							KeyValuePair<bool, string> keyValuePair2 = (KeyValuePair<bool, string>)cookie;
+							if (keyValuePair2.Key)
+							{
+								this.screen.ShowVideoPostView(keyValuePair2.Value);
+							}
+							else
+							{
+								this.screen.HideVideoPreView();
+							}
+						}
 					}
-					this.screen.ShowVideoPreView();
-					return EatResponse.NotEaten;
+					else
+					{
+						this.screen.ShowVideoPreView();
+					}
 				}
 				else
 				{
-					KeyValuePair<VideoSummaryStyle, List<VideoSummaryData>> keyValuePair = (KeyValuePair<VideoSummaryStyle, List<VideoSummaryData>>)cookie;
-					if (keyValuePair.get_Key() != VideoSummaryStyle.HolonetEmpty || this.videoSummary == null)
+					ScreenBase highestLevelScreen = Service.Get<ScreenController>().GetHighestLevelScreen<ScreenBase>();
+					if (highestLevelScreen != this.screen)
 					{
-						return EatResponse.NotEaten;
-					}
-					using (List<VideoSummaryData>.Enumerator enumerator = keyValuePair.get_Value().GetEnumerator())
-					{
-						while (enumerator.MoveNext())
-						{
-							VideoSummaryData current = enumerator.Current;
-							if (current == this.videoSummary.summaryData)
-							{
-								this.ShowLeaderboardInfo();
-							}
-						}
-						return EatResponse.NotEaten;
+						this.HideDailyCrateParticleFX();
 					}
 				}
 			}
-			else if (id != EventId.UIVideosViewComplete)
+			else if (this.dailyCrateParticleFX != null)
 			{
-				if (id == EventId.CrateInventoryUpdated)
-				{
-					InventoryCrates crates = Service.Get<CurrentPlayer>().Prizes.Crates;
-					this.dailyCrate = crates.GetDailyCrateIfAvailable();
-					this.SetupDailyCratePanel();
-					return EatResponse.NotEaten;
-				}
-				return EatResponse.NotEaten;
-			}
-			else
-			{
-				KeyValuePair<bool, string> keyValuePair2 = (KeyValuePair<bool, string>)cookie;
-				if (keyValuePair2.get_Key())
-				{
-					this.screen.ShowVideoPostView(keyValuePair2.get_Value());
-					return EatResponse.NotEaten;
-				}
-				this.screen.HideVideoPreView();
-				return EatResponse.NotEaten;
-			}
-			ScreenBase highestLevelScreen = Service.Get<ScreenController>().GetHighestLevelScreen<ScreenBase>();
-			if (highestLevelScreen != this.screen)
-			{
-				this.HideDailyCrateParticleFX();
+				this.dailyCrateParticleFX.Visible = true;
 			}
 			return EatResponse.NotEaten;
 		}
@@ -1349,42 +1341,26 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		{
 			SquadWarManager warManager = Service.Get<SquadController>().WarManager;
 			SquadWarStatusType currentStatus = warManager.GetCurrentStatus();
-			string id = "";
+			string id = string.Empty;
 			int num = 0;
 			switch (currentStatus)
 			{
 			case SquadWarStatusType.PhasePrep:
-			{
-				int num2 = this.endPrepPhaseTime - 1;
-				this.endPrepPhaseTime = num2;
-				num = num2;
+				num = --this.endPrepPhaseTime;
 				id = "WAR_BASE_PREP_TIME_REMAINING";
 				break;
-			}
 			case SquadWarStatusType.PhasePrepGrace:
-			{
-				int num2 = this.endPrepGracePhaseTime - 1;
-				this.endPrepGracePhaseTime = num2;
-				num = num2;
+				num = --this.endPrepGracePhaseTime;
 				id = "WAR_BOARD_PREP_GRACE_PHASE";
 				break;
-			}
 			case SquadWarStatusType.PhaseAction:
-			{
-				int num2 = this.endActionPhaseTime - 1;
-				this.endActionPhaseTime = num2;
-				num = num2;
+				num = --this.endActionPhaseTime;
 				id = "WAR_BASE_ACTION_TIME_REMAINING";
 				break;
-			}
 			case SquadWarStatusType.PhaseActionGrace:
-			{
-				int num2 = this.endActionGracePhaseTime - 1;
-				this.endActionGracePhaseTime = num2;
-				num = num2;
+				num = --this.endActionGracePhaseTime;
 				id = "WAR_BOARD_ACTION_GRACE_PHASE";
 				break;
-			}
 			case SquadWarStatusType.PhaseCooldown:
 				this.SetupSquadWarInfo();
 				return;
@@ -1402,200 +1378,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		public override string GetBITabName()
 		{
 			UXElement centeredElement = this.featureGrid.GetCenteredElement();
-			string text = string.Empty;
+			string str = string.Empty;
 			if (centeredElement != null && centeredElement.Tag != null)
 			{
-				text = "|" + (centeredElement.Tag as CommandCenterVO).Uid;
+				str = "|" + (centeredElement.Tag as CommandCenterVO).Uid;
 			}
-			return "command_center" + text;
-		}
-
-		protected internal CommandCenterHolonetTab(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).CancelDailyCrateParticleFXTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).FeaturedButton1Clicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).FeaturedButton2Clicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).FeaturedItemDotClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).GetBITabName());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).GoToLeaderBoardClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HideDailyCrateParticleFX();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HideViewUIElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).LinkToDevNotes((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).LinkToMoreVideos((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).MakeLeaderBoardExcerpt();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).MakeLeaderClone((LeaderboardController)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).MakeNoLeaderFoundClone();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnCenteredFinished((UXElement)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnCrateInfoModalClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnDestroyTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnGetCrateClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnOpenCrateClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnSquadWarBtnClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnTabClose();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnTabOpen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).QuarterButtonSetup((CommandCenterVO)GCHandledObjects.GCHandleToObject(*args), (UXTable)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).RefreshButtons((CommandCenterVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ScheduleDailyCrateParticleActivation((CrateVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupDailyCratePanel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupSquadWarInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ShowLeaderboardInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((CommandCenterHolonetTab)GCHandledObjects.GCHandleToObject(instance)).UpdateNextDailyCrateTimeLabel();
-			return -1L;
+			return "command_center" + str;
 		}
 	}
 }

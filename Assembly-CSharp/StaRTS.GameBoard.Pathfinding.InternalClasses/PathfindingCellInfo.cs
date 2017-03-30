@@ -33,9 +33,5 @@ namespace StaRTS.GameBoard.Pathfinding.InternalClasses
 			this.InRange = false;
 			this.Health = null;
 		}
-
-		protected internal PathfindingCellInfo(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

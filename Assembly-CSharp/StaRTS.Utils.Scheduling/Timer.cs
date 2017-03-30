@@ -1,5 +1,4 @@
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Utils.Scheduling
 {
@@ -77,54 +76,6 @@ namespace StaRTS.Utils.Scheduling
 			this.Cookie = null;
 			this.Callback = null;
 			this.isKilled = true;
-		}
-
-		protected internal Timer(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Timer)GCHandledObjects.GCHandleToObject(instance)).Callback);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Timer)GCHandledObjects.GCHandleToObject(instance)).Cookie);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Timer)GCHandledObjects.GCHandleToObject(instance)).IsKilled);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Timer)GCHandledObjects.GCHandleToObject(instance)).Repeat);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((Timer)GCHandledObjects.GCHandleToObject(instance)).Kill();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((Timer)GCHandledObjects.GCHandleToObject(instance)).Callback = (TimerDelegate)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((Timer)GCHandledObjects.GCHandleToObject(instance)).Cookie = GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((Timer)GCHandledObjects.GCHandleToObject(instance)).Repeat = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

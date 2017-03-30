@@ -3,11 +3,9 @@ using StaRTS.Main.Controllers.Planets;
 using StaRTS.Main.Models.Planets;
 using StaRTS.Main.Models.Player;
 using StaRTS.Main.Utils.Events;
-using StaRTS.Main.Views.UserInput;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 {
@@ -95,7 +93,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		private void OnPlanetInfoButtonClicked(UXButton button)
 		{
-			Service.Get<UserInputInhibitor>().DenyAll();
 			button.Enabled = false;
 			Service.Get<EventManager>().SendEvent(EventId.LootTableButtonTapped, null);
 			Planet currentPlanet = this.screen.CurrentPlanet;
@@ -109,7 +106,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			this.screen.ShowPlanetInfoUI();
 			this.screen.UpdateCurrentPlanet(this.screen.CurrentPlanet);
 			Service.Get<GalaxyViewController>().SwitchToObjectiveDetails(false);
-			Service.Get<UserInputInhibitor>().AllowAll();
 		}
 
 		private void OnScreenClosed(object result, object cookie)
@@ -145,63 +141,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			string prefName = "plh_" + this.screen.CurrentPlanet.VO.Uid;
 			string pref = sharedPlayerPrefs.GetPref<string>(prefName);
 			return pref != this.currentFeaturedLootHash;
-		}
-
-		protected internal PlanetDetailsPlanetInfoViewModule(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetDetailsPlanetInfoViewModule)GCHandledObjects.GCHandleToObject(instance)).CleanUpLootScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetDetailsPlanetInfoViewModule)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetDetailsPlanetInfoViewModule)GCHandledObjects.GCHandleToObject(instance)).OnClose();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetDetailsPlanetInfoViewModule)GCHandledObjects.GCHandleToObject(instance)).OnPlanetInfoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetDetailsPlanetInfoViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetDetailsPlanetInfoViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetDetailsPlanetInfoViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshScreenForPlanetChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PlanetDetailsPlanetInfoViewModule)GCHandledObjects.GCHandleToObject(instance)).SaveLastFeaturedLootHash();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsPlanetInfoViewModule)GCHandledObjects.GCHandleToObject(instance)).ShouldBadgeForNewLoot());
 		}
 	}
 }

@@ -9,7 +9,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -46,12 +45,14 @@ namespace StaRTS.Main.Controllers
 				eventManager.RegisterObserver(this, EventId.TroopDeployed, EventPriority.AfterDefault);
 				eventManager.RegisterObserver(this, EventId.HeroDeployed, EventPriority.AfterDefault);
 				eventManager.RegisterObserver(this, EventId.ChampionDeployed, EventPriority.AfterDefault);
-				return;
 			}
-			eventManager.UnregisterObserver(this, EventId.EntityKilled);
-			eventManager.UnregisterObserver(this, EventId.TroopDeployed);
-			eventManager.UnregisterObserver(this, EventId.HeroDeployed);
-			eventManager.UnregisterObserver(this, EventId.ChampionDeployed);
+			else
+			{
+				eventManager.UnregisterObserver(this, EventId.EntityKilled);
+				eventManager.UnregisterObserver(this, EventId.TroopDeployed);
+				eventManager.UnregisterObserver(this, EventId.HeroDeployed);
+				eventManager.UnregisterObserver(this, EventId.ChampionDeployed);
+			}
 		}
 
 		private void ResetLowestDelay()
@@ -147,72 +148,66 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.TroopDeployed)
+			if (id != EventId.EntityKilled)
 			{
-				if (id == EventId.EntityKilled)
+				if (id == EventId.TroopDeployed || id == EventId.HeroDeployed || id == EventId.ChampionDeployed)
 				{
-					List<ICombatTrigger> list = new List<ICombatTrigger>();
 					int i = 0;
-					int count = this.deathTriggers.Count;
+					int count = this.deployTriggers.Count;
 					while (i < count)
 					{
-						ICombatTrigger combatTrigger = this.deathTriggers[i];
-						if (combatTrigger.Owner == cookie)
+						ICombatTrigger combatTrigger = this.deployTriggers[i];
+						string a = ((SmartEntity)cookie).TroopComp.TroopType.TroopID.ToLower();
+						string b = (string)combatTrigger.Owner;
+						if (a == b)
 						{
 							this.TryAndTrigger(combatTrigger, null);
-							list.Add(combatTrigger);
 						}
 						i++;
 					}
-					int j = 0;
-					int count2 = this.areaTriggers.Count;
-					while (j < count2)
+				}
+			}
+			else
+			{
+				List<ICombatTrigger> list = new List<ICombatTrigger>();
+				int j = 0;
+				int count2 = this.deathTriggers.Count;
+				while (j < count2)
+				{
+					ICombatTrigger combatTrigger2 = this.deathTriggers[j];
+					if (combatTrigger2.Owner == cookie)
 					{
-						if (this.areaTriggers[j].Owner == cookie)
+						this.TryAndTrigger(combatTrigger2, null);
+						list.Add(combatTrigger2);
+					}
+					j++;
+				}
+				int k = 0;
+				int count3 = this.areaTriggers.Count;
+				while (k < count3)
+				{
+					if (this.areaTriggers[k].Owner == cookie)
+					{
+						list.Add(this.areaTriggers[k]);
+						if (this.areaTriggers[k] is DefendedBuildingCombatTrigger)
 						{
-							list.Add(this.areaTriggers[j]);
-							if (this.areaTriggers[j] is DefendedBuildingCombatTrigger)
+							DefendedBuildingCombatTrigger defendedBuildingCombatTrigger = (DefendedBuildingCombatTrigger)this.areaTriggers[k];
+							defendedBuildingCombatTrigger.Type = CombatTriggerType.Death;
+							if (defendedBuildingCombatTrigger.TroopsHurtable)
 							{
-								DefendedBuildingCombatTrigger defendedBuildingCombatTrigger = (DefendedBuildingCombatTrigger)this.areaTriggers[j];
-								defendedBuildingCombatTrigger.Type = CombatTriggerType.Death;
-								if (defendedBuildingCombatTrigger.TroopsHurtable)
-								{
-									defendedBuildingCombatTrigger.InitialDelay = GameConstants.SPAWN_DELAY;
-									defendedBuildingCombatTrigger.TroopsHurt = true;
-									defendedBuildingCombatTrigger.Leashed = false;
-								}
-								this.TryAndTrigger(defendedBuildingCombatTrigger, null);
+								defendedBuildingCombatTrigger.InitialDelay = GameConstants.SPAWN_DELAY;
+								defendedBuildingCombatTrigger.TroopsHurt = true;
+								defendedBuildingCombatTrigger.Leashed = false;
 							}
+							this.TryAndTrigger(defendedBuildingCombatTrigger, null);
 						}
-						j++;
 					}
-					for (int k = 0; k < list.Count; k++)
-					{
-						this.RemoveTrigger(list[k]);
-					}
-					return EatResponse.NotEaten;
+					k++;
 				}
-				if (id != EventId.TroopDeployed)
+				for (int l = 0; l < list.Count; l++)
 				{
-					return EatResponse.NotEaten;
+					this.RemoveTrigger(list[l]);
 				}
-			}
-			else if (id != EventId.HeroDeployed && id != EventId.ChampionDeployed)
-			{
-				return EatResponse.NotEaten;
-			}
-			int l = 0;
-			int count3 = this.deployTriggers.Count;
-			while (l < count3)
-			{
-				ICombatTrigger combatTrigger2 = this.deployTriggers[l];
-				string text = ((SmartEntity)cookie).TroopComp.TroopType.TroopID.ToLower();
-				string text2 = (string)combatTrigger2.Owner;
-				if (text == text2)
-				{
-					this.TryAndTrigger(combatTrigger2, null);
-				}
-				l++;
 			}
 			return EatResponse.NotEaten;
 		}
@@ -266,63 +261,6 @@ namespace StaRTS.Main.Controllers
 				this.TryAndTrigger(trigger, null);
 				i++;
 			}
-		}
-
-		protected internal CombatTriggerManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CombatTriggerManager)GCHandledObjects.GCHandleToObject(instance)).Enable(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CombatTriggerManager)GCHandledObjects.GCHandleToObject(instance)).ExecuteLoadTriggers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CombatTriggerManager)GCHandledObjects.GCHandleToObject(instance)).InformAreaTriggerBuildings((List<ElementPriorityPair<Entity>>)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CombatTriggerManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((CombatTriggerManager)GCHandledObjects.GCHandleToObject(instance)).RegisterTrigger((ICombatTrigger)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((CombatTriggerManager)GCHandledObjects.GCHandleToObject(instance)).RemoveTrigger((ICombatTrigger)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((CombatTriggerManager)GCHandledObjects.GCHandleToObject(instance)).ResetLowestDelay();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((CombatTriggerManager)GCHandledObjects.GCHandleToObject(instance)).TryAndTrigger((ICombatTrigger)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((CombatTriggerManager)GCHandledObjects.GCHandleToObject(instance)).UnregisterAllTriggers();
-			return -1L;
 		}
 	}
 }

@@ -2,15 +2,15 @@ using StaRTS.Main.Configs;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player
 {
 	public class ServerPlayerPrefs
 	{
 		private const char CLIENT_PREFS_DELIMITER = ',';
+
+		private const string PREF_SERVER_PLAYER_PREFS = "serverPlayerPrefs";
 
 		private string[] prefs;
 
@@ -28,8 +28,6 @@ namespace StaRTS.Main.Models.Player
 			ServerPref.FactionFlipped,
 			ServerPref.LastChatViewTime
 		};
-
-		private const string PREF_SERVER_PLAYER_PREFS = "serverPlayerPrefs";
 
 		public ServerPlayerPrefs(string prefsString)
 		{
@@ -51,7 +49,7 @@ namespace StaRTS.Main.Models.Player
 			this.ParsePref(inputPrefs, ServerPref.AgeGate, "0");
 			this.ParsePref(inputPrefs, ServerPref.LoginPopups, "0");
 			this.ParsePref(inputPrefs, ServerPref.LastLoginTime, "0");
-			this.ParsePref(inputPrefs, ServerPref.NewspaperArticlesViewed, "");
+			this.ParsePref(inputPrefs, ServerPref.NewspaperArticlesViewed, string.Empty);
 			this.SetPref(ServerPref.LastTroopRequestTime, "0");
 			this.ParsePref(inputPrefs, ServerPref.NumRateAppViewed, "0");
 			this.ParsePref(inputPrefs, ServerPref.RatedApp, "0");
@@ -61,7 +59,7 @@ namespace StaRTS.Main.Models.Player
 			this.ParsePref(inputPrefs, ServerPref.NumInventoryCurrencyNotViewed, "0");
 			this.ParsePref(inputPrefs, ServerPref.ChapterMissionViewed, "0");
 			this.ParsePref(inputPrefs, ServerPref.SpecopsMissionViewed, "0");
-			this.ParsePref(inputPrefs, ServerPref.TournamentViewed, "");
+			this.ParsePref(inputPrefs, ServerPref.TournamentViewed, string.Empty);
 			this.ParsePref(inputPrefs, ServerPref.LastPaymentTime, "0");
 			this.ParsePref(inputPrefs, ServerPref.BattlesAdCount, "0");
 			this.ParsePref(inputPrefs, ServerPref.SquadIntroViewed, "0");
@@ -83,9 +81,11 @@ namespace StaRTS.Main.Models.Player
 			if ((ServerPref)inputPrefs.Length > pref && !string.IsNullOrEmpty(inputPrefs[(int)pref]))
 			{
 				this.SetPref(pref, inputPrefs[(int)pref]);
-				return;
 			}
-			this.SetPref(pref, defaultValue);
+			else
+			{
+				this.SetPref(pref, defaultValue);
+			}
 		}
 
 		public string GetPref(ServerPref pref)
@@ -104,10 +104,10 @@ namespace StaRTS.Main.Models.Player
 
 		public string Serialize()
 		{
-			string text = "";
+			string text = string.Empty;
 			for (int i = 0; i < this.prefs.Length; i++)
 			{
-				text = text + this.prefs[i] + ",";
+				text = text + this.prefs[i] + ',';
 			}
 			return text;
 		}
@@ -135,44 +135,6 @@ namespace StaRTS.Main.Models.Player
 				}
 				PlayerPrefs.DeleteKey("serverPlayerPrefs");
 			}
-		}
-
-		protected internal ServerPlayerPrefs(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerPlayerPrefs)GCHandledObjects.GCHandleToObject(instance)).GetPref((ServerPref)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ServerPlayerPrefs)GCHandledObjects.GCHandleToObject(instance)).HandleLocalPrefOverride();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ServerPlayerPrefs)GCHandledObjects.GCHandleToObject(instance)).ParsePref((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), (ServerPref)(*(int*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ServerPlayerPrefs)GCHandledObjects.GCHandleToObject(instance)).SavePrefsLocally();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerPlayerPrefs)GCHandledObjects.GCHandleToObject(instance)).Serialize());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ServerPlayerPrefs)GCHandledObjects.GCHandleToObject(instance)).SetPref((ServerPref)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
 		}
 	}
 }

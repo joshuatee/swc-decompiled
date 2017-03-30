@@ -1,5 +1,4 @@
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Squads
 {
@@ -29,19 +28,6 @@ namespace StaRTS.Main.Models.Squads
 			{
 				return !string.IsNullOrEmpty(this.WarId);
 			}
-		}
-
-		public SqmRequestData()
-		{
-		}
-
-		protected internal SqmRequestData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SqmRequestData)GCHandledObjects.GCHandleToObject(instance)).IsWarRequest);
 		}
 	}
 }

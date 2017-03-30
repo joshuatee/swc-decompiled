@@ -15,8 +15,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -46,13 +44,13 @@ namespace StaRTS.Main.Utils
 				ProjectileTypeVO projectileType = specialAttackTypeVO.ProjectileType;
 				return (uint)projectileType.SplashRadius;
 			}
-			if (eventType == TrapEventType.Turret)
+			if (eventType != TrapEventType.Turret)
 			{
-				string turretUid = trapType.TurretTED.TurretUid;
-				TurretTypeVO turretTypeVO = dataController.Get<TurretTypeVO>(turretUid);
-				return turretTypeVO.MaxAttackRange;
+				return 0u;
 			}
-			return 0u;
+			string turretUid = trapType.TurretTED.TurretUid;
+			TurretTypeVO turretTypeVO = dataController.Get<TurretTypeVO>(turretUid);
+			return turretTypeVO.MaxAttackRange;
 		}
 
 		public static List<AddOnMapping> ParseAddons(string rawString)
@@ -105,7 +103,7 @@ namespace StaRTS.Main.Utils
 					'('
 				});
 				array2[0] = array2[0].ToLower();
-				array2[1] = array2[1].Substring(0, array2[1].get_Length() - 1);
+				array2[1] = array2[1].Substring(0, array2[1].Length - 1);
 				string[] args = array2[1].Split(new char[]
 				{
 					','
@@ -253,66 +251,6 @@ namespace StaRTS.Main.Utils
 			bool flag = gameState is BattleStartState || gameState is BattlePlayState;
 			string playerId = Service.Get<CurrentPlayer>().PlayerId;
 			return (gameState is BattlePlaybackState && Service.Get<BattlePlaybackController>().CurrentBattleEntry.DefenderID == playerId) || (flag && Service.Get<BattleController>().CurrentPlayerTeamType == TeamType.Defender);
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TrapUtils.GetRearmableTraps());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TrapUtils.IsCurrentPlayerInDefensiveBattle((IState)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			TrapUtils.OnPayMeForCurrencyResultForMultiTrap(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			TrapUtils.OnPayMeForCurrencyResultSingleTrap(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TrapUtils.ParseAddons(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TrapUtils.ParseConditions(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TrapUtils.ParseEventData((TrapEventType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			TrapUtils.RearmAllTraps();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			TrapUtils.RearmSingleTrap((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TrapUtils.RearmTrapForClient((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			TrapUtils.SendRearmTrapServerCommand((List<Entity>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

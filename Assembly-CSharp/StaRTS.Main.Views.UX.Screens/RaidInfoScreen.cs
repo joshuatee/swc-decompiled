@@ -12,7 +12,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -264,7 +263,23 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void SetupRaidButtons()
 		{
 			this.HideActionButtons();
-			if (this.raidAvailable)
+			if (!this.raidAvailable)
+			{
+				if (!Service.Get<NotificationController>().HasAgreedToNotifications())
+				{
+					this.cancelBtn.Visible = true;
+					this.cancelLabel.Text = this.lang.Get("s_Ok", new object[0]);
+					this.cancelBtn.OnClicked = new UXButtonClickedDelegate(this.OnCloseButtonClicked);
+					this.confirmBtn.Visible = true;
+					this.confirmLabel.Text = this.lang.Get("RAID_NOTIFY_ME", new object[0]);
+					this.confirmBtn.OnClicked = new UXButtonClickedDelegate(this.OnNotifyClicked);
+				}
+				else
+				{
+					this.okBtn.Visible = true;
+				}
+			}
+			else
 			{
 				this.cancelBtn.Visible = true;
 				this.cancelLabel.Text = this.lang.Get("RAID_WAIT", new object[0]);
@@ -272,19 +287,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.confirmBtn.Visible = true;
 				this.confirmLabel.Text = this.lang.Get("RAID_START", new object[0]);
 				this.confirmBtn.OnClicked = new UXButtonClickedDelegate(this.OnDefendButtonClicked);
-				return;
 			}
-			if (!Service.Get<NotificationController>().HasAgreedToNotifications())
-			{
-				this.cancelBtn.Visible = true;
-				this.cancelLabel.Text = this.lang.Get("s_Ok", new object[0]);
-				this.cancelBtn.OnClicked = new UXButtonClickedDelegate(this.OnCloseButtonClicked);
-				this.confirmBtn.Visible = true;
-				this.confirmLabel.Text = this.lang.Get("RAID_NOTIFY_ME", new object[0]);
-				this.confirmBtn.OnClicked = new UXButtonClickedDelegate(this.OnNotifyClicked);
-				return;
-			}
-			this.okBtn.Visible = true;
 		}
 
 		public void OnViewClockTime(float dt)
@@ -332,7 +335,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void OnDefendButtonClicked(UXButton notifyButton)
 		{
-			Service.Get<BILoggingController>().TrackGameAction("UI_raid", "start", "briefing", "", 1);
+			Service.Get<BILoggingController>().TrackGameAction("UI_raid", "start", "briefing", string.Empty, 1);
 			RaidDefenseController raidDefenseController = Service.Get<RaidDefenseController>();
 			this.Close(true);
 			raidDefenseController.StartCurrentRaidDefense();
@@ -344,7 +347,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				RaidDefenseController raidDefenseController = Service.Get<RaidDefenseController>();
 				raidDefenseController.AttemptToShowRaidWaitConfirmation();
-				Service.Get<BILoggingController>().TrackGameAction("UI_raid_briefing", "close", "", "", 1);
+				Service.Get<BILoggingController>().TrackGameAction("UI_raid_briefing", "close", string.Empty, string.Empty, 1);
 			}
 		}
 
@@ -352,118 +355,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
 			base.OnDestroyElement();
-		}
-
-		protected internal RaidInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).HideActionButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitCrateProjector((UXSprite)GCHandledObjects.GCHandleToObject(*args), (CrateVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnCrateClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnDefendButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnNotifyClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnRaidInfoScreenClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnWaitButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshRaidView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRaidButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRaidData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRaidInfoText();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRaidRewards();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRaidRewardsBG();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRaidStateColors();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((RaidInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateRaidTimer();
-			return -1L;
 		}
 	}
 }

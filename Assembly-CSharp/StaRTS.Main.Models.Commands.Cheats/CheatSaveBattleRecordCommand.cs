@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSaveBattleRecordCommand(CheatSaveBattleRecordRequest request) : base("cheats.saveBattleRecord", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSaveBattleRecordCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

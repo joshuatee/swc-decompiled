@@ -6,7 +6,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.World.Transitions
 {
@@ -57,27 +56,6 @@ namespace StaRTS.Main.Controllers.World.Transitions
 		{
 			Service.Get<UserInputInhibitor>().AllowAll();
 			base.OnTransitionInComplete(cookie);
-		}
-
-		protected internal WarboardToBaseTransition(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarboardToBaseTransition)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((WarboardToBaseTransition)GCHandledObjects.GCHandleToObject(instance)).OnTransitionInComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((WarboardToBaseTransition)GCHandledObjects.GCHandleToObject(instance)).StartTransition();
-			return -1L;
 		}
 	}
 }

@@ -11,8 +11,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Missions
 {
@@ -79,7 +77,7 @@ namespace StaRTS.Main.Controllers.Missions
 			this.introTimer = 0u;
 			if (!this.introChain.Valid)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Mission {0} has an invalid introStory {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Mission {0} has an invalid introStory {1}", new object[]
 				{
 					this.MissionVO.Uid,
 					this.MissionVO.IntroStory
@@ -105,7 +103,7 @@ namespace StaRTS.Main.Controllers.Missions
 			this.successTimer = 0u;
 			if (!this.successChain.Valid)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Mission {0} has an invalid winStory {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Mission {0} has an invalid winStory {1}", new object[]
 				{
 					this.MissionVO.Uid,
 					this.MissionVO.SuccessStory
@@ -131,7 +129,7 @@ namespace StaRTS.Main.Controllers.Missions
 			this.failureTimer = 0u;
 			if (!this.failureChain.Valid)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Mission {0} has an invalid loseStory {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Mission {0} has an invalid loseStory {1}", new object[]
 				{
 					this.MissionVO.Uid,
 					this.MissionVO.FailureStory
@@ -209,36 +207,41 @@ namespace StaRTS.Main.Controllers.Missions
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.HomeStateTransitionComplete)
+			switch (id)
 			{
-				if (id == EventId.WorldInTransitionComplete || id == EventId.HomeStateTransitionComplete)
+			case EventId.WorldInTransitionComplete:
+			case EventId.HomeStateTransitionComplete:
+				if (Service.Get<GameStateMachine>().CurrentState is HomeState)
 				{
-					if (Service.Get<GameStateMachine>().CurrentState is HomeState)
+					Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldInTransitionComplete);
+					Service.Get<EventManager>().UnregisterObserver(this, EventId.HomeStateTransitionComplete);
+					if (!this.MissionVO.IsRaidDefense())
 					{
-						Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldInTransitionComplete);
-						Service.Get<EventManager>().UnregisterObserver(this, EventId.HomeStateTransitionComplete);
-						if (!this.MissionVO.IsRaidDefense())
-						{
-							Service.Get<ScreenController>().AddScreen(new MissionCompleteScreen(this.MissionVO));
-						}
+						Service.Get<ScreenController>().AddScreen(new MissionCompleteScreen(this.MissionVO));
 					}
 				}
-			}
-			else if (id != EventId.StoryChainCompleted)
+				return EatResponse.NotEaten;
+			case EventId.WorldOutTransitionComplete:
+			case EventId.WorldReset:
 			{
-				if (id == EventId.MissionCompleteScreenDisplayed)
+				IL_1B:
+				if (id == EventId.StoryChainCompleted)
 				{
-					Service.Get<EventManager>().UnregisterObserver(this, EventId.MissionCompleteScreenDisplayed);
-					CampaignVO meta = Service.Get<IDataController>().Get<CampaignVO>(this.MissionVO.CampaignUid);
-					Service.Get<ScreenController>().AddScreen(new CampaignCompleteScreen(meta));
+					ActionChain chain = cookie as ActionChain;
+					this.CompleteChain(chain);
+					return EatResponse.NotEaten;
 				}
+				if (id != EventId.MissionCompleteScreenDisplayed)
+				{
+					return EatResponse.NotEaten;
+				}
+				Service.Get<EventManager>().UnregisterObserver(this, EventId.MissionCompleteScreenDisplayed);
+				CampaignVO meta = Service.Get<IDataController>().Get<CampaignVO>(this.MissionVO.CampaignUid);
+				Service.Get<ScreenController>().AddScreen(new CampaignCompleteScreen(meta));
+				return EatResponse.NotEaten;
 			}
-			else
-			{
-				ActionChain chain = cookie as ActionChain;
-				this.CompleteChain(chain);
 			}
-			return EatResponse.NotEaten;
+			goto IL_1B;
 		}
 
 		private void CompleteChain(ActionChain chain)
@@ -247,9 +250,8 @@ namespace StaRTS.Main.Controllers.Missions
 			if (chain == this.introChain)
 			{
 				this.processor.OnIntroHookComplete();
-				return;
 			}
-			if (chain == this.successChain)
+			else if (chain == this.successChain)
 			{
 				this.processor.OnSuccessHookComplete();
 				if (Service.Get<CurrentPlayer>().CampaignProgress.FueInProgress)
@@ -260,7 +262,7 @@ namespace StaRTS.Main.Controllers.Missions
 				CampaignMissionVO lastMission = Service.Get<CampaignController>().GetLastMission(this.MissionVO.CampaignUid);
 				bool flag = this.MissionVO == lastMission;
 				bool flag2 = Service.Get<CurrentPlayer>().CampaignProgress.GetTotalCampaignStarsEarned(campaignVO) >= campaignVO.TotalMasteryStars;
-				if (flag | flag2)
+				if (flag || flag2)
 				{
 					if (Service.Get<GameStateMachine>().CurrentState is HomeState)
 					{
@@ -271,111 +273,27 @@ namespace StaRTS.Main.Controllers.Missions
 						Service.Get<EventManager>().RegisterObserver(this, EventId.MissionCompleteScreenDisplayed, EventPriority.Default);
 					}
 				}
-				if (!(Service.Get<GameStateMachine>().CurrentState is HomeState))
+				if (Service.Get<GameStateMachine>().CurrentState is HomeState)
+				{
+					if (!lastMission.IsRaidDefense())
+					{
+						Service.Get<ScreenController>().AddScreen(new MissionCompleteScreen(this.MissionVO));
+					}
+				}
+				else
 				{
 					Service.Get<EventManager>().RegisterObserver(this, EventId.WorldInTransitionComplete, EventPriority.Default);
 					Service.Get<EventManager>().RegisterObserver(this, EventId.HomeStateTransitionComplete, EventPriority.Default);
-					return;
-				}
-				if (!lastMission.IsRaidDefense())
-				{
-					Service.Get<ScreenController>().AddScreen(new MissionCompleteScreen(this.MissionVO));
-					return;
 				}
 			}
-			else
+			else if (chain == this.failureChain)
 			{
-				if (chain == this.failureChain)
-				{
-					this.processor.OnFailureHookComplete();
-					return;
-				}
-				if (chain == this.GoalFailureChain)
-				{
-					this.processor.OnGoalFailureHookComplete();
-				}
+				this.processor.OnFailureHookComplete();
 			}
-		}
-
-		protected internal MissionConductor(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).CancelMission();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).CompleteChain((ActionChain)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).CompleteMission(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).MissionVO);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).GetCounters());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).OnFailureHook());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).OnGoalFailureHook());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).OnIntroHook());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).OnSuccessHook());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).Resume();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).MissionVO = (CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((MissionConductor)GCHandledObjects.GCHandleToObject(instance)).UpdateCounter(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
+			else if (chain == this.GoalFailureChain)
+			{
+				this.processor.OnGoalFailureHookComplete();
+			}
 		}
 	}
 }

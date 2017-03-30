@@ -15,8 +15,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.World.Transitions
 {
@@ -90,9 +88,11 @@ namespace StaRTS.Main.Controllers.World.Transitions
 			if ((!this.softWipe && !this.skipTransitions) || this.softWipe)
 			{
 				this.StartTransitionOut(this.mapDataLoader.GetPlanetData(), false, this.zoomOut);
-				return;
 			}
-			this.OnTransitionOutComplete(null);
+			else
+			{
+				this.OnTransitionOutComplete(null);
+			}
 		}
 
 		protected void OnTransitionVisualsLoaded(object cookie)
@@ -117,9 +117,8 @@ namespace StaRTS.Main.Controllers.World.Transitions
 			{
 				this.OnTransitionOutComplete(null);
 				this.softWipeWorldLoad = false;
-				return;
 			}
-			if (this.softWipeAutoFinish)
+			else if (this.softWipeAutoFinish)
 			{
 				this.StartTransitionIn();
 				this.softWipeAutoFinish = false;
@@ -201,7 +200,7 @@ namespace StaRTS.Main.Controllers.World.Transitions
 		{
 			if (!this.softWipe)
 			{
-				Service.Get<StaRTSLogger>().Error("You must already be in a soft wipe to call for a wipe to continue.");
+				Service.Get<Logger>().Error("You must already be in a soft wipe to call for a wipe to continue.");
 				return;
 			}
 			this.transitionToState = transitionToState;
@@ -217,9 +216,11 @@ namespace StaRTS.Main.Controllers.World.Transitions
 				if (this.softWipeComplete)
 				{
 					this.StartTransitionIn();
-					return;
 				}
-				this.softWipeAutoFinish = true;
+				else
+				{
+					this.softWipeAutoFinish = true;
+				}
 			}
 		}
 
@@ -255,9 +256,11 @@ namespace StaRTS.Main.Controllers.World.Transitions
 			if (Service.Get<GameStateMachine>().CurrentState is HomeState)
 			{
 				this.FinishWipe();
-				return;
 			}
-			HomeState.GoToHomeState(null, false);
+			else
+			{
+				HomeState.GoToHomeState(null, false);
+			}
 		}
 
 		protected void PreloadAssetsBeforeMapLoad()
@@ -306,9 +309,11 @@ namespace StaRTS.Main.Controllers.World.Transitions
 			if (!this.skipTransitions)
 			{
 				this.StartTransitionIn();
-				return;
 			}
-			this.OnTransitionInComplete(null);
+			else
+			{
+				this.OnTransitionInComplete(null);
+			}
 		}
 
 		public bool IsEverythingLoaded()
@@ -410,205 +415,6 @@ namespace StaRTS.Main.Controllers.World.Transitions
 		public IMapDataLoader GetMapDataLoader()
 		{
 			return this.mapDataLoader;
-		}
-
-		protected internal AbstractTransition(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).ChooseRandomWipeDirection();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).CleanupTransitionVisuals();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).ContinueWipe((IState)GCHandledObjects.GCHandleToObject(*args), (IMapDataLoader)GCHandledObjects.GCHandleToObject(args[1]), (TransitionCompleteDelegate)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).FinishWipe();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).GetCurrentWorldFactionAssetName());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).GetCurrentWorldName());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).GetMapDataLoader());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).IsCurrentWorldHome());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).IsCurrentWorldUserWarBase());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).IsEverythingLoaded());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).IsSoftWipeing());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).IsTransitioning());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).OnGarbageCollected();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).OnMapLoaded((Map)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).OnMapLoadFailure();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).OnPreloadComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).OnSoftWipeComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).OnTransitionInComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).OnTransitionOutComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).OnTransitionVisualsLoaded(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).Preload();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).PreloadAssetsAfterMapLoad((Map)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).PreloadAssetsBeforeMapLoad();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).SetAlertMessage(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).SetOnTransitionComplete((TransitionCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).SetOnTransitionInStart((TransitionInStartDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).SetSkipTransitions(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).StartTransition();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).StartTransitionIn();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).StartTransitionInContinueSetup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).StartTransitionOut((PlanetVO)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).StartWipe((PlanetVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((AbstractTransition)GCHandledObjects.GCHandleToObject(instance)).TryCompleteTransition();
-			return -1L;
 		}
 	}
 }

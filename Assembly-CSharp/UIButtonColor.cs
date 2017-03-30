@@ -1,11 +1,8 @@
 using System;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/Interaction/Button Color"), ExecuteInEditMode]
-public class UIButtonColor : UIWidgetContainer, IUnitySerializable
+public class UIButtonColor : UIWidgetContainer
 {
 	public enum State
 	{
@@ -17,27 +14,27 @@ public class UIButtonColor : UIWidgetContainer, IUnitySerializable
 
 	public GameObject tweenTarget;
 
-	public Color hover;
+	public Color hover = new Color(0.882352948f, 0.784313738f, 0.5882353f, 1f);
 
-	public Color pressed;
+	public Color pressed = new Color(0.7176471f, 0.6392157f, 0.482352942f, 1f);
 
-	public Color disabledColor;
+	public Color disabledColor = Color.grey;
 
-	public float duration;
+	public float duration = 0.2f;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected Color mStartingColor;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected Color mDefaultColor;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected bool mInitDone;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected UIWidget mWidget;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected UIButtonColor.State mState;
 
 	public UIButtonColor.State state
@@ -127,26 +124,29 @@ public class UIButtonColor : UIWidgetContainer, IUnitySerializable
 		{
 			this.mDefaultColor = this.mWidget.color;
 			this.mStartingColor = this.mDefaultColor;
-			return;
 		}
-		if (this.tweenTarget != null)
+		else if (this.tweenTarget != null)
 		{
 			Renderer component = this.tweenTarget.GetComponent<Renderer>();
 			if (component != null)
 			{
-				this.mDefaultColor = (Application.isPlaying ? component.material.color : component.sharedMaterial.color);
+				this.mDefaultColor = ((!Application.isPlaying) ? component.sharedMaterial.color : component.material.color);
 				this.mStartingColor = this.mDefaultColor;
-				return;
 			}
-			Light component2 = this.tweenTarget.GetComponent<Light>();
-			if (component2 != null)
+			else
 			{
-				this.mDefaultColor = component2.color;
-				this.mStartingColor = this.mDefaultColor;
-				return;
+				Light component2 = this.tweenTarget.GetComponent<Light>();
+				if (component2 != null)
+				{
+					this.mDefaultColor = component2.color;
+					this.mStartingColor = this.mDefaultColor;
+				}
+				else
+				{
+					this.tweenTarget = null;
+					this.mInitDone = false;
+				}
 			}
-			this.tweenTarget = null;
-			this.mInitDone = false;
 		}
 	}
 
@@ -161,9 +161,8 @@ public class UIButtonColor : UIWidgetContainer, IUnitySerializable
 			if (UICamera.currentTouch.pressed == base.gameObject)
 			{
 				this.OnPress(true);
-				return;
 			}
-			if (UICamera.currentTouch.current == base.gameObject)
+			else if (UICamera.currentTouch.current == base.gameObject)
 			{
 				this.OnHover(true);
 			}
@@ -194,7 +193,7 @@ public class UIButtonColor : UIWidgetContainer, IUnitySerializable
 			}
 			if (this.tweenTarget != null)
 			{
-				this.SetState(isOver ? UIButtonColor.State.Hover : UIButtonColor.State.Normal, false);
+				this.SetState((!isOver) ? UIButtonColor.State.Normal : UIButtonColor.State.Hover, false);
 			}
 		}
 	}
@@ -212,22 +211,21 @@ public class UIButtonColor : UIWidgetContainer, IUnitySerializable
 				if (isPressed)
 				{
 					this.SetState(UIButtonColor.State.Pressed, false);
-					return;
 				}
-				if (UICamera.currentTouch.current == base.gameObject)
+				else if (UICamera.currentTouch.current == base.gameObject)
 				{
 					if (UICamera.currentScheme == UICamera.ControlScheme.Controller)
 					{
 						this.SetState(UIButtonColor.State.Hover, false);
-						return;
 					}
-					if (UICamera.currentScheme == UICamera.ControlScheme.Mouse && UICamera.hoveredObject == base.gameObject)
+					else if (UICamera.currentScheme == UICamera.ControlScheme.Mouse && UICamera.hoveredObject == base.gameObject)
 					{
 						this.SetState(UIButtonColor.State.Hover, false);
-						return;
 					}
-					this.SetState(UIButtonColor.State.Normal, false);
-					return;
+					else
+					{
+						this.SetState(UIButtonColor.State.Normal, false);
+					}
 				}
 				else
 				{
@@ -307,420 +305,5 @@ public class UIButtonColor : UIWidgetContainer, IUnitySerializable
 				tweenColor.enabled = false;
 			}
 		}
-	}
-
-	public UIButtonColor()
-	{
-		this.hover = new Color(0.882352948f, 0.784313738f, 0.5882353f, 1f);
-		this.pressed = new Color(0.7176471f, 0.6392157f, 0.482352942f, 1f);
-		this.disabledColor = Color.grey;
-		this.duration = 0.2f;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.tweenTarget);
-		}
-		if (depth <= 7)
-		{
-			this.hover.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			this.pressed.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			this.disabledColor.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteSingle(this.duration);
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			this.tweenTarget = (SerializedStateReader.Instance.ReadUnityEngineObject() as GameObject);
-		}
-		if (depth <= 7)
-		{
-			this.hover.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.pressed.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.disabledColor.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		this.duration = SerializedStateReader.Instance.ReadSingle();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (this.tweenTarget != null)
-		{
-			this.tweenTarget = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.tweenTarget) as GameObject);
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateWriter arg_20_0 = SerializedNamedStateWriter.Instance;
-			UnityEngine.Object arg_20_1 = this.tweenTarget;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_20_0.WriteUnityEngineObject(arg_20_1, &var_0_cp_0[var_0_cp_1] + 96);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 108);
-			this.hover.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 114);
-			this.pressed.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 122);
-			this.disabledColor.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteSingle(this.duration, &var_0_cp_0[var_0_cp_1] + 136);
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateReader arg_1B_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			this.tweenTarget = (arg_1B_0.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 96) as GameObject);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 108);
-			this.hover.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 114);
-			this.pressed.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 122);
-			this.disabledColor.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		this.duration = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 136);
-	}
-
-	protected internal UIButtonColor(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static long $Get0(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIButtonColor)instance).tweenTarget);
-	}
-
-	public static void $Set0(object instance, long value)
-	{
-		((UIButtonColor)instance).tweenTarget = (GameObject)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static float $Get1(object instance, int index)
-	{
-		UIButtonColor expr_06_cp_0 = (UIButtonColor)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.hover.r;
-		case 1:
-			return expr_06_cp_0.hover.g;
-		case 2:
-			return expr_06_cp_0.hover.b;
-		case 3:
-			return expr_06_cp_0.hover.a;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set1(object instance, float value, int index)
-	{
-		UIButtonColor expr_06_cp_0 = (UIButtonColor)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.hover.r = value;
-			return;
-		case 1:
-			expr_06_cp_0.hover.g = value;
-			return;
-		case 2:
-			expr_06_cp_0.hover.b = value;
-			return;
-		case 3:
-			expr_06_cp_0.hover.a = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get2(object instance, int index)
-	{
-		UIButtonColor expr_06_cp_0 = (UIButtonColor)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.pressed.r;
-		case 1:
-			return expr_06_cp_0.pressed.g;
-		case 2:
-			return expr_06_cp_0.pressed.b;
-		case 3:
-			return expr_06_cp_0.pressed.a;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set2(object instance, float value, int index)
-	{
-		UIButtonColor expr_06_cp_0 = (UIButtonColor)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.pressed.r = value;
-			return;
-		case 1:
-			expr_06_cp_0.pressed.g = value;
-			return;
-		case 2:
-			expr_06_cp_0.pressed.b = value;
-			return;
-		case 3:
-			expr_06_cp_0.pressed.a = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get3(object instance, int index)
-	{
-		UIButtonColor expr_06_cp_0 = (UIButtonColor)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.disabledColor.r;
-		case 1:
-			return expr_06_cp_0.disabledColor.g;
-		case 2:
-			return expr_06_cp_0.disabledColor.b;
-		case 3:
-			return expr_06_cp_0.disabledColor.a;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set3(object instance, float value, int index)
-	{
-		UIButtonColor expr_06_cp_0 = (UIButtonColor)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.disabledColor.r = value;
-			return;
-		case 1:
-			expr_06_cp_0.disabledColor.g = value;
-			return;
-		case 2:
-			expr_06_cp_0.disabledColor.b = value;
-			return;
-		case 3:
-			expr_06_cp_0.disabledColor.a = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get4(object instance)
-	{
-		return ((UIButtonColor)instance).duration;
-	}
-
-	public static void $Set4(object instance, float value)
-	{
-		((UIButtonColor)instance).duration = value;
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).CacheDefaultColor();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).defaultColor);
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).isEnabled);
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).state);
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).OnDisable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).OnDragOut();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).OnDragOver();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).OnEnable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).OnHover(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).OnInit();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).ResetDefaultColor();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).defaultColor = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).isEnabled = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).state = (UIButtonColor.State)(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).SetState((UIButtonColor.State)(*(int*)args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((UIButtonColor)GCHandledObjects.GCHandleToObject(instance)).UpdateColor(*(sbyte*)args != 0);
-		return -1L;
 	}
 }

@@ -9,7 +9,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Projectors
 {
@@ -54,12 +53,6 @@ namespace StaRTS.Main.Views.Projectors
 			return geometryProjector;
 		}
 
-		public static void ResetProjectorMembers(GeometryProjector projector)
-		{
-			projector.AssetProcessor.Reset();
-			projector.Renderer.Render(projector.Config);
-		}
-
 		private static bool CanBeAnimated(ProjectorConfig config)
 		{
 			return config.AnimPreference == AnimationPreference.AnimationAlways || (config.AnimPreference == AnimationPreference.AnimationPreferred && !HardwareProfile.IsLowEndDevice());
@@ -81,64 +74,61 @@ namespace StaRTS.Main.Views.Projectors
 		{
 			ProjectorConfig projectorConfig = ProjectorUtils.GenerateGeometryConfig(vo, frameSprite, false);
 			BuildingType type = vo.Type;
-			if (type <= BuildingType.Turret)
+			if (type != BuildingType.Barracks)
 			{
-				if (type == BuildingType.Barracks)
+				if (type != BuildingType.Turret && type != BuildingType.Storage)
 				{
-					projectorConfig.AnimationName = "IdleClosed";
-					goto IL_5A;
-				}
-				if (type != BuildingType.Turret)
-				{
-					goto IL_4F;
-				}
-			}
-			else if (type != BuildingType.Storage)
-			{
-				if (type != BuildingType.Armory)
-				{
-					goto IL_4F;
-				}
-				projectorConfig.AnimationName = "Idle";
-				goto IL_5A;
-			}
-			projectorConfig.AnimationName = null;
-			goto IL_5A;
-			IL_4F:
-			projectorConfig.AnimationName = "Active";
-			IL_5A:
-			type = vo.Type;
-			if (type <= BuildingType.Starport)
-			{
-				if (type != BuildingType.ChampionPlatform)
-				{
-					if (type == BuildingType.Starport)
+					if (type != BuildingType.Armory)
 					{
-						projectorConfig.Metered = true;
-						projectorConfig.MeterValue = 1f;
+						projectorConfig.AnimationName = "Active";
+					}
+					else
+					{
+						projectorConfig.AnimationName = "Idle";
 					}
 				}
 				else
 				{
-					projectorConfig.AttachmentAssets = new string[]
-					{
-						vo.AssetName
-					};
+					projectorConfig.AnimationName = null;
 				}
 			}
-			else if (type != BuildingType.Turret)
+			else
 			{
-				if (type == BuildingType.Trap)
+				projectorConfig.AnimationName = "IdleClosed";
+			}
+			type = vo.Type;
+			switch (type)
+			{
+			case BuildingType.ChampionPlatform:
+				projectorConfig.AttachmentAssets = new string[]
 				{
-					projectorConfig.SnapshotFrameDelay = 4;
+					vo.AssetName
+				};
+				return projectorConfig;
+			case BuildingType.Housing:
+			case BuildingType.Squad:
+				IL_8F:
+				if (type == BuildingType.Turret)
+				{
+					if (!string.IsNullOrEmpty(vo.TurretUid))
+					{
+						TurretTypeVO turretTypeVO = Service.Get<IDataController>().Get<TurretTypeVO>(vo.TurretUid);
+						projectorConfig.TrackerName = turretTypeVO.TrackerName;
+					}
+					return projectorConfig;
 				}
+				if (type != BuildingType.Trap)
+				{
+					return projectorConfig;
+				}
+				projectorConfig.SnapshotFrameDelay = 4;
+				return projectorConfig;
+			case BuildingType.Starport:
+				projectorConfig.Metered = true;
+				projectorConfig.MeterValue = 1f;
+				return projectorConfig;
 			}
-			else if (!string.IsNullOrEmpty(vo.TurretUid))
-			{
-				TurretTypeVO turretTypeVO = Service.Get<IDataController>().Get<TurretTypeVO>(vo.TurretUid);
-				projectorConfig.TrackerName = turretTypeVO.TrackerName;
-			}
-			return projectorConfig;
+			goto IL_8F;
 		}
 
 		public static ProjectorConfig GenerateGeometryConfig(IGeometryVO vo, Action<RenderTexture, ProjectorConfig> callback, float width, float height)
@@ -229,86 +219,10 @@ namespace StaRTS.Main.Views.Projectors
 				text = buffTypeVO.ShaderName;
 				if (text.StartsWith("PL_2"))
 				{
-					text = text.Replace("PL_2", "");
+					text = text.Replace("PL_2", string.Empty);
 				}
 			}
 			return text;
-		}
-
-		public ProjectorUtils()
-		{
-		}
-
-		protected internal ProjectorUtils(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.CanBeAnimated((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.DetermineVOForEquipment((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.GenerateBuildingConfig((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (UXSprite)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.GenerateEquipmentConfig((EquipmentVO)GCHandledObjects.GCHandleToObject(*args), (UXSprite)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.GenerateEquipmentConfig((EquipmentVO)GCHandledObjects.GCHandleToObject(*args), (Action<RenderTexture, ProjectorConfig>)GCHandledObjects.GCHandleToObject(args[1]), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.GenerateGeometryConfig((IGeometryVO)GCHandledObjects.GCHandleToObject(*args), (UXSprite)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.GenerateGeometryConfig((IGeometryVO)GCHandledObjects.GCHandleToObject(*args), (UXSprite)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.GenerateGeometryConfig((IGeometryVO)GCHandledObjects.GCHandleToObject(*args), (Action<RenderTexture, ProjectorConfig>)GCHandledObjects.GCHandleToObject(args[1]), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.GenerateProjector((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectorUtils.GetEquipmentBuildingShaderName((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			ProjectorUtils.OnDefaultAssetFailure((GeometryProjector)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			ProjectorUtils.OnDefaultAssetSuccess((GeometryProjector)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			ProjectorUtils.ResetProjectorMembers((GeometryProjector)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -17,7 +17,6 @@ using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -46,49 +45,51 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.MapDataProcessingStart)
+			switch (id)
 			{
-				if (id != EventId.BuildingViewReady)
-				{
-					if (id == EventId.MapDataProcessingStart)
-					{
-						this.worldLoadPending = true;
-						this.canRepair = this.CheckIfCanRepair();
-					}
-				}
-				else if (this.canRepair)
-				{
-					EntityViewParams entityViewParams = (EntityViewParams)cookie;
-					this.OnEntityLoaded(entityViewParams.Entity);
-				}
-			}
-			else if (id != EventId.WorldLoadComplete)
+			case EventId.MapDataProcessingStart:
+				this.worldLoadPending = true;
+				this.canRepair = this.CheckIfCanRepair();
+				return EatResponse.NotEaten;
+			case EventId.MapDataProcessingEnd:
 			{
-				if (id != EventId.GameStateAboutToChange)
+				IL_17:
+				if (id == EventId.BuildingViewReady)
 				{
-					if (id == EventId.EntityHealthViewRegenerated)
+					if (this.canRepair)
 					{
-						HealthViewComponent healthViewComponent = (HealthViewComponent)cookie;
-						if (healthViewComponent.Entity != null)
-						{
-							this.entitiesInRepairMap.Remove(healthViewComponent.Entity);
-							this.OnHeathRepairStopped(healthViewComponent);
-							this.CleanupEntityAfterRepair(healthViewComponent.Entity, healthViewComponent);
-						}
+						EntityViewParams entityViewParams = (EntityViewParams)cookie;
+						this.OnEntityLoaded(entityViewParams.Entity);
 					}
+					return EatResponse.NotEaten;
 				}
-				else
+				if (id == EventId.GameStateAboutToChange)
 				{
 					this.UpdateEntityRepairs(cookie as IState);
+					return EatResponse.NotEaten;
 				}
+				if (id != EventId.EntityHealthViewRegenerated)
+				{
+					return EatResponse.NotEaten;
+				}
+				HealthViewComponent healthViewComponent = (HealthViewComponent)cookie;
+				if (healthViewComponent.Entity != null)
+				{
+					this.entitiesInRepairMap.Remove(healthViewComponent.Entity);
+					this.OnHeathRepairStopped(healthViewComponent);
+					this.CleanupEntityAfterRepair(healthViewComponent.Entity, healthViewComponent);
+				}
+				return EatResponse.NotEaten;
 			}
-			else
+			case EventId.WorldLoadComplete:
 			{
 				this.worldLoadPending = false;
 				IState currentState = Service.Get<GameStateMachine>().CurrentState;
 				this.UpdateEntityRepairs(currentState);
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			}
+			goto IL_17;
 		}
 
 		private bool CheckIfCanRepair()
@@ -244,8 +245,8 @@ namespace StaRTS.Main.Controllers
 			{
 				foreach (KeyValuePair<Entity, HealthViewComponent> current in this.entitiesInRepairMap)
 				{
-					Entity key = current.get_Key();
-					HealthViewComponent value = current.get_Value();
+					Entity key = current.Key;
+					HealthViewComponent value = current.Value;
 					value.AutoRegenerating = false;
 					this.OnHeathRepairStopped(value);
 					this.CleanupEntityAfterRepair(key, value);
@@ -266,7 +267,7 @@ namespace StaRTS.Main.Controllers
 			{
 				return;
 			}
-			float num = (healthView.MaxHealthAmount == 0) ? 0f : ((float)healthView.HealthAmount / (float)healthView.MaxHealthAmount);
+			float num = (healthView.MaxHealthAmount != 0) ? ((float)healthView.HealthAmount / (float)healthView.MaxHealthAmount) : 0f;
 			if (num > 0.2f)
 			{
 				Service.Get<FXManager>().RemoveAttachedRubbleFromEntity(entity);
@@ -281,7 +282,7 @@ namespace StaRTS.Main.Controllers
 			{
 				foreach (KeyValuePair<Entity, HealthViewComponent> current in this.entitiesInRepairMap)
 				{
-					current.get_Value().AutoRegenerating = !pause;
+					current.Value.AutoRegenerating = !pause;
 				}
 			}
 		}
@@ -297,13 +298,15 @@ namespace StaRTS.Main.Controllers
 			{
 				int health = Mathf.FloorToInt((float)healthComp.MaxHealth * ((float)healthPercentage / 100f));
 				healthComp.Health = health;
-				return;
 			}
-			healthComp.Health = 0;
-			if (buildingComponent.BuildingType.Type == BuildingType.HQ)
+			else
 			{
-				healthComp.Health = Mathf.FloorToInt((float)healthComp.MaxHealth * 0.2f);
-				Service.Get<FXManager>().RemoveAttachedRubbleFromEntity(entity);
+				healthComp.Health = 0;
+				if (buildingComponent.BuildingType.Type == BuildingType.HQ)
+				{
+					healthComp.Health = Mathf.FloorToInt((float)healthComp.MaxHealth * 0.2f);
+					Service.Get<FXManager>().RemoveAttachedRubbleFromEntity(entity);
+				}
 			}
 		}
 
@@ -344,105 +347,11 @@ namespace StaRTS.Main.Controllers
 			if (entity.Has<GameObjectViewComponent>())
 			{
 				this.AddEntityForRepair(entity, num2);
-				return;
 			}
-			this.UpdateDamagePercentageFromHealth(entity, num2);
-		}
-
-		protected internal PostBattleRepairController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).AddEntityForRepair((Entity)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).CheckIfCanRepair());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).CleanupEntityAfterRepair((Entity)GCHandledObjects.GCHandleToObject(*args), (HealthViewComponent)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).ForceRepairOnAllBuildings(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).ForceRepairOnBuilding((Entity)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).GetStartingHealth((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).IsEntityInRepair((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).OnEntityLoaded((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).OnHeathRepairStopped((HealthViewComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).PauseHealthRepairs(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).RemoveExistingRepair((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).StartHealthRepair((HealthViewComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).StopHealthRepairs();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).UpdateDamagePercentageFromHealth((Entity)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PostBattleRepairController)GCHandledObjects.GCHandleToObject(instance)).UpdateEntityRepairs((IState)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
+			else
+			{
+				this.UpdateDamagePercentageFromHealth(entity, num2);
+			}
 		}
 	}
 }

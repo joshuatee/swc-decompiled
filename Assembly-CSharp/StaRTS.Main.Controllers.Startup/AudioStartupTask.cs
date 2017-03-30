@@ -4,7 +4,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -25,22 +24,6 @@ namespace StaRTS.Main.Controllers.Startup
 			Service.Get<IDataController>().Unload<AssetTypeVO>();
 			base.Complete();
 			Service.Get<EventManager>().SendEvent(EventId.InitializeAudioEnd, null);
-		}
-
-		protected internal AudioStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AudioStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnAudioComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AudioStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

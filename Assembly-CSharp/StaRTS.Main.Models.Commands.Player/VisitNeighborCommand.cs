@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public VisitNeighborCommand(VisitNeighborRequest request) : base("player.neighbor.visit", request, new VisitNeighborResponse())
 		{
 		}
-
-		protected internal VisitNeighborCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -1,40 +1,37 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [RequireComponent(typeof(UITexture))]
-public class UIColorPicker : MonoBehaviour, IUnitySerializable
+public class UIColorPicker : MonoBehaviour
 {
 	public static UIColorPicker current;
 
-	public Color value;
+	public Color value = Color.white;
 
 	public UIWidget selectionWidget;
 
-	public List<EventDelegate> onChange;
+	public List<EventDelegate> onChange = new List<EventDelegate>();
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private Transform mTrans;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private UITexture mUITex;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private Texture2D mTex;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private UICamera mCam;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private Vector2 mPos;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private int mWidth;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private int mHeight;
 
 	private static AnimationCurve mRed;
@@ -78,7 +75,7 @@ public class UIColorPicker : MonoBehaviour, IUnitySerializable
 
 	private void OnPress(bool pressed)
 	{
-		if ((base.enabled & pressed) && UICamera.currentScheme != UICamera.ControlScheme.Controller)
+		if (base.enabled && pressed && UICamera.currentScheme != UICamera.ControlScheme.Controller)
 		{
 			this.Sample();
 		}
@@ -225,310 +222,18 @@ public class UIColorPicker : MonoBehaviour, IUnitySerializable
 				new Keyframe(1f, 0.5f)
 			});
 		}
-		Vector3 vector = new Vector3(UIColorPicker.mRed.Evaluate(x), UIColorPicker.mGreen.Evaluate(x), UIColorPicker.mBlue.Evaluate(x));
+		Vector3 from = new Vector3(UIColorPicker.mRed.Evaluate(x), UIColorPicker.mGreen.Evaluate(x), UIColorPicker.mBlue.Evaluate(x));
 		if (y < 0.5f)
 		{
 			y *= 2f;
-			vector.x *= y;
-			vector.y *= y;
-			vector.z *= y;
+			from.x *= y;
+			from.y *= y;
+			from.z *= y;
 		}
 		else
 		{
-			vector = Vector3.Lerp(vector, Vector3.one, y * 2f - 1f);
+			from = Vector3.Lerp(from, Vector3.one, y * 2f - 1f);
 		}
-		return new Color(vector.x, vector.y, vector.z, 1f);
-	}
-
-	public UIColorPicker()
-	{
-		this.value = Color.white;
-		this.onChange = new List<EventDelegate>();
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			this.value.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.selectionWidget);
-		}
-		if (depth <= 7)
-		{
-			if (this.onChange == null)
-			{
-				SerializedStateWriter.Instance.WriteInt32(0);
-			}
-			else
-			{
-				SerializedStateWriter.Instance.WriteInt32(this.onChange.Count);
-				for (int i = 0; i < this.onChange.Count; i++)
-				{
-					((this.onChange[i] != null) ? this.onChange[i] : new EventDelegate()).Unity_Serialize(depth + 1);
-				}
-			}
-		}
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			this.value.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.selectionWidget = (SerializedStateReader.Instance.ReadUnityEngineObject() as UIWidget);
-		}
-		if (depth <= 7)
-		{
-			int num = SerializedStateReader.Instance.ReadInt32();
-			this.onChange = new List<EventDelegate>(num);
-			for (int i = 0; i < num; i++)
-			{
-				EventDelegate eventDelegate = new EventDelegate();
-				eventDelegate.Unity_Deserialize(depth + 1);
-				this.onChange.Add(eventDelegate);
-			}
-		}
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (this.selectionWidget != null)
-		{
-			this.selectionWidget = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.selectionWidget) as UIWidget);
-		}
-		if (depth <= 7)
-		{
-			if (this.onChange != null)
-			{
-				for (int i = 0; i < this.onChange.Count; i++)
-				{
-					EventDelegate eventDelegate = this.onChange[i];
-					if (eventDelegate != null)
-					{
-						eventDelegate.Unity_RemapPPtrs(depth + 1);
-					}
-				}
-			}
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateWriter arg_23_0 = SerializedNamedStateWriter.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_23_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3495);
-			this.value.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.selectionWidget, &var_0_cp_0[var_0_cp_1] + 3501);
-		}
-		if (depth <= 7)
-		{
-			if (this.onChange == null)
-			{
-				SerializedNamedStateWriter.Instance.BeginSequenceGroup(&var_0_cp_0[var_0_cp_1] + 1446, 0);
-				SerializedNamedStateWriter.Instance.EndMetaGroup();
-			}
-			else
-			{
-				SerializedNamedStateWriter.Instance.BeginSequenceGroup(&var_0_cp_0[var_0_cp_1] + 1446, this.onChange.Count);
-				for (int i = 0; i < this.onChange.Count; i++)
-				{
-					EventDelegate arg_E8_0 = (this.onChange[i] != null) ? this.onChange[i] : new EventDelegate();
-					SerializedNamedStateWriter.Instance.BeginMetaGroup((IntPtr)0);
-					arg_E8_0.Unity_NamedSerialize(depth + 1);
-					SerializedNamedStateWriter.Instance.EndMetaGroup();
-				}
-				SerializedNamedStateWriter.Instance.EndMetaGroup();
-			}
-		}
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateReader arg_23_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_23_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3495);
-			this.value.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.selectionWidget = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 3501) as UIWidget);
-		}
-		if (depth <= 7)
-		{
-			int num = SerializedNamedStateReader.Instance.BeginSequenceGroup(&var_0_cp_0[var_0_cp_1] + 1446);
-			this.onChange = new List<EventDelegate>(num);
-			for (int i = 0; i < num; i++)
-			{
-				EventDelegate eventDelegate = new EventDelegate();
-				EventDelegate arg_A5_0 = eventDelegate;
-				SerializedNamedStateReader.Instance.BeginMetaGroup((IntPtr)0);
-				arg_A5_0.Unity_NamedDeserialize(depth + 1);
-				SerializedNamedStateReader.Instance.EndMetaGroup();
-				this.onChange.Add(eventDelegate);
-			}
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-	}
-
-	protected internal UIColorPicker(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static float $Get0(object instance, int index)
-	{
-		UIColorPicker expr_06_cp_0 = (UIColorPicker)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.value.r;
-		case 1:
-			return expr_06_cp_0.value.g;
-		case 2:
-			return expr_06_cp_0.value.b;
-		case 3:
-			return expr_06_cp_0.value.a;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set0(object instance, float value, int index)
-	{
-		UIColorPicker expr_06_cp_0 = (UIColorPicker)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.value.r = value;
-			return;
-		case 1:
-			expr_06_cp_0.value.g = value;
-			return;
-		case 2:
-			expr_06_cp_0.value.b = value;
-			return;
-		case 3:
-			expr_06_cp_0.value.a = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static long $Get1(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIColorPicker)instance).selectionWidget);
-	}
-
-	public static void $Set1(object instance, long value)
-	{
-		((UIColorPicker)instance).selectionWidget = (UIWidget)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).OnDestroy();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).OnPan(*(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIColorPicker.Sample(*(float*)args, *(float*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).Sample();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).Select(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).Select(*(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UIColorPicker)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
+		return new Color(from.x, from.y, from.z, 1f);
 	}
 }

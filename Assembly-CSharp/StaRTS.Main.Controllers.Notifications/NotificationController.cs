@@ -8,8 +8,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Notifications
 {
@@ -35,16 +33,18 @@ namespace StaRTS.Main.Controllers.Notifications
 				if (this.isEnabled)
 				{
 					this.RegisterForRemoteNotifications();
-					return;
 				}
-				this.UnregisterForRemoteNotifications();
+				else
+				{
+					this.UnregisterForRemoteNotifications();
+				}
 			}
 		}
 
 		public NotificationController()
 		{
 			Service.Set<NotificationController>(this);
-			this.notificationManager = new WindowsNotificationManager();
+			this.notificationManager = new AndroidNotificationManager();
 			this.notificationEventManager = new NotificationEventManager();
 		}
 
@@ -80,7 +80,7 @@ namespace StaRTS.Main.Controllers.Notifications
 
 		public void ScheduleLocalNotification(string message, string soundName, DateTime time)
 		{
-			this.ScheduleLocalNotification("", "", message, soundName, time, "", "");
+			this.ScheduleLocalNotification(string.Empty, string.Empty, message, soundName, time, string.Empty, string.Empty);
 		}
 
 		public void ScheduleLocalNotification(string notificationUID, string inProgressMessage, string message, string soundName, DateTime time, string key, string objectId)
@@ -124,7 +124,7 @@ namespace StaRTS.Main.Controllers.Notifications
 				CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 				if (currentPlayer == null)
 				{
-					Service.Get<StaRTSLogger>().Warn("Trying to register for remote notification before CurrentPlayer is available");
+					Service.Get<Logger>().Warn("Trying to register for remote notification before CurrentPlayer is available");
 					return;
 				}
 				registerDeviceRequest.PlayerId = currentPlayer.PlayerId;
@@ -162,7 +162,7 @@ namespace StaRTS.Main.Controllers.Notifications
 				CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 				if (currentPlayer == null)
 				{
-					Service.Get<StaRTSLogger>().Warn("Trying to unregister for remote notification before CurrentPlayer is available");
+					Service.Get<Logger>().Warn("Trying to unregister for remote notification before CurrentPlayer is available");
 					return;
 				}
 				deregisterDeviceRequest.PlayerId = currentPlayer.PlayerId;
@@ -171,104 +171,8 @@ namespace StaRTS.Main.Controllers.Notifications
 			}
 			if (Service.IsSet<BuildingLookupController>())
 			{
-				Service.Get<BILoggingController>().TrackGameAction("push_notification", "04_standard_deny", Service.Get<BuildingLookupController>().GetHighestLevelHQ().ToString(), "");
+				Service.Get<BILoggingController>().TrackGameAction("push_notification", "04_standard_deny", Service.Get<BuildingLookupController>().GetHighestLevelHQ().ToString(), string.Empty);
 			}
-		}
-
-		protected internal NotificationController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).BatchScheduleLocalNotifications((List<NotificationObject>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).ClearAllPendingLocalNotifications();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).ClearPendingLocalNotification(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).ClearReceivedLocalNotifications();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationController)GCHandledObjects.GCHandleToObject(instance)).Enabled);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationController)GCHandledObjects.GCHandleToObject(instance)).GetDeviceToken());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationController)GCHandledObjects.GCHandleToObject(instance)).HasAgreedToNotifications());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationController)GCHandledObjects.GCHandleToObject(instance)).HasAuthorizedPushNotifications());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).Init();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).OnRegisterSuccess((RegisterDeviceResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).RegisterForRemoteNotifications();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).ScheduleLocalNotification(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).ScheduleLocalNotification(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), *(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), Marshal.PtrToStringUni(*(IntPtr*)(args + 6)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).Enabled = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).TryEnableNotifications();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((NotificationController)GCHandledObjects.GCHandleToObject(instance)).UnregisterForRemoteNotifications();
-			return -1L;
 		}
 	}
 }

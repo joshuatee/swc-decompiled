@@ -5,7 +5,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -83,7 +82,7 @@ namespace StaRTS.Main.Views.UX.Screens
 					beamDamage2
 				});
 				this.sliders[sliderIndex].CurrentLabel.Text = string.Empty;
-				this.sliders[sliderIndex].CurrentSlider.Value = ((beamDamage == 0) ? 0f : ((float)beamDamage2 / (float)beamDamage));
+				this.sliders[sliderIndex].CurrentSlider.Value = ((beamDamage != 0) ? ((float)beamDamage2 / (float)beamDamage) : 0f);
 				if (this.useUpgradeGroup && this.nextBuildingInfo != null)
 				{
 					BuildingTypeVO nextLevel = buildingUpgradeCatalog.GetNextLevel(this.buildingInfo);
@@ -92,8 +91,7 @@ namespace StaRTS.Main.Views.UX.Screens
 					{
 						this.lang.ThousandsSeparated(beamDamage3 - beamDamage2)
 					});
-					this.sliders[sliderIndex].NextSlider.Value = ((beamDamage == 0) ? 0f : ((float)beamDamage3 / (float)beamDamage));
-					return;
+					this.sliders[sliderIndex].NextSlider.Value = ((beamDamage != 0) ? ((float)beamDamage3 / (float)beamDamage) : 0f);
 				}
 			}
 			else
@@ -102,10 +100,10 @@ namespace StaRTS.Main.Views.UX.Screens
 				int dPS2 = turretTypeVO.DPS;
 				this.sliders[1].DescLabel.Text = this.lang.Get("DAMAGE_DPS", new object[]
 				{
-					""
+					string.Empty
 				});
 				this.sliders[sliderIndex].CurrentLabel.Text = this.lang.ThousandsSeparated(dPS);
-				this.sliders[sliderIndex].CurrentSlider.Value = ((dPS2 == 0) ? 0f : ((float)dPS / (float)dPS2));
+				this.sliders[sliderIndex].CurrentSlider.Value = ((dPS2 != 0) ? ((float)dPS / (float)dPS2) : 0f);
 				if (this.useUpgradeGroup && this.nextBuildingInfo != null)
 				{
 					BuildingTypeVO nextLevel2 = buildingUpgradeCatalog.GetNextLevel(this.buildingInfo);
@@ -114,7 +112,7 @@ namespace StaRTS.Main.Views.UX.Screens
 					{
 						this.lang.ThousandsSeparated(dPS3 - dPS)
 					});
-					this.sliders[sliderIndex].NextSlider.Value = ((dPS2 == 0) ? 0f : ((float)dPS3 / (float)dPS2));
+					this.sliders[sliderIndex].NextSlider.Value = ((dPS2 != 0) ? ((float)dPS3 / (float)dPS2) : 0f);
 				}
 			}
 		}
@@ -140,45 +138,11 @@ namespace StaRTS.Main.Views.UX.Screens
 				});
 			}
 			base.GetElement<UXLabel>("LabelLeftColumn2").Text = this.lang.Get("DAMAGE_TYPE", new object[0]);
-			base.GetElement<UXLabel>("LabelRightColumn2").Text = this.lang.Get(this.turretInfo.ProjectileType.SeeksTarget ? "SINGLE_TARGET" : "AREA_OF_EFFECT", new object[0]);
+			base.GetElement<UXLabel>("LabelRightColumn2").Text = this.lang.Get((!this.turretInfo.ProjectileType.SeeksTarget) ? "AREA_OF_EFFECT" : "SINGLE_TARGET", new object[0]);
 			base.GetElement<UXLabel>("LabelLeftColumn3").Text = this.lang.Get("TARGET", new object[0]);
-			base.GetElement<UXLabel>("LabelRightColumn3").Text = this.lang.Get(this.turretInfo.ProjectileType.SeeksTarget ? "ATTACK_TARGETS_ENEMY" : "ATTACK_TARGETS_GROUND", new object[0]);
+			base.GetElement<UXLabel>("LabelRightColumn3").Text = this.lang.Get((!this.turretInfo.ProjectileType.SeeksTarget) ? "ATTACK_TARGETS_GROUND" : "ATTACK_TARGETS_ENEMY", new object[0]);
 			base.GetElement<UXLabel>("LabelLeftColumn4").Text = this.lang.Get("FAVORITE_TARGET", new object[0]);
 			base.GetElement<UXLabel>("LabelRightColumn4").Text = this.lang.Get("target_pref_" + this.turretInfo.FavoriteTargetType, new object[0]);
-		}
-
-		protected internal TurretInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TurretInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitGroups();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TurretInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TurretInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetSelectedBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TurretInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupDetailsTable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TurretInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateDps(*(int*)args);
-			return -1L;
 		}
 	}
 }

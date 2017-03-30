@@ -6,9 +6,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Externals.Maker
 {
@@ -64,12 +62,14 @@ namespace StaRTS.Externals.Maker
 			if (Service.Get<VideoDataManager>().VideoDatas.ContainsKey(this.Guid))
 			{
 				Service.Get<ThumbnailManager>().GetThumbnail(this.Guid, this.thumbnailSize, new ThumbnailManager.ImageLoadCompleteDelegate(this.OnThumbnailReceived));
-				return;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("video data not found for '{0}'", new object[]
+			else
 			{
-				this.Guid
-			});
+				Service.Get<Logger>().ErrorFormat("video data not found for '{0}'", new object[]
+				{
+					this.Guid
+				});
+			}
 		}
 
 		private void OnThumbnailReceived(Texture2D thumbnail)
@@ -79,7 +79,6 @@ namespace StaRTS.Externals.Maker
 				if (this.IsVisible)
 				{
 					Service.Get<EventManager>().SendEvent(EventId.UIVideosThumbnailResponse, this);
-					return;
 				}
 			}
 			else
@@ -118,7 +117,7 @@ namespace StaRTS.Externals.Maker
 			if (id == EventId.VideoEnd)
 			{
 				KeyValuePair<bool, string> keyValuePair = (KeyValuePair<bool, string>)cookie;
-				if (keyValuePair.get_Value() == this.Guid)
+				if (keyValuePair.Value == this.Guid)
 				{
 					EventManager eventManager = Service.Get<EventManager>();
 					eventManager.SendEvent(EventId.UIVideosViewComplete, keyValuePair);
@@ -126,104 +125,6 @@ namespace StaRTS.Externals.Maker
 				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal VideoSummaryData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).DownloadThumbnail();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).Guid);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).IsVisible);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).Location);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).Style);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).UILabel);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).GetThumbnailImage());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).GetVideoData());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).OnThumbnailReceived((Texture2D)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).PlayVideo(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).Guid = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).IsVisible = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).Location = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).Style = (VideoSummaryStyle)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((VideoSummaryData)GCHandledObjects.GCHandleToObject(instance)).UILabel = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
 		}
 	}
 }

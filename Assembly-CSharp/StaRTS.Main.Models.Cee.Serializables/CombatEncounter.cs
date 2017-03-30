@@ -2,7 +2,6 @@ using StaRTS.Main.Models.Player.World;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Cee.Serializables
 {
@@ -23,24 +22,6 @@ namespace StaRTS.Main.Models.Cee.Serializables
 		public string ToJson()
 		{
 			return Serializer.Start().AddObject<Map>("map", this.map).End().ToString();
-		}
-
-		public CombatEncounter()
-		{
-		}
-
-		protected internal CombatEncounter(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CombatEncounter)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CombatEncounter)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

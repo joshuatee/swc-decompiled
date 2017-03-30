@@ -11,7 +11,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -67,7 +66,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (this.deadLootedEntities.ContainsKey(buildingComponent.BuildingTO.Key))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Entity {0} reported dead twice to LootController.", new object[]
+				Service.Get<Logger>().ErrorFormat("Entity {0} reported dead twice to LootController.", new object[]
 				{
 					buildingComponent.BuildingTO.Key
 				});
@@ -75,7 +74,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (string.IsNullOrEmpty(buildingComponent.BuildingTO.Key))
 			{
-				Service.Get<StaRTSLogger>().Error("Recieved dead building with invalid BuildingTO Key!");
+				Service.Get<Logger>().Error("Recieved dead building with invalid BuildingTO Key!");
 				return EatResponse.NotEaten;
 			}
 			this.deadLootedEntities[buildingComponent.BuildingTO.Key] = lootComponent;
@@ -186,7 +185,7 @@ namespace StaRTS.Main.Controllers
 			}
 			foreach (KeyValuePair<string, LootComponent> current in this.deadLootedEntities)
 			{
-				this.EarnLootFromDeath(current.get_Value());
+				this.EarnLootFromDeath(current.Value);
 			}
 			Service.Get<EventManager>().SendEvent(EventId.LootEarnedUpdated, null);
 		}
@@ -289,110 +288,6 @@ namespace StaRTS.Main.Controllers
 		public void ResetLastLootEarned(CurrencyType lootType)
 		{
 			this.lastLootEarned[(int)lootType] = this.GetLootEarned(lootType);
-		}
-
-		public LootController()
-		{
-		}
-
-		protected internal LootController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LootController)GCHandledObjects.GCHandleToObject(instance)).CalculateLootFromDamagePercentage(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).CalculateTotalLoot(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[3]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[4]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[5]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).DistributLootWithHQWeighted((CurrencyType)(*(int*)args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), *(int*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).EarnCalculatedLoot((LootComponent)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).EarnLootFromDamage((LootComponent)GCHandledObjects.GCHandleToObject(*args), (HealthComponent)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).EarnLootFromDeath((LootComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LootController)GCHandledObjects.GCHandleToObject(instance)).GetLootDelta((CurrencyType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LootController)GCHandledObjects.GCHandleToObject(instance)).GetLootEarned((CurrencyType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LootController)GCHandledObjects.GCHandleToObject(instance)).GetRemainingLoot((CurrencyType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LootController)GCHandledObjects.GCHandleToObject(instance)).GetTotalLootAvailable((CurrencyType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).Initialize(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[3]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[4]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[5]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LootController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).RefreshEarnedLoot();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).ResetEarnedLoot();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).ResetLastLootEarned((CurrencyType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((LootController)GCHandledObjects.GCHandleToObject(instance)).UpdateLootOnHealthChange((Entity)GCHandledObjects.GCHandleToObject(*args), (HealthComponent)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2));
-			return -1L;
 		}
 	}
 }

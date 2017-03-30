@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.ValueObjects
 {
@@ -174,65 +173,6 @@ namespace StaRTS.Main.Models.ValueObjects
 		{
 			this.original = original;
 			this.skinned = skinned;
-		}
-
-		protected internal SkinnedShooterFacade(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).ClipRetargeting);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).Damage);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).DPS);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).GunSequence);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).NearnessPercentile);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).OverWalls);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).Preference);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).PreferencePercentile);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).ProjectileType);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).Sequences);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinnedShooterFacade)GCHandledObjects.GCHandleToObject(instance)).StrictCooldown);
 		}
 	}
 }

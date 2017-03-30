@@ -4,8 +4,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Planets
 {
@@ -16,27 +14,15 @@ namespace StaRTS.Main.Models.Commands.Planets
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary != null)
 			{
+				string planetUID = string.Empty;
 				foreach (KeyValuePair<string, object> current in dictionary)
 				{
-					string key = current.get_Key();
-					int population = Convert.ToInt32(current.get_Value() as string, CultureInfo.InvariantCulture);
-					Service.Get<GalaxyPlanetController>().UpdatePlanetPopulation(key, population);
+					planetUID = current.Key;
+					int population = Convert.ToInt32(current.Value as string);
+					Service.Get<GalaxyPlanetController>().UpdatePlanetPopulation(planetUID, population);
 				}
 			}
 			return this;
-		}
-
-		public PlanetStatsResponse()
-		{
-		}
-
-		protected internal PlanetStatsResponse(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetStatsResponse)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

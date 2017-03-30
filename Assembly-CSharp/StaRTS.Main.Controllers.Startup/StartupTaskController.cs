@@ -1,8 +1,8 @@
 using StaRTS.Utils.Core;
+using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -63,10 +63,14 @@ namespace StaRTS.Main.Controllers.Startup
 				else
 				{
 					this.currentTask = this.tasks.Dequeue();
-					float endPercentage = (this.tasks.Count == 0) ? 100f : this.tasks.Peek().Percentage;
+					float endPercentage = (this.tasks.Count != 0) ? this.tasks.Peek().Percentage : 100f;
 					this.currentTask.EndPercentage = endPercentage;
 					this.currentTaskCompleted = false;
 					this.currentTask.Start();
+					if (this.allStartsMustComplete && !this.currentTaskCompleted)
+					{
+						Service.Get<Logger>().Error(this.currentTask.GetType().Name + " must call Complete() from its Start()");
+					}
 				}
 			}
 			if (this.progressCallback != null && this.currentTask != null)
@@ -92,40 +96,6 @@ namespace StaRTS.Main.Controllers.Startup
 		public void AllStartsMustNowComplete()
 		{
 			this.allStartsMustComplete = true;
-		}
-
-		protected internal StartupTaskController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StartupTaskController)GCHandledObjects.GCHandleToObject(instance)).AddTask((StartupTask)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((StartupTaskController)GCHandledObjects.GCHandleToObject(instance)).AllStartsMustNowComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((StartupTaskController)GCHandledObjects.GCHandleToObject(instance)).KillStartup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((StartupTaskController)GCHandledObjects.GCHandleToObject(instance)).OnTaskComplete((StartupTask)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((StartupTaskController)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
 		}
 	}
 }

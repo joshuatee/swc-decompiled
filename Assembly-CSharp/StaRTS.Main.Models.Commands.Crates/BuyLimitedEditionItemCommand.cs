@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Crates
 		public BuyLimitedEditionItemCommand(BuyLimitedEditionItemRequest request) : base("player.store.crate.buyLE", request, new CrateDataResponse())
 		{
 		}
-
-		protected internal BuyLimitedEditionItemCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

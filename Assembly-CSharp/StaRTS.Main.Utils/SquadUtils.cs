@@ -13,10 +13,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -106,7 +103,7 @@ namespace StaRTS.Main.Utils
 
 		public static string GetFailureStringIdByScoutState(SquadWarScoutState state, bool pvp)
 		{
-			StringBuilder stringBuilder = new StringBuilder("");
+			StringBuilder stringBuilder = new StringBuilder(string.Empty);
 			switch (state)
 			{
 			case SquadWarScoutState.NotInActionPhase:
@@ -151,45 +148,45 @@ namespace StaRTS.Main.Utils
 
 		public static string GetFailureStringIdByStatus(uint status, bool isPvp)
 		{
-			string text = "";
+			string str = string.Empty;
 			if (status == 2402u)
 			{
 				return "WAR_ERROR_BUFF_BASE_OWNED";
 			}
 			if (status == 2403u)
 			{
-				text = "WAR_SCOUT_UNDER_ATTACK_ERROR_";
+				str = "WAR_SCOUT_UNDER_ATTACK_ERROR_";
 			}
 			else if (status == 2404u)
 			{
-				text = "WAR_SCOUT_UNDER_ATTACK_ERROR_";
+				str = "WAR_SCOUT_UNDER_ATTACK_ERROR_";
 			}
 			else if (status == 2406u)
 			{
-				text = "WAR_SCOUT_NO_TURNS_LEFT_ERROR_";
+				str = "WAR_SCOUT_NO_TURNS_LEFT_ERROR_";
 			}
 			else if (status == 2407u)
 			{
-				text = "WAR_SCOUT_NO_VICTORY_POINTS_LEFT_ERROR_";
+				str = "WAR_SCOUT_NO_VICTORY_POINTS_LEFT_ERROR_";
 			}
 			else if (status == 2409u)
 			{
-				text = "WAR_SCOUT_NOT_IN_ACTION_PHASE_ERROR_";
+				str = "WAR_SCOUT_NOT_IN_ACTION_PHASE_ERROR_";
 			}
 			else if (status == 2418u)
 			{
-				text = "WAR_SCOUT_UNDER_PLAYER_ATTACK_ERROR_";
+				str = "WAR_SCOUT_UNDER_PLAYER_ATTACK_ERROR_";
 			}
 			else if (status == 2421u)
 			{
 				return "WAR_ERROR_BUFF_BASE_OWNER_CHANGED";
 			}
-			string text2 = "PVE";
+			string str2 = "PVE";
 			if (isPvp)
 			{
-				text2 = "PVP";
+				str2 = "PVP";
 			}
-			return text + text2;
+			return str + str2;
 		}
 
 		public static bool IsPlayerInSquad(string playerId, Squad squad)
@@ -288,16 +285,16 @@ namespace StaRTS.Main.Utils
 			{
 				foreach (KeyValuePair<string, object> current in dictionary)
 				{
-					Dictionary<string, object> dictionary2 = current.get_Value() as Dictionary<string, object>;
+					Dictionary<string, object> dictionary2 = current.Value as Dictionary<string, object>;
 					if (dictionary2 != null)
 					{
-						string key = current.get_Key();
+						string key = current.Key;
 						SquadDonatedTroop squadDonatedTroop = new SquadDonatedTroop(key);
 						list.Add(squadDonatedTroop);
 						foreach (KeyValuePair<string, object> current2 in dictionary2)
 						{
-							string key2 = current2.get_Key();
-							int value = Convert.ToInt32(current2.get_Value(), CultureInfo.InvariantCulture);
+							string key2 = current2.Key;
+							int value = Convert.ToInt32(current2.Value);
 							squadDonatedTroop.SenderAmounts.Add(key2, value);
 						}
 					}
@@ -339,49 +336,54 @@ namespace StaRTS.Main.Utils
 			{
 			case 2300u:
 				text = "ALREADY_IN_A_GUILD";
-				break;
+				goto IL_89;
 			case 2301u:
-				break;
+				IL_2C:
+				if (status != 2321u)
+				{
+					goto IL_89;
+				}
+				text = "PLAYER_IS_IN_SQUAD_WAR";
+				goto IL_89;
 			case 2302u:
 				text = "GUILD_IS_FULL";
-				break;
+				goto IL_89;
 			case 2303u:
 				text = "GUILD_IS_NOT_OPEN_ENROLLMENT";
-				break;
+				goto IL_89;
 			case 2304u:
 				text = "GUILD_SCORE_REQUIREMENT_NOT_MET";
-				break;
+				goto IL_89;
 			case 2305u:
 				text = "IN_WRONG_FACTION";
-				break;
+				goto IL_89;
 			case 2306u:
 				text = "NOT_IN_GUILD";
-				break;
-			default:
-				if (status == 2321u)
-				{
-					text = "PLAYER_IS_IN_SQUAD_WAR";
-				}
-				break;
+				goto IL_89;
 			}
+			goto IL_2C;
+			IL_89:
 			switch (actionType)
 			{
 			case SquadAction.Create:
-				if (text != null)
+				if (text == null)
 				{
-					return text;
+					if (status != 701u)
+					{
+						if (status != 2301u)
+						{
+							text = "GENERIC_SQUAD_CREATE_ISSUE";
+						}
+						else
+						{
+							text = "GUILD_NAME_ALREADY_TAKEN";
+						}
+					}
+					else
+					{
+						text = "INVALID_SQUAD_NAME";
+					}
 				}
-				if (status == 701u)
-				{
-					text = "INVALID_SQUAD_NAME";
-					return text;
-				}
-				if (status == 2301u)
-				{
-					text = "GUILD_NAME_ALREADY_TAKEN";
-					return text;
-				}
-				text = "GENERIC_SQUAD_CREATE_ISSUE";
 				return text;
 			case SquadAction.Join:
 			case SquadAction.ApplyToJoin:
@@ -389,56 +391,53 @@ namespace StaRTS.Main.Utils
 				if (text == null)
 				{
 					text = "GENERIC_SQUAD_JOIN_ISSUE";
-					return text;
 				}
 				return text;
 			case SquadAction.Leave:
 				if (text == null)
 				{
 					text = "GENERIC_SQUAD_LEAVE_ISSUE";
-					return text;
 				}
 				return text;
 			case SquadAction.Edit:
-				if (text != null)
+				if (text == null)
 				{
-					return text;
+					if (status != 701u)
+					{
+						text = "GENERIC_SQUAD_EDIT_ISSUE";
+					}
+					else
+					{
+						text = "INVALID_SQUAD_DESC";
+					}
 				}
-				if (status == 701u)
-				{
-					text = "INVALID_SQUAD_DESC";
-					return text;
-				}
-				text = "GENERIC_SQUAD_EDIT_ISSUE";
 				return text;
 			case SquadAction.SendInviteToJoin:
-				if (status <= 2302u)
+				switch (status)
 				{
-					if (status == 2300u)
+				case 2300u:
+					text = "SQUAD_INVITE_ALREADY_IN_A_GUILD";
+					goto IL_248;
+				case 2301u:
+				case 2303u:
+				case 2304u:
+					IL_201:
+					if (status != 2309u)
 					{
-						text = "SQUAD_INVITE_ALREADY_IN_A_GUILD";
-						return text;
+						text = "SQUAD_INVITE_FAILED";
+						goto IL_248;
 					}
-					if (status == 2302u)
-					{
-						text = "SQUAD_INVITE_GUILD_IS_FULL";
-						return text;
-					}
+					text = "SQUAD_INVITE_NOT_ENOUGH_GUILD_RANK";
+					goto IL_248;
+				case 2302u:
+					text = "SQUAD_INVITE_GUILD_IS_FULL";
+					goto IL_248;
+				case 2305u:
+					text = "SQUAD_INVITE_WRONG_FACTION";
+					goto IL_248;
 				}
-				else
-				{
-					if (status == 2305u)
-					{
-						text = "SQUAD_INVITE_WRONG_FACTION";
-						return text;
-					}
-					if (status == 2309u)
-					{
-						text = "SQUAD_INVITE_NOT_ENOUGH_GUILD_RANK";
-						return text;
-					}
-				}
-				text = "SQUAD_INVITE_FAILED";
+				goto IL_201;
+				IL_248:
 				return text;
 			case SquadAction.RejectInviteToJoin:
 				text = "SQUAD_INVITE_REJECT_FAILED";
@@ -449,18 +448,19 @@ namespace StaRTS.Main.Utils
 				{
 				case 2315u:
 					text = "NOT_IN_SAME_GUILD";
-					return text;
+					goto IL_1D6;
 				case 2316u:
 					text = "CANNOT_DEDUCT_NEGATIVE_AMOUNTS";
-					return text;
+					goto IL_1D6;
 				case 2318u:
 					text = "CAN_ONLY_DONATE_TROOPS";
-					return text;
+					goto IL_1D6;
 				case 2319u:
 					text = "NOT_ENOUGH_GUILD_TROOP_CAPACITY";
-					return text;
+					goto IL_1D6;
 				}
 				text = "GENERIC_DONATE_ISSUE";
+				IL_1D6:
 				return text;
 			}
 			text = "GENERIC_SQUAD_ISSUE";
@@ -535,8 +535,7 @@ namespace StaRTS.Main.Utils
 			{
 				squad.MemberList.Remove(squadMemberById);
 				squad.BattleScore -= squadMemberById.Score;
-				int memberCount = squad.MemberCount;
-				squad.MemberCount = memberCount - 1;
+				squad.MemberCount--;
 			}
 		}
 
@@ -787,7 +786,7 @@ namespace StaRTS.Main.Utils
 			bool flag3 = currentStatus == SquadWarStatusType.PhaseCooldown || currentStatus == SquadWarStatusType.PhaseOpen;
 			SquadWarData currentSquadWar = squadController.WarManager.CurrentSquadWar;
 			bool flag4 = currentSquadWar == null || currentSquadWar.RewardsProcessed;
-			return flag2 & flag & flag3 & flag4;
+			return flag2 && flag && flag3 && flag4;
 		}
 
 		public static bool SquadMeetsMatchmakingRequirements(SquadController squadController)
@@ -843,125 +842,6 @@ namespace StaRTS.Main.Utils
 				i++;
 			}
 			return false;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			SquadUtils.AddSquadMember((Squad)GCHandledObjects.GCHandleToObject(*args), (SquadMember)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.CanLeaveSquad());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.CanStartMatchmakingPrep((SquadController)GCHandledObjects.GCHandleToObject(*args), (BuildingLookupController)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			SquadUtils.ForceCloseSquadWarScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetDonatedTroopStorageUsed((List<SquadDonatedTroop>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetDonatedTroopStorageUsedByCurrentPlayer());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetDonatedTroopStorageUsedByWorldOwner());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetDonatedWarTroopStorageUsedByCurrentPlayer());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetDonationCount((List<SquadMsg>)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetFailureStringIdByScoutState((SquadWarScoutState)(*(int*)args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetFriendIdsInSquad(Marshal.PtrToStringUni(*(IntPtr*)args), (LeaderboardController)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetFriendIdsString((List<string>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetReputationReqForSquadLevel(*(int*)args));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetRewardForWar(Marshal.PtrToStringUni(*(IntPtr*)args), (SquadMemberWarData)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetSquadDonatedTroopsFromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetSquadMemberById((Squad)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.GetWorldOwnerSquadBuildingTroops());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.IsPlayerInSquad(Marshal.PtrToStringUni(*(IntPtr*)args), (Squad)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.IsPlayerMedalCountHigherThanSquadAvg((Squad)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.IsPlayerSquadWarTroopsAtMaxCapacity());
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			SquadUtils.RemoveSquadMember((Squad)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			SquadUtils.SetSquadMemberRole((Squad)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (SquadRole)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SquadUtils.SquadMeetsMatchmakingRequirements((SquadController)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

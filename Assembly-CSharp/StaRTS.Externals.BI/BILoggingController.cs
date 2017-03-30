@@ -20,11 +20,9 @@ using StaRTS.Utils.State;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using System.Diagnostics;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Externals.BI
 {
@@ -36,19 +34,19 @@ namespace StaRTS.Externals.BI
 
 		private const string NO_PLAYER_ID = "NO_PLAYER_ID";
 
-		private uint sampleDelayTimerID;
-
 		private const string REASON_LOW_FPS = "Low FPS";
 
 		private const string REASON_ERROR = "Critical error";
 
 		private const string REASON_WARNING = "Severe warning";
 
+		private uint sampleDelayTimerID;
+
 		private DateTime epochDate;
 
 		private MonoBehaviour engine;
 
-		private string locale;
+		private string locale = string.Empty;
 
 		private IDeviceInfoController deviceInfoController;
 
@@ -68,23 +66,21 @@ namespace StaRTS.Externals.BI
 
 		public BILoggingController()
 		{
-			this.locale = "";
-			base..ctor();
 			Service.Set<BILoggingController>(this);
 			this.Initialize();
 		}
 
 		public void Initialize()
 		{
-			this.playdomLogCreator = new PlaydomLogCreator("https://n7-starts-client-bi.playdom.com/bi?", "https://stage.api.disney.com/datatech/serverlog/v1/cp?");
-			this.event2LogCreator = new Event2LogCreator("http://n7vgd1strtsbil01.general.disney.private/bi_event2_qa", "https://qa.api.disney.com/datatech/log/v1/batch");
+			this.playdomLogCreator = new PlaydomLogCreator("https://n7-starts-client-bi.playdom.com/bi?", "https://weblogger.data.disney.com/cp?");
+			this.event2LogCreator = new Event2LogCreator("https://n7-starts-client-bi.playdom.com/bi_event2", "https://api.disney.com/datatech/log/v1/batch");
 			this.engine = Service.Get<Engine>();
-			this.epochDate = new DateTime(1970, 1, 1, 0, 0, 0, 1);
+			this.epochDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 			this.log = new BILog();
 			this.stepTiming = new StepTimingController();
 			this.biFrameMonitor = new BIFrameMonitor();
 			EventManager eventManager = Service.Get<EventManager>();
-			this.deviceInfoController = new DefaultDeviceInfoController();
+			this.deviceInfoController = new AndroidDeviceInfoController();
 			eventManager.RegisterObserver(this, EventId.AssetLoadEnd);
 			eventManager.RegisterObserver(this, EventId.AssetLoadStart);
 			eventManager.RegisterObserver(this, EventId.BattleLoadEnd);
@@ -341,553 +337,576 @@ namespace StaRTS.Externals.BI
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ContractCanceled)
+			switch (id)
 			{
-				if (id <= EventId.GameStateChanged)
+			case EventId.WorldLoadComplete:
+			{
+				IState currentState = Service.Get<GameStateMachine>().CurrentState;
+				if (currentState is ApplicationLoadState)
 				{
-					if (id != EventId.StoreCategorySelected)
-					{
-						switch (id)
-						{
-						case EventId.SquadChatSent:
-							this.TrackGameAction("squad_action", "chat", "", this.GetSquadID(), 1);
-							break;
-						case EventId.SquadDetailsUpdated:
-						case EventId.SquadUpdateCompleted:
-						case EventId.SquadEdited:
-						case EventId.SquadSelect:
-						case EventId.SquadSend:
-						case EventId.SquadNext:
-						case EventId.SquadMore:
-						case EventId.SquadFB:
-						case EventId.SquadCredits:
-						case EventId.TroopViewReady:
-						case EventId.TroopLevelUpgraded:
-						case EventId.StarshipLevelUpgraded:
-						case EventId.BuildingLevelUpgraded:
-						case EventId.BuildingSwapped:
-						case EventId.BuildingConstructed:
-						case EventId.BuildingReplaced:
-						case EventId.SpecialAttackSpawned:
-						case EventId.SpecialAttackDeployed:
-						case EventId.SpecialAttackDropshipFlyingAway:
-						case EventId.SpecialAttackFired:
-						case EventId.HudComplete:
-						case EventId.IntroStarted:
-						case EventId.IntroComplete:
-						case EventId.InventoryCapacityChanged:
-						case EventId.MapDataProcessingStart:
-						case EventId.MapDataProcessingEnd:
-						case EventId.WorldInTransitionComplete:
-						case EventId.WorldOutTransitionComplete:
-						case EventId.WorldReset:
-						case EventId.HomeStateTransitionComplete:
-						case EventId.PlayedLoadedOnDemandAudio:
-						case EventId.PreloadedAudioSuccess:
-						case EventId.PreloadedAudioFailure:
-						case EventId.SuccessfullyResumed:
-						case EventId.AllUXElementsCreated:
-						case EventId.ElementDestroyed:
-						case EventId.UIFilterSelected:
-						case EventId.EnterEditMode:
-						case EventId.ExitEditMode:
-						case EventId.ExitBaseLayoutToolMode:
-							break;
-						case EventId.UISquadJoinTabShown:
-							this.TrackGameAction("UI_squad", cookie as string, this.GetMemberOrNonMember(), "", 1);
-							break;
-						case EventId.UISquadJoinScreenShown:
-							this.TrackGameAction("UI_squad", "featured_access", (cookie as string) + "|" + this.GetMemberOrNonMember(), "", 1);
-							break;
-						case EventId.UISquadLeaveConfirmation:
-							this.TrackGameAction("squad_action", "leave_prompt", cookie as string, "", 1);
-							break;
-						case EventId.UISquadScreenTabShown:
-							this.TrackGameAction("UI_squad", cookie as string, this.GetMemberOrNonMember(), "", 1);
-							break;
-						case EventId.UILeaderboardSquadTabShown:
-							this.TrackGameAction("UI_leaderboard", "squads", cookie as string, "", 1);
-							break;
-						case EventId.UILeaderboardFriendsTabShown:
-							this.TrackGameAction("UI_leaderboard", "friends", cookie as string, "", 1);
-							break;
-						case EventId.UILeaderboardPlayersTabShown:
-							this.TrackGameAction("UI_leaderboard", "players", cookie as string, "", 1);
-							break;
-						case EventId.UILeaderboardTournamentTabShown:
-							this.TrackGameAction("UI_leaderboard", "tournament", cookie as string, "", 1);
-							break;
-						case EventId.UILeaderboardExpand:
-							this.TrackGameAction("UI_leaderboard", "expand", cookie as string, "", 1);
-							break;
-						case EventId.UILeaderboardVisit:
-							this.TrackGameAction("UI_leaderboard_expand", "visit", cookie as string, "", 1);
-							break;
-						case EventId.UILeaderboardInfo:
-							this.TrackGameAction("UI_leaderboard_expand", "info", cookie as string, "", 1);
-							break;
-						case EventId.UILeaderboardJoin:
-							this.TrackGameAction("UI_leaderboard_expand", "join", cookie as string, "", 1);
-							break;
-						case EventId.VisitPlayer:
-						{
-							PlayerVisitTag playerVisitTag = cookie as PlayerVisitTag;
-							this.TrackPlayerVisit(playerVisitTag.IsSquadMate, playerVisitTag.IsFriend, playerVisitTag.TabName, playerVisitTag.PlayerId);
-							break;
-						}
-						case EventId.WorldLoadComplete:
-						{
-							IState currentState = Service.Get<GameStateMachine>().CurrentState;
-							if (currentState is ApplicationLoadState)
-							{
-								this.TrackStepTiming("page_load", "end", "default", StepTimingType.End);
-								this.TrackUserInfo();
-								this.TrackPlayerInfo();
-								this.TrackFaction();
-							}
-							break;
-						}
-						case EventId.InitialLoadStart:
-							this.TrackStepTiming("page_load", "start", "default", StepTimingType.Start);
-							break;
-						case EventId.MetaDataLoadStart:
-							this.TrackStepTiming("page_load", "metadata_start", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.MetaDataLoadEnd:
-							this.TrackStepTiming("page_load", "metadata_end", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.AssetLoadStart:
-							this.TrackStepTiming("page_load", "assetload_start", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.AssetLoadEnd:
-							this.TrackStepTiming("page_load", "assetload_end", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.StringsLoadStart:
-							this.TrackStepTiming("page_load", "string_data_start", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.StringsLoadEnd:
-							this.TrackStepTiming("page_load", "string_data_end", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.PreloadAssetsStart:
-							this.TrackStepTiming("page_load", "preload_assets_start", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.PreloadAssetsEnd:
-							this.TrackStepTiming("page_load", "preload_assets_end", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeGameDataStart:
-							this.TrackStepTiming("page_load", "init_gamedata_start", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeGameDataEnd:
-							this.TrackStepTiming("page_load", "init_gamedata_end", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeAudioStart:
-							this.TrackStepTiming("page_load", "init_audio_start", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeAudioEnd:
-							this.TrackStepTiming("page_load", "init_audio_end", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeBoardStart:
-							this.TrackStepTiming("page_load", "init_board_start", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeBoardEnd:
-							this.TrackStepTiming("page_load", "init_board_end", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeGeneralSystemsStart:
-							this.TrackStepTiming("page_load", "init_general_sys_start", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeGeneralSystemsEnd:
-							this.TrackStepTiming("page_load", "init_general_sys_end", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeWorldStart:
-							this.TrackStepTiming("page_load", "init_world_start", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.InitializeWorldEnd:
-							this.TrackStepTiming("page_load", "init_world_end", "default", StepTimingType.Intermediary);
-							break;
-						case EventId.UINotEnoughSoftCurrencyBuy:
-							this.TrackGameAction("UI_money_flow", "buy", "not_enough_soft_currency", "", 1);
-							break;
-						case EventId.UINotEnoughSoftCurrencyClose:
-							this.TrackGameAction("UI_money_flow", "close", "not_enough_soft_currency", "", 1);
-							break;
-						case EventId.UINotEnoughHardCurrencyBuy:
-							this.TrackGameAction("UI_money_flow", "buy", "not_enough_hard_currency", "", 1);
-							break;
-						case EventId.UINotEnoughHardCurrencyClose:
-							this.TrackGameAction("UI_money_flow", "close", "not_enough_hard_currency", "", 1);
-							break;
-						case EventId.UINotEnoughDroidBuy:
-							this.TrackGameAction("UI_money_flow", "buy", "all_droids_busy", "", 1);
-							break;
-						case EventId.UINotEnoughDroidClose:
-							this.TrackGameAction("UI_money_flow", "close", "all_droids_busy", "", 1);
-							break;
-						case EventId.UINotEnoughDroidSpeedUp:
-							this.TrackGameAction("UI_money_flow", "speed_up", "all_droids_busy", "", 1);
-							break;
-						case EventId.BattleLoadStart:
-							this.TrackBattleLoadStepTiming(StepTimingType.Start);
-							break;
-						case EventId.BattleLoadEnd:
-							this.TrackBattleLoadStepTiming(StepTimingType.End);
-							break;
-						default:
-							switch (id)
-							{
-							case EventId.PvpOpponentNotFound:
-								this.TrackGameAction("UI_PvP", "no_opponent_found", cookie as string, "", 0);
-								break;
-							case EventId.PvpRevengeOpponentNotFound:
-								this.TrackGameAction("UI_Revenge", "no_opponent_found", cookie as string, "", 0);
-								break;
-							case EventId.PvpBattleSkipped:
-								this.TrackPvpGameAction("skip");
-								break;
-							case EventId.GameStateChanged:
-								this.HandleGameStateChanged();
-								break;
-							}
-							break;
-						}
-					}
-					else
-					{
-						this.HandleStoreCategorySelection((StoreTab)cookie);
-					}
+					this.TrackStepTiming("page_load", "end", "default", StepTimingType.End);
+					this.TrackUserInfo();
+					this.TrackPlayerInfo();
+					this.TrackFaction();
 				}
-				else if (id != EventId.ContractAdded)
-				{
-					if (id == EventId.ContractCompleted || id == EventId.ContractCanceled)
-					{
-						this.TrackBuildingContractStepTiming(StepTimingType.End, cookie as ContractEventData);
-					}
-				}
-				else
-				{
-					this.TrackBuildingContractStepTiming(StepTimingType.Start, cookie as ContractEventData);
-				}
+				return EatResponse.NotEaten;
 			}
-			else if (id <= EventId.SettingsSfxCheckboxSelected)
-			{
+			case EventId.WorldInTransitionComplete:
+			case EventId.WorldOutTransitionComplete:
+			case EventId.WorldReset:
+			case EventId.HomeStateTransitionComplete:
+			case EventId.PlayedLoadedOnDemandAudio:
+			case EventId.PreloadedAudioSuccess:
+			case EventId.PreloadedAudioFailure:
+			case EventId.SuccessfullyResumed:
+			case EventId.AllUXElementsCreated:
+			case EventId.ElementDestroyed:
+			case EventId.UIFilterSelected:
+			case EventId.EnterEditMode:
+			case EventId.ExitEditMode:
+			case EventId.ExitBaseLayoutToolMode:
+			case EventId.BattleEndProcessing:
+			case EventId.BattleEndRecorded:
+			case EventId.BattleEndFullyProcessed:
+			case EventId.BattleCancelRequested:
+			case EventId.BattleCanceled:
+			case EventId.BattleNextRequested:
+			case EventId.BattleReplayRequested:
+			case EventId.BattleReplaySetup:
+			case EventId.BattleRecordRetrieved:
+			case EventId.BattleLeftBeforeStarting:
+			case EventId.BattleLoadedForDefend:
+			case EventId.BattleReplayEnded:
+			case EventId.MissionStarted:
+			case EventId.PvpBattleStarting:
+			case EventId.PvpBattleWon:
+				IL_105:
 				switch (id)
 				{
-				case EventId.UIAttackScreenSelection:
-				{
-					ActionMessageBIData actionMessageBIData = (ActionMessageBIData)cookie;
-					this.TrackGameAction("UI_attack", actionMessageBIData.Action, actionMessageBIData.Message, "", 1);
-					break;
-				}
-				case EventId.UISquadWarScreen:
-				{
-					ActionMessageBIData actionMessageBIData2 = (ActionMessageBIData)cookie;
-					this.TrackGameAction("UI_squadwar_attack", actionMessageBIData2.Action, actionMessageBIData2.Message, "");
-					break;
-				}
-				case EventId.UIConflictStatusClicked:
-				{
-					ActionMessageBIData actionMessageBIData3 = (ActionMessageBIData)cookie;
-					this.TrackGameAction("UI_conflict_ticker", actionMessageBIData3.Action, actionMessageBIData3.Message, "", 1);
-					break;
-				}
-				case EventId.UIPvESelection:
-				{
-					ActionMessageBIData actionMessageBIData4 = (ActionMessageBIData)cookie;
-					this.TrackGameAction("UI_PvE_mission", actionMessageBIData4.Action, actionMessageBIData4.Message, "", 1);
-					break;
-				}
-				case EventId.UIPvEMissionStart:
-					this.TrackGameAction("PvE", "start", cookie as string, "", 1);
-					break;
-				case EventId.UITournamentTierSelection:
-				{
-					ActionMessageBIData actionMessageBIData5 = (ActionMessageBIData)cookie;
-					this.TrackGameAction("UI_tournament_tiers", actionMessageBIData5.Action, actionMessageBIData5.Message, "", 1);
-					break;
-				}
-				case EventId.UITournamentEndSelection:
-				{
-					ActionMessageBIData actionMessageBIData6 = (ActionMessageBIData)cookie;
-					this.TrackGameAction("UI_tournament_end", actionMessageBIData6.Action, actionMessageBIData6.Message, "", 1);
-					break;
-				}
-				case EventId.ObjectivesUpdated:
-				case EventId.UpdateObjectiveToastData:
-				case EventId.ShowObjectiveToast:
-				case EventId.ClaimObjectiveFailed:
-				case EventId.HoloEvent:
-				case EventId.StoryTranscriptDisplayed:
-				case EventId.HolocommScreenLoadComplete:
-				case EventId.HoloCommScreenDestroyed:
-				case EventId.StoryNextButtonClicked:
-				case EventId.StoryAttackButtonClicked:
-				case EventId.StorySkipButtonClicked:
-				case EventId.StoryChainCompleted:
-					break;
-				case EventId.ShowOffers:
-					this.TrackGameAction("UI_show_offers", cookie as string, "", "");
-					break;
-				case EventId.TapjoyOfferWallSelect:
-					this.TrackGameAction("UI_choose_offer", "tapjoy", "", "");
-					this.TrackGameAction("UI_shop_treasure", cookie as string, "", "", 1);
-					break;
-				case EventId.InAppPurchaseSelect:
-				case EventId.SoftCurrencyPurchaseSelect:
-					this.TrackGameAction("UI_shop_treasure", cookie as string, "", "", 1);
-					break;
-				case EventId.UserIsIdle:
-					this.TrackGameAction("UI_idlepop", "idlepop", "", "");
-					break;
-				case EventId.LogStoryActionExecuted:
-					this.HandleStoryAction(cookie as StoryActionVO);
-					break;
-				default:
-					if (id != EventId.PlayerLoginSuccess)
-					{
-						switch (id)
-						{
-						case EventId.HUDBattleButtonClicked:
-							this.TrackGameAction("UI_HUD", "attack", null, null, 1);
-							break;
-						case EventId.HUDBattleLogButtonClicked:
-							this.TrackGameAction("UI_HUD", "battle_log", null, null, 1);
-							break;
-						case EventId.HUDCrystalButtonClicked:
-							this.TrackGameAction("UI_HUD", "add_crystals", null, null, 1);
-							break;
-						case EventId.HUDDroidButtonClicked:
-							this.TrackGameAction("UI_HUD", "add_droid", null, null, 1);
-							break;
-						case EventId.HUDLeaderboardButtonClicked:
-							this.TrackGameAction("UI_HUD", "leaderboard", null, null, 1);
-							break;
-						case EventId.HUDHolonetButtonClicked:
-							this.TrackGameAction("UI_HUD", "holonet", null, null, 1);
-							break;
-						case EventId.HUDSettingsButtonClicked:
-							this.TrackGameAction("UI_HUD", "settings", null, null, 1);
-							break;
-						case EventId.HUDShieldButtonClicked:
-							this.TrackGameAction("UI_HUD", "damage_protection", null, null, 1);
-							break;
-						case EventId.HUDSquadsButtonClicked:
-							this.TrackGameAction("UI_HUD", "squad", null, null, 1);
-							break;
-						case EventId.HUDStoreButtonClicked:
-							this.TrackGameAction("UI_HUD", "shop", null, null, 1);
-							break;
-						case EventId.FactionIconUpgraded:
-							this.TrackGameAction("faction_icon", "icon_level", null, null, 1);
-							break;
-						case EventId.GalaxyOpenByInfoScreen:
-							this.TrackGameAction("UI_galaxy_map", "open", "info_screen", "", 1);
-							break;
-						case EventId.GalaxyOpenByContextButton:
-							this.TrackGameAction("UI_galaxy_map", "open", "context_button", "", 1);
-							break;
-						case EventId.GalaxyOpenByPlayScreen:
-							this.TrackGameAction("UI_galaxy_map", "open", "play_screen", "", 1);
-							break;
-						case EventId.GalaxyScreenClosed:
-							this.TrackGameAction("UI_galaxy_map", "close", "", "", 1);
-							break;
-						case EventId.GalaxyPlanetTapped:
-							this.TrackGameAction("UI_galaxy_map", "planet", cookie as string, "", 1);
-							break;
-						case EventId.GalaxyPlanetInfoButton:
-							this.TrackGameAction("UI_attack", "info", cookie as string, "", 1);
-							break;
-						case EventId.FacebookLoggedIn:
-							this.TrackGameAction("facebook_connect", "allow", cookie as string, "");
-							break;
-						case EventId.SettingsAboutButtonClicked:
-							this.TrackGameAction("UI_settings", "about", null, null, 1);
-							break;
-						case EventId.SettingsFacebookLoggedIn:
-							this.HandleSettingsScreenFacebookLogin((bool)cookie);
-							break;
-						case EventId.SettingsHelpButtonClicked:
-							this.TrackGameAction("UI_settings", "help", null, null, 1);
-							break;
-						case EventId.SettingsMusicCheckboxSelected:
-							this.HandleSettingsScreenMusicSetting((bool)cookie);
-							break;
-						case EventId.SettingsFanForumsButtonClicked:
-							this.TrackGameAction("UI_settings", "fan_forums", null, null, 1);
-							break;
-						case EventId.SettingsSfxCheckboxSelected:
-							this.HandleSettingsScreenSfxSetting((bool)cookie);
-							break;
-						}
-					}
-					else
-					{
-						this.TrackLogin();
-						this.TrackDeviceInfo();
-						this.TrackGeo();
-					}
-					break;
-				}
-			}
-			else if (id <= EventId.SquadReplaySharedByCurrentPlayer)
-			{
-				switch (id)
-				{
-				case EventId.UIIAPDisclaimerClosed:
-					this.TrackGameAction("UI_IAP_disclaimer", "close", "", "", 0);
-					break;
-				case EventId.UIIAPDisclaimerViewed:
-					this.TrackGameAction("UI_IAP_disclaimer", "view", "", "", 0);
-					break;
-				case EventId.UIFactionFlipAction:
-					this.TrackGameAction("UI_faction_flip", "flip", cookie as string, "", 1);
-					break;
-				case EventId.UIFactionFlipConfirmAction:
-					this.TrackGameAction("UI_faction_flip", "confirmation", cookie as string, "", 1);
-					break;
-				case EventId.UIFactionFlipOpened:
-					this.TrackGameAction("UI_faction_flip", "menu", cookie as string, "", 1);
-					break;
-				case EventId.TrapTriggered:
-				case EventId.TrapDisarmed:
-				case EventId.TrapDestroyed:
-					break;
-				case EventId.PlanetRelocateButtonPressed:
-					this.TrackGameAction("UI_attack", "relocate", cookie as string, "", 1);
-					break;
-				default:
+				case EventId.HUDBattleButtonClicked:
+					this.TrackGameAction("UI_HUD", "attack", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDBattleLogButtonClicked:
+					this.TrackGameAction("UI_HUD", "battle_log", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDCrystalButtonClicked:
+					this.TrackGameAction("UI_HUD", "add_crystals", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDDroidButtonClicked:
+					this.TrackGameAction("UI_HUD", "add_droid", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDLeaderboardButtonClicked:
+					this.TrackGameAction("UI_HUD", "leaderboard", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDHolonetButtonClicked:
+					this.TrackGameAction("UI_HUD", "holonet", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDSettingsButtonClicked:
+					this.TrackGameAction("UI_HUD", "settings", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDShieldButtonClicked:
+					this.TrackGameAction("UI_HUD", "damage_protection", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDSquadsButtonClicked:
+					this.TrackGameAction("UI_HUD", "squad", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDStoreButtonClicked:
+					this.TrackGameAction("UI_HUD", "shop", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.HUDSpecialPromotionButtonClicked:
+				case EventId.HQCelebrationPlayed:
+				case EventId.HolonetContentPrepareStarted:
+				case EventId.AllHolonetContentPrepared:
+				case EventId.HolonetContentPrepared:
+				case EventId.TargetedBundleContentPrepared:
+				case EventId.HQCelebrationScreenClosed:
+				case EventId.RateAppScreenClosed:
+				case EventId.PlanetDetailsScreenOpened:
+				case EventId.PlanetDetailsScreenClosed:
+				case EventId.GalaxyStatePanToPlanetComplete:
+				case EventId.GalaxyViewMapOpenComplete:
+				case EventId.ReturnToGalaxyViewMapComplete:
+				case EventId.GalaxyGoToPlanetView:
+				case EventId.GalaxyGoToGalaxyView:
+				case EventId.GalaxyTransitionToNextPlanet:
+				case EventId.GalaxyTransitionToPreviousPlanet:
+				case EventId.GalaxyNotEnoughRelocateStarsClose:
+				case EventId.GalaxyUIPlanetFocus:
+				case EventId.PlanetScoutingStart:
+				case EventId.PlanetUnlocked:
+				case EventId.PlanetsLoadingComplete:
+					IL_1CA:
 					switch (id)
 					{
 					case EventId.HolonetCommandCenterTab:
 						this.TrackGameAction("UI_holonet", "command_center", cookie as string, null, 1);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.HolonetCommandCenterFeature:
 						this.TrackGameAction("UI_holonet", "command_center", cookie as string, null, 1);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.HolonetVideoTab:
 						this.TrackGameAction("UI_holonet", "video", cookie as string, null, 1);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.HolonetDevNotes:
 						this.TrackGameAction("UI_holonet", "dev_notes", cookie as string, null, 1);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.HolonetTransmissionLog:
 						this.TrackGameAction("UI_holonet", "transmission_log", null, null, 1);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.HolonetIncomingTransmission:
 						this.TrackGameAction("UI_holonet", "incoming_transmission", cookie as string, null, 1);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.HolonetOpened:
 						this.TrackStepTiming("holonet", "start", "holonet", StepTimingType.Intermediary);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.HolonetClosed:
 						this.TrackGameAction("UI_holonet", "close", cookie as string, null, 1);
 						this.TrackStepTiming("holonet", "end", "holonet", StepTimingType.Intermediary);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.HolonetTabOpened:
 						this.TrackStepTiming("holonet_tab", "start", cookie as string, StepTimingType.Intermediary);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.HolonetTabClosed:
 						this.TrackStepTiming("holonet_tab", "end", cookie as string, StepTimingType.Intermediary);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.ObjectiveLockedCrateClicked:
 						this.TrackGameAction("UI_objectives", "locked_crate", cookie as string, null, 1);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.ObjectiveDetailsClicked:
 						this.TrackGameAction("UI_objectives", "objective_details", cookie as string, null, 1);
-						break;
+						return EatResponse.NotEaten;
+					case EventId.ObjectiveCrateInfoScreenOpened:
+					case EventId.ObjectiveCompleted:
+					case EventId.ObjectiveRewardDataCardRevealed:
+					case EventId.SquadScreenOpenedOrClosed:
+					case EventId.SquadUpdated:
+					case EventId.SquadLeft:
+					case EventId.SquadChatFilterUpdated:
+					case EventId.SquadJoinInviteAcceptedByCurrentPlayer:
+					case EventId.SquadTroopsRequestedByCurrentPlayer:
+					case EventId.SquadWarTroopsRequestStartedByCurrentPlayer:
+					case EventId.SquadWarTroopsRequestedByCurrentPlayer:
+					case EventId.SquadTroopsDonatedByCurrentPlayer:
+						IL_243:
+						switch (id)
+						{
+						case EventId.UIAttackScreenSelection:
+						{
+							ActionMessageBIData actionMessageBIData = (ActionMessageBIData)cookie;
+							this.TrackGameAction("UI_attack", actionMessageBIData.Action, actionMessageBIData.Message, string.Empty, 1);
+							return EatResponse.NotEaten;
+						}
+						case EventId.UISquadWarScreen:
+						{
+							ActionMessageBIData actionMessageBIData2 = (ActionMessageBIData)cookie;
+							this.TrackGameAction("UI_squadwar_attack", actionMessageBIData2.Action, actionMessageBIData2.Message, string.Empty);
+							return EatResponse.NotEaten;
+						}
+						case EventId.UIConflictStatusClicked:
+						{
+							ActionMessageBIData actionMessageBIData3 = (ActionMessageBIData)cookie;
+							this.TrackGameAction("UI_conflict_ticker", actionMessageBIData3.Action, actionMessageBIData3.Message, string.Empty, 1);
+							return EatResponse.NotEaten;
+						}
+						case EventId.UIPvESelection:
+						{
+							ActionMessageBIData actionMessageBIData4 = (ActionMessageBIData)cookie;
+							this.TrackGameAction("UI_PvE_mission", actionMessageBIData4.Action, actionMessageBIData4.Message, string.Empty, 1);
+							return EatResponse.NotEaten;
+						}
+						case EventId.UIPvEMissionStart:
+							this.TrackGameAction("PvE", "start", cookie as string, string.Empty, 1);
+							return EatResponse.NotEaten;
+						case EventId.UITournamentTierSelection:
+						{
+							ActionMessageBIData actionMessageBIData5 = (ActionMessageBIData)cookie;
+							this.TrackGameAction("UI_tournament_tiers", actionMessageBIData5.Action, actionMessageBIData5.Message, string.Empty, 1);
+							return EatResponse.NotEaten;
+						}
+						case EventId.UITournamentEndSelection:
+						{
+							ActionMessageBIData actionMessageBIData6 = (ActionMessageBIData)cookie;
+							this.TrackGameAction("UI_tournament_end", actionMessageBIData6.Action, actionMessageBIData6.Message, string.Empty, 1);
+							return EatResponse.NotEaten;
+						}
+						case EventId.ObjectivesUpdated:
+						case EventId.UpdateObjectiveToastData:
+						case EventId.ShowObjectiveToast:
+						case EventId.ClaimObjectiveFailed:
+						case EventId.HoloEvent:
+						case EventId.StoryTranscriptDisplayed:
+						case EventId.HolocommScreenLoadComplete:
+						case EventId.HoloCommScreenDestroyed:
+						case EventId.StoryNextButtonClicked:
+						case EventId.StoryAttackButtonClicked:
+						case EventId.StorySkipButtonClicked:
+						case EventId.StoryChainCompleted:
+							IL_2B4:
+							switch (id)
+							{
+							case EventId.SquadChatSent:
+								this.TrackGameAction("squad_action", "chat", string.Empty, this.GetSquadID(), 1);
+								return EatResponse.NotEaten;
+							case EventId.SquadDetailsUpdated:
+							case EventId.SquadUpdateCompleted:
+							case EventId.SquadEdited:
+							case EventId.SquadSelect:
+							case EventId.SquadSend:
+							case EventId.SquadNext:
+							case EventId.SquadMore:
+							case EventId.SquadFB:
+							case EventId.SquadCredits:
+								IL_31A:
+								switch (id)
+								{
+								case EventId.UIIAPDisclaimerClosed:
+									this.TrackGameAction("UI_IAP_disclaimer", "close", string.Empty, string.Empty, 0);
+									return EatResponse.NotEaten;
+								case EventId.UIIAPDisclaimerViewed:
+									this.TrackGameAction("UI_IAP_disclaimer", "view", string.Empty, string.Empty, 0);
+									return EatResponse.NotEaten;
+								case EventId.UIFactionFlipAction:
+									this.TrackGameAction("UI_faction_flip", "flip", cookie as string, string.Empty, 1);
+									return EatResponse.NotEaten;
+								case EventId.UIFactionFlipConfirmAction:
+									this.TrackGameAction("UI_faction_flip", "confirmation", cookie as string, string.Empty, 1);
+									return EatResponse.NotEaten;
+								case EventId.UIFactionFlipOpened:
+									this.TrackGameAction("UI_faction_flip", "menu", cookie as string, string.Empty, 1);
+									return EatResponse.NotEaten;
+								case EventId.TrapTriggered:
+								case EventId.TrapDisarmed:
+								case EventId.TrapDestroyed:
+									IL_34B:
+									switch (id)
+									{
+									case EventId.HUDInventoryScreenOpened:
+										this.TrackGameAction("UI_crate_inventory", "inventory_tap", string.Empty, string.Empty, 1);
+										return EatResponse.NotEaten;
+									case EventId.InventoryCrateTapped:
+									{
+										string message = Convert.ToString(cookie);
+										this.TrackGameAction("UI_crate_inventory", "crate_tap", message, string.Empty, 1);
+										return EatResponse.NotEaten;
+									}
+									case EventId.InventoryCrateOpened:
+									{
+										string message2 = Convert.ToString(cookie);
+										this.TrackGameAction("UI_crate_inventory", "crate_open", message2, string.Empty, 1);
+										return EatResponse.NotEaten;
+									}
+									case EventId.InventoryCrateStoreOpen:
+									{
+										string message3 = Convert.ToString(cookie);
+										this.TrackGameAction("UI_crate_inventory", "crate_store", message3, string.Empty, 1);
+										return EatResponse.NotEaten;
+									}
+									case EventId.LootTableButtonTapped:
+										this.TrackGameAction("UI_prize_table", "prize_table_tap", string.Empty, string.Empty, 1);
+										return EatResponse.NotEaten;
+									case EventId.LootTableUnitInfoTapped:
+									{
+										string message4 = Convert.ToString(cookie);
+										this.TrackGameAction("UI_prize_table", "unit_info_tap", message4, string.Empty, 1);
+										return EatResponse.NotEaten;
+									}
+									case EventId.LootTableRelocateTapped:
+									{
+										CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
+										string planetId = currentPlayer.PlanetId;
+										int rawRelocationStarsCount = currentPlayer.GetRawRelocationStarsCount();
+										string value = Convert.ToString(cookie);
+										string value2 = currentPlayer.IsRelocationRequirementMet().ToString();
+										StringBuilder stringBuilder = new StringBuilder(rawRelocationStarsCount.ToString());
+										stringBuilder.Append("|");
+										stringBuilder.Append(value2);
+										stringBuilder.Append("|");
+										stringBuilder.Append(value);
+										stringBuilder.Append("|");
+										stringBuilder.Append(planetId);
+										this.TrackGameAction("UI_prize_table", "relocate", stringBuilder.ToString(), string.Empty, 1);
+										return EatResponse.NotEaten;
+									}
+									case EventId.UnitInfoGoToGalaxy:
+									{
+										string message5 = Convert.ToString(cookie);
+										this.TrackGameAction("UI_unit_info", "galaxy_map", message5, string.Empty, 1);
+										return EatResponse.NotEaten;
+									}
+									default:
+										switch (id)
+										{
+										case EventId.ContractCompleted:
+										case EventId.ContractCanceled:
+											this.TrackBuildingContractStepTiming(StepTimingType.End, cookie as ContractEventData);
+											return EatResponse.NotEaten;
+										case EventId.ContractCompletedForStoryAction:
+										case EventId.ContractsCompletedWhileOffline:
+											IL_395:
+											switch (id)
+											{
+											case EventId.CrateStoreOpen:
+												this.TrackGameAction("UI_shop_treasure", cookie as string, "open", string.Empty, 1);
+												return EatResponse.NotEaten;
+											case EventId.CrateStoreCancel:
+												this.TrackGameAction("UI_shop_treasure", cookie as string, "cancel", string.Empty, 1);
+												return EatResponse.NotEaten;
+											case EventId.CrateStorePurchase:
+												this.TrackGameAction("UI_shop_treasure", cookie as string, "purchase", string.Empty, 1);
+												return EatResponse.NotEaten;
+											case EventId.CrateStoreNotEnoughCurrency:
+												this.TrackGameAction("UI_shop_treasure", cookie as string, "not_enough_currency", string.Empty, 1);
+												return EatResponse.NotEaten;
+											default:
+												if (id == EventId.StoreCategorySelected)
+												{
+													this.HandleStoreCategorySelection((StoreTab)((int)cookie));
+													return EatResponse.NotEaten;
+												}
+												if (id == EventId.ContractAdded)
+												{
+													this.TrackBuildingContractStepTiming(StepTimingType.Start, cookie as ContractEventData);
+													return EatResponse.NotEaten;
+												}
+												if (id != EventId.PlayerLoginSuccess)
+												{
+													return EatResponse.NotEaten;
+												}
+												this.TrackLogin();
+												this.TrackDeviceInfo();
+												this.TrackGeo();
+												return EatResponse.NotEaten;
+											}
+											break;
+										}
+										goto IL_395;
+									}
+									break;
+								case EventId.PlanetRelocateButtonPressed:
+									this.TrackGameAction("UI_attack", "relocate", cookie as string, string.Empty, 1);
+									return EatResponse.NotEaten;
+								}
+								goto IL_34B;
+							case EventId.UISquadJoinTabShown:
+								this.TrackGameAction("UI_squad", cookie as string, this.GetMemberOrNonMember(), string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UISquadJoinScreenShown:
+								this.TrackGameAction("UI_squad", "featured_access", (cookie as string) + "|" + this.GetMemberOrNonMember(), string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UISquadLeaveConfirmation:
+								this.TrackGameAction("squad_action", "leave_prompt", cookie as string, string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UISquadScreenTabShown:
+								this.TrackGameAction("UI_squad", cookie as string, this.GetMemberOrNonMember(), string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UILeaderboardSquadTabShown:
+								this.TrackGameAction("UI_leaderboard", "squads", cookie as string, string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UILeaderboardFriendsTabShown:
+								this.TrackGameAction("UI_leaderboard", "friends", cookie as string, string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UILeaderboardPlayersTabShown:
+								this.TrackGameAction("UI_leaderboard", "players", cookie as string, string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UILeaderboardTournamentTabShown:
+								this.TrackGameAction("UI_leaderboard", "tournament", cookie as string, string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UILeaderboardExpand:
+								this.TrackGameAction("UI_leaderboard", "expand", cookie as string, string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UILeaderboardVisit:
+								this.TrackGameAction("UI_leaderboard_expand", "visit", cookie as string, string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UILeaderboardInfo:
+								this.TrackGameAction("UI_leaderboard_expand", "info", cookie as string, string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.UILeaderboardJoin:
+								this.TrackGameAction("UI_leaderboard_expand", "join", cookie as string, string.Empty, 1);
+								return EatResponse.NotEaten;
+							case EventId.VisitPlayer:
+							{
+								PlayerVisitTag playerVisitTag = cookie as PlayerVisitTag;
+								this.TrackPlayerVisit(playerVisitTag.IsSquadMate, playerVisitTag.IsFriend, playerVisitTag.TabName, playerVisitTag.PlayerId);
+								return EatResponse.NotEaten;
+							}
+							}
+							goto IL_31A;
+						case EventId.ShowOffers:
+							this.TrackGameAction("UI_show_offers", cookie as string, string.Empty, string.Empty);
+							return EatResponse.NotEaten;
+						case EventId.TapjoyOfferWallSelect:
+							this.TrackGameAction("UI_choose_offer", "tapjoy", string.Empty, string.Empty);
+							this.TrackGameAction("UI_shop_treasure", cookie as string, string.Empty, string.Empty, 1);
+							return EatResponse.NotEaten;
+						case EventId.InAppPurchaseSelect:
+						case EventId.SoftCurrencyPurchaseSelect:
+							this.TrackGameAction("UI_shop_treasure", cookie as string, string.Empty, string.Empty, 1);
+							return EatResponse.NotEaten;
+						case EventId.UserIsIdle:
+							this.TrackGameAction("UI_idlepop", "idlepop", string.Empty, string.Empty);
+							return EatResponse.NotEaten;
+						case EventId.LogStoryActionExecuted:
+							this.HandleStoryAction(cookie as StoryActionVO);
+							return EatResponse.NotEaten;
+						}
+						goto IL_2B4;
 					case EventId.SquadJoinedByCurrentPlayer:
 						this.TrackSquadSocialGameAction("squad_membership_social", "join", cookie as string, true);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.SquadJoinApplicationAcceptedByCurrentPlayer:
 						this.TrackSquadSocialGameAction("squad_action", "join_accept", cookie as string, false);
-						break;
+						return EatResponse.NotEaten;
 					case EventId.SquadReplaySharedByCurrentPlayer:
 					{
 						SqmReplayData sqmReplayData = (SqmReplayData)cookie;
-						string action = (sqmReplayData.BattleType == SquadBattleReplayType.Defense) ? "defense" : "attack";
-						this.TrackGameAction("share_replay", action, "", sqmReplayData.BattleId, 1);
-						break;
+						string action = (sqmReplayData.BattleType != SquadBattleReplayType.Defense) ? "attack" : "defense";
+						this.TrackGameAction("share_replay", action, string.Empty, sqmReplayData.BattleId, 1);
+						return EatResponse.NotEaten;
 					}
 					}
-					break;
+					goto IL_243;
+				case EventId.FactionIconUpgraded:
+					this.TrackGameAction("faction_icon", "icon_level", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.GalaxyOpenByInfoScreen:
+					this.TrackGameAction("UI_galaxy_map", "open", "info_screen", string.Empty, 1);
+					return EatResponse.NotEaten;
+				case EventId.GalaxyOpenByContextButton:
+					this.TrackGameAction("UI_galaxy_map", "open", "context_button", string.Empty, 1);
+					return EatResponse.NotEaten;
+				case EventId.GalaxyOpenByPlayScreen:
+					this.TrackGameAction("UI_galaxy_map", "open", "play_screen", string.Empty, 1);
+					return EatResponse.NotEaten;
+				case EventId.GalaxyScreenClosed:
+					this.TrackGameAction("UI_galaxy_map", "close", string.Empty, string.Empty, 1);
+					return EatResponse.NotEaten;
+				case EventId.GalaxyPlanetTapped:
+					this.TrackGameAction("UI_galaxy_map", "planet", cookie as string, string.Empty, 1);
+					return EatResponse.NotEaten;
+				case EventId.GalaxyPlanetInfoButton:
+					this.TrackGameAction("UI_attack", "info", cookie as string, string.Empty, 1);
+					return EatResponse.NotEaten;
+				case EventId.FacebookLoggedIn:
+					this.TrackGameAction("facebook_connect", "allow", cookie as string, string.Empty);
+					return EatResponse.NotEaten;
+				case EventId.SettingsAboutButtonClicked:
+					this.TrackGameAction("UI_settings", "about", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.SettingsFacebookLoggedIn:
+					this.HandleSettingsScreenFacebookLogin((bool)cookie);
+					return EatResponse.NotEaten;
+				case EventId.SettingsHelpButtonClicked:
+					this.TrackGameAction("UI_settings", "help", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.SettingsMusicCheckboxSelected:
+					this.HandleSettingsScreenMusicSetting((bool)cookie);
+					return EatResponse.NotEaten;
+				case EventId.SettingsFanForumsButtonClicked:
+					this.TrackGameAction("UI_settings", "fan_forums", null, null, 1);
+					return EatResponse.NotEaten;
+				case EventId.SettingsSfxCheckboxSelected:
+					this.HandleSettingsScreenSfxSetting((bool)cookie);
+					return EatResponse.NotEaten;
 				}
+				goto IL_1CA;
+			case EventId.InitialLoadStart:
+				this.TrackStepTiming("page_load", "start", "default", StepTimingType.Start);
+				return EatResponse.NotEaten;
+			case EventId.MetaDataLoadStart:
+				this.TrackStepTiming("page_load", "metadata_start", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.MetaDataLoadEnd:
+				this.TrackStepTiming("page_load", "metadata_end", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.AssetLoadStart:
+				this.TrackStepTiming("page_load", "assetload_start", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.AssetLoadEnd:
+				this.TrackStepTiming("page_load", "assetload_end", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.StringsLoadStart:
+				this.TrackStepTiming("page_load", "string_data_start", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.StringsLoadEnd:
+				this.TrackStepTiming("page_load", "string_data_end", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.PreloadAssetsStart:
+				this.TrackStepTiming("page_load", "preload_assets_start", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.PreloadAssetsEnd:
+				this.TrackStepTiming("page_load", "preload_assets_end", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeGameDataStart:
+				this.TrackStepTiming("page_load", "init_gamedata_start", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeGameDataEnd:
+				this.TrackStepTiming("page_load", "init_gamedata_end", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeAudioStart:
+				this.TrackStepTiming("page_load", "init_audio_start", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeAudioEnd:
+				this.TrackStepTiming("page_load", "init_audio_end", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeBoardStart:
+				this.TrackStepTiming("page_load", "init_board_start", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeBoardEnd:
+				this.TrackStepTiming("page_load", "init_board_end", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeGeneralSystemsStart:
+				this.TrackStepTiming("page_load", "init_general_sys_start", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeGeneralSystemsEnd:
+				this.TrackStepTiming("page_load", "init_general_sys_end", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeWorldStart:
+				this.TrackStepTiming("page_load", "init_world_start", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.InitializeWorldEnd:
+				this.TrackStepTiming("page_load", "init_world_end", "default", StepTimingType.Intermediary);
+				return EatResponse.NotEaten;
+			case EventId.UINotEnoughSoftCurrencyBuy:
+				this.TrackGameAction("UI_money_flow", "buy", "not_enough_soft_currency", string.Empty, 1);
+				return EatResponse.NotEaten;
+			case EventId.UINotEnoughSoftCurrencyClose:
+				this.TrackGameAction("UI_money_flow", "close", "not_enough_soft_currency", string.Empty, 1);
+				return EatResponse.NotEaten;
+			case EventId.UINotEnoughHardCurrencyBuy:
+				this.TrackGameAction("UI_money_flow", "buy", "not_enough_hard_currency", string.Empty, 1);
+				return EatResponse.NotEaten;
+			case EventId.UINotEnoughHardCurrencyClose:
+				this.TrackGameAction("UI_money_flow", "close", "not_enough_hard_currency", string.Empty, 1);
+				return EatResponse.NotEaten;
+			case EventId.UINotEnoughDroidBuy:
+				this.TrackGameAction("UI_money_flow", "buy", "all_droids_busy", string.Empty, 1);
+				return EatResponse.NotEaten;
+			case EventId.UINotEnoughDroidClose:
+				this.TrackGameAction("UI_money_flow", "close", "all_droids_busy", string.Empty, 1);
+				return EatResponse.NotEaten;
+			case EventId.UINotEnoughDroidSpeedUp:
+				this.TrackGameAction("UI_money_flow", "speed_up", "all_droids_busy", string.Empty, 1);
+				return EatResponse.NotEaten;
+			case EventId.BattleLoadStart:
+				this.TrackBattleLoadStepTiming(StepTimingType.Start);
+				return EatResponse.NotEaten;
+			case EventId.BattleLoadEnd:
+				this.TrackBattleLoadStepTiming(StepTimingType.End);
+				return EatResponse.NotEaten;
+			case EventId.PvpOpponentNotFound:
+				this.TrackGameAction("UI_PvP", "no_opponent_found", cookie as string, string.Empty, 0);
+				return EatResponse.NotEaten;
+			case EventId.PvpRevengeOpponentNotFound:
+				this.TrackGameAction("UI_Revenge", "no_opponent_found", cookie as string, string.Empty, 0);
+				return EatResponse.NotEaten;
+			case EventId.PvpBattleSkipped:
+				this.TrackPvpGameAction("skip");
+				return EatResponse.NotEaten;
+			case EventId.GameStateChanged:
+				this.HandleGameStateChanged();
+				return EatResponse.NotEaten;
 			}
-			else
-			{
-				switch (id)
-				{
-				case EventId.CrateStoreOpen:
-					this.TrackGameAction("UI_shop_treasure", cookie as string, "open", "", 1);
-					break;
-				case EventId.CrateStoreCancel:
-					this.TrackGameAction("UI_shop_treasure", cookie as string, "cancel", "", 1);
-					break;
-				case EventId.CrateStorePurchase:
-					this.TrackGameAction("UI_shop_treasure", cookie as string, "purchase", "", 1);
-					break;
-				case EventId.CrateStoreNotEnoughCurrency:
-					this.TrackGameAction("UI_shop_treasure", cookie as string, "not_enough_currency", "", 1);
-					break;
-				default:
-					switch (id)
-					{
-					case EventId.HUDInventoryScreenOpened:
-						this.TrackGameAction("UI_crate_inventory", "inventory_tap", "", "", 1);
-						break;
-					case EventId.InventoryCrateTapped:
-					{
-						string message = Convert.ToString(cookie);
-						this.TrackGameAction("UI_crate_inventory", "crate_tap", message, "", 1);
-						break;
-					}
-					case EventId.InventoryCrateOpened:
-					{
-						string message2 = Convert.ToString(cookie);
-						this.TrackGameAction("UI_crate_inventory", "crate_open", message2, "", 1);
-						break;
-					}
-					case EventId.InventoryCrateStoreOpen:
-					{
-						string message3 = Convert.ToString(cookie);
-						this.TrackGameAction("UI_crate_inventory", "crate_store", message3, "", 1);
-						break;
-					}
-					case EventId.LootTableButtonTapped:
-						this.TrackGameAction("UI_prize_table", "prize_table_tap", "", "", 1);
-						break;
-					case EventId.LootTableUnitInfoTapped:
-					{
-						string message4 = Convert.ToString(cookie);
-						this.TrackGameAction("UI_prize_table", "unit_info_tap", message4, "", 1);
-						break;
-					}
-					case EventId.LootTableRelocateTapped:
-					{
-						CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-						string planetId = currentPlayer.PlanetId;
-						int rawRelocationStarsCount = currentPlayer.GetRawRelocationStarsCount();
-						string text = Convert.ToString(cookie);
-						string text2 = currentPlayer.IsRelocationRequirementMet().ToString();
-						StringBuilder stringBuilder = new StringBuilder(rawRelocationStarsCount.ToString());
-						stringBuilder.Append("|");
-						stringBuilder.Append(text2);
-						stringBuilder.Append("|");
-						stringBuilder.Append(text);
-						stringBuilder.Append("|");
-						stringBuilder.Append(planetId);
-						this.TrackGameAction("UI_prize_table", "relocate", stringBuilder.ToString(), "", 1);
-						break;
-					}
-					case EventId.UnitInfoGoToGalaxy:
-					{
-						string message5 = Convert.ToString(cookie);
-						this.TrackGameAction("UI_unit_info", "galaxy_map", message5, "", 1);
-						break;
-					}
-					}
-					break;
-				}
-			}
-			return EatResponse.NotEaten;
+			goto IL_105;
 		}
 
 		public void SchedulePerformanceLogging(bool home)
@@ -897,7 +916,7 @@ namespace StaRTS.Externals.BI
 			{
 				viewTimerManager.KillViewTimer(this.sampleDelayTimerID);
 			}
-			this.sampleDelayTimerID = viewTimerManager.CreateViewTimer((float)(home ? GameConstants.PERFORMANCE_SAMPLE_DELAY_HOME : GameConstants.PERFORMANCE_SAMPLE_DELAY_BATTLE), false, new TimerDelegate(this.PerformanceLogCallback), 0);
+			this.sampleDelayTimerID = viewTimerManager.CreateViewTimer((float)((!home) ? GameConstants.PERFORMANCE_SAMPLE_DELAY_BATTLE : GameConstants.PERFORMANCE_SAMPLE_DELAY_HOME), false, new TimerDelegate(this.PerformanceLogCallback), 0);
 		}
 
 		public void UnschedulePerformanceLogging()
@@ -923,13 +942,12 @@ namespace StaRTS.Externals.BI
 
 		private void AddCommonParameters(BILog biLog)
 		{
-			biLog.AddParam("app", "qa_starts");
-			biLog.AddParam("c_app_version", "4.7.0.2");
+			biLog.AddParam("app", "starts");
+			biLog.AddParam("c_app_version", "4.8.0.9512");
 			biLog.AddParam("app_locale", this.GetLangLocale());
 			biLog.AddParam("network", this.GetNetwork());
 			biLog.AddParam("view_network", this.GetViewNetwork());
 			biLog.AddParam("user_id", this.GetPlayerId());
-			biLog.AddParam("c_server", Service.Get<AppServerEnvironmentController>().Server);
 		}
 
 		private void AddLocaleParameter(BILog biLog)
@@ -985,7 +1003,7 @@ namespace StaRTS.Externals.BI
 			this.AddLocaleParameter(this.log);
 			this.log.AddParam("app", "click_track");
 			this.log.AddParam("is_new_user", this.IsNewUser());
-			this.log.AddParam("log_app", "qa_starts");
+			this.log.AddParam("log_app", "starts");
 			this.log.AddParam("tracking_code", "mobile");
 			this.StartCallBICoroutine(this.log);
 			this.log.Reset();
@@ -1075,41 +1093,30 @@ namespace StaRTS.Externals.BI
 
 		public void TrackIAPGameAction(string context, string action, string message)
 		{
-			int num = this.iapActionCounter;
-			this.iapActionCounter = num + 1;
-			this.TrackGameAction(context, action, message, string.Concat(num));
+			this.TrackGameAction(context, action, message, string.Empty + this.iapActionCounter++);
 		}
 
 		private void TrackSquadSocialGameAction(string context, string action, string source, bool addFriendIds)
 		{
 			Squad currentSquad = Service.Get<SquadController>().StateManager.GetCurrentSquad();
 			int num = 0;
-			string text = "";
+			string arg = string.Empty;
 			List<string> friendIdsInSquad = SquadUtils.GetFriendIdsInSquad(currentSquad.SquadID, Service.Get<LeaderboardController>());
 			if (friendIdsInSquad != null)
 			{
 				num = friendIdsInSquad.Count;
 				if (addFriendIds)
 				{
-					text = SquadUtils.GetFriendIdsString(friendIdsInSquad);
+					arg = SquadUtils.GetFriendIdsString(friendIdsInSquad);
 				}
 			}
-			string text2 = "lower";
+			string arg2 = "lower";
 			if (SquadUtils.IsPlayerMedalCountHigherThanSquadAvg(currentSquad, Service.Get<CurrentPlayer>().PlayerMedals))
 			{
-				text2 = "higher";
+				arg2 = "higher";
 			}
-			string message = string.Format("{0}|{1}|{2}", new object[]
-			{
-				num.ToString(),
-				text2,
-				source.ToLower()
-			});
-			string otherData = addFriendIds ? string.Format("{0}|{1}", new object[]
-			{
-				currentSquad.SquadID,
-				text
-			}) : currentSquad.SquadID;
+			string message = string.Format("{0}|{1}|{2}", num.ToString(), arg2, source.ToLower());
+			string otherData = (!addFriendIds) ? currentSquad.SquadID : string.Format("{0}|{1}", currentSquad.SquadID, arg);
 			this.TrackGameAction(context, action, message, otherData, 1);
 		}
 
@@ -1240,7 +1247,7 @@ namespace StaRTS.Externals.BI
 
 		public void TrackError(LogLevel logLevel, string errorMessage)
 		{
-			this.TrackError((logLevel == LogLevel.Error) ? "Critical error" : "Severe warning", errorMessage);
+			this.TrackError((logLevel != LogLevel.Error) ? "Severe warning" : "Critical error", errorMessage);
 		}
 
 		private void TrackError(string reason, string message)
@@ -1286,57 +1293,61 @@ namespace StaRTS.Externals.BI
 
 		public void TrackAssetBundleCacheClean(int version, bool isSuccess)
 		{
-			string message = isSuccess ? "success" : "failure";
+			string message = (!isSuccess) ? "failure" : "success";
 			this.TrackGameAction("asset_bundle_cache_clean", version.ToString(), message, null);
 		}
 
-		[IteratorStateMachine(typeof(BILoggingController.<CallBI>d__53))]
+		[DebuggerHidden]
 		private IEnumerator CallBI(BILogData playdomLogData, BILogData event2LogData)
 		{
-			if (playdomLogData != null)
-			{
-				WWW wWW = new WWW(playdomLogData.url);
-				WWWManager.Add(wWW);
-				yield return wWW;
-				if (WWWManager.Remove(wWW))
-				{
-					wWW.Dispose();
-				}
-				wWW = null;
-			}
-			if (event2LogData != null)
-			{
-				WWW wWW2 = new WWW(event2LogData.url, event2LogData.postData, event2LogData.headers);
-				WWWManager.Add(wWW2);
-				yield return wWW2;
-				if (WWWManager.Remove(wWW2))
-				{
-					wWW2.Dispose();
-				}
-				wWW2 = null;
-			}
-			yield break;
+			BILoggingController.<CallBI>c__Iterator7 <CallBI>c__Iterator = new BILoggingController.<CallBI>c__Iterator7();
+			<CallBI>c__Iterator.playdomLogData = playdomLogData;
+			<CallBI>c__Iterator.event2LogData = event2LogData;
+			<CallBI>c__Iterator.<$>playdomLogData = playdomLogData;
+			<CallBI>c__Iterator.<$>event2LogData = event2LogData;
+			return <CallBI>c__Iterator;
 		}
 
 		private void HandleStoryAction(StoryActionVO vo)
 		{
 			string logType = vo.LogType;
-			if (logType == "start")
+			if (logType != null)
+			{
+				if (BILoggingController.<>f__switch$map5 == null)
+				{
+					BILoggingController.<>f__switch$map5 = new Dictionary<string, int>(2)
+					{
+						{
+							"start",
+							0
+						},
+						{
+							"end",
+							1
+						}
+					};
+				}
+				int num;
+				if (BILoggingController.<>f__switch$map5.TryGetValue(logType, out num))
+				{
+					if (num == 0)
+					{
+						this.TrackStepTiming(vo.LogTag, "start", vo.LogPath, StepTimingType.Start, 1);
+						return;
+					}
+					if (num == 1)
+					{
+						this.TrackStepTiming(vo.LogTag, "end", vo.LogPath, StepTimingType.End, 1);
+						this.TrackGameAction(vo.LogTag, vo.LogPath, string.Empty, vo.Uid, 1);
+						return;
+					}
+				}
+			}
+			if (!this.stepTiming.IsStepStarted(vo.LogTag))
 			{
 				this.TrackStepTiming(vo.LogTag, "start", vo.LogPath, StepTimingType.Start, 1);
-				return;
 			}
-			if (!(logType == "end"))
-			{
-				if (!this.stepTiming.IsStepStarted(vo.LogTag))
-				{
-					this.TrackStepTiming(vo.LogTag, "start", vo.LogPath, StepTimingType.Start, 1);
-				}
-				this.TrackStepTiming(vo.LogTag, vo.Uid, vo.LogPath, StepTimingType.Intermediary, 1);
-				return;
-			}
-			this.TrackStepTiming(vo.LogTag, "end", vo.LogPath, StepTimingType.End, 1);
-			this.TrackGameAction(vo.LogTag, vo.LogPath, "", vo.Uid, 1);
+			this.TrackStepTiming(vo.LogTag, vo.Uid, vo.LogPath, StepTimingType.Intermediary, 1);
 		}
 
 		private void TrackBuildingContractStepTiming(StepTimingType type, ContractEventData contractData)
@@ -1346,7 +1357,7 @@ namespace StaRTS.Externals.BI
 				StringBuilder stringBuilder = new StringBuilder();
 				int timeElapsed = 0;
 				stringBuilder.Append(StringUtils.ToLowerCaseUnderscoreSeperated(contractData.BuildingVO.Type.ToString()));
-				string location = "";
+				string location = string.Empty;
 				if (type == StepTimingType.Start)
 				{
 					location = "start";
@@ -1391,12 +1402,6 @@ namespace StaRTS.Externals.BI
 				case DeliveryType.ClearClearable:
 					this.TrackStepTiming("droid", location, stringBuilder.ToString(), timeElapsed);
 					break;
-				case DeliveryType.UpgradeTroop:
-				case DeliveryType.UpgradeStarship:
-				case DeliveryType.UpgradeEquipment:
-					break;
-				default:
-					return;
 				}
 			}
 		}
@@ -1441,7 +1446,7 @@ namespace StaRTS.Externals.BI
 				action2 = "disallow";
 			}
 			this.TrackGameAction("UI_settings", action, null, null, 1);
-			this.TrackGameAction("facebook_connect", action2, "UI_settings", "");
+			this.TrackGameAction("facebook_connect", action2, "UI_settings", string.Empty);
 		}
 
 		private void HandleSettingsScreenMusicSetting(bool musicEnabled)
@@ -1493,7 +1498,7 @@ namespace StaRTS.Externals.BI
 		{
 			CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
 			BattleType type2 = currentBattle.Type;
-			string context = "";
+			string context = string.Empty;
 			switch (type2)
 			{
 			case BattleType.Pvp:
@@ -1522,7 +1527,7 @@ namespace StaRTS.Externals.BI
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
 			CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
 			BattleType type = currentBattle.Type;
-			string context = "";
+			string context = string.Empty;
 			if (currentState is BattlePlayState || currentState is BattleEndState)
 			{
 				switch (type)
@@ -1548,9 +1553,8 @@ namespace StaRTS.Externals.BI
 				if (currentState is BattlePlayState)
 				{
 					this.TrackBattleStepTiming(StepTimingType.Start, context);
-					return;
 				}
-				if (currentState is BattleEndState)
+				else if (currentState is BattleEndState)
 				{
 					this.TrackBattleStepTiming(StepTimingType.End, context);
 				}
@@ -1561,8 +1565,8 @@ namespace StaRTS.Externals.BI
 		{
 			CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
 			BattleType type2 = currentBattle.Type;
-			string text = "";
-			string location = "";
+			string text = string.Empty;
+			string location = string.Empty;
 			if (type == StepTimingType.Start)
 			{
 				location = "start";
@@ -1616,7 +1620,7 @@ namespace StaRTS.Externals.BI
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
 			string recordID = currentBattle.RecordID;
-			string text = (currentBattle.Defender != null) ? currentBattle.Defender.PlayerId : "";
+			string value = (currentBattle.Defender == null) ? string.Empty : currentBattle.Defender.PlayerId;
 			int defenderBaseScore = currentBattle.DefenderBaseScore;
 			StringBuilder stringBuilder = new StringBuilder();
 			stringBuilder.Append(currentPlayer.CurrentXPAmount);
@@ -1625,7 +1629,7 @@ namespace StaRTS.Externals.BI
 			stringBuilder.Append("|");
 			stringBuilder.Append(this.GetHQLevel());
 			stringBuilder.Append("|");
-			stringBuilder.Append(text);
+			stringBuilder.Append(value);
 			stringBuilder.Append("|");
 			stringBuilder.Append("|");
 			stringBuilder.Append("|");
@@ -1654,11 +1658,7 @@ namespace StaRTS.Externals.BI
 		private string GetPlayerId()
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-			if (currentPlayer == null || currentPlayer.PlayerId == null)
-			{
-				return "NO_PLAYER_ID";
-			}
-			return currentPlayer.PlayerId;
+			return (currentPlayer == null || currentPlayer.PlayerId == null) ? "NO_PLAYER_ID" : currentPlayer.PlayerId;
 		}
 
 		private string GetHQLevel()
@@ -1677,7 +1677,7 @@ namespace StaRTS.Externals.BI
 			{
 				return currentSquad.SquadName;
 			}
-			return "";
+			return string.Empty;
 		}
 
 		private string GetSquadID()
@@ -1687,17 +1687,17 @@ namespace StaRTS.Externals.BI
 			{
 				return currentSquad.SquadID;
 			}
-			return "";
+			return string.Empty;
 		}
 
 		private string GetNetwork()
 		{
-			return "f";
+			return "u";
 		}
 
 		private string GetViewNetwork()
 		{
-			return "f";
+			return "a";
 		}
 
 		private string GetDeviceType()
@@ -1712,14 +1712,14 @@ namespace StaRTS.Externals.BI
 
 		private string GetTimeStampInSeconds()
 		{
-			DateTime utcNow = DateTime.get_UtcNow();
-			return ((int)(utcNow - this.epochDate).get_TotalSeconds()).ToString();
+			DateTime utcNow = DateTime.UtcNow;
+			return ((int)(utcNow - this.epochDate).TotalSeconds).ToString();
 		}
 
 		private string GetTimeStampInMilliseconds()
 		{
-			DateTime utcNow = DateTime.get_UtcNow();
-			return ((long)(utcNow - this.epochDate).get_TotalMilliseconds()).ToString();
+			DateTime utcNow = DateTime.UtcNow;
+			return ((long)(utcNow - this.epochDate).TotalMilliseconds).ToString();
 		}
 
 		private string IsNewUser()
@@ -1752,358 +1752,6 @@ namespace StaRTS.Externals.BI
 		private string GetLangLocale()
 		{
 			return Service.Get<Lang>().Locale;
-		}
-
-		protected internal BILoggingController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).AddCommonParameters((BILog)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).AddGameActionParams(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), *(int*)(args + 4));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).AddLangParameter((BILog)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).AddLocaleParameter((BILog)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).CallBI((BILogData)GCHandledObjects.GCHandleToObject(*args), (BILogData)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetDeviceLocale());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetDeviceModel());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetDeviceType());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetHQLevel());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetLangLocale());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetMemberOrNonMember());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetMission(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetNetwork());
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetPageLoadStepCounter());
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetPlayerId());
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetSquadID());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetSquadName());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetTimeStampInMilliseconds());
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetTimeStampInSeconds());
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).GetViewNetwork());
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).HandleGameStateChanged();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).HandleSettingsScreenFacebookLogin(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).HandleSettingsScreenMusicSetting(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).HandleSettingsScreenSfxSetting(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).HandleStoreCategorySelection((StoreTab)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).HandleStoryAction((StoryActionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).Initialize();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).IsNewUser());
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).SchedulePerformanceLogging(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).SetBIUrl(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).StartCallBICoroutine((BILog)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackAssetBundleCacheClean(*(int*)args, *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackAuthorization(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackBattleLoadStepTiming((StepTimingType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackBattleStepTiming((StepTimingType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackBuildingContractStepTiming((StepTimingType)(*(int*)args), (ContractEventData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackDeviceInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackError((LogLevel)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackError(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackFaction();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackGameAction(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackGameAction(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), *(int*)(args + 4));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackGeo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackIAPGameAction(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackLogin();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackLowFPS(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackNetworkMappingInfo(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackPerformance(*(float*)args, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackPlayerInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackPlayerVisit(*(sbyte*)args != 0, *(sbyte*)(args + 1) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackPvpGameAction(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackSendMessage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackSquadSocialGameAction(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackStepTiming(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (StepTimingType)(*(int*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackStepTiming(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackStepTiming(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (StepTimingType)(*(int*)(args + 3)), *(int*)(args + 4));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackUserInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).TrackVideoSharing((VideoSharingNetwork)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			((BILoggingController)GCHandledObjects.GCHandleToObject(instance)).UnschedulePerformanceLogging();
-			return -1L;
 		}
 	}
 }

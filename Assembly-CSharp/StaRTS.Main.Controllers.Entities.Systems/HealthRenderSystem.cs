@@ -6,16 +6,11 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities.Systems
 {
 	public class HealthRenderSystem : ViewSystemBase
 	{
-		private EntityController entityController;
-
-		private NodeList<HealthViewNode> nodeList;
-
 		private const float HP_REGENERATION_INTERVAL_TIME = 0.1f;
 
 		private const int HP_REGENERATION_PER_INTERVAL = 80;
@@ -23,6 +18,10 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 		public const float HP_REGENERATION_PERCENT_THRESHOLD_RUBBLE = 0.2f;
 
 		private const float REGENERATION_FINISHED_EVENT_DELAY = 1f;
+
+		private EntityController entityController;
+
+		private NodeList<HealthViewNode> nodeList;
 
 		private float timeSinceRegenerationUpdate;
 
@@ -86,7 +85,7 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 
 		public void UpdateRubbleStateFromHealthView(HealthViewComponent healthView)
 		{
-			float num = (healthView.MaxHealthAmount == 0) ? 0f : ((float)healthView.HealthAmount / (float)healthView.MaxHealthAmount);
+			float num = (healthView.MaxHealthAmount != 0) ? ((float)healthView.HealthAmount / (float)healthView.MaxHealthAmount) : 0f;
 			bool flag = num < 0.2f;
 			if (healthView.HasRubble)
 			{
@@ -94,7 +93,6 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 				{
 					Service.Get<FXManager>().RemoveAttachedRubbleFromEntity(healthView.Entity);
 					healthView.HasRubble = false;
-					return;
 				}
 			}
 			else if (flag)
@@ -107,50 +105,6 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 		private void NotifyAutoRegenerationFinished(uint timerId, object cookie)
 		{
 			Service.Get<EventManager>().SendEvent(EventId.EntityHealthViewRegenerated, cookie);
-		}
-
-		public HealthRenderSystem()
-		{
-		}
-
-		protected internal HealthRenderSystem(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HealthRenderSystem)GCHandledObjects.GCHandleToObject(instance)).AddToGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HealthRenderSystem)GCHandledObjects.GCHandleToObject(instance)).ForceUpdate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HealthRenderSystem)GCHandledObjects.GCHandleToObject(instance)).RemoveFromGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((HealthRenderSystem)GCHandledObjects.GCHandleToObject(instance)).Update(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HealthRenderSystem)GCHandledObjects.GCHandleToObject(instance)).UpdateAutoRegeneration((HealthViewComponent)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HealthRenderSystem)GCHandledObjects.GCHandleToObject(instance)).UpdateRubbleStateFromHealthView((HealthViewComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

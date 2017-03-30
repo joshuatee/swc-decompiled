@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public SquadWarCancelMatchmakingCommand(PlayerIdChecksumRequest request) : base("guild.war.matchmaking.cancel", request, new DefaultResponse())
 		{
 		}
-
-		protected internal SquadWarCancelMatchmakingCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -13,9 +13,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -61,9 +59,11 @@ namespace StaRTS.Main.Controllers
 						if (abilityVO.CooldownOnSpawn)
 						{
 							this.StartCoolDown(deployedTroop, abilityVO);
-							return;
 						}
-						this.QueueAutoActivateAbility(troopEntity.ID);
+						else
+						{
+							this.QueueAutoActivateAbility(troopEntity.ID);
+						}
 					}
 				}
 			}
@@ -139,9 +139,9 @@ namespace StaRTS.Main.Controllers
 		{
 			foreach (KeyValuePair<uint, DeployedTroop> current in this.deployedTroops)
 			{
-				if (current.get_Value().Uid == heroUid)
+				if (current.Value.Uid == heroUid)
 				{
-					this.ActivateAbility(current.get_Key());
+					this.ActivateAbility(current.Key);
 					break;
 				}
 			}
@@ -201,20 +201,20 @@ namespace StaRTS.Main.Controllers
 		{
 			if (deployedTroop == null)
 			{
-				Service.Get<StaRTSLogger>().Error("TroopAbilityConroller.DeactivateAbility: DeployedTroop Null");
+				Service.Get<Logger>().Error("TroopAbilityConroller.DeactivateAbility: DeployedTroop Null");
 				return;
 			}
 			deployedTroop.AbilityTimer = 0u;
 			SmartEntity entity = deployedTroop.Entity;
 			if (entity == null)
 			{
-				Service.Get<StaRTSLogger>().Error("TroopAbilityConroller.DeactivateAbility: SmartEntity troop = Null");
+				Service.Get<Logger>().Error("TroopAbilityConroller.DeactivateAbility: SmartEntity troop = Null");
 				return;
 			}
 			TroopComponent troopComp = entity.TroopComp;
 			if (troopComp == null)
 			{
-				Service.Get<StaRTSLogger>().Error("TroopAbilityConroller.DeactivateAbility: troopComp = Null");
+				Service.Get<Logger>().Error("TroopAbilityConroller.DeactivateAbility: troopComp = Null");
 				return;
 			}
 			troopComp.SetVOData(troopComp.OriginalTroopShooterVO, troopComp.OriginalSpeedVO);
@@ -227,7 +227,7 @@ namespace StaRTS.Main.Controllers
 			TroopAbilityVO abilityVO = troopComp.AbilityVO;
 			if (abilityVO == null)
 			{
-				Service.Get<StaRTSLogger>().Error("TroopAbilityConroller.DeactivateAbility: TroopAbilityVO abilityVO = Null");
+				Service.Get<Logger>().Error("TroopAbilityConroller.DeactivateAbility: TroopAbilityVO abilityVO = Null");
 				return;
 			}
 			this.ResetTargetAndSendEvent(entity, false);
@@ -256,9 +256,11 @@ namespace StaRTS.Main.Controllers
 			if (abilityVO.CoolDownTime == 0u)
 			{
 				this.OnCoolDownTimer(0u, deployedTroop);
-				return;
 			}
-			deployedTroop.CoolDownTimer = Service.Get<SimTimerManager>().CreateSimTimer(abilityVO.CoolDownTime, false, new TimerDelegate(this.OnCoolDownTimer), deployedTroop);
+			else
+			{
+				deployedTroop.CoolDownTimer = Service.Get<SimTimerManager>().CreateSimTimer(abilityVO.CoolDownTime, false, new TimerDelegate(this.OnCoolDownTimer), deployedTroop);
+			}
 		}
 
 		private void OnCoolDownTimer(uint id, object cookie)
@@ -302,7 +304,7 @@ namespace StaRTS.Main.Controllers
 			{
 				return;
 			}
-			if (ability.AltGunLocators != null && ability.AltGunLocators.Length != 0)
+			if (ability.AltGunLocators != null && ability.AltGunLocators.Length > 0)
 			{
 				gameObjectViewComp.SwitchGunLocators(true);
 			}
@@ -343,31 +345,31 @@ namespace StaRTS.Main.Controllers
 
 		private void ResetAttackFSM(SmartEntity troopEntity)
 		{
-			StaRTSLogger staRTSLogger = Service.Get<StaRTSLogger>();
+			Logger logger = Service.Get<Logger>();
 			StateComponent stateComp = troopEntity.StateComp;
 			if (stateComp == null)
 			{
-				staRTSLogger.Error("ResetAttackFSM StateComp is null");
+				logger.Error("ResetAttackFSM StateComp is null");
 				return;
 			}
 			stateComp.Reset();
 			TroopComponent troopComp = troopEntity.TroopComp;
 			if (troopComp == null)
 			{
-				staRTSLogger.Error("ResetAttackFSM TroopComp is null");
+				logger.Error("ResetAttackFSM TroopComp is null");
 				return;
 			}
 			ITroopDeployableVO troopType = troopComp.TroopType;
 			if (troopType == null)
 			{
-				staRTSLogger.Error("ResetAttackFSM TroopVO is null");
+				logger.Error("ResetAttackFSM TroopVO is null");
 				return;
 			}
-			HealthType healthType = troopType.IsHealer ? HealthType.Healing : HealthType.Damaging;
+			HealthType healthType = (!troopType.IsHealer) ? HealthType.Damaging : HealthType.Healing;
 			ShooterComponent shooterComp = troopEntity.ShooterComp;
 			if (shooterComp == null)
 			{
-				staRTSLogger.Error("ResetAttackFSM ShooterComp is null");
+				logger.Error("ResetAttackFSM ShooterComp is null");
 				return;
 			}
 			shooterComp.Reset();
@@ -410,7 +412,7 @@ namespace StaRTS.Main.Controllers
 		{
 			foreach (KeyValuePair<uint, DeployedTroop> current in this.deployedTroops)
 			{
-				this.OnTroopDestroyed(current.get_Key(), false);
+				this.OnTroopDestroyed(current.Key, false);
 			}
 			this.deployedTroops.Clear();
 			if (this.autoActivatedEntityIDs != null)
@@ -430,9 +432,7 @@ namespace StaRTS.Main.Controllers
 			{
 				deployedTroop.AbilityClipCount = clipCount;
 				deployedTroop.Entity.ShooterComp.ShouldCountClips = true;
-				int num = this.numActivatedTroopsWithClipCounts;
-				this.numActivatedTroopsWithClipCounts = num + 1;
-				if (num == 0)
+				if (this.numActivatedTroopsWithClipCounts++ == 0)
 				{
 					Service.Get<EventManager>().RegisterObserver(this, EventId.ShooterClipUsed);
 				}
@@ -448,9 +448,7 @@ namespace StaRTS.Main.Controllers
 				{
 					entity.ShooterComp.ShouldCountClips = false;
 				}
-				int num = this.numActivatedTroopsWithClipCounts - 1;
-				this.numActivatedTroopsWithClipCounts = num;
-				if (num == 0)
+				if (--this.numActivatedTroopsWithClipCounts == 0)
 				{
 					Service.Get<EventManager>().UnregisterObserver(this, EventId.ShooterClipUsed);
 				}
@@ -465,11 +463,13 @@ namespace StaRTS.Main.Controllers
 				eventManager.RegisterObserver(this, EventId.EntityKilled, EventPriority.Default);
 				eventManager.RegisterObserver(this, EventId.EntityDestroyed, EventPriority.Default);
 				eventManager.RegisterObserver(this, EventId.BattleEndProcessing, EventPriority.Default);
-				return;
 			}
-			eventManager.UnregisterObserver(this, EventId.EntityKilled);
-			eventManager.UnregisterObserver(this, EventId.EntityDestroyed);
-			eventManager.UnregisterObserver(this, EventId.BattleEndProcessing);
+			else
+			{
+				eventManager.UnregisterObserver(this, EventId.EntityKilled);
+				eventManager.UnregisterObserver(this, EventId.EntityDestroyed);
+				eventManager.UnregisterObserver(this, EventId.BattleEndProcessing);
+			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
@@ -510,99 +510,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal TroopAbilityController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).ActivateAbilityViewEffects((DeployedTroop)GCHandledObjects.GCHandleToObject(*args), (TroopAbilityVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).ActivateHeroAbility(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).DeactivateAbility((DeployedTroop)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).DeactivateAbilityViewEffects((DeployedTroop)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).EnsureEvents(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).OnTroopSpawned((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).ProcessPendingAbilities();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).RemoveAllDeployedTroops();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).ResetAttackFSM((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).ResetTargetAndSendEvent((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).SetupAbilityViewEffects((DeployedTroop)GCHandledObjects.GCHandleToObject(*args), (TroopAbilityVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).StartCoolDown((DeployedTroop)GCHandledObjects.GCHandleToObject(*args), (TroopAbilityVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).StartTrackingShooterClips((DeployedTroop)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TroopAbilityController)GCHandledObjects.GCHandleToObject(instance)).StopTrackingShooterClips((DeployedTroop)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

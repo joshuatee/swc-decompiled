@@ -17,18 +17,16 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class BaseLayoutToolController : IEventObserver
 	{
+		private const string NO_VALID_POSITION_FOR_UNSTASH = "NO_VALID_POSITION_FOR_UNSTASH";
+
 		private PositionMap lastSavedMap;
 
 		public Dictionary<string, List<Entity>> stashedBuildingMap;
-
-		private const string NO_VALID_POSITION_FOR_UNSTASH = "NO_VALID_POSITION_FOR_UNSTASH";
 
 		public bool IsBaseLayoutModeActive
 		{
@@ -162,7 +160,7 @@ namespace StaRTS.Main.Controllers
 			}
 			foreach (KeyValuePair<string, List<Entity>> current in this.stashedBuildingMap)
 			{
-				List<Entity> value = current.get_Value();
+				List<Entity> value = current.Value;
 				if (value.Count > 0)
 				{
 					return false;
@@ -207,9 +205,12 @@ namespace StaRTS.Main.Controllers
 			while (i < count)
 			{
 				Entity buildingEntity = buildingListByType[i];
-				if (!this.IsBuildingClearable(buildingEntity) && !this.IsBuildingStashed(buildingEntity))
+				if (!this.IsBuildingClearable(buildingEntity))
 				{
-					this.StashBuilding(buildingEntity);
+					if (!this.IsBuildingStashed(buildingEntity))
+					{
+						this.StashBuilding(buildingEntity);
+					}
 				}
 				i++;
 			}
@@ -226,17 +227,20 @@ namespace StaRTS.Main.Controllers
 				Entity entity = buildingListByType[i];
 				BuildingComponent buildingComponent = entity.Get<BuildingComponent>();
 				Building buildingTO = buildingComponent.BuildingTO;
-				if (buildingComponent.BuildingType.Type != BuildingType.Clearable && !this.IsBuildingStashed(entity))
+				if (buildingComponent.BuildingType.Type != BuildingType.Clearable)
 				{
-					string key = buildingTO.Key;
-					Position position = this.lastSavedMap.GetPosition(key);
-					if (position == null)
+					if (!this.IsBuildingStashed(entity))
 					{
-						Service.Get<StaRTSLogger>().Error("BLT: Old Building position for " + key + " not found!");
-					}
-					else if (this.HasBuildingMoved(buildingTO, position))
-					{
-						this.StashBuilding(entity);
+						string key = buildingTO.Key;
+						Position position = this.lastSavedMap.GetPosition(key);
+						if (position == null)
+						{
+							Service.Get<Logger>().Error("BLT: Old Building position for " + key + " not found!");
+						}
+						else if (this.HasBuildingMoved(buildingTO, position))
+						{
+							this.StashBuilding(entity);
+						}
 					}
 				}
 				i++;
@@ -272,13 +276,15 @@ namespace StaRTS.Main.Controllers
 			if (Service.Get<GameStateMachine>().CurrentState is WarBaseEditorState)
 			{
 				Service.Get<WarBaseEditController>().SaveWarBaseMap(diffMap);
-				return;
 			}
-			BuildingMultiMoveCommand command = new BuildingMultiMoveCommand(new BuildingMultiMoveRequest
+			else
 			{
-				PositionMap = diffMap
-			});
-			Service.Get<ServerAPI>().Enqueue(command);
+				BuildingMultiMoveCommand command = new BuildingMultiMoveCommand(new BuildingMultiMoveRequest
+				{
+					PositionMap = diffMap
+				});
+				Service.Get<ServerAPI>().Enqueue(command);
+			}
 		}
 
 		public Map GetCurrentPlayerMap()
@@ -295,7 +301,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (!this.IsStashedBuildingListEmpty())
 			{
-				Service.Get<StaRTSLogger>().Warn("BLT: We can't save the map as there are still stashed buildings");
+				Service.Get<Logger>().Warn("BLT: We can't save the map as there are still stashed buildings");
 				return;
 			}
 			PositionMap positionMap = new PositionMap();
@@ -310,7 +316,7 @@ namespace StaRTS.Main.Controllers
 				Position position = this.lastSavedMap.GetPosition(key);
 				if (!(Service.Get<GameStateMachine>().CurrentState is WarBaseEditorState) && position == null)
 				{
-					Service.Get<StaRTSLogger>().Error("BLT: Old Building position for " + key + " not found!");
+					Service.Get<Logger>().Error("BLT: Old Building position for " + key + " not found!");
 				}
 				else if (position == null || this.HasBuildingMoved(buildings[i], position))
 				{
@@ -345,10 +351,10 @@ namespace StaRTS.Main.Controllers
 			}
 			foreach (KeyValuePair<string, List<Entity>> current in this.stashedBuildingMap)
 			{
-				List<Entity> value = current.get_Value();
+				List<Entity> value = current.Value;
 				while (value.Count > 0)
 				{
-					this.UnstashBuildingByUID(current.get_Key(), true, false, false, false);
+					this.UnstashBuildingByUID(current.Key, true, false, false, false);
 				}
 			}
 			Service.Get<EventManager>().SendEvent(EventId.UserLoweredBuildingAudio, null);
@@ -374,7 +380,7 @@ namespace StaRTS.Main.Controllers
 			BuildingComponent buildingComponent = buildingEntity.Get<BuildingComponent>();
 			if (buildingComponent.BuildingType.Type == BuildingType.Clearable)
 			{
-				Service.Get<StaRTSLogger>().Warn("BLT: Can't stash clearable: " + buildingComponent.BuildingTO.Key + ":" + buildingComponent.BuildingTO.Uid);
+				Service.Get<Logger>().Warn("BLT: Can't stash clearable: " + buildingComponent.BuildingTO.Key + ":" + buildingComponent.BuildingTO.Uid);
 				return;
 			}
 			string uid = buildingComponent.BuildingTO.Uid;
@@ -421,7 +427,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (!this.stashedBuildingMap.ContainsKey(buildingUID) || this.stashedBuildingMap[buildingUID].Count < 1)
 			{
-				Service.Get<StaRTSLogger>().Error("Can't unstash! No buildings of : " + buildingUID + " currently stashed");
+				Service.Get<Logger>().Error("Can't unstash! No buildings of : " + buildingUID + " currently stashed");
 				return;
 			}
 			List<Entity> list = this.stashedBuildingMap[buildingUID];
@@ -439,7 +445,7 @@ namespace StaRTS.Main.Controllers
 				if (flag)
 				{
 					flag = false;
-					Service.Get<StaRTSLogger>().Warn("No stamping while reverting!!");
+					Service.Get<Logger>().Warn("No stamping while reverting!!");
 				}
 			}
 			BuildingController buildingController = Service.Get<BuildingController>();
@@ -460,7 +466,7 @@ namespace StaRTS.Main.Controllers
 				list2.Remove(entity);
 				if (!buildingController.PositionUnstashedBuilding(entity, pos, flag, panToBuilding, playLoweredSound))
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Unable to place building from stash.  Building {0} {1}", new object[]
+					Service.Get<Logger>().ErrorFormat("Unable to place building from stash.  Building {0} {1}", new object[]
 					{
 						entity.Get<BuildingComponent>().BuildingTO.Key,
 						entity.Get<BuildingComponent>().BuildingType.Uid
@@ -480,9 +486,11 @@ namespace StaRTS.Main.Controllers
 			if (this.IsListOutOfGivenBuilding(buildingUID))
 			{
 				buildingController.DisableUnstashStampingState();
-				return;
 			}
-			this.UnstashBuildingByUID(buildingUID, false, true, true, true);
+			else
+			{
+				this.UnstashBuildingByUID(buildingUID, false, true, true, true);
+			}
 		}
 
 		private bool HasBuildingMoved(Building building, Position oldPosition)
@@ -511,204 +519,6 @@ namespace StaRTS.Main.Controllers
 		{
 			bool flag = this.IsBaseLayoutModeActive && !this.IsSavingBaseLayout;
 			return flag && !(Service.Get<GameStateMachine>().CurrentState is WarBaseEditorState);
-		}
-
-		protected internal BaseLayoutToolController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).ClearStashedBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).EnterBaseLayoutTool();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).ExitBaseLayoutTool();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsBaseLayoutModeActive);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsQuickStashModeEnabled);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsSavingBaseLayout);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).ShouldRevertMap);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingLastSavedX(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingLastSavedZ(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentPlayerMap());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).HasBuildingMoved((Building)GCHandledObjects.GCHandleToObject(*args), (Position)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsActive());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsBuildingClearable((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsBuildingStampable((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsBuildingStashed((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsListOutOfGivenBuilding(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsStashedBuildingListEmpty());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).PauseContractsOnAllBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).ResumeContractsOnAllBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).RevertToPreviousMapLayout();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).SaveBaseLayout((PositionMap)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).SaveMap();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsBaseLayoutModeActive = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsQuickStashModeEnabled = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).IsSavingBaseLayout = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).ShouldRevertMap = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).ShouldChecksumLastSaveData());
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).StampUnstashBuildingByUID(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).StashAllBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).StashAllMovedBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).StashBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).StashBuilding((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).UnstashBuildingByUID(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((BaseLayoutToolController)GCHandledObjects.GCHandleToObject(instance)).UpdateLastSavedMap();
-			return -1L;
 		}
 	}
 }

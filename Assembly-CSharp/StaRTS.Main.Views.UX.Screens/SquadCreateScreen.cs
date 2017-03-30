@@ -10,9 +10,7 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -179,9 +177,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.showCreateView)
 			{
 				this.InitCreateView();
-				return;
 			}
-			this.InitEditView();
+			else
+			{
+				this.InitEditView();
+			}
 		}
 
 		protected override void InitButtons()
@@ -284,7 +284,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.buttonTypeBack.Enabled = openEnrollment;
 			this.buttonTypeForward.Enabled = !openEnrollment;
 			int num = this.scoreReq;
-			this.scoreReq = (openEnrollment ? this.prevScoreReq : 0);
+			this.scoreReq = ((!openEnrollment) ? 0 : this.prevScoreReq);
 			this.prevScoreReq = num;
 			this.labelScore.Text = this.scoreReq.ToString();
 			this.buttonScoreIncrement.Visible = openEnrollment;
@@ -307,34 +307,28 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.spriteSelectedSymbol = base.GetElement<UXSprite>("SpriteBtnSelectSymbol");
 			for (int i = 1; i <= 16; i++)
 			{
-				string name = string.Format("Toggle{0:D2}", new object[]
-				{
-					i
-				});
-				string tag = string.Format("SquadSymbols_{0:D2}", new object[]
-				{
-					i
-				});
+				string name = string.Format("Toggle{0:D2}", i);
+				string tag = string.Format("SquadSymbols_{0:D2}", i);
 				UXCheckbox element6 = base.GetElement<UXCheckbox>(name);
 				element6.Tag = tag;
 				element6.OnSelected = new UXCheckboxSelectedDelegate(this.OnSymbolSelected);
 			}
-			string text;
-			string text2;
+			string str;
+			string str2;
 			if (Service.Get<CurrentPlayer>().Faction == FactionType.Empire)
 			{
-				text = "MakerEmpire";
-				text2 = "MakerRebel";
+				str = "MakerEmpire";
+				str2 = "MakerRebel";
 			}
 			else
 			{
-				text = "MakerRebel";
-				text2 = "MakerEmpire";
+				str = "MakerRebel";
+				str2 = "MakerEmpire";
 			}
-			UXCheckbox element7 = base.GetElement<UXCheckbox>("Toggle" + text);
-			element7.Tag = "SquadSymbols_" + text;
+			UXCheckbox element7 = base.GetElement<UXCheckbox>("Toggle" + str);
+			element7.Tag = "SquadSymbols_" + str;
 			element7.OnSelected = new UXCheckboxSelectedDelegate(this.OnSymbolSelected);
-			UXCheckbox element8 = base.GetElement<UXCheckbox>("Toggle" + text2);
+			UXCheckbox element8 = base.GetElement<UXCheckbox>("Toggle" + str2);
 			element8.Visible = false;
 		}
 
@@ -369,9 +363,9 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private string ConvertSymbolNameToCheckboxId(string symbolName)
 		{
-			int length = "SquadSymbols_".get_Length();
-			string text = symbolName.Substring(length);
-			return "Toggle" + text;
+			int length = "SquadSymbols_".Length;
+			string str = symbolName.Substring(length);
+			return "Toggle" + str;
 		}
 
 		private void InitCreateView()
@@ -401,19 +395,21 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void OnNameChange()
 		{
 			string text = this.inputName.Text;
-			if (!string.IsNullOrEmpty(text) && text.get_Length() >= GameConstants.SQUAD_NAME_LENGTH_MIN)
+			if (!string.IsNullOrEmpty(text) && text.Length >= GameConstants.SQUAD_NAME_LENGTH_MIN)
 			{
 				this.buttonPurchase.Enabled = true;
 				this.labelInstructions.Visible = false;
-				return;
 			}
-			this.buttonPurchase.Enabled = false;
-			this.labelInstructions.Visible = true;
+			else
+			{
+				this.buttonPurchase.Enabled = false;
+				this.labelInstructions.Visible = true;
+			}
 		}
 
 		public char OnNameValidate(string text, int charIndex, char addedChar)
 		{
-			if (text.get_Length() >= GameConstants.SQUAD_NAME_LENGTH_MAX)
+			if (text.Length >= GameConstants.SQUAD_NAME_LENGTH_MAX)
 			{
 				return '\0';
 			}
@@ -427,14 +423,16 @@ namespace StaRTS.Main.Views.UX.Screens
 				StringBuilder stringBuilder = new StringBuilder();
 				stringBuilder.Append("create");
 				stringBuilder.Append("|");
-				string text = this.openEnrollment ? "public" : "private";
-				stringBuilder.Append(text);
+				string value = (!this.openEnrollment) ? "private" : "public";
+				stringBuilder.Append(value);
 				stringBuilder.Append("|");
 				stringBuilder.Append(this.scoreReq);
 				PayMeScreen.ShowIfNotEnoughCurrency(GameConstants.SQUAD_CREATE_COST, 0, 0, stringBuilder.ToString(), new OnScreenModalResult(this.OnPurchaseSoftCurrency));
-				return;
 			}
-			this.CreateSquad();
+			else
+			{
+				this.CreateSquad();
+			}
 		}
 
 		private void OnPurchaseSoftCurrency(object result, object cookie)
@@ -457,11 +455,13 @@ namespace StaRTS.Main.Views.UX.Screens
 					YesNoScreen.ShowModal(this.lang.Get("ALERT", new object[0]), this.lang.Get("CREATE_LEAVE_SQUAD_ALERT", new object[]
 					{
 						currentSquad.SquadName
-					}), false, this.lang.Get("CREATE_CTA", new object[0]), this.lang.Get("ACCOUNT_CONFLICT_CONFIRM_CANCEL", new object[0]), new OnScreenModalResult(this.OnLeaveAndCreateSquad), null, false);
+					}), false, this.lang.Get("CREATE_CTA", new object[0]), this.lang.Get("ACCOUNT_CONFLICT_CONFIRM_CANCEL", new object[0]), new OnScreenModalResult(this.OnLeaveAndCreateSquad), null);
 					Service.Get<EventManager>().SendEvent(EventId.UISquadLeaveConfirmation, currentSquad.SquadID + "|create|");
-					return;
 				}
-				this.ActualCreateSquad();
+				else
+				{
+					this.ActualCreateSquad();
+				}
 			}
 		}
 
@@ -477,9 +477,11 @@ namespace StaRTS.Main.Views.UX.Screens
 					text
 				}), 1f, 5f);
 				Service.Get<ScreenController>().CloseAll();
-				return;
 			}
-			this.buttonPurchase.Enabled = true;
+			else
+			{
+				this.buttonPurchase.Enabled = true;
+			}
 		}
 
 		private void OnLeaveAndCreateSquad(object result, object cookie)
@@ -497,9 +499,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (success)
 			{
 				this.ActualCreateSquad();
-				return;
 			}
-			Service.Get<ScreenController>().CloseAll();
+			else
+			{
+				Service.Get<ScreenController>().CloseAll();
+			}
 		}
 
 		private void ActualCreateSquad()
@@ -556,23 +560,27 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			ProcessingScreen.Hide();
 			base.AllowClose = true;
-			if (!success)
+			if (success)
+			{
+				string squadName = Service.Get<SquadController>().StateManager.GetCurrentSquad().SquadName;
+				Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(this.lang.Get("EDIT_SQUAD_CONFIRMATION", new object[]
+				{
+					squadName
+				}), 1f, 5f);
+				IState currentState = Service.Get<GameStateMachine>().CurrentState;
+				if (currentState is WarBoardState)
+				{
+					this.Close(null);
+				}
+				else
+				{
+					Service.Get<ScreenController>().CloseAll();
+				}
+			}
+			else
 			{
 				this.buttonEdit.Enabled = true;
-				return;
 			}
-			string squadName = Service.Get<SquadController>().StateManager.GetCurrentSquad().SquadName;
-			Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(this.lang.Get("EDIT_SQUAD_CONFIRMATION", new object[]
-			{
-				squadName
-			}), 1f, 5f);
-			IState currentState = Service.Get<GameStateMachine>().CurrentState;
-			if (currentState is WarBoardState)
-			{
-				this.Close(null);
-				return;
-			}
-			Service.Get<ScreenController>().CloseAll();
 		}
 
 		private bool CheckForValidInput(bool checkName)
@@ -589,176 +597,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				return false;
 			}
 			return true;
-		}
-
-		protected internal SquadCreateScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).ActualCreateSquad();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).CheckForValidInput(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).ConvertSymbolNameToCheckboxId(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).CreateSquad();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).InitCreateView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).InitEditView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).InitEnrollmentTypeSelector();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).InitScoreReqSelector();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).InitSymbolSelector();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnConfirmSymbolClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnCreateClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnCreateComplete(*(sbyte*)args != 0, GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnEditClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnEditComplete(*(sbyte*)args != 0, GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnEnrollmentTypeChangeClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnLeaveAndCreateSquad(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnLeaveComplete(*(sbyte*)args != 0, GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnNameChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnPurchaseSoftCurrency(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnScoreChangeClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnShowSymbolsClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).OnSymbolSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).SetupCreateCostButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).ToggleSymbolsView(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateEnrollmentType(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((SquadCreateScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateScoreReq(*(int*)args);
-			return -1L;
 		}
 	}
 }

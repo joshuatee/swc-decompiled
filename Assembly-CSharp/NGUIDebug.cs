@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/Internal/Debug")]
-public class NGUIDebug : MonoBehaviour, IUnitySerializable
+public class NGUIDebug : MonoBehaviour
 {
 	private static bool mRayDebug = false;
 
@@ -49,14 +47,16 @@ public class NGUIDebug : MonoBehaviour, IUnitySerializable
 			}
 			NGUIDebug.mLines.Add(text);
 			NGUIDebug.CreateInstance();
-			return;
 		}
-		Debug.Log(text);
+		else
+		{
+			Debug.Log(text);
+		}
 	}
 
 	public static void Log(params object[] objs)
 	{
-		string text = "";
+		string text = string.Empty;
 		for (int i = 0; i < objs.Length; i++)
 		{
 			if (i == 0)
@@ -102,7 +102,7 @@ public class NGUIDebug : MonoBehaviour, IUnitySerializable
 			GUI.Label(position, text);
 			position.y += 18f;
 			position.x += 1f;
-			text = "Hover: " + NGUITools.GetHierarchy(UICamera.hoveredObject).Replace("\"", "");
+			text = "Hover: " + NGUITools.GetHierarchy(UICamera.hoveredObject).Replace("\"", string.Empty);
 			GUI.color = Color.black;
 			GUI.Label(position, text);
 			position.y -= 1f;
@@ -111,7 +111,7 @@ public class NGUIDebug : MonoBehaviour, IUnitySerializable
 			GUI.Label(position, text);
 			position.y += 18f;
 			position.x += 1f;
-			text = "Selection: " + NGUITools.GetHierarchy(UICamera.selectedObject).Replace("\"", "");
+			text = "Selection: " + NGUITools.GetHierarchy(UICamera.selectedObject).Replace("\"", string.Empty);
 			GUI.color = Color.black;
 			GUI.Label(position, text);
 			position.y -= 1f;
@@ -120,7 +120,7 @@ public class NGUIDebug : MonoBehaviour, IUnitySerializable
 			GUI.Label(position, text);
 			position.y += 18f;
 			position.x += 1f;
-			text = "Controller: " + NGUITools.GetHierarchy(UICamera.controllerNavigationObject).Replace("\"", "");
+			text = "Controller: " + NGUITools.GetHierarchy(UICamera.controllerNavigationObject).Replace("\"", string.Empty);
 			GUI.color = Color.black;
 			GUI.Label(position, text);
 			position.y -= 1f;
@@ -161,110 +161,5 @@ public class NGUIDebug : MonoBehaviour, IUnitySerializable
 			position.x += 1f;
 			i++;
 		}
-	}
-
-	public NGUIDebug()
-	{
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-	}
-
-	public override void Unity_NamedSerialize(int depth)
-	{
-	}
-
-	public override void Unity_NamedDeserialize(int depth)
-	{
-	}
-
-	protected internal NGUIDebug(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		NGUIDebug.Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		NGUIDebug.CreateInstance();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		NGUIDebug.DrawBounds(*(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(NGUIDebug.debugRaycast);
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		NGUIDebug.Log((object[])GCHandledObjects.GCHandleToPinnedArrayObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		NGUIDebug.LogString(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((NGUIDebug)GCHandledObjects.GCHandleToObject(instance)).OnGUI();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		NGUIDebug.debugRaycast = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((NGUIDebug)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((NGUIDebug)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((NGUIDebug)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((NGUIDebug)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((NGUIDebug)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
 	}
 }

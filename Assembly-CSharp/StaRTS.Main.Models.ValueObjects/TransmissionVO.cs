@@ -7,14 +7,12 @@ using StaRTS.Utils.MetaData;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.ValueObjects
 {
-	public class TransmissionVO : ITimestamped, IValueObject, ICallToAction
+	public class TransmissionVO : ITimestamped, ICallToAction, IValueObject
 	{
 		private const string SERVER_START_DATE = "postingDate";
 
@@ -332,18 +330,18 @@ namespace StaRTS.Main.Models.ValueObjects
 				{
 					DateTime date = DateTime.ParseExact(text, "HH:mm,dd-MM-yyyy", CultureInfo.InvariantCulture);
 					this.StartTime = DateUtils.GetSecondsFromEpoch(date);
-					goto IL_A6;
 				}
 				catch (Exception)
 				{
 					this.StartTime = 0;
-					Service.Get<StaRTSLogger>().Warn("TransmissionVO:: Transmission Holonet CMS Start Date Format Error: " + this.Uid);
-					goto IL_A6;
+					Service.Get<Logger>().Warn("TransmissionVO:: Transmission Holonet CMS Start Date Format Error: " + this.Uid);
 				}
 			}
-			this.StartTime = 0;
-			Service.Get<StaRTSLogger>().Warn("TransmissionVO:: Transmission Holonet CMS Start Date Not Specified For: " + this.Uid);
-			IL_A6:
+			else
+			{
+				this.StartTime = 0;
+				Service.Get<Logger>().Warn("TransmissionVO:: Transmission Holonet CMS Start Date Not Specified For: " + this.Uid);
+			}
 			string text2 = row.TryGetString(TransmissionVO.COLUMN_endDate);
 			if (!string.IsNullOrEmpty(text2))
 			{
@@ -351,17 +349,17 @@ namespace StaRTS.Main.Models.ValueObjects
 				{
 					DateTime date2 = DateTime.ParseExact(text2, "HH:mm,dd-MM-yyyy", CultureInfo.InvariantCulture);
 					this.EndTime = DateUtils.GetSecondsFromEpoch(date2);
-					goto IL_10C;
 				}
 				catch (Exception)
 				{
 					this.EndTime = 2147483647;
-					Service.Get<StaRTSLogger>().Warn("TransmissionVO:: Transmission Holonet CMS End Date Format Error: " + this.Uid);
-					goto IL_10C;
+					Service.Get<Logger>().Warn("TransmissionVO:: Transmission Holonet CMS End Date Format Error: " + this.Uid);
 				}
 			}
-			this.EndTime = 2147483647;
-			IL_10C:
+			else
+			{
+				this.EndTime = 2147483647;
+			}
 			this.Faction = StringUtils.ParseEnum<FactionType>(row.TryGetString(TransmissionVO.COLUMN_faction));
 			this.CharacterID = row.TryGetString(TransmissionVO.COLUMN_npc);
 			this.Image = row.TryGetString(TransmissionVO.COLUMN_image);
@@ -408,7 +406,7 @@ namespace StaRTS.Main.Models.ValueObjects
 			StringBuilder stringBuilder = new StringBuilder();
 			if (dictionary.ContainsKey("postingDate"))
 			{
-				transmissionVO.StartTime = Convert.ToInt32((string)dictionary["postingDate"], CultureInfo.InvariantCulture);
+				transmissionVO.StartTime = Convert.ToInt32((string)dictionary["postingDate"]);
 			}
 			if (dictionary.ContainsKey("eventType"))
 			{
@@ -444,7 +442,7 @@ namespace StaRTS.Main.Models.ValueObjects
 			}
 			if (dictionary.ContainsKey("empireScore"))
 			{
-				int num = Convert.ToInt32(dictionary["empireScore"], CultureInfo.InvariantCulture);
+				int num = Convert.ToInt32(dictionary["empireScore"]);
 				transmissionVO.EmpireScore = num;
 				stringBuilder.Append(num);
 			}
@@ -456,7 +454,7 @@ namespace StaRTS.Main.Models.ValueObjects
 			}
 			if (dictionary.ContainsKey("rebelScore"))
 			{
-				int num2 = Convert.ToInt32(dictionary["rebelScore"], CultureInfo.InvariantCulture);
+				int num2 = Convert.ToInt32(dictionary["rebelScore"]);
 				transmissionVO.RebelScore = num2;
 				stringBuilder.Append(num2);
 			}
@@ -472,7 +470,7 @@ namespace StaRTS.Main.Models.ValueObjects
 			}
 			if (dictionary.ContainsKey("guildLevel"))
 			{
-				transmissionVO.SquadLevel = Convert.ToInt32(dictionary["guildLevel"], CultureInfo.InvariantCulture);
+				transmissionVO.SquadLevel = Convert.ToInt32(dictionary["guildLevel"]);
 				transmissionVO.Btn1Action = "squadlevelup";
 				transmissionVO.Priority = 2;
 			}
@@ -485,510 +483,6 @@ namespace StaRTS.Main.Models.ValueObjects
 			transmissionVO.Uid = stringBuilder.ToString();
 			transmissionVO.EndTime = 2147483647;
 			return transmissionVO;
-		}
-
-		public TransmissionVO()
-		{
-		}
-
-		protected internal TransmissionVO(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.CreateFromServerObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).AttackerData);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).BodyText);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn1);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn1Action);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn1Data);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn2);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn2Action);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn2Data);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).CharacterID);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_actionData);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_actionDisplay);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_actionType);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_bodyText);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_btn1);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_btn1action);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_btn1data);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_btn2);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_btn2action);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_btn2data);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_endDate);
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_faction);
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_image);
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_npc);
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_startDate);
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_titleText);
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TransmissionVO.COLUMN_transType);
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).CrateId);
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).CurrentSquadName);
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).EmpireScore);
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).EmpireSquadName);
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).EndTime);
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Faction);
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Image);
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Priority);
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).RebelScore);
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).RebelSquadName);
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).SquadLevel);
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).StartTime);
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).TitleText);
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).TotalPvpRatingDelta);
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).TransData);
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Type);
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Uid);
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).InitBattleData((List<BattleEntry>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).ReadRow((Row)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).ResetAttackerData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).AttackerData = (List<BattleEntry>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).BodyText = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn1 = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn1Action = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn1Data = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn2 = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn2Action = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Btn2Data = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).CharacterID = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_actionData = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_actionDisplay = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_actionType = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_bodyText = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_btn1 = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_btn1action = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_btn1data = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_btn2 = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_btn2action = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_btn2data = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_endDate = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_faction = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_image = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_npc = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_startDate = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_titleText = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			TransmissionVO.COLUMN_transType = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).CrateId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).CurrentSquadName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).EmpireScore = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).EmpireSquadName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).EndTime = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Faction = (FactionType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Image = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Priority = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).RebelScore = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).RebelSquadName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).SquadLevel = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).StartTime = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).TitleText = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).TotalPvpRatingDelta = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke87(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).TransData = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke88(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Type = (TransmissionType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke89(long instance, long* args)
-		{
-			((TransmissionVO)GCHandledObjects.GCHandleToObject(instance)).Uid = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
 		}
 	}
 }

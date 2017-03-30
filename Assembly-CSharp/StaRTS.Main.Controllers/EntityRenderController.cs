@@ -13,7 +13,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -36,10 +35,10 @@ namespace StaRTS.Main.Controllers
 			TransformComponent transformComp = entity.TransformComp;
 			if (gameObjectViewComp == null || transformComp == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Entity is not ready for rendering. view: {0}, transform: {1}, entity: {2}", new object[]
+				Service.Get<Logger>().WarnFormat("Entity is not ready for rendering. view: {0}, transform: {1}, entity: {2}", new object[]
 				{
-					(gameObjectViewComp == null) ? "null" : gameObjectViewComp.ToString(),
-					(transformComp == null) ? "null" : transformComp.ToString(),
+					(gameObjectViewComp != null) ? gameObjectViewComp.ToString() : "null",
+					(transformComp != null) ? transformComp.ToString() : "null",
 					entity.ID
 				});
 				return;
@@ -51,18 +50,19 @@ namespace StaRTS.Main.Controllers
 				float speed = Service.Get<BattlePlaybackController>().CurrentPlaybackScale;
 				this.UpdateAnimationSpeed(gameObjectViewComp, speed);
 				this.UpdateAnimationState(gameObjectViewComp, entity.StateComp);
-				return;
 			}
-			if (entity.TrapComp != null)
+			else if (entity.TrapComp != null)
 			{
 				gameObjectViewComp.MainGameObject.SetActive(true);
 				Service.Get<TrapController>().SetTrapState(entity.TrapComp, entity.TrapComp.CurrentState);
 				Service.Get<TrapViewController>().UpdateTrapVisibility(entity);
 				gameObjectViewComp.Rotate(transformComp.Rotation);
-				return;
 			}
-			gameObjectViewComp.Rotate(transformComp.Rotation);
-			gameObjectViewComp.MainGameObject.SetActive(true);
+			else
+			{
+				gameObjectViewComp.Rotate(transformComp.Rotation);
+				gameObjectViewComp.MainGameObject.SetActive(true);
+			}
 		}
 
 		public void SetSpeed(float speed)
@@ -177,7 +177,7 @@ namespace StaRTS.Main.Controllers
 			num = MathUtils.MinAngle(transformComp.Rotation, num);
 			float num2 = (float)entity.WalkerComp.SpeedVO.RotationSpeed / 1000f;
 			float smoothTime = 0.7853982f / num2;
-			float num3 = (dt == 0f) ? transformComp.Rotation : Mathf.SmoothDampAngle(transformComp.Rotation, num, ref transformComp.RotationVelocity, smoothTime, num2, dt);
+			float num3 = (dt != 0f) ? Mathf.SmoothDampAngle(transformComp.Rotation, num, ref transformComp.RotationVelocity, smoothTime, num2, dt) : transformComp.Rotation;
 			num3 = MathUtils.WrapAngle(num3);
 			gameObjectViewComp.Rotate(num3 + -1.57079637f);
 			transformComp.Rotation = num3;
@@ -201,10 +201,12 @@ namespace StaRTS.Main.Controllers
 			{
 				component.SetInteger("Motivation", 8);
 				Service.Get<FXManager>().CreateAndAttachFXToEntity(entity, effectsTypeVO.AssetName, "effectSmoke" + entity.ID.ToString(), null, false, Vector3.zero, true);
-				return;
 			}
-			component.SetInteger("Motivation", 0);
-			Service.Get<FXManager>().RemoveAttachedFXFromEntity(entity, "effectSmoke" + entity.ID.ToString());
+			else
+			{
+				component.SetInteger("Motivation", 0);
+				Service.Get<FXManager>().RemoveAttachedFXFromEntity(entity, "effectSmoke" + entity.ID.ToString());
+			}
 		}
 
 		public void UpdateAnimationState(GameObjectViewComponent view, StateComponent stateComp)
@@ -231,119 +233,66 @@ namespace StaRTS.Main.Controllers
 					EntityState entityState = stateComp.DequeuePrevState();
 					if (entityState == EntityState.AttackingReset)
 					{
-						component.Play("", 0, 0f);
+						component.Play(string.Empty, 0, 0f);
 					}
 				}
 				switch (stateComp.CurState)
 				{
 				case EntityState.Disable:
 					component.SetInteger("Motivation", 0);
-					return;
+					break;
 				case EntityState.Idle:
 					component.SetInteger("Motivation", 0);
-					return;
+					break;
 				case EntityState.Moving:
 					if (stateComp.IsRunning)
 					{
 						component.SetInteger("Motivation", 9);
-						return;
 					}
-					component.SetInteger("Motivation", 1);
-					return;
-				case EntityState.Tracking:
+					else
+					{
+						component.SetInteger("Motivation", 1);
+					}
 					break;
 				case EntityState.Turning:
 					component.SetInteger("Motivation", 1);
-					return;
+					break;
 				case EntityState.WarmingUp:
 					if (isAbilityModeActive)
 					{
 						component.SetInteger("Motivation", 5);
-						return;
 					}
-					component.SetInteger("Motivation", 4);
-					return;
+					else
+					{
+						component.SetInteger("Motivation", 4);
+					}
+					break;
 				case EntityState.Attacking:
 				case EntityState.AttackingReset:
 					if (isAbilityModeActive)
 					{
 						component.SetInteger("Motivation", 6);
-						return;
 					}
-					component.SetInteger("Motivation", 3);
-					return;
+					else
+					{
+						component.SetInteger("Motivation", 3);
+					}
+					break;
 				case EntityState.CoolingDown:
 					if (isAbilityModeActive)
 					{
 						component.SetInteger("Motivation", 7);
-						return;
 					}
-					component.SetInteger("Motivation", 4);
-					return;
+					else
+					{
+						component.SetInteger("Motivation", 4);
+					}
+					break;
 				case EntityState.Dying:
 					component.SetInteger("Motivation", stateComp.DeathAnimationID);
 					break;
-				default:
-					return;
 				}
 			}
-		}
-
-		protected internal EntityRenderController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityRenderController)GCHandledObjects.GCHandleToObject(instance)).MoveGameObject((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(*args), (PathView)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EntityRenderController)GCHandledObjects.GCHandleToObject(instance)).RotateGameObject((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EntityRenderController)GCHandledObjects.GCHandleToObject(instance)).SetSpeed(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((EntityRenderController)GCHandledObjects.GCHandleToObject(instance)).SetTroopRotation((Transform)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EntityRenderController)GCHandledObjects.GCHandleToObject(instance)).UpdateAnimationSpeed((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((EntityRenderController)GCHandledObjects.GCHandleToObject(instance)).UpdateAnimationState((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(*args), (StateComponent)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((EntityRenderController)GCHandledObjects.GCHandleToObject(instance)).UpdateAnimationState((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(*args), (StateComponent)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((EntityRenderController)GCHandledObjects.GCHandleToObject(instance)).UpdateChampionAnimationStateInHomeOrWarBoardMode((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((EntityRenderController)GCHandledObjects.GCHandleToObject(instance)).UpdateNewEntityView((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

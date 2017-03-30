@@ -11,13 +11,5 @@ namespace StaRTS.Externals.Kochava
 		public const string EVENT_TUTORIAL_COMPLETE = "tutorialComplete";
 
 		public const string EVENT_DAY_PLAYED = "dayPlayed";
-
-		public KochavaConstants()
-		{
-		}
-
-		protected internal KochavaConstants(UIntPtr dummy)
-		{
-		}
 	}
 }

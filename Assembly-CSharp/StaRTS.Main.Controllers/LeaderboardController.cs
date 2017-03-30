@@ -15,9 +15,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -33,15 +30,15 @@ namespace StaRTS.Main.Controllers
 
 		private const string PARAM_NEARBY = "listnearby";
 
-		private List<Squad> cachedSquads;
-
-		private List<PlayerLBEntity> cachedPlayers;
-
 		private const int DATA_REFRESH_THROTTLE = 30;
 
 		private const int RECHECK_LB_FRIENDS_COUNT = 0;
 
 		private const int RECHECK_LB_LEADERS_COUNT = 10;
+
+		private List<Squad> cachedSquads;
+
+		private List<PlayerLBEntity> cachedPlayers;
 
 		public List<PlayerLBEntity> topPlayers;
 
@@ -152,7 +149,7 @@ namespace StaRTS.Main.Controllers
 				string planetId = allLiveAndClosingTournaments[j].PlanetId;
 				if (this.TournamentLeadersByPlanet.ContainsKey(planetId))
 				{
-					Service.Get<StaRTSLogger>().Error("Multiple tournaments are active on planet " + planetId);
+					Service.Get<Logger>().Error("Multiple tournaments are active on planet " + planetId);
 				}
 				else
 				{
@@ -280,7 +277,7 @@ namespace StaRTS.Main.Controllers
 						string text = null;
 						if (dictionary.ContainsKey("_id"))
 						{
-							text = Convert.ToString(dictionary["_id"], CultureInfo.InvariantCulture);
+							text = Convert.ToString(dictionary["_id"]);
 						}
 						if (text != null)
 						{
@@ -360,7 +357,7 @@ namespace StaRTS.Main.Controllers
 		{
 			LeaderboardList<PlayerLBEntity> leaderboardList = null;
 			LeaderboardList<PlayerLBEntity> value = null;
-			string planetId = (planetVO != null) ? planetVO.Uid : null;
+			string planetId = (planetVO == null) ? null : planetVO.Uid;
 			this.GetPlayerLists(PlayerListType.Leaders, planetId, out leaderboardList, out value);
 			PlayerLeaderboardRequest request = new PlayerLeaderboardRequest(planetId, Service.Get<CurrentPlayer>().PlayerId);
 			GetLeaderboardPlayersCommand getLeaderboardPlayersCommand = new GetLeaderboardPlayersCommand(request);
@@ -397,7 +394,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (planetVO == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Tournament leaderboard requested without setting planetVO");
+				Service.Get<Logger>().Error("Tournament leaderboard requested without setting planetVO");
 				return;
 			}
 			PlayerLeaderboardRequest request = new PlayerLeaderboardRequest(planetVO.Uid, Service.Get<CurrentPlayer>().PlayerId);
@@ -431,7 +428,7 @@ namespace StaRTS.Main.Controllers
 						string text = null;
 						if (dictionary.ContainsKey("_id"))
 						{
-							text = Convert.ToString(dictionary["_id"], CultureInfo.InvariantCulture);
+							text = Convert.ToString(dictionary["_id"]);
 						}
 						if (text != null)
 						{
@@ -446,7 +443,7 @@ namespace StaRTS.Main.Controllers
 							}
 							else
 							{
-								Service.Get<StaRTSLogger>().Warn("Player Leaderboard Entry Failed to parse.");
+								Service.Get<Logger>().Warn("Player Leaderboard Entry Failed to parse.");
 							}
 						}
 					}
@@ -505,17 +502,19 @@ namespace StaRTS.Main.Controllers
 			case PlayerListType.Friends:
 				leaderboardList = this.Friends;
 				nearbyLeaderboardList = this.Friends;
-				return;
+				break;
 			case PlayerListType.Leaders:
 				if (planetId == null)
 				{
 					leaderboardList = this.GlobalLeaders;
 					nearbyLeaderboardList = this.GlobalNearMeLeaders;
-					return;
 				}
-				leaderboardList = this.LeadersByPlanet[planetId];
-				nearbyLeaderboardList = this.LeadersNearMeByPlanet[planetId];
-				return;
+				else
+				{
+					leaderboardList = this.LeadersByPlanet[planetId];
+					nearbyLeaderboardList = this.LeadersNearMeByPlanet[planetId];
+				}
+				break;
 			case PlayerListType.TournamentLeaders:
 				if (!string.IsNullOrEmpty(planetId))
 				{
@@ -525,12 +524,12 @@ namespace StaRTS.Main.Controllers
 					}
 					leaderboardList = this.TournamentLeadersByPlanet[planetId];
 					nearbyLeaderboardList = this.TournamentLeadersNearMeByPlanet[planetId];
-					return;
 				}
-				Service.Get<StaRTSLogger>().Error("planetId value is null or empty in tournament leaderboard response handling");
-				return;
-			default:
-				return;
+				else
+				{
+					Service.Get<Logger>().Error("planetId value is null or empty in tournament leaderboard response handling");
+				}
+				break;
 			}
 		}
 
@@ -612,15 +611,19 @@ namespace StaRTS.Main.Controllers
 				if (leaderboardList.List.Count > 0)
 				{
 					this.topPlayers.Add(leaderboardList.List[0]);
-					int num = 0;
+					int i = 0;
 					int count = leaderboardList.List.Count;
-					while (num < count && this.topPlayers.Count < 2)
+					while (i < count)
 					{
-						if (leaderboardList.List[num].Faction != this.topPlayers[0].Faction)
+						if (this.topPlayers.Count >= 2)
 						{
-							this.topPlayers.Add(leaderboardList.List[num]);
+							break;
 						}
-						num++;
+						if (leaderboardList.List[i].Faction != this.topPlayers[0].Faction)
+						{
+							this.topPlayers.Add(leaderboardList.List[i]);
+						}
+						i++;
 					}
 				}
 			}
@@ -629,304 +632,29 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id != EventId.SquadLeft)
+			switch (id)
 			{
-				if (id == EventId.SquadJoinedByCurrentPlayer)
-				{
-					string squadID = Service.Get<SquadController>().StateManager.GetCurrentSquad().SquadID;
-					int i = 0;
-					int count = this.TopSquads.List.Count;
-					while (i < count)
-					{
-						if (this.TopSquads.List[i].SquadID == squadID)
-						{
-							this.TopSquads.AlwaysRefresh = true;
-							break;
-						}
-						i++;
-					}
-				}
-			}
-			else
-			{
+			case EventId.SquadLeft:
 				this.TopSquads.AlwaysRefresh = false;
+				break;
+			case EventId.SquadJoinedByCurrentPlayer:
+			{
+				string squadID = Service.Get<SquadController>().StateManager.GetCurrentSquad().SquadID;
+				int i = 0;
+				int count = this.TopSquads.List.Count;
+				while (i < count)
+				{
+					if (this.TopSquads.List[i].SquadID == squadID)
+					{
+						this.TopSquads.AlwaysRefresh = true;
+						break;
+					}
+					i++;
+				}
+				break;
+			}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal LeaderboardController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).FireCallbackFromCookie(GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).FeaturedSquads);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).Friends);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).GlobalLeaders);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).GlobalNearMeLeaders);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).LeadersByPlanet);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).LeadersNearMeByPlanet);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).SearchedSquads);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).SquadsNearMe);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).TopSquads);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).TournamentLeadersByPlanet);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).TournamentLeadersNearMeByPlanet);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).GetCachedPlayer(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).GetCachedSquad(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).GetOrCreatePlayer(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).GetOrCreateSquad(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).InitLeaderBoardListForPlanet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).InitTournamentListForPlanet(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).OnFriendsUpdated((LeaderboardResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).OnGetFeaturedSquadsSuccess((FeaturedSquadsResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).OnGetSearchedSquadsSuccess((FeaturedSquadsResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).OnGetTopSquadsSuccess((LeaderboardResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).OnLeadersUpdated((LeaderboardResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).OnTopPlayerSuccess(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).OnUpdateSquadSuccess((SquadResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).ParsePlayerResponse((List<object>)GCHandledObjects.GCHandleToObject(*args), (LeaderboardList<PlayerLBEntity>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).ParseSquadResponse((List<object>)GCHandledObjects.GCHandleToObject(*args), (LeaderboardList<Squad>)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, (Squad)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).SearchSquadsByName(Marshal.PtrToStringUni(*(IntPtr*)args), (LeaderboardController.OnUpdateData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).FeaturedSquads = (LeaderboardList<Squad>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).Friends = (LeaderboardList<PlayerLBEntity>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).GlobalLeaders = (LeaderboardList<PlayerLBEntity>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).GlobalNearMeLeaders = (LeaderboardList<PlayerLBEntity>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).LeadersByPlanet = (Dictionary<string, LeaderboardList<PlayerLBEntity>>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).LeadersNearMeByPlanet = (Dictionary<string, LeaderboardList<PlayerLBEntity>>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).SearchedSquads = (LeaderboardList<Squad>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).SquadsNearMe = (LeaderboardList<Squad>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).TopSquads = (LeaderboardList<Squad>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).TournamentLeadersByPlanet = (Dictionary<string, LeaderboardList<PlayerLBEntity>>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).TournamentLeadersNearMeByPlanet = (Dictionary<string, LeaderboardList<PlayerLBEntity>>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).ShouldRefreshData((PlayerListType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).TopPlayer((PlanetVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).UpdateFeaturedSquads((LeaderboardController.OnUpdateData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).UpdateFriends(Marshal.PtrToStringUni(*(IntPtr*)args), (LeaderboardController.OnUpdateData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).UpdateLeaders((PlanetVO)GCHandledObjects.GCHandleToObject(*args), (LeaderboardController.OnUpdateData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadDetails(Marshal.PtrToStringUni(*(IntPtr*)args), (LeaderboardController.OnUpdateSquadData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).UpdateTopSquads((LeaderboardController.OnUpdateData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((LeaderboardController)GCHandledObjects.GCHandleToObject(instance)).UpdateTournamentLeaders((PlanetVO)GCHandledObjects.GCHandleToObject(*args), (LeaderboardController.OnUpdateData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

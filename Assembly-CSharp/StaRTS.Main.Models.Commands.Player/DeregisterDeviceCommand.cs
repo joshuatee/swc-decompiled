@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public DeregisterDeviceCommand(DeregisterDeviceRequest request) : base("player.device.deregister", request, new DefaultResponse())
 		{
 		}
-
-		protected internal DeregisterDeviceCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

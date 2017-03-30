@@ -23,13 +23,5 @@ namespace StaRTS.Main.RUF.RUFTasks
 		public const int HOLONET = 100;
 
 		public const int TOURNAMENT_ENDED = 110;
-
-		public RUFTaskPriority()
-		{
-		}
-
-		protected internal RUFTaskPriority(UIntPtr dummy)
-		{
-		}
 	}
 }

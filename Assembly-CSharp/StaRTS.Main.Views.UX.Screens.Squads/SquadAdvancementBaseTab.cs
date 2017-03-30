@@ -9,8 +9,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -65,15 +63,12 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				if (value)
 				{
 					this.OnShow();
-					return;
 				}
-				this.OnHide();
+				else
+				{
+					this.OnHide();
+				}
 			}
-		}
-
-		public bool ShouldBlockInput()
-		{
-			return this.openedModalOnTop;
 		}
 
 		public SquadAdvancementBaseTab(SquadSlidingScreen screen, string baseViewName, string tabLabelName, string tabLabelString)
@@ -87,6 +82,11 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			this.perkInfoBtn = screen.GetElement<UXButton>("BtnInfoPerks");
 			this.perkInfoBtn.OnClicked = new UXButtonClickedDelegate(this.OnPerkInfoButtonClicked);
 			Service.Get<EventManager>().RegisterObserver(this, EventId.SquadScreenOpenedOrClosed);
+		}
+
+		public bool ShouldBlockInput()
+		{
+			return this.openedModalOnTop;
 		}
 
 		public virtual bool ShouldBlockTabChanges()
@@ -120,17 +120,17 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				this.AddFilterData(perkData, item, ref list);
 			}
 			list.Sort(new Comparison<UXElement>(this.SortByFilterId));
-			string text = this.FindAllFilterOption();
+			string b = this.FindAllFilterOption();
 			if (this.lastFilterId == null)
 			{
-				this.lastFilterId = text;
+				this.lastFilterId = b;
 			}
 			int count2 = list.Count;
 			for (int j = 0; j < count2; j++)
 			{
 				UXElement uXElement = list[j];
-				string text2 = (string)uXElement.Tag;
-				if (text2 == text)
+				string a = (string)uXElement.Tag;
+				if (a == b)
 				{
 					this.filterGrid.AddItem(uXElement, 0);
 				}
@@ -153,9 +153,9 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		{
 			foreach (KeyValuePair<string, List<UXElement>> current in this.filterMap)
 			{
-				if (current.get_Value().Count == this.gridToFilter.Count)
+				if (current.Value.Count == this.gridToFilter.Count)
 				{
-					return current.get_Key();
+					return current.Key;
 				}
 			}
 			return null;
@@ -236,9 +236,9 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private int SortByFilterId(UXElement a, UXElement b)
 		{
-			string text = (string)a.Tag;
-			string text2 = (string)b.Tag;
-			return string.Compare(text2, text);
+			string strB = (string)a.Tag;
+			string strA = (string)b.Tag;
+			return string.Compare(strA, strB);
 		}
 
 		public virtual void RefreshPerkStates()
@@ -353,12 +353,14 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (jewelControl != null)
 			{
 				bool flag2 = perkViewController.IsPerkGroupBadged(perkVO.PerkGroup);
-				if (flag2 & flag)
+				if (flag2 && flag)
 				{
 					jewelControl.Text = "!";
-					return;
 				}
-				jewelControl.Value = 0;
+				else
+				{
+					jewelControl.Value = 0;
+				}
 			}
 		}
 
@@ -386,171 +388,29 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		public virtual EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id != EventId.SquadScreenOpenedOrClosed)
+			if (id != EventId.PerkUnlocked && id != EventId.PerkUpgraded)
 			{
-				if (id == EventId.PerkUnlocked || id == EventId.PerkUpgraded)
+				if (id == EventId.SquadScreenOpenedOrClosed)
 				{
-					PerkViewController perkViewController = Service.Get<PerkViewController>();
-					PerkVO perkVO = (PerkVO)cookie;
-					string perkGroup = perkVO.PerkGroup;
-					if (perkViewController.IsPerkGroupBadged(perkGroup))
+					if (!(bool)cookie)
 					{
-						this.ShowPerkCelebration(perkVO);
-						perkViewController.RemovePerkGroupFromBadgeList(perkGroup);
-						this.screen.UpdateBadges();
+						this.lastFilterId = null;
 					}
 				}
 			}
-			else if (!(bool)cookie)
+			else
 			{
-				this.lastFilterId = null;
+				PerkViewController perkViewController = Service.Get<PerkViewController>();
+				PerkVO perkVO = (PerkVO)cookie;
+				string perkGroup = perkVO.PerkGroup;
+				if (perkViewController.IsPerkGroupBadged(perkGroup))
+				{
+					this.ShowPerkCelebration(perkVO);
+					perkViewController.RemovePerkGroupFromBadgeList(perkGroup);
+					this.screen.UpdateBadges();
+				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal SquadAdvancementBaseTab(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).CanShowGridItem((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).CleanUpPerkUpgradeCeleb();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).CreateFilterTab(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).FetchPerkGridItem((UXGrid)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).FilterGridBasedOnId(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).FindAllFilterOption());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).Visible);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).InitFilterGrid(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), (UXGrid)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).OnFilterClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).OnHide();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).OnPerkInfoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).OnRepositionComplete((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).OnShow();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).RefreshFilterGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).RefreshPerkStates();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).RegisterEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).Visible = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).SetupPerkBadge((PerkVO)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).ShouldBlockInput());
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).ShouldBlockTabChanges());
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).ShowPerkCelebration((PerkVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).SortByFilterId((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SquadAdvancementBaseTab)GCHandledObjects.GCHandleToObject(instance)).UnregisterEvents();
-			return -1L;
 		}
 	}
 }

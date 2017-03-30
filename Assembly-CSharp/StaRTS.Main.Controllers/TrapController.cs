@@ -17,7 +17,6 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -132,12 +131,11 @@ namespace StaRTS.Main.Controllers
 			TrapEventType eventType = comp.Type.EventType;
 			if (eventType != TrapEventType.SpecialAttack)
 			{
-				if (eventType != TrapEventType.Turret)
+				if (eventType == TrapEventType.Turret)
 				{
-					return;
+					this.SwapTrapToTurret((SmartEntity)comp.Entity);
+					this.SetTrapState(comp, TrapState.Active);
 				}
-				this.SwapTrapToTurret((SmartEntity)comp.Entity);
-				this.SetTrapState(comp, TrapState.Active);
 			}
 			else
 			{
@@ -154,7 +152,6 @@ namespace StaRTS.Main.Controllers
 				if (!specialAttackTypeVO.IsDropship)
 				{
 					Service.Get<ViewTimerManager>().CreateViewTimer((specialAttackTypeVO.AnimationDelay + specialAttackTypeVO.HitDelay) * 0.001f, false, new TimerDelegate(this.OnStarshipStrike), comp.Entity);
-					return;
 				}
 			}
 		}
@@ -167,11 +164,7 @@ namespace StaRTS.Main.Controllers
 		private void OnStarshipStrike(uint uid, object cookie)
 		{
 			SmartEntity smartEntity = (SmartEntity)cookie;
-			string assetName = string.Format(smartEntity.BuildingComp.BuildingType.DestructFX, new object[]
-			{
-				smartEntity.BuildingComp.BuildingType.SizeX,
-				smartEntity.BuildingComp.BuildingType.SizeY
-			});
+			string assetName = string.Format(smartEntity.BuildingComp.BuildingType.DestructFX, smartEntity.BuildingComp.BuildingType.SizeX, smartEntity.BuildingComp.BuildingType.SizeY);
 			FXManager fXManager = Service.Get<FXManager>();
 			fXManager.CreateAndAttachFXToEntity(smartEntity, assetName, "TrapDestruction", null, false, Vector3.zero, false);
 		}
@@ -187,7 +180,7 @@ namespace StaRTS.Main.Controllers
 				IState currentState2 = Service.Get<GameStateMachine>().CurrentState;
 				if (TrapUtils.IsCurrentPlayerInDefensiveBattle(currentState2))
 				{
-					smartEntity.BuildingComp.BuildingTO.CurrentStorage = ((state == TrapState.Armed) ? 1 : 0);
+					smartEntity.BuildingComp.BuildingTO.CurrentStorage = ((state != TrapState.Armed) ? 0 : 1);
 				}
 				Service.Get<TrapViewController>().UpdateTrapVisibility((SmartEntity)comp.Entity);
 				switch (state)
@@ -205,56 +198,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			Service.Get<TrapViewController>().SetTrapViewState(trapViewComp, state);
-		}
-
-		protected internal TrapController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TrapController)GCHandledObjects.GCHandleToObject(instance)).DestroyTrap((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TrapController)GCHandledObjects.GCHandleToObject(instance)).ExecuteTrap((TrapComponent)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TrapController)GCHandledObjects.GCHandleToObject(instance)).GetTrapDamageForUIDisplay((TrapTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TrapController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TrapController)GCHandledObjects.GCHandleToObject(instance)).RegisterTraps((CurrentBattle)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TrapController)GCHandledObjects.GCHandleToObject(instance)).SetTrapState((TrapComponent)GCHandledObjects.GCHandleToObject(*args), (TrapState)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TrapController)GCHandledObjects.GCHandleToObject(instance)).SwapTrapToTurret((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TrapController)GCHandledObjects.GCHandleToObject(instance)).SwapTurretToTrap((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

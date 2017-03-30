@@ -3,7 +3,6 @@ using StaRTS.Externals.Manimal.TransferObjects.Response;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player
 {
@@ -17,17 +16,7 @@ namespace StaRTS.Main.Models.Commands.Player
 
 		public override void OnSuccess()
 		{
-			Service.Get<StaRTSLogger>().Debug("Reset successful.");
-		}
-
-		protected internal ResetStateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ResetStateCommand)GCHandledObjects.GCHandleToObject(instance)).OnSuccess();
-			return -1L;
+			Service.Get<Logger>().Debug("Reset successful.");
 		}
 	}
 }

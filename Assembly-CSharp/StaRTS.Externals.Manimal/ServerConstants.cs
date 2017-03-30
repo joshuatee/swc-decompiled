@@ -103,13 +103,5 @@ namespace StaRTS.Externals.Manimal
 		public const uint RECEIPT_STATUS_COMPLETE = 0u;
 
 		public const uint RECEIPT_STATUS_INITIATED = 6300u;
-
-		public ServerConstants()
-		{
-		}
-
-		protected internal ServerConstants(UIntPtr dummy)
-		{
-		}
 	}
 }

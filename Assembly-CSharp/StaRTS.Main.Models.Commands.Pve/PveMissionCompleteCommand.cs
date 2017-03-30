@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Pve
 		public PveMissionCompleteCommand(BattleEndRequest request) : base("player.pve.complete", request, new DefaultResponse())
 		{
 		}
-
-		protected internal PveMissionCompleteCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

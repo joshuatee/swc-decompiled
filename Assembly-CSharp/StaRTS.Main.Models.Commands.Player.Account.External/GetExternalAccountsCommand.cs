@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Account.External
 		public GetExternalAccountsCommand(PlayerIdRequest request) : base("player.account.external.get", request, new GetExternalAccountsResponse())
 		{
 		}
-
-		protected internal GetExternalAccountsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

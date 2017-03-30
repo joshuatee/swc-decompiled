@@ -3,9 +3,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Assets
 {
@@ -39,7 +37,7 @@ namespace StaRTS.Assets
 			{
 				if (value)
 				{
-					Service.Get<StaRTSLogger>().Error("Cannot use AssetProfiler in Release build");
+					Service.Get<Logger>().Error("Cannot use AssetProfiler in Release build");
 					return;
 				}
 				if (this.enabled != value)
@@ -47,7 +45,7 @@ namespace StaRTS.Assets
 					this.enabled = value;
 					if (this.enabled)
 					{
-						Service.Get<StaRTSLogger>().Warn("AssetProfiler enabled, do not commit!");
+						Service.Get<Logger>().Warn("AssetProfiler enabled, do not commit!");
 						this.assets = new Dictionary<string, AssetProfilerFetchData>();
 						this.info = new StringBuilder();
 						this.enableTime = UnityUtils.GetRealTimeSinceStartUp();
@@ -64,13 +62,13 @@ namespace StaRTS.Assets
 						int num = array.Length;
 						while (i < num)
 						{
-							Service.Get<StaRTSLogger>().Debug(array[i]);
+							Service.Get<Logger>().Debug(array[i]);
 							i++;
 						}
 						this.assets = null;
 						this.info = null;
 						this.enableTime = 0f;
-						Service.Get<StaRTSLogger>().Debug("AssetProfiler disabled");
+						Service.Get<Logger>().Debug("AssetProfiler disabled");
 					}
 					this.totalMBDownloaded = 0f;
 					this.totalMBPulledFromCache = 0f;
@@ -99,16 +97,10 @@ namespace StaRTS.Assets
 			if (serverTraffic)
 			{
 				this.totalMBServerTraffic += num2;
-				string line = string.Format("server\t{0}\t{1:F2}\t{2}", new object[]
-				{
-					num,
-					this.totalMBServerTraffic,
-					name
-				});
+				string line = string.Format("server\t{0}\t{1:F2}\t{2}", num, this.totalMBServerTraffic, name);
 				this.AppendLine(line);
-				return;
 			}
-			if (received)
+			else if (received)
 			{
 				this.StripOffPath(ref name);
 				string line2;
@@ -145,23 +137,23 @@ namespace StaRTS.Assets
 					line2 = "*UNKNOWN*\t\t\t" + name;
 				}
 				this.AppendLine(line2);
-				return;
-			}
-			this.StripOffPath(ref name);
-			AssetProfilerFetchData assetProfilerFetchData2;
-			if (this.assets.ContainsKey(name))
-			{
-				assetProfilerFetchData2 = this.assets[name];
 			}
 			else
 			{
-				assetProfilerFetchData2 = new AssetProfilerFetchData(name);
-				this.assets.Add(name, assetProfilerFetchData2);
+				this.StripOffPath(ref name);
+				AssetProfilerFetchData assetProfilerFetchData2;
+				if (this.assets.ContainsKey(name))
+				{
+					assetProfilerFetchData2 = this.assets[name];
+				}
+				else
+				{
+					assetProfilerFetchData2 = new AssetProfilerFetchData(name);
+					this.assets.Add(name, assetProfilerFetchData2);
+				}
+				assetProfilerFetchData2.FetchCount++;
+				assetProfilerFetchData2.FetchTime = UnityUtils.GetRealTimeSinceStartUp();
 			}
-			AssetProfilerFetchData expr_193 = assetProfilerFetchData2;
-			int fetchCount = expr_193.FetchCount;
-			expr_193.FetchCount = fetchCount + 1;
-			assetProfilerFetchData2.FetchTime = UnityUtils.GetRealTimeSinceStartUp();
 		}
 
 		private void StripOffPath(ref string name)
@@ -188,57 +180,11 @@ namespace StaRTS.Assets
 		private void AppendLine(string line)
 		{
 			float num = UnityUtils.GetRealTimeSinceStartUp() - this.enableTime;
-			string text = string.Format("{0:F3}", new object[]
-			{
-				num
-			});
-			this.info.Append(text);
+			string value = string.Format("{0:F3}", num);
+			this.info.Append(value);
 			this.info.Append('\t');
 			this.info.Append(line);
 			this.info.Append('\n');
-		}
-
-		public AssetProfiler()
-		{
-		}
-
-		protected internal AssetProfiler(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AssetProfiler)GCHandledObjects.GCHandleToObject(instance)).AppendLine(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AssetProfiler)GCHandledObjects.GCHandleToObject(instance)).AppendUnreceivedFetchedAssets();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AssetProfiler)GCHandledObjects.GCHandleToObject(instance)).Enabled);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AssetProfiler)GCHandledObjects.GCHandleToObject(instance)).RecordEvent(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AssetProfiler)GCHandledObjects.GCHandleToObject(instance)).RecordFetchEvent(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AssetProfiler)GCHandledObjects.GCHandleToObject(instance)).Enabled = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

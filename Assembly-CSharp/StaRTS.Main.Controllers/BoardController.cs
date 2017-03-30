@@ -7,7 +7,6 @@ using StaRTS.Main.Models.Entities.Shared;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -76,38 +75,6 @@ namespace StaRTS.Main.Controllers
 		public void ResetBoard()
 		{
 			this.Initialize();
-		}
-
-		protected internal BoardController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardController)GCHandledObjects.GCHandleToObject(instance)).Board);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BoardController)GCHandledObjects.GCHandleToObject(instance)).GetPriorityQueueSize());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BoardController)GCHandledObjects.GCHandleToObject(instance)).Initialize();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BoardController)GCHandledObjects.GCHandleToObject(instance)).RemoveEntity((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BoardController)GCHandledObjects.GCHandleToObject(instance)).ResetBoard();
-			return -1L;
 		}
 	}
 }

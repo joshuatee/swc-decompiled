@@ -1,5 +1,4 @@
 using StaRTS.Main.Controllers;
-using StaRTS.Main.Models.Player;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Utils;
 using StaRTS.Main.Utils.Events;
@@ -8,9 +7,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -28,13 +25,13 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private const string REWARD_ICONS_PREFIX = "RewardIcon";
 
+		private const float ANIMATION_TIME = 3f;
+
 		private Dictionary<string, string> rewardIconMap;
 
 		private UXLabel titleLabel;
 
 		private UXTable rewardTable;
-
-		private const float ANIMATION_TIME = 3f;
 
 		private CampaignMissionVO missionVO;
 
@@ -91,7 +88,7 @@ namespace StaRTS.Main.Views.UX.Screens
 					if (this.rewardIconMap.ContainsKey(key))
 					{
 						string text = "RewardIcon" + this.rewardIconMap[key];
-						string text2 = this.lang.ThousandsSeparated(Convert.ToInt32(array[1], CultureInfo.InvariantCulture));
+						string text2 = this.lang.ThousandsSeparated(Convert.ToInt32(array[1]));
 						string itemUid = text + i;
 						UXElement item = this.rewardTable.CloneTemplateItem(itemUid);
 						this.rewardTable.GetSubElement<UXSprite>(itemUid, text).Visible = true;
@@ -100,9 +97,11 @@ namespace StaRTS.Main.Views.UX.Screens
 					}
 				}
 				this.rewardTable.RepositionItems();
-				return;
 			}
-			this.rewardTable.Visible = false;
+			else
+			{
+				this.rewardTable.Visible = false;
+			}
 		}
 
 		private void OnAnimationFinishedTimer(uint id, object cookie)
@@ -110,12 +109,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.Visible = false;
 			this.Close(null);
 			Service.Get<EventManager>().SendEvent(EventId.MissionCompleteScreenDisplayed, null);
-			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-			if (currentPlayer.PlayerNameInvalid)
-			{
-				SetCallsignScreen screen = new SetCallsignScreen(true);
-				Service.Get<ScreenController>().AddScreen(screen);
-			}
 		}
 
 		public override void OnDestroyElement()
@@ -126,40 +119,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.rewardTable = null;
 			}
 			base.OnDestroyElement();
-		}
-
-		protected internal MissionCompleteScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((MissionCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).FillOutRewardIconMap();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((MissionCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((MissionCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).InitRewardGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((MissionCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((MissionCompleteScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
 		}
 	}
 }

@@ -9,7 +9,6 @@ using StaRTS.Utils.Pooling;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World.Targeting
 {
@@ -37,9 +36,9 @@ namespace StaRTS.Main.Views.World.Targeting
 
 		private bool assetReady;
 
-		private float reticleScale;
+		private float reticleScale = 1f;
 
-		private string name;
+		private string name = string.Empty;
 
 		private float lockonMaxDuration;
 
@@ -54,7 +53,7 @@ namespace StaRTS.Main.Views.World.Targeting
 			set
 			{
 				this.gameObjectView = value;
-				this.ViewTransform = ((this.gameObjectView == null) ? null : this.gameObjectView.transform);
+				this.ViewTransform = ((!(this.gameObjectView == null)) ? this.gameObjectView.transform : null);
 			}
 		}
 
@@ -66,9 +65,6 @@ namespace StaRTS.Main.Views.World.Targeting
 
 		public TargetReticle()
 		{
-			this.reticleScale = 1f;
-			this.name = "";
-			base..ctor();
 			AssetHandle assetHandle = AssetHandle.Invalid;
 			Service.Get<AssetManager>().Load(ref assetHandle, "tac_reticle_quad", new AssetSuccessDelegate(this.OnLoad), new AssetFailureDelegate(this.OnFail), null);
 		}
@@ -90,10 +86,7 @@ namespace StaRTS.Main.Views.World.Targeting
 			this.targetIdentifier = objectPool;
 			if (string.IsNullOrEmpty(this.name))
 			{
-				this.name = string.Format("TargetReticle {0}", new object[]
-				{
-					this.targetIdentifier.Capacity
-				});
+				this.name = string.Format("TargetReticle {0}", this.targetIdentifier.Capacity);
 			}
 		}
 
@@ -108,7 +101,7 @@ namespace StaRTS.Main.Views.World.Targeting
 
 		private void OnFail(object cookie)
 		{
-			Service.Get<StaRTSLogger>().Error("Failed to load target reticle");
+			Service.Get<Logger>().Error("Failed to load target reticle");
 		}
 
 		private void CreateView(GameObject asset, IObjectPool<TargetReticle> objectPool)
@@ -147,7 +140,7 @@ namespace StaRTS.Main.Views.World.Targeting
 				return;
 			}
 			this.View.name = this.name;
-			this.ViewTransform.position = new Vector3(Units.BoardToWorldX(boardX), 0.09f, Units.BoardToWorldZ(boardZ));
+			this.ViewTransform.position = new Vector3(Units.BoardToWorldX(boardX), 0.01f, Units.BoardToWorldZ(boardZ));
 			this.reticleScale = 1.4f * Mathf.Max(Units.BoardToWorldX(width), Units.BoardToWorldZ(depth));
 			this.ViewTransform.localScale = new Vector3(3f * this.reticleScale, 3f * this.reticleScale, 3f * this.reticleScale);
 			this.ViewTransform.localEulerAngles = Vector3.zero;
@@ -189,103 +182,6 @@ namespace StaRTS.Main.Views.World.Targeting
 			float y = num * 180f;
 			this.ViewTransform.localScale = new Vector3(num3 * this.reticleScale, num3 * this.reticleScale, num3 * this.reticleScale);
 			this.ViewTransform.localEulerAngles = new Vector3(0f, y, 0f);
-		}
-
-		protected internal TargetReticle(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).Construct((IObjectPool<TargetReticle>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TargetReticle.CreateTargetReticlePoolObject((IObjectPool<TargetReticle>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).CreateView((GameObject)GCHandledObjects.GCHandleToObject(*args), (IObjectPool<TargetReticle>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).Deactivate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			TargetReticle.DeactivateTargetReticlePoolObject((TargetReticle)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).FinishLockon();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).View);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).ViewTransform);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).OnFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).OnLoad(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).View = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).ViewTransform = (Transform)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).SetTarget((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).SetWorldTarget(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TargetReticle)GCHandledObjects.GCHandleToObject(instance)).StartLockon();
-			return -1L;
 		}
 	}
 }

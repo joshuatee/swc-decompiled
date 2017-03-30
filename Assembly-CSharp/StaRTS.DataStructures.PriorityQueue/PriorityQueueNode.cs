@@ -9,13 +9,5 @@ namespace StaRTS.DataStructures.PriorityQueue
 		public int InsertionIndex;
 
 		public int QueueIndex;
-
-		public PriorityQueueNode()
-		{
-		}
-
-		protected internal PriorityQueueNode(UIntPtr dummy)
-		{
-		}
 	}
 }

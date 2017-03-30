@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Externals.Maker.MRSS
 {
@@ -102,33 +101,33 @@ namespace StaRTS.Externals.Maker.MRSS
 
 		private bool FilterResponse(KeyValuePair<List<string>, bool> response)
 		{
-			if (response.get_Key() == null)
+			if (response.Key == null)
 			{
 				this.FinishUp(null);
 				return false;
 			}
-			if (this.intersection.get_Key() == null)
+			if (this.intersection.Key == null)
 			{
-				this.intersection = new KeyValuePair<List<string>, bool>(new List<string>(response.get_Key()), response.get_Value());
+				this.intersection = new KeyValuePair<List<string>, bool>(new List<string>(response.Key), response.Value);
 			}
 			else
 			{
-				List<string> key = this.intersection.get_Key();
-				List<string> key2 = response.get_Key();
-				if (response.get_Value())
+				List<string> key = this.intersection.Key;
+				List<string> key2 = response.Key;
+				if (response.Value)
 				{
-					key = response.get_Key();
-					key2 = this.intersection.get_Key();
+					key = response.Key;
+					key2 = this.intersection.Key;
 				}
-				bool flag = this.intersection.get_Value() || response.get_Value();
-				KeyValuePair<List<string>, bool> keyValuePair = new KeyValuePair<List<string>, bool>(new List<string>(), flag);
+				bool value = this.intersection.Value || response.Value;
+				KeyValuePair<List<string>, bool> keyValuePair = new KeyValuePair<List<string>, bool>(new List<string>(), value);
 				int i = 0;
 				int count = key.Count;
 				while (i < count)
 				{
 					if (key2.Contains(key[i]))
 					{
-						keyValuePair.get_Key().Add(key[i]);
+						keyValuePair.Key.Add(key[i]);
 					}
 					i++;
 				}
@@ -150,77 +149,7 @@ namespace StaRTS.Externals.Maker.MRSS
 					return;
 				}
 			}
-			this.FinishUp(this.intersection.get_Key());
-		}
-
-		protected internal QueryData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((QueryData)GCHandledObjects.GCHandleToObject(instance)).AddCallback((VideoDataManager.DataListQueryCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((QueryData)GCHandledObjects.GCHandleToObject(instance)).AddResult((List<string>)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryData)GCHandledObjects.GCHandleToObject(instance)).FilterResponse((KeyValuePair<List<string>, bool>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((QueryData)GCHandledObjects.GCHandleToObject(instance)).FilterResults();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((QueryData)GCHandledObjects.GCHandleToObject(instance)).FinishUp((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryData)GCHandledObjects.GCHandleToObject(instance)).Active);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryData)GCHandledObjects.GCHandleToObject(instance)).Section);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryData)GCHandledObjects.GCHandleToObject(instance)).IsQueryComplete());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryData)GCHandledObjects.GCHandleToObject(instance)).ParamsEqual((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryData)GCHandledObjects.GCHandleToObject(instance)).QueryMatch((VideoSection)(*(int*)args), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1]), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[2])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((QueryData)GCHandledObjects.GCHandleToObject(instance)).Active = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((QueryData)GCHandledObjects.GCHandleToObject(instance)).Section = (VideoSection)(*(int*)args);
-			return -1L;
+			this.FinishUp(this.intersection.Key);
 		}
 	}
 }

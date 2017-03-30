@@ -1,7 +1,5 @@
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 public class TapjoyEvent
 {
@@ -25,20 +23,12 @@ public class TapjoyEvent
 		this.myParameter = eventParameter;
 		this.myCallback = callback;
 		this.myGuid = TapjoyPlugin.CreateEvent(this, eventName, eventParameter);
-		Debug.Log(string.Format("C#: Event {0} created with GUID:{1} with Param:{2}", new object[]
-		{
-			this.myName,
-			this.myGuid,
-			this.myParameter
-		}));
+		Debug.Log(string.Format("C#: Event {0} created with GUID:{1} with Param:{2}", this.myName, this.myGuid, this.myParameter));
 	}
 
 	public void Send()
 	{
-		Debug.Log(string.Format("C#: Sending event {0} ", new object[]
-		{
-			this.myName
-		}));
+		Debug.Log(string.Format("C#: Sending event {0} ", this.myName));
 		TapjoyPlugin.SendEvent(this.myGuid);
 	}
 
@@ -103,79 +93,5 @@ public class TapjoyEvent
 		Debug.Log("C#: TriggerDidRequestAction");
 		TapjoyEventRequest tapjoyEventRequest = new TapjoyEventRequest(this.myGuid, type, identifier, quantity);
 		this.myCallback.DidRequestAction(this, tapjoyEventRequest);
-	}
-
-	protected internal TapjoyEvent(UIntPtr dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).EnableAutoPresent(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).EnablePreload(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).GetName());
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).IsContentReady());
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).Send();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).Show();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).TriggerContentDidAppear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).TriggerContentDidDisappear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).TriggerContentIsReady(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).TriggerDidRequestAction(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).TriggerSendEventFailed(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((TapjoyEvent)GCHandledObjects.GCHandleToObject(instance)).TriggerSendEventSucceeded(*(sbyte*)args != 0);
-		return -1L;
 	}
 }

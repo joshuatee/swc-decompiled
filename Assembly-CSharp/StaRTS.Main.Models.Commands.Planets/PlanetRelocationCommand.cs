@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Planets
 		public PlanetRelocationCommand(RelocatePlanetRequest request) : base("player.planet.relocate", request, new DefaultResponse())
 		{
 		}
-
-		protected internal PlanetRelocationCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -11,8 +11,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -37,8 +35,8 @@ namespace StaRTS.Main.Story.Actions
 		public override void Prepare()
 		{
 			base.VerifyArgumentCount(2);
-			this.boardX = Convert.ToInt32(this.prepareArgs[0], CultureInfo.InvariantCulture);
-			this.boardZ = Convert.ToInt32(this.prepareArgs[1], CultureInfo.InvariantCulture);
+			this.boardX = Convert.ToInt32(this.prepareArgs[0]);
+			this.boardZ = Convert.ToInt32(this.prepareArgs[1]);
 			this.parent.ChildPrepared(this);
 		}
 
@@ -48,7 +46,7 @@ namespace StaRTS.Main.Story.Actions
 			BoardCell<Entity> cellAt = Service.Get<BoardController>().Board.GetCellAt(this.boardX, this.boardZ);
 			if (cellAt == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Story {0} is attempting to remove a building at {1}, {2}, but there is no cell.", new object[]
+				Service.Get<Logger>().ErrorFormat("Story {0} is attempting to remove a building at {1}, {2}, but there is no cell.", new object[]
 				{
 					this.vo.Uid,
 					this.boardX,
@@ -88,28 +86,6 @@ namespace StaRTS.Main.Story.Actions
 			this.buildingToRemove = null;
 			this.fader = null;
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal RemoveBuildingStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RemoveBuildingStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((RemoveBuildingStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnEntityFadeComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((RemoveBuildingStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

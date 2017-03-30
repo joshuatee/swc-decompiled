@@ -23,9 +23,5 @@ namespace StaRTS.Main.Models
 			this.RawDamage = rawDamage;
 			this.IsFromBeam = isFromBeam;
 		}
-
-		protected internal EntityHealthChangedData(UIntPtr dummy)
-		{
-		}
 	}
 }

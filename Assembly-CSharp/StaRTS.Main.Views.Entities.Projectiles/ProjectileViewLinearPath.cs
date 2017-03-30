@@ -1,7 +1,6 @@
 using StaRTS.Main.Views.World;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities.Projectiles
 {
@@ -54,16 +53,6 @@ namespace StaRTS.Main.Views.Entities.Projectiles
 				}
 			}
 			base.CurrentLocation = vector;
-		}
-
-		protected internal ProjectileViewLinearPath(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ProjectileViewLinearPath)GCHandledObjects.GCHandleToObject(instance)).OnUpdate(*(float*)args);
-			return -1L;
 		}
 	}
 }

@@ -5,7 +5,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.RUF.RUFTasks
 {
@@ -33,9 +32,11 @@ namespace StaRTS.Main.RUF.RUFTasks
 			if (base.ShouldProcess)
 			{
 				Service.Get<ViewTimerManager>().CreateViewTimer(2f, false, new TimerDelegate(this.ShowHolonetOnTimer), this.newBattles);
-				return;
 			}
-			base.Process(continueProcessing);
+			else
+			{
+				base.Process(continueProcessing);
+			}
 		}
 
 		public void ShowHolonetOnTimer(uint timerId, object data)
@@ -47,16 +48,6 @@ namespace StaRTS.Main.RUF.RUFTasks
 				Service.Get<HolonetController>().OpenHolonet();
 			}
 			base.Process(this.continueProcessing);
-		}
-
-		protected internal HolonetRUFTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HolonetRUFTask)GCHandledObjects.GCHandleToObject(instance)).Process(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

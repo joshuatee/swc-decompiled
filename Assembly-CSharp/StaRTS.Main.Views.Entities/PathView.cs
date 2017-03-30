@@ -4,7 +4,6 @@ using StaRTS.Main.Models.Entities.Components;
 using StaRTS.Main.Utils;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -62,6 +61,11 @@ namespace StaRTS.Main.Views.Entities
 			}
 		}
 
+		public PathView(PathingComponent pathing)
+		{
+			this.Reset(pathing);
+		}
+
 		public void Reset(PathingComponent pathing)
 		{
 			this.TimeToTarget = 0f;
@@ -75,15 +79,12 @@ namespace StaRTS.Main.Views.Entities
 				uint num = this.PathComponent.Entity.ID % 9u;
 				this.ClusterOffsetX = num % 3u / 3f;
 				this.ClusterOffsetZ = num / 3u % 3u / 3f;
-				return;
 			}
-			this.ClusterOffsetX = 0f;
-			this.ClusterOffsetZ = 0f;
-		}
-
-		public PathView(PathingComponent pathing)
-		{
-			this.Reset(pathing);
+			else
+			{
+				this.ClusterOffsetX = 0f;
+				this.ClusterOffsetZ = 0f;
+			}
 		}
 
 		public BoardCell<Entity> GetPrevTurn()
@@ -159,108 +160,6 @@ namespace StaRTS.Main.Views.Entities
 					transformComponent2.RotationVelocity = 0f;
 				}
 			}
-		}
-
-		protected internal PathView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PathView)GCHandledObjects.GCHandleToObject(instance)).AdvanceNextTurn();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).ClusterOffsetX);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).ClusterOffsetZ);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).NextTurnIndex);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).PathComponent);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).Speed);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).StartPos);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).TimeToTarget);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).GetNextNextTurn());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).GetNextTurn());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathView)GCHandledObjects.GCHandleToObject(instance)).GetPrevTurn());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PathView)GCHandledObjects.GCHandleToObject(instance)).Reset((PathingComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PathView)GCHandledObjects.GCHandleToObject(instance)).ClusterOffsetX = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PathView)GCHandledObjects.GCHandleToObject(instance)).ClusterOffsetZ = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PathView)GCHandledObjects.GCHandleToObject(instance)).PathComponent = (PathingComponent)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PathView)GCHandledObjects.GCHandleToObject(instance)).Speed = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PathView)GCHandledObjects.GCHandleToObject(instance)).StartPos = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PathView)GCHandledObjects.GCHandleToObject(instance)).TimeToTarget = *(float*)args;
-			return -1L;
 		}
 	}
 }

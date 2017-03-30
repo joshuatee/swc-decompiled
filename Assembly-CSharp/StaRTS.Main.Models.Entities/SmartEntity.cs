@@ -4,7 +4,6 @@ using StaRTS.Main.Models.Entities.Components;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Entities
 {
@@ -463,7 +462,7 @@ namespace StaRTS.Main.Models.Entities
 			}
 			if (!flag && compCls != null)
 			{
-				Service.Get<StaRTSLogger>().Error("Invalid component add: " + compCls.get_Name());
+				Service.Get<Logger>().Error("Invalid component add: " + compCls.Name);
 			}
 			return base.AddComponentAndDispatchAddEvent(comp, compCls);
 		}
@@ -723,24 +722,6 @@ namespace StaRTS.Main.Models.Entities
 				this.HousingComp = null;
 			}
 			return base.Remove(compCls);
-		}
-
-		public SmartEntity()
-		{
-		}
-
-		protected internal SmartEntity(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SmartEntity)GCHandledObjects.GCHandleToObject(instance)).AddComponentAndDispatchAddEvent((ComponentBase)GCHandledObjects.GCHandleToObject(*args), (Type)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SmartEntity)GCHandledObjects.GCHandleToObject(instance)).Remove((Type)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

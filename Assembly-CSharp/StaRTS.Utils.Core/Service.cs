@@ -43,11 +43,5 @@ namespace StaRTS.Utils.Core
 			}
 			Service.serviceWrapperList = null;
 		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			Service.ResetAll();
-			return -1L;
-		}
 	}
 }

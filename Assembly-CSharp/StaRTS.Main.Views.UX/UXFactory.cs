@@ -8,9 +8,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX
 {
@@ -165,19 +163,15 @@ namespace StaRTS.Main.Views.UX
 
 		public T GetOptionalElement<T>(string name) where T : UXElement
 		{
-			if (!this.HasElement<T>(name))
-			{
-				return default(T);
-			}
-			return this.GetElement<T>(name);
+			return (!this.HasElement<T>(name)) ? ((T)((object)null)) : this.GetElement<T>(name);
 		}
 
 		public T GetElement<T>(string name) where T : UXElement
 		{
-			T t = default(T);
+			T t = (T)((object)null);
 			if (this.duplicates.ContainsKey(name))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("UX bundle {0} contains duplicate elements named {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("UX bundle {0} contains duplicate elements named {1}", new object[]
 				{
 					this.root.name,
 					name
@@ -189,37 +183,15 @@ namespace StaRTS.Main.Views.UX
 			}
 			if (t == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find {0} named {1} in {2}", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find {0} named {1} in {2}", new object[]
 				{
 					typeof(T),
 					name,
-					(this.root == null) ? "(null)" : this.root.name
+					(!(this.root == null)) ? this.root.name : "(null)"
 				});
 				t = this.CreateDegenerateElement<T>(name);
 			}
 			return t;
-		}
-
-		public List<UXElement> FindElement(string name)
-		{
-			List<UXElement> list = new List<UXElement>();
-			name = name.ToLower();
-			if (this.duplicates.ContainsKey(name))
-			{
-				Service.Get<StaRTSLogger>().ErrorFormat("UX bundle {0} contains duplicate elements named {1}", new object[]
-				{
-					this.root.name,
-					name
-				});
-			}
-			foreach (string current in this.elements.Keys)
-			{
-				if (current.ToLower().Contains(name))
-				{
-					list.Add(this.elements[current]);
-				}
-			}
-			return list;
 		}
 
 		protected UXElement CreateElements(GameObject parent)
@@ -302,24 +274,22 @@ namespace StaRTS.Main.Views.UX
 			if (this.elements.ContainsKey(name))
 			{
 				this.AddDuplicateName(name);
-				return;
 			}
-			this.elements.Add(name, element);
+			else
+			{
+				this.elements.Add(name, element);
+			}
 		}
 
 		private T CreateDegenerateElement<T>(string name) where T : UXElement
 		{
-			T t = default(T);
+			T t = (T)((object)null);
 			if (this.root == null)
 			{
 				throw new Exception("Cannot create degenerate UX element with null root");
 			}
 			GameObject gameObject = new GameObject();
-			gameObject.name = string.Format("{0} ({1})", new object[]
-			{
-				"Degenerate",
-				name
-			});
+			gameObject.name = string.Format("{0} ({1})", "Degenerate", name);
 			gameObject.transform.parent = this.root.transform;
 			gameObject.transform.position = Vector3.zero;
 			gameObject.layer = this.root.layer;
@@ -554,14 +524,14 @@ namespace StaRTS.Main.Views.UX
 
 		public T CloneElement<T>(UXElement template, string name, GameObject parent) where T : UXElement
 		{
-			if (template == null || parent == null || name == null || name == "")
+			if (template == null || parent == null || name == null || name == string.Empty)
 			{
-				return default(T);
+				return (T)((object)null);
 			}
 			GameObject gameObject = template.CloneRoot(name, parent);
 			if (gameObject == null)
 			{
-				return default(T);
+				return (T)((object)null);
 			}
 			return this.CreateElements(gameObject) as T;
 		}
@@ -609,12 +579,15 @@ namespace StaRTS.Main.Views.UX
 		{
 			if (this.duplicates.ContainsKey(name))
 			{
-				Dictionary<string, int> expr_16 = this.duplicates;
-				int num = expr_16[name];
-				expr_16[name] = num + 1;
-				return;
+				Dictionary<string, int> dictionary;
+				Dictionary<string, int> expr_17 = dictionary = this.duplicates;
+				int num = dictionary[name];
+				expr_17[name] = num + 1;
 			}
-			this.duplicates.Add(name, 1);
+			else
+			{
+				this.duplicates.Add(name, 1);
+			}
 		}
 
 		private void RemoveDuplicateNameIfPresent(string name)
@@ -625,9 +598,11 @@ namespace StaRTS.Main.Views.UX
 				if (num == 0)
 				{
 					this.duplicates.Remove(name);
-					return;
 				}
-				this.duplicates[name] = num;
+				else
+				{
+					this.duplicates[name] = num;
+				}
 			}
 		}
 
@@ -700,215 +675,6 @@ namespace StaRTS.Main.Views.UX
 		public virtual EatResponse OnEvent(EventId id, object cookie)
 		{
 			return EatResponse.NotEaten;
-		}
-
-		protected internal UXFactory(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).AddDuplicateName(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).AddElement(Marshal.PtrToStringUni(*(IntPtr*)args), (UXElement)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateButton((GameObject)GCHandledObjects.GCHandleToObject(*args), (UIButton)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateCheckbox((GameObject)GCHandledObjects.GCHandleToObject(*args), (UIToggle)GCHandledObjects.GCHandleToObject(args[1]), (UIButton)GCHandledObjects.GCHandleToObject(args[2]), (UIPlayTween)GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateElement((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateElements((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateGrid((GameObject)GCHandledObjects.GCHandleToObject(*args), (UIGrid)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateInput((GameObject)GCHandledObjects.GCHandleToObject(*args), (UIInput)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateLabel((GameObject)GCHandledObjects.GCHandleToObject(*args), (UILabel)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateMeshRenderer((GameObject)GCHandledObjects.GCHandleToObject(*args), (MeshRenderer)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateSlider((GameObject)GCHandledObjects.GCHandleToObject(*args), (UISlider)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateSprite((GameObject)GCHandledObjects.GCHandleToObject(*args), (UISprite)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateTable((GameObject)GCHandledObjects.GCHandleToObject(*args), (UITable)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).CreateTexture((GameObject)GCHandledObjects.GCHandleToObject(*args), (UITexture)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).DestroyElement((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).DestroyElement((UXElement)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).DestroyFactory();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).FindElement(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).FinishSetup((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).HiddenInQueue);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).Visible);
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).HandleVisibilityChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).IsLoaded());
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).LoadFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).LoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).LoadSuccessNoClone(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXFactory)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).RemoveDuplicateNameIfPresent(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).RemoveElementsRecursively((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).RenameElement((GameObject)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).RestoreElementsToOrig();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).RevertToOriginalNameRecursively((GameObject)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).HiddenInQueue = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).Visible = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).SetupRootCollider();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((UXFactory)GCHandledObjects.GCHandleToObject(instance)).Unload((AssetHandle)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
 		}
 	}
 }

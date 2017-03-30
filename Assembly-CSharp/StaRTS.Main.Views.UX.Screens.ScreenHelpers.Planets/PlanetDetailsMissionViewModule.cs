@@ -10,17 +10,13 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 {
 	public class PlanetDetailsMissionViewModule : AbstractPlanetDetailsViewModule, IEventObserver, IViewFrameTimeObserver
 	{
-		private static readonly Color COMPLETION_COLOR = new Color(255f, 222f, 0f);
-
 		private const string ATTACKS_LEFT_STRING = "ATTACKS_LEFT";
 
 		private const string ELITE_OPS_REWARD_ITEM_PREFIX = "RewardItem";
@@ -179,6 +175,8 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		private const string BTN_CLOSE_CAMPAIGN_DETAILS = "BtnCloseCampaignDetails";
 
+		private static readonly Color COMPLETION_COLOR = new Color(255f, 222f, 0f);
+
 		private UXElement campaignDescriptionGroup;
 
 		private UXElement campaignDetailsGroup;
@@ -215,26 +213,22 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		public CampaignMissionVO selectedMission;
 
-		private int missionSelectIndexOnFrameDelay;
+		private int missionSelectIndexOnFrameDelay = -1;
 
-		public PlanetDetailsMissionViewModule(PlanetDetailsScreen screen)
+		public PlanetDetailsMissionViewModule(PlanetDetailsScreen screen) : base(screen)
 		{
-			this.missionSelectIndexOnFrameDelay = -1;
-			base..ctor(screen);
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id != EventId.MissionCompleted)
+			switch (id)
 			{
-				if (id == EventId.MissionCollected)
-				{
-					this.OnRewardCollected(cookie as CampaignMissionVO);
-				}
-			}
-			else
-			{
+			case EventId.MissionCompleted:
 				this.OnMissionCompleted(cookie as CampaignMissionVO);
+				break;
+			case EventId.MissionCollected:
+				this.OnRewardCollected(cookie as CampaignMissionVO);
+				break;
 			}
 			return EatResponse.NotEaten;
 		}
@@ -255,7 +249,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 					this.missionGrid.ScrollToItem(i);
 				}
 				CampaignMissionVO campaignMissionVO = (CampaignMissionVO)this.missionGrid.GetItem(i).Tag;
-				UXCheckbox uXCheckbox = this.selectedCampaign.IsMiniCampaign() ? this.missionGrid.GetSubElement<UXCheckbox>(campaignMissionVO.Uid, "ButtonObjectiveCardDifficulty") : this.missionGrid.GetSubElement<UXCheckbox>(campaignMissionVO.Uid, "ButtonObjectiveCard");
+				UXCheckbox uXCheckbox = (!this.selectedCampaign.IsMiniCampaign()) ? this.missionGrid.GetSubElement<UXCheckbox>(campaignMissionVO.Uid, "ButtonObjectiveCard") : this.missionGrid.GetSubElement<UXCheckbox>(campaignMissionVO.Uid, "ButtonObjectiveCardDifficulty");
 				uXCheckbox.Selected = true;
 				this.OnMissionItemSelected(uXCheckbox, true);
 			}
@@ -465,12 +459,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			bool flag3 = base.Player.CampaignProgress.IsMissionCollected(this.selectedMission);
 			bool flag4 = GameUtils.IsMissionSpecOps(this.selectedMission.Uid);
 			int missionEarnedStars = base.Player.CampaignProgress.GetMissionEarnedStars(this.selectedMission);
-			if (((flag2 && !flag3) & flag4) && missionEarnedStars == 3)
+			if (flag2 && !flag3 && flag4 && missionEarnedStars == 3)
 			{
 				flag3 = true;
 			}
 			bool flag5 = !string.IsNullOrEmpty(this.selectedMission.Rewards) && this.selectedMission.CampaignPoints == 0;
-			if (flag3 | flag)
+			if (flag3 || flag)
 			{
 				this.rewardedLabel.Visible = true;
 				element7.Visible = false;
@@ -479,7 +473,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			else
 			{
 				this.rewardedLabel.Visible = false;
-				if (flag2 & flag5)
+				if (flag2 && flag5)
 				{
 					element7.Visible = true;
 					element7.OnClicked = new UXButtonClickedDelegate(this.OnCollectButtonClicked);
@@ -498,7 +492,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			for (int i = 1; i <= 3; i++)
 			{
 				UXSprite element10 = this.screen.GetElement<UXSprite>("MissionSpriteStar" + i);
-				element10.SpriteName = ((missionEarnedStars >= i) ? "CampaignStarOn" : "CampaignStarOff");
+				element10.SpriteName = ((missionEarnedStars < i) ? "CampaignStarOff" : "CampaignStarOn");
 			}
 			if (!GameUtils.IsPlanetCurrentOne("planet1"))
 			{
@@ -559,7 +553,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		private void UpdateMissionItem(string itemUid, CampaignMissionVO missionType, bool selected)
 		{
-			UXSprite uXSprite = this.selectedCampaign.IsMiniCampaign() ? null : this.missionGrid.GetSubElement<UXSprite>(itemUid, "SpriteObjectiveImage");
+			UXSprite uXSprite = (!this.selectedCampaign.IsMiniCampaign()) ? this.missionGrid.GetSubElement<UXSprite>(itemUid, "SpriteObjectiveImage") : null;
 			if (uXSprite != null)
 			{
 				if (missionType.Grind)
@@ -572,7 +566,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				}
 				else if (missionType.IsCombatMission())
 				{
-					uXSprite.SpriteName = ((missionType.MissionType == MissionType.Attack) ? "IcoAttack" : "icoDefend");
+					uXSprite.SpriteName = ((missionType.MissionType != MissionType.Attack) ? "icoDefend" : "IcoAttack");
 				}
 				else if (missionType.HasPvpCondition() || missionType.MissionType == MissionType.Pvp)
 				{
@@ -583,7 +577,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 					uXSprite.SpriteName = "IcoBuild";
 				}
 			}
-			UXCheckbox uXCheckbox = this.selectedCampaign.IsMiniCampaign() ? this.missionGrid.GetSubElement<UXCheckbox>(itemUid, "ButtonObjectiveCardDifficulty") : this.missionGrid.GetSubElement<UXCheckbox>(itemUid, "ButtonObjectiveCard");
+			UXCheckbox uXCheckbox = (!this.selectedCampaign.IsMiniCampaign()) ? this.missionGrid.GetSubElement<UXCheckbox>(itemUid, "ButtonObjectiveCard") : this.missionGrid.GetSubElement<UXCheckbox>(itemUid, "ButtonObjectiveCardDifficulty");
 			uXCheckbox.Tag = missionType;
 			uXCheckbox.OnSelected = new UXCheckboxSelectedDelegate(this.OnMissionItemSelected);
 			uXCheckbox.Selected = selected;
@@ -634,21 +628,24 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			{
 				subElement3.Visible = true;
 				uXSprite.Visible = false;
-				return;
 			}
-			if (!base.Player.CampaignProgress.IsMissionCompleted(missionType))
+			else if (base.Player.CampaignProgress.IsMissionCompleted(missionType))
+			{
+				if (base.Player.CampaignProgress.IsMissionCollected(missionType))
+				{
+					subElement3.Visible = true;
+					uXSprite.Visible = false;
+				}
+				else
+				{
+					uXSprite.Visible = true;
+					subElement3.Visible = false;
+				}
+			}
+			else
 			{
 				subElement3.Visible = false;
-				return;
 			}
-			if (base.Player.CampaignProgress.IsMissionCollected(missionType))
-			{
-				subElement3.Visible = true;
-				uXSprite.Visible = false;
-				return;
-			}
-			uXSprite.Visible = true;
-			subElement3.Visible = false;
 		}
 
 		private void OnMissionItemSelected(UXCheckbox checkbox, bool selected)
@@ -820,152 +817,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			base.EvtManager.UnregisterObserver(this, EventId.MissionCollected);
 			base.EvtManager.UnregisterObserver(this, EventId.MissionCompleted);
 			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
-		}
-
-		protected internal PlanetDetailsMissionViewModule(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).BackButtonClickedHelper((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlanetDetailsMissionViewModule.CompareMissions((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args), (CampaignMissionVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).InitCampaignDetailScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).InitMissionDetailGroup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).InitMissionGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).InitMissionRewardsGrid(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnActionButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnAllChaptersButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnBackButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnCampaignInfoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnCampaignItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnCollectButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnMissionCompleted((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnMissionFrameDelayed(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnMissionItemSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnRewardCollected((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshScreenForPlanetChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).ReturnToMainSelect();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).SelectCampaign((CampaignVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((PlanetDetailsMissionViewModule)GCHandledObjects.GCHandleToObject(instance)).UpdateMissionItem(Marshal.PtrToStringUni(*(IntPtr*)args), (CampaignMissionVO)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
 		}
 	}
 }

@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Perks
 		public PlayerPerkCancelCommand(PlayerPerkCancelRequest request) : base("player.perks.cancel", request, new PlayerPerksDataResponse())
 		{
 		}
-
-		protected internal PlayerPerkCancelCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -12,7 +12,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.GameBoard.Pathfinding
 {
@@ -105,14 +104,14 @@ namespace StaRTS.GameBoard.Pathfinding
 			ShooterComponent shooterComp = troop.ShooterComp;
 			this.pathingComp = smartEntity.PathingComp;
 			BoardCell<Entity> boardCell2;
-			if ((this.pathingComp != null & isRepathing) && this.pathingComp.TargetCell != null && this.pathingComp.EndCell != null && damageableComp != null)
+			if (this.pathingComp != null && isRepathing && this.pathingComp.TargetCell != null && this.pathingComp.EndCell != null && damageableComp != null)
 			{
 				boardCell2 = this.pathingComp.TargetCell;
 				boardCell = this.pathingComp.EndCell;
 			}
 			else if (damageableComp != null)
 			{
-				uint maxRange = (uint)((rangeOverride >= 0) ? rangeOverride : ((int)shooterComp.ShooterVO.MaxAttackRange));
+				uint maxRange = (rangeOverride < 0) ? shooterComp.ShooterVO.MaxAttackRange : ((uint)rangeOverride);
 				boardCell = damageableComp.FindAttackCell(maxRange, troopParams.TroopWidth, x, z, allowTroopFanning);
 				int x2;
 				int z2;
@@ -133,21 +132,18 @@ namespace StaRTS.GameBoard.Pathfinding
 						int y = boardCell2.Z - cellAt.Z;
 						int num = IntMath.Atan2Lookup(x3, y) * 180 / 16384;
 						int targetCount = target.TroopComp.TargetCount;
-						int num2 = (int)((troopParams.MaxRange > 1u) ? (troopParams.MaxRange - 1u) : 1u);
-						for (int i = num2; i > 0; i--)
+						int num2 = (int)((troopParams.MaxRange <= 1u) ? 1u : (troopParams.MaxRange - 1u));
+						int num3 = num2;
+						while (num3 > 0 && boardCell == null)
 						{
-							if (boardCell != null)
+							int num4 = num3 * 3 + 1;
+							int num5 = 180 / num4;
+							for (int i = 0; i < num4; i++)
 							{
-								break;
-							}
-							int num3 = i * 3 + 1;
-							int num4 = 180 / num3;
-							for (int j = 0; j < num3; j++)
-							{
-								int num5 = (j + targetCount) % num3;
-								int twiceAngle = (num + 90 + num5 * num4) % 360 * 2;
-								int x4 = boardCell2.X + IntMath.cosLookup(twiceAngle) * i / 1024;
-								int z3 = boardCell2.Z + IntMath.sinLookup(twiceAngle) * i / 1024;
+								int num6 = (i + targetCount) % num4;
+								int twiceAngle = (num + 90 + num6 * num5) % 360 * 2;
+								int x4 = boardCell2.X + IntMath.cosLookup(twiceAngle) * num3 / 1024;
+								int z3 = boardCell2.Z + IntMath.sinLookup(twiceAngle) * num3 / 1024;
 								boardCell = this.boardController.Board.GetClampedToBoardCellAt(x4, z3, troopParams.TroopWidth);
 								if ((boardCell.Children == null || boardCell.Children.Count == 0) && boardCell.Clearance >= troopParams.TroopWidth)
 								{
@@ -155,6 +151,7 @@ namespace StaRTS.GameBoard.Pathfinding
 								}
 								boardCell = null;
 							}
+							num3--;
 						}
 					}
 					else
@@ -190,8 +187,8 @@ namespace StaRTS.GameBoard.Pathfinding
 			BattleController battleController = Service.Get<BattleController>();
 			if (clampPathLength && (battleController == null || battleController.GetCurrentBattle().Type == BattleType.Pvp || battleController.GetCurrentBattle().Type == BattleType.ClientBattle))
 			{
-				int num6 = IntMath.FastDist(cellAt.X, cellAt.Z, boardCell2.X, boardCell2.Z);
-				maxLength = 2 * num6 / 1024 + 2;
+				int num7 = IntMath.FastDist(cellAt.X, cellAt.Z, boardCell2.X, boardCell2.Z);
+				maxLength = 2 * num7 / 1024 + 2;
 			}
 			this.path = new Path(cellAt, boardCell, boardCell2, maxLength, troopParams, boardParams);
 			this.UpdatePathing(out found);
@@ -235,45 +232,31 @@ namespace StaRTS.GameBoard.Pathfinding
 			this.pathingComp.CurrentPath = new Path(startCell, endCell, endCell, -1, new PathTroopParams
 			{
 				TroopWidth = size,
-				DPS = 0,
-				MinRange = 0u,
 				MaxRange = 1u,
 				MaxSpeed = walkerComp.SpeedVO.MaxSpeed,
 				PathSearchWidth = pathSearchWidth,
 				IsMelee = true,
-				IsOverWall = false,
-				IsHealer = false,
-				CrushesWalls = false,
-				IsTargetShield = false,
 				TargetInRangeModifier = 1u
 			}, new PathBoardParams
 			{
-				IgnoreWall = ignoreWall,
-				Destructible = false
+				IgnoreWall = ignoreWall
 			});
 			bool flag;
 			this.pathingComp.CurrentPath.CalculatePath(out flag);
-			if (!flag & attemptNoWall)
+			if (!flag && attemptNoWall)
 			{
 				this.boardController.Board.RefreshClearanceMapNoWall();
 				this.pathingComp.CurrentPath = new Path(startCell, endCell, endCell, -1, new PathTroopParams
 				{
 					TroopWidth = size,
-					DPS = 0,
-					MinRange = 0u,
 					MaxRange = 1u,
 					MaxSpeed = walkerComp.SpeedVO.MaxSpeed,
 					PathSearchWidth = pathSearchWidth,
 					IsMelee = true,
-					IsOverWall = false,
-					IsHealer = false,
-					CrushesWalls = false,
-					IsTargetShield = false,
 					TargetInRangeModifier = 1u
 				}, new PathBoardParams
 				{
-					IgnoreWall = true,
-					Destructible = false
+					IgnoreWall = true
 				});
 				this.pathingComp.CurrentPath.CalculatePath(out flag);
 			}
@@ -349,7 +332,7 @@ namespace StaRTS.GameBoard.Pathfinding
 						text = smartEntity.TroopComp.TroopType.Uid;
 					}
 				}
-				Service.Get<StaRTSLogger>().WarnFormat("UpdatePathing to null path for {0}", new object[]
+				Service.Get<Logger>().WarnFormat("UpdatePathing to null path for {0}", new object[]
 				{
 					text
 				});
@@ -415,62 +398,28 @@ namespace StaRTS.GameBoard.Pathfinding
 			{
 				return EatResponse.NotEaten;
 			}
-			if (id != EventId.EntityKilled)
+			switch (id)
 			{
-				if (id == EventId.EntityDestroyed)
-				{
-					uint num = (uint)cookie;
-					if (num == this.target.ID || num == this.troop.ID)
-					{
-						this.pathingComp = null;
-					}
-				}
-			}
-			else
+			case EventId.EntityKilled:
 			{
 				SmartEntity smartEntity = (SmartEntity)cookie;
 				if (smartEntity == this.target || smartEntity == this.troop)
 				{
 					this.pathingComp = null;
 				}
+				break;
+			}
+			case EventId.EntityDestroyed:
+			{
+				uint num = (uint)cookie;
+				if (num == this.target.ID || num == this.troop.ID)
+				{
+					this.pathingComp = null;
+				}
+				break;
+			}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal PathingManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathingManager)GCHandledObjects.GCHandleToObject(instance)).GetPathingCell());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathingManager)GCHandledObjects.GCHandleToObject(instance)).IsPathingOngoing());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathingManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PathingManager)GCHandledObjects.GCHandleToObject(instance)).RecycleAllPathingCells();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PathingManager)GCHandledObjects.GCHandleToObject(instance)).SetPathToTarget();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PathingManager)GCHandledObjects.GCHandleToObject(instance)).StartPathingWorkerOrPatrol((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]), (BoardCell<Entity>)GCHandledObjects.GCHandleToObject(args[2]), (BoardCell<Entity>)GCHandledObjects.GCHandleToObject(args[3]), *(int*)(args + 4), *(sbyte*)(args + 5) != 0));
 		}
 	}
 }

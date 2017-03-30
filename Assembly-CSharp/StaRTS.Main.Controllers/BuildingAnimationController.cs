@@ -17,16 +17,12 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class BuildingAnimationController : IEventObserver
 	{
-		private NodeList<BuildingRenderNode> nodeList;
-
 		private const string IDLE_ANIMATION_TRACK = "Idle";
 
 		private const string ACTIVE_ANIM = "Active";
@@ -48,6 +44,8 @@ namespace StaRTS.Main.Controllers
 		private const string TRAP_DEACTIVATE_TRACK = "Deactivate";
 
 		private const string TRAP_DEACTIVATED_LOOP = "DeactivatedIdle";
+
+		private NodeList<BuildingRenderNode> nodeList;
 
 		private string[] barracksOpenCloseAnims;
 
@@ -205,9 +203,11 @@ namespace StaRTS.Main.Controllers
 			{
 				anim[animName].time = Service.Get<Rand>().ViewRangeFloat(0f, anim[animName].length);
 				anim.Play(animName);
-				return;
 			}
-			anim.Play();
+			else
+			{
+				anim.Play();
+			}
 		}
 
 		private void StopAnimation(Animation anim)
@@ -400,7 +400,6 @@ namespace StaRTS.Main.Controllers
 					{
 						anim.Stop();
 						anim.Play("Full");
-						return;
 					}
 					break;
 				case ShuttleState.Idle:
@@ -411,8 +410,6 @@ namespace StaRTS.Main.Controllers
 						this.EnqueueAnimation(buildingAnimationComp, "Active");
 					}
 					break;
-				default:
-					return;
 				}
 			}
 		}
@@ -502,134 +499,139 @@ namespace StaRTS.Main.Controllers
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
-			if (id <= EventId.WorldLoadComplete)
+			switch (id)
 			{
-				if (id <= EventId.StorageDoorEvent)
+			case EventId.CurrencyCollected:
+			{
+				CurrencyCollectionTag currencyCollectionTag = cookie as CurrencyCollectionTag;
+				SmartEntity smartEntity = (SmartEntity)currencyCollectionTag.Building;
+				if (smartEntity == null)
 				{
-					if (id != EventId.BuildingViewReady)
-					{
-						switch (id)
-						{
-						case EventId.CurrencyCollected:
-						{
-							CurrencyCollectionTag currencyCollectionTag = cookie as CurrencyCollectionTag;
-							SmartEntity smartEntity = (SmartEntity)currencyCollectionTag.Building;
-							if (smartEntity != null)
-							{
-								BuildingAnimationComponent buildingAnimationComp = smartEntity.BuildingAnimationComp;
-								if (buildingAnimationComp != null)
-								{
-									this.UpdateAnimation(smartEntity, currentState, buildingAnimationComp, true);
-								}
-							}
-							break;
-						}
-						case EventId.GeneratorJustFilled:
-							this.UpdateAnimationOnGeneratorFull((SmartEntity)cookie, currentState);
-							break;
-						case EventId.StorageDoorEvent:
-						{
-							SmartEntity smartEntity = (SmartEntity)cookie;
-							if (smartEntity != null && smartEntity.BuildingAnimationComp != null && smartEntity.StorageComp != null && smartEntity.StorageComp.CurrentFullnessPercentage < 1f)
-							{
-								BuildingAnimationComponent buildingAnimationComp = smartEntity.BuildingAnimationComp;
-								if (this.BuildingEligibleForActiveAnimation(smartEntity, currentState, buildingAnimationComp))
-								{
-									buildingAnimationComp.Anim.Stop();
-									int num = this.storageOpenCloseAnims.Length;
-									for (int i = 0; i < num; i++)
-									{
-										this.EnqueueAnimation(buildingAnimationComp, this.storageOpenCloseAnims[i]);
-									}
-								}
-							}
-							break;
-						}
-						}
-					}
-					else
-					{
-						EntityViewParams entityViewParams = cookie as EntityViewParams;
-						SmartEntity smartEntity = entityViewParams.Entity;
-						GameObject mainGameObject = smartEntity.GameObjectViewComp.MainGameObject;
-						Animation component = mainGameObject.GetComponent<Animation>();
-						if (!(component == null))
-						{
-							AssetMeshDataMonoBehaviour component2 = mainGameObject.GetComponent<AssetMeshDataMonoBehaviour>();
-							this.UpdateAnimation(smartEntity, currentState, new BuildingAnimationComponent(component, component2 ? component2.ListOfParticleSystems : null), true);
-						}
-					}
+					return EatResponse.NotEaten;
 				}
-				else if (id != EventId.TroopRecruited)
+				BuildingAnimationComponent buildingAnimationComp = smartEntity.BuildingAnimationComp;
+				if (buildingAnimationComp == null)
 				{
-					if (id == EventId.WorldLoadComplete)
-					{
-						this.UpdateAnimations(currentState);
-					}
+					return EatResponse.NotEaten;
 				}
-				else
-				{
-					ContractEventData contractEventData = cookie as ContractEventData;
-					if (contractEventData.Contract.DeliveryType == DeliveryType.Infantry)
-					{
-						SmartEntity smartEntity = (SmartEntity)contractEventData.Entity;
-						if (smartEntity != null)
-						{
-							BuildingAnimationComponent buildingAnimationComp = smartEntity.BuildingAnimationComp;
-							if (buildingAnimationComp != null && this.BuildingEligibleForActiveAnimation(smartEntity, currentState, buildingAnimationComp))
-							{
-								buildingAnimationComp.Anim.Stop();
-								for (int j = 0; j < this.barracksOpenCloseAnims.Length; j++)
-								{
-									this.EnqueueAnimation(buildingAnimationComp, this.barracksOpenCloseAnims[j]);
-								}
-							}
-						}
-					}
-				}
+				this.UpdateAnimation(smartEntity, currentState, buildingAnimationComp, true);
+				return EatResponse.NotEaten;
 			}
-			else if (id <= EventId.ContractStopped)
-			{
-				if (id != EventId.GameStateChanged)
-				{
-					switch (id)
-					{
-					case EventId.ContractStarted:
-					case EventId.ContractContinued:
-					{
-						ContractEventData contractEventData2 = (ContractEventData)cookie;
-						this.StartAnimationOnContractStarted(contractEventData2.Entity, contractEventData2.Contract, currentState);
-						break;
-					}
-					case EventId.ContractStopped:
-						this.UpdateAnimationOnContractStopped((Entity)cookie, currentState);
-						break;
-					}
-				}
-				else
-				{
-					this.UpdateAnimations(currentState);
-				}
-			}
-			else if (id != EventId.ScreenClosing)
-			{
+			case EventId.AudibleCurrencySpent:
+			case EventId.ViewObjectsPurged:
+				IL_32:
 				switch (id)
 				{
 				case EventId.EntityPostBattleRepairStarted:
 				case EventId.EntityPostBattleRepairFinished:
 				{
 					SmartEntity smartEntity = (SmartEntity)cookie;
-					if (smartEntity != null)
+					if (smartEntity == null)
 					{
-						BuildingAnimationComponent buildingAnimationComp = smartEntity.BuildingAnimationComp;
-						if (buildingAnimationComp != null)
-						{
-							this.UpdateAnimation(smartEntity, currentState, buildingAnimationComp, true);
-						}
+						return EatResponse.NotEaten;
 					}
-					break;
+					BuildingAnimationComponent buildingAnimationComp = smartEntity.BuildingAnimationComp;
+					if (buildingAnimationComp == null)
+					{
+						return EatResponse.NotEaten;
+					}
+					this.UpdateAnimation(smartEntity, currentState, buildingAnimationComp, true);
+					return EatResponse.NotEaten;
 				}
 				case EventId.AllPostBattleRepairFinished:
+					IL_4F:
+					switch (id)
+					{
+					case EventId.ContractStarted:
+					case EventId.ContractContinued:
+					{
+						ContractEventData contractEventData = (ContractEventData)cookie;
+						this.StartAnimationOnContractStarted(contractEventData.Entity, contractEventData.Contract, currentState);
+						return EatResponse.NotEaten;
+					}
+					case EventId.ContractStopped:
+						this.UpdateAnimationOnContractStopped((Entity)cookie, currentState);
+						return EatResponse.NotEaten;
+					default:
+						if (id != EventId.BuildingViewReady)
+						{
+							if (id == EventId.TroopRecruited)
+							{
+								ContractEventData contractEventData2 = cookie as ContractEventData;
+								if (contractEventData2.Contract.DeliveryType == DeliveryType.Infantry)
+								{
+									SmartEntity smartEntity = (SmartEntity)contractEventData2.Entity;
+									if (smartEntity != null)
+									{
+										BuildingAnimationComponent buildingAnimationComp = smartEntity.BuildingAnimationComp;
+										if (buildingAnimationComp != null)
+										{
+											if (this.BuildingEligibleForActiveAnimation(smartEntity, currentState, buildingAnimationComp))
+											{
+												buildingAnimationComp.Anim.Stop();
+												for (int i = 0; i < this.barracksOpenCloseAnims.Length; i++)
+												{
+													this.EnqueueAnimation(buildingAnimationComp, this.barracksOpenCloseAnims[i]);
+												}
+											}
+										}
+									}
+								}
+								return EatResponse.NotEaten;
+							}
+							if (id == EventId.WorldLoadComplete)
+							{
+								this.UpdateAnimations(currentState);
+								return EatResponse.NotEaten;
+							}
+							if (id == EventId.GameStateChanged)
+							{
+								this.UpdateAnimations(currentState);
+								return EatResponse.NotEaten;
+							}
+							if (id != EventId.ScreenClosing)
+							{
+								if (id != EventId.EquipmentDeactivated)
+								{
+									return EatResponse.NotEaten;
+								}
+								NodeList<ArmoryNode> armoryNodeList = Service.Get<BuildingLookupController>().ArmoryNodeList;
+								for (ArmoryNode armoryNode = armoryNodeList.Head; armoryNode != null; armoryNode = armoryNode.Next)
+								{
+									this.UpdateArmoryAnimation((SmartEntity)armoryNode.Entity);
+								}
+								return EatResponse.NotEaten;
+							}
+							else
+							{
+								if (!(cookie is ArmoryScreen))
+								{
+									return EatResponse.NotEaten;
+								}
+								NodeList<ArmoryNode> armoryNodeList2 = Service.Get<BuildingLookupController>().ArmoryNodeList;
+								for (ArmoryNode armoryNode2 = armoryNodeList2.Head; armoryNode2 != null; armoryNode2 = armoryNode2.Next)
+								{
+									this.UpdateArmoryAnimation((SmartEntity)armoryNode2.Entity);
+								}
+								return EatResponse.NotEaten;
+							}
+						}
+						else
+						{
+							EntityViewParams entityViewParams = cookie as EntityViewParams;
+							SmartEntity smartEntity = entityViewParams.Entity;
+							GameObject mainGameObject = smartEntity.GameObjectViewComp.MainGameObject;
+							Animation component = mainGameObject.GetComponent<Animation>();
+							if (component == null)
+							{
+								return EatResponse.NotEaten;
+							}
+							AssetMeshDataMonoBehaviour component2 = mainGameObject.GetComponent<AssetMeshDataMonoBehaviour>();
+							this.UpdateAnimation(smartEntity, currentState, new BuildingAnimationComponent(component, (!component2) ? null : component2.ListOfParticleSystems), true);
+							return EatResponse.NotEaten;
+						}
+						break;
+					}
 					break;
 				case EventId.ShuttleAnimStateChanged:
 				{
@@ -643,150 +645,37 @@ namespace StaRTS.Main.Controllers
 					{
 						this.UpdateContraBandGeneratorAnimation(smartEntity, shuttleAnim);
 					}
-					break;
+					return EatResponse.NotEaten;
 				}
-				default:
-					if (id == EventId.EquipmentDeactivated)
+				}
+				goto IL_4F;
+			case EventId.GeneratorJustFilled:
+				this.UpdateAnimationOnGeneratorFull((SmartEntity)cookie, currentState);
+				return EatResponse.NotEaten;
+			case EventId.StorageDoorEvent:
+			{
+				SmartEntity smartEntity = (SmartEntity)cookie;
+				if (smartEntity == null || smartEntity.BuildingAnimationComp == null || smartEntity.StorageComp == null)
+				{
+					return EatResponse.NotEaten;
+				}
+				if (smartEntity.StorageComp.CurrentFullnessPercentage < 1f)
+				{
+					BuildingAnimationComponent buildingAnimationComp = smartEntity.BuildingAnimationComp;
+					if (this.BuildingEligibleForActiveAnimation(smartEntity, currentState, buildingAnimationComp))
 					{
-						NodeList<ArmoryNode> armoryNodeList = Service.Get<BuildingLookupController>().ArmoryNodeList;
-						for (ArmoryNode armoryNode = armoryNodeList.Head; armoryNode != null; armoryNode = armoryNode.Next)
+						buildingAnimationComp.Anim.Stop();
+						int num = this.storageOpenCloseAnims.Length;
+						for (int j = 0; j < num; j++)
 						{
-							this.UpdateArmoryAnimation((SmartEntity)armoryNode.Entity);
+							this.EnqueueAnimation(buildingAnimationComp, this.storageOpenCloseAnims[j]);
 						}
 					}
-					break;
 				}
+				return EatResponse.NotEaten;
 			}
-			else if (cookie is ArmoryScreen)
-			{
-				NodeList<ArmoryNode> armoryNodeList2 = Service.Get<BuildingLookupController>().ArmoryNodeList;
-				for (ArmoryNode armoryNode2 = armoryNodeList2.Head; armoryNode2 != null; armoryNode2 = armoryNode2.Next)
-				{
-					this.UpdateArmoryAnimation((SmartEntity)armoryNode2.Entity);
-				}
 			}
-			return EatResponse.NotEaten;
-		}
-
-		protected internal BuildingAnimationController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).BuildingEligibleForActiveAnimation((Entity)GCHandledObjects.GCHandleToObject(*args), (IState)GCHandledObjects.GCHandleToObject(args[1]), (BuildingAnimationComponent)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).BuildingEligibleForIdleAnimation((Entity)GCHandledObjects.GCHandleToObject(*args), (IState)GCHandledObjects.GCHandleToObject(args[1]), (BuildingAnimationComponent)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).DepotSpark(*(int*)args, (GameObjectViewComponent)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).EnqueueAnimation((BuildingAnimationComponent)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).FactorySpark(*(int*)args, (GameObjectViewComponent)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).PlayAnimation((Animation)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).PlayAnimation((Animation)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).PlayFXs((List<ParticleSystem>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).PrepareFactorySparkWithEvent(*(int*)args, (GameObjectViewComponent)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).StartAnimationOnContractStarted((Entity)GCHandledObjects.GCHandleToObject(*args), (Contract)GCHandledObjects.GCHandleToObject(args[1]), (IState)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).StopAnimation((Animation)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).StopFXs((List<ParticleSystem>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).UpdateAnimation((Entity)GCHandledObjects.GCHandleToObject(*args), (IState)GCHandledObjects.GCHandleToObject(args[1]), (BuildingAnimationComponent)GCHandledObjects.GCHandleToObject(args[2]), *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).UpdateAnimationOnContractStopped((Entity)GCHandledObjects.GCHandleToObject(*args), (IState)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).UpdateAnimationOnGeneratorFull((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (IState)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).UpdateAnimations((IState)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).UpdateArmoryAnimation((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).UpdateContraBandGeneratorAnimation((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (ShuttleAnim)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((BuildingAnimationController)GCHandledObjects.GCHandleToObject(instance)).UpdateContraBandShipAnimation((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
+			goto IL_32;
 		}
 	}
 }

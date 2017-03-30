@@ -6,15 +6,14 @@ using StaRTS.Main.Views.UX;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.World
 {
 	public class HomeMapDataLoader : IMapDataLoader
 	{
-		private MapLoadedDelegate onMapLoaded;
-
 		private const WorldType worldType = WorldType.Home;
+
+		private MapLoadedDelegate onMapLoaded;
 
 		public HomeMapDataLoader()
 		{
@@ -62,7 +61,7 @@ namespace StaRTS.Main.Controllers.World
 
 		public string GetWorldName()
 		{
-			return "";
+			return string.Empty;
 		}
 
 		public string GetFactionAssetName()
@@ -74,52 +73,6 @@ namespace StaRTS.Main.Controllers.World
 		public PlanetVO GetPlanetData()
 		{
 			return Service.Get<CurrentPlayer>().Map.Planet;
-		}
-
-		protected internal HomeMapDataLoader(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).DoOfflineSimulationForGenerators();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetFactionAssetName());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetPlanetData());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetPreloads());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetProjectilePreloads((Map)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetWorldName());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetWorldType());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).LoadMapData((MapLoadedDelegate)GCHandledObjects.GCHandleToObject(*args), (MapLoadFailDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

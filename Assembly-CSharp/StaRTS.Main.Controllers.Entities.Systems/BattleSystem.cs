@@ -5,12 +5,15 @@ using StaRTS.Main.Models.Battle;
 using StaRTS.Main.Models.Entities.Nodes;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities.Systems
 {
 	public class BattleSystem : SimSystemBase
 	{
+		private const uint SMALL_AUDIO_RESET_DELTA = 33u;
+
+		private const uint LARGE_AUDIO_RESET_DELTA = 330u;
+
 		private EntityController entityController;
 
 		private BattleController battleController;
@@ -27,10 +30,6 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 
 		private NodeList<TroopNode> troopNodeList;
 
-		private const uint SMALL_AUDIO_RESET_DELTA = 33u;
-
-		private const uint LARGE_AUDIO_RESET_DELTA = 330u;
-
 		private uint audioResetDeltaMax;
 
 		private uint audioResetDeltaAccumulator;
@@ -45,7 +44,7 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 			this.squadTroopAttackController = Service.Get<SquadTroopAttackController>();
 			this.buildingNodeList = this.entityController.GetNodeList<BuildingNode>();
 			this.troopNodeList = this.entityController.GetNodeList<TroopNode>();
-			this.audioResetDeltaMax = (HardwareProfile.IsLowEndDevice() ? 330u : 33u);
+			this.audioResetDeltaMax = ((!HardwareProfile.IsLowEndDevice()) ? 33u : 330u);
 			this.audioResetDeltaAccumulator = this.audioResetDeltaMax;
 		}
 
@@ -95,34 +94,8 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 			{
 				this.battleController.OnAllTroopsDead();
 			}
-			TeamType type = this.battleController.GetCurrentBattle().IsRaidDefense() ? TeamType.Defender : TeamType.Attacker;
+			TeamType type = (!this.battleController.GetCurrentBattle().IsRaidDefense()) ? TeamType.Attacker : TeamType.Defender;
 			this.squadTroopAttackController.UpdateSquadTroopSpawnQueue(type);
-		}
-
-		public BattleSystem()
-		{
-		}
-
-		protected internal BattleSystem(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BattleSystem)GCHandledObjects.GCHandleToObject(instance)).AddToGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BattleSystem)GCHandledObjects.GCHandleToObject(instance)).HandleDeferredUserInuput();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BattleSystem)GCHandledObjects.GCHandleToObject(instance)).RemoveFromGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

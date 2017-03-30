@@ -14,7 +14,7 @@ namespace Net.RichardLord.Ash.Core
 			{
 				TNode tail = this._tail;
 				this._tail = this._tail.Previous;
-				tail.Previous = default(TNode);
+				tail.Previous = (TNode)((object)null);
 				return tail;
 			}
 			return Activator.CreateInstance<TNode>();
@@ -22,7 +22,7 @@ namespace Net.RichardLord.Ash.Core
 
 		internal void Dispose(TNode node)
 		{
-			node.Next = default(TNode);
+			node.Next = (TNode)((object)null);
 			node.Previous = this._tail;
 			this._tail = node;
 		}
@@ -39,7 +39,7 @@ namespace Net.RichardLord.Ash.Core
 			{
 				TNode cacheTail = this._cacheTail;
 				this._cacheTail = cacheTail.Previous;
-				cacheTail.Next = default(TNode);
+				cacheTail.Next = (TNode)((object)null);
 				cacheTail.Previous = this._tail;
 				this._tail = cacheTail;
 			}

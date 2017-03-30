@@ -3,7 +3,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Views.Projectors;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Animations
 {
@@ -33,20 +32,6 @@ namespace StaRTS.Main.Views.Animations
 			}
 			this.Projector = null;
 			this.CrateSupply = null;
-		}
-
-		public SupplyCrateTag()
-		{
-		}
-
-		protected internal SupplyCrateTag(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SupplyCrateTag)GCHandledObjects.GCHandleToObject(instance)).CleanUp();
-			return -1L;
 		}
 	}
 }

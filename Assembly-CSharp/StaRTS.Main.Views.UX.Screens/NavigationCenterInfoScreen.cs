@@ -12,7 +12,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -48,13 +47,13 @@ namespace StaRTS.Main.Views.UX.Screens
 			base.InitLabels();
 			base.GetElement<UXElement>("LabelInfo").Visible = false;
 			base.GetElement<UXElement>("LowLayoutGroup").Visible = true;
-			base.GetElement<UXLabel>("LabelUpgradeUnlockPlanet").Text = "";
+			base.GetElement<UXLabel>("LabelUpgradeUnlockPlanet").Text = string.Empty;
 			base.GetElement<UXElement>("UpgradeTime").Visible = false;
 			base.GetElement<UXLabel>("LabelInfoBottom").Text = LangUtils.GetBuildingDescription(this.buildingInfo);
 			this.labelHQUpgradeDesc.Visible = false;
 			this.labelViewGalaxyMap.Text = this.lang.Get("s_ViewGalaxyMap", new object[0]);
 			this.labelUnlockPlanetTimer = base.GetElement<UXLabel>("LabelUnlockPlanetTimer");
-			this.labelUnlockPlanetTimer.Text = "";
+			this.labelUnlockPlanetTimer.Text = string.Empty;
 			this.labelUnlockPlanetTimer.Visible = false;
 		}
 
@@ -186,16 +185,18 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				sliderControl.CurrentLabel.Visible = true;
 				float num = (float)currentPlayer.GetRequiredRelocationStars();
-				sliderControl.CurrentSlider.Value = ((num <= 0f) ? 1f : ((float)displayRelocationStarsCount / num));
+				sliderControl.CurrentSlider.Value = ((num > 0f) ? ((float)displayRelocationStarsCount / num) : 1f);
 				sliderControl.CurrentLabel.Text = displayRelocationStarsCount + "/" + currentPlayer.GetRequiredRelocationStars();
 				sliderControl.DescLabel.Text = this.lang.Get("PLANETS_GNC_RELOCATION_STATUS", new object[0]);
 				base.GetElement<UXSprite>("SpritepBar3MasteryStar").Visible = true;
-				return;
 			}
-			sliderControl.CurrentSlider.Value = 1f;
-			sliderControl.CurrentLabel.Enabled = false;
-			sliderControl.DescLabel.Text = this.lang.Get("PLANETS_GNC_RELOCATION_STATUS_AVAILABLE", new object[0]);
-			base.GetElement<UXSprite>("SpritepBar3MasteryStar").Visible = false;
+			else
+			{
+				sliderControl.CurrentSlider.Value = 1f;
+				sliderControl.CurrentLabel.Enabled = false;
+				sliderControl.DescLabel.Text = this.lang.Get("PLANETS_GNC_RELOCATION_STATUS_AVAILABLE", new object[0]);
+				base.GetElement<UXSprite>("SpritepBar3MasteryStar").Visible = false;
+			}
 		}
 
 		public override void OnDestroyElement()
@@ -207,70 +208,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			this.buttonViewGalaxyMap.OnClicked = null;
 			base.OnDestroyElement();
-		}
-
-		protected internal NavigationCenterInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitGroups();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitImages();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitPlanetSlider(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitRelocationStarSlider(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitUnlockedPlanets();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((NavigationCenterInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ViewGalaxyMapClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

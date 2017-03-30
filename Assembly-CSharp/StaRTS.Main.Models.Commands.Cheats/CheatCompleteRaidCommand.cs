@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatCompleteRaidCommand(PlayerIdRequest request) : base("cheats.raids.complete", request, new RaidDefenseCompleteResponse())
 		{
 		}
-
-		protected internal CheatCompleteRaidCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

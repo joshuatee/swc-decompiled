@@ -8,17 +8,16 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Planets
 {
 	public class Planet
 	{
+		private const int THRASH_CAP = 20;
+
 		private float THRASH_TIME;
 
 		private float THRASH_DELTA_PERCENT;
-
-		private const int THRASH_CAP = 20;
 
 		public AssetHandle Handle;
 
@@ -107,7 +106,7 @@ namespace StaRTS.Main.Models.Planets
 			set
 			{
 				this.tournamentVO = value;
-				this.tournamentState = ((this.tournamentVO != null) ? TimedEventUtils.GetState(this.tournamentVO) : TimedEventState.Invalid);
+				this.tournamentState = ((this.tournamentVO == null) ? TimedEventState.Invalid : TimedEventUtils.GetState(this.tournamentVO));
 			}
 		}
 
@@ -218,9 +217,8 @@ namespace StaRTS.Main.Models.Planets
 				if (this.thrashValue > 20)
 				{
 					this.thrashValue = 20;
-					return;
 				}
-				if (this.thrashValue < -20)
+				else if (this.thrashValue < -20)
 				{
 					this.thrashValue = -20;
 					this.thrashValue = Mathf.Max(this.thrashValue, -this.actualPopulation);
@@ -266,230 +264,6 @@ namespace StaRTS.Main.Models.Planets
 			this.PlanetGameObject = null;
 			this.VO = null;
 			this.ObjectExtents = Vector3.zero;
-		}
-
-		protected internal Planet(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).DestroyParticles();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).CurrentBackUIShown);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).EventEffect);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).FriendsOnPlanet);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).IsCurrentPlanet);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).IsForegrounded);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).NumSquadmatesOnPlanet);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).ObjectExtents);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).OriginalRingSize);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).ParticleFX);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).ParticleRings);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).PlanetExplosions);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).PlanetGameObject);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).PlanetGlowEffect);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).ThrashingPopulation);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).Tournament);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).TournamentCountdown);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).TournamentState);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).VO);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).IsCurrentAndNeedsAnim());
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).CurrentBackUIShown = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).EventEffect = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).FriendsOnPlanet = (List<SocialFriendData>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).IsCurrentPlanet = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).IsForegrounded = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).NumSquadmatesOnPlanet = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).ObjectExtents = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).OriginalRingSize = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).ParticleFX = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).ParticleRings = (ParticleSystem)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).PlanetExplosions = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).PlanetGameObject = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).PlanetGlowEffect = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).ThrashingPopulation = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).Tournament = (TournamentVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).TournamentCountdown = (TimedEventCountdownHelper)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).VO = (PlanetVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Planet)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetTournamentState());
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((Planet)GCHandledObjects.GCHandleToObject(instance)).UpdateThrashingPopulation(*(float*)args);
-			return -1L;
 		}
 	}
 }

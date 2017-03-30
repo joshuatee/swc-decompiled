@@ -1,7 +1,6 @@
 using StaRTS.Utils;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Cameras
 {
@@ -29,7 +28,7 @@ namespace StaRTS.Main.Views.Cameras
 			}
 			set
 			{
-				this.nguiCamera.eventReceiverMask = (value ? this.unityCamera.cullingMask : 0);
+				this.nguiCamera.eventReceiverMask = ((!value) ? 0 : this.unityCamera.cullingMask);
 			}
 		}
 
@@ -93,6 +92,7 @@ namespace StaRTS.Main.Views.Cameras
 				component2.enabled = true;
 			}
 			this.Scale = 1f;
+			this.nguiCamera.useMouse = false;
 		}
 
 		public float ScaleColliderHorizontally(float x)
@@ -112,11 +112,7 @@ namespace StaRTS.Main.Views.Cameras
 
 		public void AddNewAnchor(GameObject gameObject)
 		{
-			gameObject.name = string.Format("{0} ({1})", new object[]
-			{
-				this.uxAnchor.name,
-				gameObject.name
-			});
+			gameObject.name = string.Format("{0} ({1})", this.uxAnchor.name, gameObject.name);
 			this.SetParent(gameObject, this.unityCamera.gameObject);
 		}
 
@@ -132,76 +128,6 @@ namespace StaRTS.Main.Views.Cameras
 			gameObject.transform.localPosition = Vector3.zero;
 			gameObject.transform.localRotation = Quaternion.identity;
 			gameObject.transform.localScale = Vector3.one;
-		}
-
-		protected internal UXCamera(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((UXCamera)GCHandledObjects.GCHandleToObject(instance)).AddNewAnchor((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((UXCamera)GCHandledObjects.GCHandleToObject(instance)).AttachToMainAnchor((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXCamera)GCHandledObjects.GCHandleToObject(instance)).Anchor);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXCamera)GCHandledObjects.GCHandleToObject(instance)).ReceiveEvents);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXCamera)GCHandledObjects.GCHandleToObject(instance)).Scale);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((UXCamera)GCHandledObjects.GCHandleToObject(instance)).Init(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXCamera)GCHandledObjects.GCHandleToObject(instance)).ScaleColliderHorizontally(*(float*)args));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXCamera)GCHandledObjects.GCHandleToObject(instance)).ScaleColliderInDepth(*(float*)args));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXCamera)GCHandledObjects.GCHandleToObject(instance)).ScaleColliderVertically(*(float*)args));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((UXCamera)GCHandledObjects.GCHandleToObject(instance)).ReceiveEvents = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((UXCamera)GCHandledObjects.GCHandleToObject(instance)).Scale = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((UXCamera)GCHandledObjects.GCHandleToObject(instance)).SetParent((GameObject)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

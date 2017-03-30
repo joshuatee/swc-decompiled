@@ -5,9 +5,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Projectors
 {
@@ -19,9 +17,9 @@ namespace StaRTS.Main.Views.Projectors
 
 		private const string CAMERA_FORMAT = "Projector Camera ({0})";
 
-		protected int projectorIndex;
-
 		private const float INDEX_OFFSET = 250f;
+
+		protected int projectorIndex;
 
 		protected GameObject cameraGameObject;
 
@@ -48,10 +46,7 @@ namespace StaRTS.Main.Views.Projectors
 		protected void SetupCamera(string name, GameObject subject, float sharpness, float width, float height, Vector3 cameraPosition, Vector3 cameraInterest)
 		{
 			this.DestroyCamera();
-			this.cameraGameObject = new GameObject(string.Format("Projector Camera ({0})", new object[]
-			{
-				name
-			}));
+			this.cameraGameObject = new GameObject(string.Format("Projector Camera ({0})", name));
 			Camera camera = this.cameraGameObject.AddComponent<Camera>();
 			camera.fieldOfView = 10f;
 			camera.clearFlags = CameraClearFlags.Color;
@@ -79,17 +74,16 @@ namespace StaRTS.Main.Views.Projectors
 			this.config = config;
 			bool flag = config.AnimPreference == AnimationPreference.NoAnimation;
 			bool flag2 = config.AnimPreference == AnimationPreference.AnimationPreferred && HardwareProfile.IsLowEndDevice();
-			this.snapshot = (flag | flag2);
+			this.snapshot = (flag || flag2);
 			if (this.snapshot)
 			{
 				this.renderCallback = config.RenderCallback;
 				this.snapshotFrameCount = config.SnapshotFrameDelay;
 				Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
-				return;
 			}
-			if (config.RenderCallback != null)
+			else if (config.RenderCallback != null)
 			{
-				config.RenderCallback.Invoke(this.renderTexture, config);
+				config.RenderCallback(this.renderTexture, config);
 			}
 		}
 
@@ -112,7 +106,7 @@ namespace StaRTS.Main.Views.Projectors
 		{
 			if (this.renderCallback != null)
 			{
-				this.renderCallback.Invoke(this.renderTexture, this.config);
+				this.renderCallback(this.renderTexture, this.config);
 			}
 			this.DestroyCamera();
 		}
@@ -131,57 +125,6 @@ namespace StaRTS.Main.Views.Projectors
 				this.cameraGameObject.GetComponent<Camera>().targetTexture = null;
 				UnityEngine.Object.Destroy(this.cameraGameObject);
 			}
-		}
-
-		protected internal AbstractProjectorRenderer(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).DestroyCamera();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).DoesRenderTextureNeedReload());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).FinishSnapshot();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AbstractProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AbstractProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).PostRender((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AbstractProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).Render((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AbstractProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).SetupCamera(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(float*)(args + 2), *(float*)(args + 3), *(float*)(args + 4), *(*(IntPtr*)(args + 5)), *(*(IntPtr*)(args + 6)));
-			return -1L;
 		}
 	}
 }

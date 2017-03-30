@@ -11,7 +11,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 public class PanToPlanetStoryAction : AbstractStoryAction, IEventObserver
 {
@@ -34,8 +33,8 @@ public class PanToPlanetStoryAction : AbstractStoryAction, IEventObserver
 		}
 		else
 		{
-			string text = cookie as string;
-			if (!this.planet.VO.Uid.Equals(text))
+			string value = cookie as string;
+			if (!this.planet.VO.Uid.Equals(value))
 			{
 				return EatResponse.NotEaten;
 			}
@@ -70,18 +69,18 @@ public class PanToPlanetStoryAction : AbstractStoryAction, IEventObserver
 		{
 			if (currentState is GalaxyState)
 			{
-				Service.Get<StaRTSLogger>().Error("PanToPlanetStoryAction: No Valid planet specified for: " + this.vo.Uid + ": prepare: " + this.vo.PrepareString);
+				Service.Get<Logger>().Error("PanToPlanetStoryAction: No Valid planet specified for: " + this.vo.Uid + ": prepare: " + this.vo.PrepareString);
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("PanToPlanetStoryAction: Can't do PanToPlanetStoryAction when not in Galaxy view");
+				Service.Get<Logger>().Error("PanToPlanetStoryAction: Can't do PanToPlanetStoryAction when not in Galaxy view");
 			}
 			this.parent.ChildComplete(this);
 			return;
 		}
 		if (!(currentState is GalaxyState))
 		{
-			Service.Get<StaRTSLogger>().Error("PanToPlanetStoryAction: We're not in Galaxy State");
+			Service.Get<Logger>().Error("PanToPlanetStoryAction: We're not in Galaxy State");
 			this.parent.ChildComplete(this);
 			return;
 		}
@@ -95,29 +94,10 @@ public class PanToPlanetStoryAction : AbstractStoryAction, IEventObserver
 		{
 			Service.Get<EventManager>().RegisterObserver(this, EventId.GalaxyStatePanToPlanetComplete, EventPriority.Default);
 			Service.Get<GalaxyViewController>().PanToPlanet(this.planet);
-			return;
 		}
-		Service.Get<EventManager>().RegisterObserver(this, EventId.PlanetsLoadingComplete, EventPriority.Default);
-	}
-
-	protected internal PanToPlanetStoryAction(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((PanToPlanetStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PanToPlanetStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((PanToPlanetStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-		return -1L;
+		else
+		{
+			Service.Get<EventManager>().RegisterObserver(this, EventId.PlanetsLoadingComplete, EventPriority.Default);
+		}
 	}
 }

@@ -9,7 +9,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 {
@@ -97,15 +96,17 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				this.battleCost.Visible = true;
 				this.pvpMeshTexture.LoadTexture("PlanetPVP-" + this.screen.viewingPlanetVO.Abbreviation);
 				this.pvpMeshTexture.SetShader("Unlit/Premultiplied Colored");
-				return;
 			}
-			this.pvpAttackButton.Enabled = false;
-			this.pvpAttackButton.Visible = false;
-			this.battleActionButtonLabel.TextColor = UXUtils.COLOR_LABEL_DISABLED;
-			this.labelBattleLocked.Visible = true;
-			this.battleCost.Visible = false;
-			this.pvpMeshTexture.LoadTexture("PlanetPanelLocked");
-			this.pvpMeshTexture.SetShader("Unlit/Premultiplied Colored");
+			else
+			{
+				this.pvpAttackButton.Enabled = false;
+				this.pvpAttackButton.Visible = false;
+				this.battleActionButtonLabel.TextColor = UXUtils.COLOR_LABEL_DISABLED;
+				this.labelBattleLocked.Visible = true;
+				this.battleCost.Visible = false;
+				this.pvpMeshTexture.LoadTexture("PlanetPanelLocked");
+				this.pvpMeshTexture.SetShader("Unlit/Premultiplied Colored");
+			}
 		}
 
 		private void InitPvpPanel()
@@ -149,7 +150,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 		{
 			StringBuilder stringBuilder = new StringBuilder();
 			TournamentVO currentPlanetActiveTournament = Service.Get<TournamentController>().CurrentPlanetActiveTournament;
-			stringBuilder.Append((currentPlanetActiveTournament != null) ? currentPlanetActiveTournament.Uid : "no_tournament");
+			stringBuilder.Append((currentPlanetActiveTournament == null) ? "no_tournament" : currentPlanetActiveTournament.Uid);
 			if (!GameUtils.HasAvailableTroops(false, null))
 			{
 				AlertScreen.ShowModal(false, base.LangController.Get("NOT_ENOUGH_TROOPS_TITLE", new object[0]), base.LangController.Get("NOT_ENOUGH_TROOPS_FOR_ATTACK", new object[0]), null, null);
@@ -166,10 +167,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			if (base.Player.ProtectedUntil > ServerTime.Time)
 			{
 				DisableProtectionAlertScreen.ShowModal(new OnScreenModalResult(this.OnConfirmInvalidation), null);
-				return;
 			}
-			this.PurchaseNextBattle();
-			base.EvtManager.SendEvent(EventId.UIAttackScreenSelection, new ActionMessageBIData("PvP", stringBuilder.ToString()));
+			else
+			{
+				this.PurchaseNextBattle();
+				base.EvtManager.SendEvent(EventId.UIAttackScreenSelection, new ActionMessageBIData("PvP", stringBuilder.ToString()));
+			}
 		}
 
 		private void OnNotEnoughCreditsModalResult(object result, object cookie)
@@ -198,64 +201,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 		public void OnClose()
 		{
 			this.pvpMeshTexture.Visible = false;
-		}
-
-		protected internal PlanetDetailsPvPViewModule(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetDetailsPvPViewModule)GCHandledObjects.GCHandleToObject(instance)).InitPvpPanel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetDetailsPvPViewModule)GCHandledObjects.GCHandleToObject(instance)).OnClose();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetDetailsPvPViewModule)GCHandledObjects.GCHandleToObject(instance)).OnConfirmInvalidation(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetDetailsPvPViewModule)GCHandledObjects.GCHandleToObject(instance)).OnNotEnoughCreditsModalResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetDetailsPvPViewModule)GCHandledObjects.GCHandleToObject(instance)).OnPvpButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetDetailsPvPViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetDetailsPvPViewModule)GCHandledObjects.GCHandleToObject(instance)).PurchaseNextBattle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PlanetDetailsPvPViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshScreenForPlanetChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PlanetDetailsPvPViewModule)GCHandledObjects.GCHandleToObject(instance)).UpdatePvpPanel(*(sbyte*)args != 0, (TournamentVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

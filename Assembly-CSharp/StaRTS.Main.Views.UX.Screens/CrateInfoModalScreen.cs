@@ -18,8 +18,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -207,7 +205,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		public CrateInfoReason ModalReason;
 
-		private int selectedRowIndex;
+		private int selectedRowIndex = -1;
 
 		private List<CrateFlyoutItemVO> filteredFlyoutItems;
 
@@ -240,6 +238,61 @@ namespace StaRTS.Main.Views.UX.Screens
 			get
 			{
 				return false;
+			}
+		}
+
+		public CrateInfoModalScreen(string crateUid, string planetID, int hqLevel) : base("gui_modal_crateinfo")
+		{
+			IDataController dataController = Service.Get<IDataController>();
+			this.targetCrateVO = dataController.Get<CrateVO>(crateUid);
+			string text = null;
+			FactionType faction = Service.Get<CurrentPlayer>().Faction;
+			if (faction != FactionType.Empire)
+			{
+				if (faction == FactionType.Rebel)
+				{
+					text = this.targetCrateVO.RebelLEIUid;
+				}
+			}
+			else
+			{
+				text = this.targetCrateVO.EmpireLEIUid;
+			}
+			if (!string.IsNullOrEmpty(text))
+			{
+				this.targetLEIVO = dataController.Get<LimitedEditionItemVO>(text);
+			}
+			this.planetVO = dataController.GetOptional<PlanetVO>(planetID);
+			this.hqLevel = hqLevel;
+			this.filteredFlyoutItems = new List<CrateFlyoutItemVO>();
+			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
+			string[] array = (currentPlayer.Faction != FactionType.Empire) ? this.targetCrateVO.FlyoutRebelItems : this.targetCrateVO.FlyoutEmpireItems;
+			if (array != null)
+			{
+				int i = 0;
+				int num = array.Length;
+				while (i < num)
+				{
+					string text2 = array[i];
+					CrateFlyoutItemVO optional = dataController.GetOptional<CrateFlyoutItemVO>(text2);
+					if (optional == null)
+					{
+						Service.Get<Logger>().ErrorFormat("CrateInfoModalScreen: FlyoutItemVO Uid {0} not found", new object[]
+						{
+							text2
+						});
+					}
+					else
+					{
+						bool flag = UXUtils.IsValidRewardItem(optional, this.planetVO, hqLevel);
+						bool flag2 = UXUtils.ShouldDisplayCrateFlyoutItem(optional, CrateFlyoutDisplayType.Flyout);
+						if (flag && flag2 && this.filteredFlyoutItems.Count < 4)
+						{
+							this.filteredFlyoutItems.Add(optional);
+						}
+					}
+					i++;
+				}
 			}
 		}
 
@@ -300,63 +353,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				ModalReason = CrateInfoReason.Reason_Store_Buy
 			};
-		}
-
-		public CrateInfoModalScreen(string crateUid, string planetID, int hqLevel)
-		{
-			this.selectedRowIndex = -1;
-			base..ctor("gui_modal_crateinfo");
-			IDataController dataController = Service.Get<IDataController>();
-			this.targetCrateVO = dataController.Get<CrateVO>(crateUid);
-			string text = null;
-			FactionType faction = Service.Get<CurrentPlayer>().Faction;
-			if (faction != FactionType.Empire)
-			{
-				if (faction == FactionType.Rebel)
-				{
-					text = this.targetCrateVO.RebelLEIUid;
-				}
-			}
-			else
-			{
-				text = this.targetCrateVO.EmpireLEIUid;
-			}
-			if (!string.IsNullOrEmpty(text))
-			{
-				this.targetLEIVO = dataController.Get<LimitedEditionItemVO>(text);
-			}
-			this.planetVO = dataController.GetOptional<PlanetVO>(planetID);
-			this.hqLevel = hqLevel;
-			this.filteredFlyoutItems = new List<CrateFlyoutItemVO>();
-			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-			string[] array = (currentPlayer.Faction == FactionType.Empire) ? this.targetCrateVO.FlyoutEmpireItems : this.targetCrateVO.FlyoutRebelItems;
-			if (array != null)
-			{
-				int i = 0;
-				int num = array.Length;
-				while (i < num)
-				{
-					string text2 = array[i];
-					CrateFlyoutItemVO optional = dataController.GetOptional<CrateFlyoutItemVO>(text2);
-					if (optional == null)
-					{
-						Service.Get<StaRTSLogger>().ErrorFormat("CrateInfoModalScreen: FlyoutItemVO Uid {0} not found", new object[]
-						{
-							text2
-						});
-					}
-					else
-					{
-						bool flag = UXUtils.IsValidRewardItem(optional, this.planetVO, hqLevel);
-						bool flag2 = UXUtils.ShouldDisplayCrateFlyoutItem(optional, CrateFlyoutDisplayType.Flyout);
-						if ((flag & flag2) && this.filteredFlyoutItems.Count < 4)
-						{
-							this.filteredFlyoutItems.Add(optional);
-						}
-					}
-					i++;
-				}
-			}
 		}
 
 		public void ResetAutoScrollTimers()
@@ -507,10 +503,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				element.Text = LangUtils.GetPlanetDisplayName(this.planetVO.Uid);
 				element2.LoadTexture(this.planetVO.LeaderboardTileTexture);
-				return;
 			}
-			element.Visible = false;
-			element2.Visible = false;
+			else
+			{
+				element.Visible = false;
+				element2.Visible = false;
+			}
 		}
 
 		private void InitExpirationLabel()
@@ -521,25 +519,22 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				UXUtils.SetLeiExpirationTimerLabel(this.targetLEIVO, this.expirationLabel, this.lang);
 				Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
-				return;
 			}
-			if (this.ModalReason == CrateInfoReason.Reason_Inventory_Open && this.crateData != null)
+			else if (this.ModalReason == CrateInfoReason.Reason_Inventory_Open && this.crateData != null)
 			{
 				UXUtils.SetCrateExpirationTimerLabel(this.crateData, this.expirationLabel, this.lang);
 				if (this.crateData.DoesExpire)
 				{
 					Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
-					return;
 				}
+			}
+			else if (this.ModalReason == CrateInfoReason.Reason_Targeted_Offer)
+			{
+				UXUtils.SetCrateTargetedOfferTimerLabel(targetedBundleController.OfferExpiresAt, this.expirationLabel, this.lang);
+				Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
 			}
 			else
 			{
-				if (this.ModalReason == CrateInfoReason.Reason_Targeted_Offer)
-				{
-					UXUtils.SetCrateTargetedOfferTimerLabel(targetedBundleController.OfferExpiresAt, this.expirationLabel, this.lang);
-					Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
-					return;
-				}
 				this.expirationLabel.Visible = false;
 			}
 		}
@@ -570,37 +565,38 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.crateInfoPayButton.OnClicked = new UXButtonClickedDelegate(this.OnTargetedOfferPurchaseClicked);
 					string[] cost = this.CurrentOffer.Cost;
-					if (cost != null && cost.Length != 0)
+					if (cost != null && cost.Length > 0)
 					{
 						element.Visible = true;
 						element.Text = this.lang.Get("CRATE_FLYOUT_STORE_OPEN_CTA", new object[0]);
 						UXUtils.SetupTargetedOfferCostUI(this.CurrentOffer, element3, element2);
-						return;
 					}
-					if (this.CurrentOffer.LinkedIAPs.Count <= 0)
+					else
 					{
-						Service.Get<StaRTSLogger>().Error("CrateModalInfoScreen::InitCTAUI No Cost on Offer: " + this.CurrentOffer.Uid);
-						return;
+						if (this.CurrentOffer.LinkedIAPs.Count <= 0)
+						{
+							Service.Get<Logger>().Error("CrateModalInfoScreen::InitCTAUI No Cost on Offer: " + this.CurrentOffer.Uid);
+							return;
+						}
+						this.btnCurrencySprite.Visible = false;
+						this.currentIapId = null;
+						this.currentRealCost = null;
+						if (!Service.Get<TargetedBundleController>().FindAvailableIAP(this.CurrentOffer, out this.currentIapId, out this.currentRealCost))
+						{
+							this.discountGroup.Visible = false;
+							this.crateInfoPayButton.Visible = false;
+							this.btnCurrencyLabel.Visible = false;
+							Service.Get<Logger>().Error("CrateModalInfoScreen::InitCTAUI LinkedIAP invalid on Offer: " + this.CurrentOffer.Uid);
+							return;
+						}
+						element4.Text = this.lang.Get("TARGETED_BUNDLE_PURCHASE", new object[]
+						{
+							this.currentRealCost
+						});
+						element4.Visible = true;
+						element2.Visible = false;
+						element3.Visible = false;
 					}
-					this.btnCurrencySprite.Visible = false;
-					this.currentIapId = null;
-					this.currentRealCost = null;
-					if (!Service.Get<TargetedBundleController>().FindAvailableIAP(this.CurrentOffer, out this.currentIapId, out this.currentRealCost))
-					{
-						this.discountGroup.Visible = false;
-						this.crateInfoPayButton.Visible = false;
-						this.btnCurrencyLabel.Visible = false;
-						Service.Get<StaRTSLogger>().Error("CrateModalInfoScreen::InitCTAUI LinkedIAP invalid on Offer: " + this.CurrentOffer.Uid);
-						return;
-					}
-					element4.Text = this.lang.Get("TARGETED_BUNDLE_PURCHASE", new object[]
-					{
-						this.currentRealCost
-					});
-					element4.Visible = true;
-					element2.Visible = false;
-					element3.Visible = false;
-					return;
 				}
 			}
 			else if (this.ModalReason == CrateInfoReason.Reason_Store_Buy && (flag || this.targetLEIVO != null))
@@ -609,21 +605,22 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.crateInfoPayButton.OnClicked = new UXButtonClickedDelegate(this.OnCrateInfoPayButtonClicked);
 				element.Text = this.lang.Get("CRATE_FLYOUT_STORE_OPEN_CTA", new object[0]);
 				element4.Visible = false;
-				int num = (this.targetLEIVO == null) ? this.targetCrateVO.Crystals : this.targetLEIVO.Crystals;
+				int num = (this.targetLEIVO != null) ? this.targetLEIVO.Crystals : this.targetCrateVO.Crystals;
 				CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 				if (currentPlayer.ArmoryInfo.FirstCratePurchased || this.targetLEIVO != null)
 				{
 					element3.Text = this.lang.ThousandsSeparated(num);
 					UXUtils.UpdateCostColor(element3, null, 0, 0, 0, num, 0, false);
 					element2.Visible = true;
-					return;
 				}
-				element4.Text = this.lang.Get("CRATE_FLYOUT_STORE_OPEN_CTA", new object[0]);
-				element4.Visible = true;
-				element.Visible = false;
-				element3.Visible = false;
-				element2.Visible = false;
-				return;
+				else
+				{
+					element4.Text = this.lang.Get("CRATE_FLYOUT_STORE_OPEN_CTA", new object[0]);
+					element4.Visible = true;
+					element.Visible = false;
+					element3.Visible = false;
+					element2.Visible = false;
+				}
 			}
 			else if (this.ModalReason == CrateInfoReason.Reason_Inventory_Open && this.crateData != null)
 			{
@@ -742,50 +739,29 @@ namespace StaRTS.Main.Views.UX.Screens
 				base.GetElement<UXElement>("RewardItemDefault").Visible = false;
 				for (int i = 1; i <= 3; i++)
 				{
-					base.GetElement<UXElement>(string.Format("RewardItemCardQ{0}", new object[]
-					{
-						i
-					})).Visible = false;
+					base.GetElement<UXElement>(string.Format("RewardItemCardQ{0}", i)).Visible = false;
 				}
 				if (optional.Type == SupplyType.ShardTroop || optional.Type == SupplyType.ShardSpecialAttack)
 				{
 					ShardVO optional2 = Service.Get<IDataController>().GetOptional<ShardVO>(optional.RewardUid);
 					int quality = (int)optional2.Quality;
-					base.GetElement<UXElement>(string.Format("RewardItemCardQ{0}", new object[]
-					{
-						quality
-					})).Visible = true;
-					base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", new object[]
-					{
-						quality
-					})).Visible = false;
+					base.GetElement<UXElement>(string.Format("RewardItemCardQ{0}", quality)).Visible = true;
+					base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", quality)).Visible = false;
 				}
 				else if (optional.Type == SupplyType.Shard)
 				{
 					EquipmentVO currentEquipmentDataByID = ArmoryUtils.GetCurrentEquipmentDataByID(optional.RewardUid);
 					int quality2 = (int)currentEquipmentDataByID.Quality;
-					base.GetElement<UXElement>(string.Format("RewardItemCardQ{0}", new object[]
-					{
-						quality2
-					})).Visible = true;
-					base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", new object[]
-					{
-						quality2
-					})).Visible = true;
+					base.GetElement<UXElement>(string.Format("RewardItemCardQ{0}", quality2)).Visible = true;
+					base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", quality2)).Visible = true;
 				}
 				else if (optional.Type == SupplyType.Troop || optional.Type == SupplyType.Hero || optional.Type == SupplyType.SpecialAttack)
 				{
 					int upgradeQualityForDeployableUID = Service.Get<DeployableShardUnlockController>().GetUpgradeQualityForDeployableUID(optional.RewardUid);
 					if (upgradeQualityForDeployableUID > 0)
 					{
-						base.GetElement<UXElement>(string.Format("RewardItemCardQ{0}", new object[]
-						{
-							upgradeQualityForDeployableUID
-						})).Visible = true;
-						base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", new object[]
-						{
-							upgradeQualityForDeployableUID
-						})).Visible = false;
+						base.GetElement<UXElement>(string.Format("RewardItemCardQ{0}", upgradeQualityForDeployableUID)).Visible = true;
+						base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", upgradeQualityForDeployableUID)).Visible = false;
 					}
 				}
 				else
@@ -801,7 +777,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("CrateInfoModalScreen: Could not generate geometry for crate supply {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("CrateInfoModalScreen: Could not generate geometry for crate supply {0}", new object[]
 					{
 						optional.Uid
 					});
@@ -809,7 +785,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.labelRewardChance.Text = this.lang.Get(crateFlyoutItemVO.DetailChanceString, new object[0]);
 				this.labelRewardName.Text = this.lang.Get(crateFlyoutItemVO.DetailDescString, new object[0]);
 				string[] listIcons = crateFlyoutItemVO.ListIcons;
-				if (listIcons != null && listIcons.Length != 0)
+				if (listIcons != null && listIcons.Length > 0)
 				{
 					this.spriteRewardIcon.SpriteName = listIcons[listIcons.Length - 1];
 				}
@@ -864,13 +840,15 @@ namespace StaRTS.Main.Views.UX.Screens
 					element3.Text = this.lang.Get("EQUIPMENT_ARMORY_REQUIRED", new object[0]);
 				}
 				this.UpdateRowHighlight(crateFlyoutItemVO.Uid, true);
-				return;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("CrateInfoModalScreen: Could not find crate supply {0} for crate flyout {1}", new object[]
+			else
 			{
-				crateSupplyUid,
-				crateFlyoutItemVO.Uid
-			});
+				Service.Get<Logger>().ErrorFormat("CrateInfoModalScreen: Could not find crate supply {0} for crate flyout {1}", new object[]
+				{
+					crateSupplyUid,
+					crateFlyoutItemVO.Uid
+				});
+			}
 		}
 
 		private void SelectRowItemAtIndex(int index)
@@ -888,7 +866,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void CloseScreenOnHideComplete(uint id, object cookie)
 		{
-			UXButton button = (cookie != null) ? (cookie as UXButton) : null;
+			UXButton button = (cookie == null) ? null : (cookie as UXButton);
 			base.OnCloseButtonClicked(button);
 		}
 
@@ -953,9 +931,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.animator.SetTrigger("Hide");
 				Service.Get<ViewTimerManager>().CreateViewTimer(1.16f, false, new TimerDelegate(this.CloseScreenOnHideComplete), button);
-				return;
 			}
-			this.CloseScreenOnHideComplete(0u, button);
+			else
+			{
+				this.CloseScreenOnHideComplete(0u, button);
+			}
 		}
 
 		private void OnCrateInfoCTAButtonClicked(UXButton button)
@@ -988,164 +968,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.OnCloseCrateInfoButtonClicked(null);
 			}
 			button.Enabled = false;
-		}
-
-		protected internal CrateInfoModalScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).AutoScrollFlyoutRowItem();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateInfoModalScreen.CreateForInfo(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateInfoModalScreen.CreateForInventory((CrateData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateInfoModalScreen.CreateForObjectiveProgressInfo(Marshal.PtrToStringUni(*(IntPtr*)args), (ObjectiveProgress)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateInfoModalScreen.CreateForStore(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateInfoModalScreen.CreateForTargetedOffer((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args), (CrateVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CrateInfoModalScreen.CreateForTargetedOfferTest((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args), (CrateVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).InitCTAUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).InitExpirationLabel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).InitPlanetUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).InitRewardsGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnCloseCrateInfoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnCrateInfoCTAButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnCrateInfoPayButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnGridItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnTargetedOfferPurchaseClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).ResetAutoScrollTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).SelectRowItemAtIndex(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTargetedOfferElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateRewardUI((CrateFlyoutItemVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((CrateInfoModalScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateRowHighlight(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
 		}
 	}
 }

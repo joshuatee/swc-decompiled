@@ -3,8 +3,6 @@ using StaRTS.Main.Models.Player;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story
 {
@@ -51,25 +49,6 @@ namespace StaRTS.Main.Story
 			}
 			Service.Get<SharedPlayerPrefs>().SetPref(planetUID + "Viewed", "1");
 			new ActionChain(optional.IntroStoryAction);
-		}
-
-		public PlanetIntroStoryUtil()
-		{
-		}
-
-		protected internal PlanetIntroStoryUtil(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			PlanetIntroStoryUtil.PlayPlanetIntroStoryChain(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlanetIntroStoryUtil.ShouldPlanetIntroStoryBePlayed(Marshal.PtrToStringUni(*(IntPtr*)args)));
 		}
 	}
 }

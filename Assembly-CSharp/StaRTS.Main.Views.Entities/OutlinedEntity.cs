@@ -2,7 +2,6 @@ using Net.RichardLord.Ash.Core;
 using StaRTS.Main.Utils;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -20,16 +19,6 @@ namespace StaRTS.Main.Views.Entities
 		{
 			material.SetColor("_OutlineColor", FXUtils.SELECTION_OUTLINE_COLOR);
 			material.SetFloat("_Outline", 0.00125f);
-		}
-
-		protected internal OutlinedEntity(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((OutlinedEntity)GCHandledObjects.GCHandleToObject(instance)).SetMaterialCustomProperties((Material)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

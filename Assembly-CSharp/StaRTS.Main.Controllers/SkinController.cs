@@ -12,7 +12,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -53,8 +52,8 @@ namespace StaRTS.Main.Controllers
 
 		private void ProcessSkin(SmartEntity entity)
 		{
-			ActiveArmory activeArmory = (Service.Get<GameStateMachine>().CurrentState is HomeState) ? Service.Get<CurrentPlayer>().ActiveArmory : null;
-			CurrentBattle battle = (activeArmory == null) ? Service.Get<BattleController>().GetCurrentBattle() : null;
+			ActiveArmory activeArmory = (!(Service.Get<GameStateMachine>().CurrentState is HomeState)) ? null : Service.Get<CurrentPlayer>().ActiveArmory;
+			CurrentBattle battle = (activeArmory != null) ? null : Service.Get<BattleController>().GetCurrentBattle();
 			SkinTypeVO applicableSkin = this.GetApplicableSkin((TroopTypeVO)entity.TroopComp.TroopType, activeArmory, battle, entity.TeamComp.TeamType);
 			if (applicableSkin != null)
 			{
@@ -206,55 +205,6 @@ namespace StaRTS.Main.Controllers
 		{
 			string text = null;
 			return this.GetApplicableSkin(troop, equipmentList, out text);
-		}
-
-		protected internal SkinController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinController)GCHandledObjects.GCHandleToObject(instance)).GetApplicableSkin((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (List<string>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinController)GCHandledObjects.GCHandleToObject(instance)).GetApplicableSkin((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (ActiveArmory)GCHandledObjects.GCHandleToObject(args[1]), (BattleEntry)GCHandledObjects.GCHandleToObject(args[2]), (TeamType)(*(int*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SkinController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SkinController)GCHandledObjects.GCHandleToObject(instance)).ProcessCardSkin((GeometryTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SkinController)GCHandledObjects.GCHandleToObject(instance)).ProcessHologramSkin((GeometryTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SkinController)GCHandledObjects.GCHandleToObject(instance)).ProcessSkin((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SkinController)GCHandledObjects.GCHandleToObject(instance)).ProcessSkin((GeometryTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SkinController)GCHandledObjects.GCHandleToObject(instance)).ProcessTooltip((GeometryTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

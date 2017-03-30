@@ -6,9 +6,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Pvp
 {
@@ -245,7 +242,7 @@ namespace StaRTS.Main.Models.Commands.Pvp
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Attempted to create invalid PvpTarget.");
+				Service.Get<Logger>().Error("Attempted to create invalid PvpTarget.");
 				return null;
 			}
 			if (dictionary.ContainsKey("battleId"))
@@ -262,27 +259,27 @@ namespace StaRTS.Main.Models.Commands.Pvp
 			}
 			if (dictionary.ContainsKey("level"))
 			{
-				this.PlayerLevel = Convert.ToInt32(dictionary["level"], CultureInfo.InvariantCulture);
+				this.PlayerLevel = Convert.ToInt32(dictionary["level"]);
 			}
 			if (dictionary.ContainsKey("xp"))
 			{
-				this.PlayerXp = Convert.ToInt32(dictionary["xp"], CultureInfo.InvariantCulture);
+				this.PlayerXp = Convert.ToInt32(dictionary["xp"]);
 			}
 			if (dictionary.ContainsKey("attackRating"))
 			{
-				this.PlayerAttackRating = Convert.ToInt32(dictionary["attackRating"], CultureInfo.InvariantCulture);
+				this.PlayerAttackRating = Convert.ToInt32(dictionary["attackRating"]);
 			}
 			if (dictionary.ContainsKey("defenseRating"))
 			{
-				this.PlayerDefenseRating = Convert.ToInt32(dictionary["defenseRating"], CultureInfo.InvariantCulture);
+				this.PlayerDefenseRating = Convert.ToInt32(dictionary["defenseRating"]);
 			}
 			if (dictionary.ContainsKey("attacksWon"))
 			{
-				this.PlayerAttacksWon = Convert.ToInt32(dictionary["attacksWon"], CultureInfo.InvariantCulture);
+				this.PlayerAttacksWon = Convert.ToInt32(dictionary["attacksWon"]);
 			}
 			if (dictionary.ContainsKey("defensesWon"))
 			{
-				this.PlayerDefensesWon = Convert.ToInt32(dictionary["defensesWon"], CultureInfo.InvariantCulture);
+				this.PlayerDefensesWon = Convert.ToInt32(dictionary["defensesWon"]);
 			}
 			if (dictionary.ContainsKey("guildId"))
 			{
@@ -306,23 +303,23 @@ namespace StaRTS.Main.Models.Commands.Pvp
 				Dictionary<string, object> dictionary2 = dictionary["resources"] as Dictionary<string, object>;
 				foreach (KeyValuePair<string, object> current in dictionary2)
 				{
-					Dictionary<string, object> dictionary3 = current.get_Value() as Dictionary<string, object>;
+					Dictionary<string, object> dictionary3 = current.Value as Dictionary<string, object>;
 					if (dictionary3 != null)
 					{
 						if (dictionary3.ContainsKey("credits"))
 						{
-							this.BuildingLootCreditsMap.Add(current.get_Key(), Convert.ToInt32(dictionary3["credits"], CultureInfo.InvariantCulture));
-							this.AvailableCredits += Convert.ToInt32(dictionary3["credits"], CultureInfo.InvariantCulture);
+							this.BuildingLootCreditsMap.Add(current.Key, Convert.ToInt32(dictionary3["credits"]));
+							this.AvailableCredits += Convert.ToInt32(dictionary3["credits"]);
 						}
 						if (dictionary3.ContainsKey("materials"))
 						{
-							this.BuildingLootMaterialsMap.Add(current.get_Key(), Convert.ToInt32(dictionary3["materials"], CultureInfo.InvariantCulture));
-							this.AvailableMaterials += Convert.ToInt32(dictionary3["materials"], CultureInfo.InvariantCulture);
+							this.BuildingLootMaterialsMap.Add(current.Key, Convert.ToInt32(dictionary3["materials"]));
+							this.AvailableMaterials += Convert.ToInt32(dictionary3["materials"]);
 						}
 						if (dictionary3.ContainsKey("contraband"))
 						{
-							this.BuildingLootContrabandMap.Add(current.get_Key(), Convert.ToInt32(dictionary3["contraband"], CultureInfo.InvariantCulture));
-							this.AvailableContraband += Convert.ToInt32(dictionary3["contraband"], CultureInfo.InvariantCulture);
+							this.BuildingLootContrabandMap.Add(current.Key, Convert.ToInt32(dictionary3["contraband"]));
+							this.AvailableContraband += Convert.ToInt32(dictionary3["contraband"]);
 						}
 					}
 				}
@@ -334,19 +331,19 @@ namespace StaRTS.Main.Models.Commands.Pvp
 				{
 					if (dictionary4.ContainsKey("potentialScoreWin"))
 					{
-						this.PotentialMedalsToGain = Convert.ToInt32(dictionary4["potentialScoreWin"], CultureInfo.InvariantCulture);
+						this.PotentialMedalsToGain = Convert.ToInt32(dictionary4["potentialScoreWin"]);
 					}
 					if (dictionary4.ContainsKey("potentialScoreLose"))
 					{
-						this.PotentialMedalsToLose = Convert.ToInt32(dictionary4["potentialScoreLose"], CultureInfo.InvariantCulture);
+						this.PotentialMedalsToLose = Convert.ToInt32(dictionary4["potentialScoreLose"]);
 					}
 					if (dictionary4.ContainsKey("potentialPointsWin"))
 					{
-						this.PotentialTournamentRatingDeltaWin = Convert.ToInt32(dictionary4["potentialPointsWin"], CultureInfo.InvariantCulture);
+						this.PotentialTournamentRatingDeltaWin = Convert.ToInt32(dictionary4["potentialPointsWin"]);
 					}
 					if (dictionary4.ContainsKey("potentialPointsLose"))
 					{
-						this.PotentialTournamentRatingDeltaLose = Convert.ToInt32(dictionary4["potentialPointsLose"], CultureInfo.InvariantCulture);
+						this.PotentialTournamentRatingDeltaLose = Convert.ToInt32(dictionary4["potentialPointsLose"]);
 					}
 				}
 			}
@@ -358,14 +355,14 @@ namespace StaRTS.Main.Models.Commands.Pvp
 				{
 					foreach (KeyValuePair<string, object> current2 in dictionary5)
 					{
-						string key = current2.get_Key();
+						string key = current2.Key;
 						int num = 0;
-						Dictionary<string, object> dictionary6 = current2.get_Value() as Dictionary<string, object>;
+						Dictionary<string, object> dictionary6 = current2.Value as Dictionary<string, object>;
 						if (dictionary6 != null)
 						{
 							foreach (KeyValuePair<string, object> current3 in dictionary6)
 							{
-								num += Convert.ToInt32(current3.get_Value(), CultureInfo.InvariantCulture);
+								num += Convert.ToInt32(current3.Value);
 							}
 							this.GuildDonatedTroops.Add(key, num);
 						}
@@ -380,14 +377,14 @@ namespace StaRTS.Main.Models.Commands.Pvp
 				{
 					foreach (KeyValuePair<string, object> current4 in dictionary7)
 					{
-						string key2 = current4.get_Key();
-						this.Champions.Add(key2, Convert.ToInt32(current4.get_Value(), CultureInfo.InvariantCulture));
+						string key2 = current4.Key;
+						this.Champions.Add(key2, Convert.ToInt32(current4.Value));
 					}
 				}
 			}
 			if (dictionary.ContainsKey("creditsCharged"))
 			{
-				this.CreditsCharged = Convert.ToInt32(dictionary["creditsCharged"], CultureInfo.InvariantCulture);
+				this.CreditsCharged = Convert.ToInt32(dictionary["creditsCharged"]);
 			}
 			this.Contracts = new List<ContractTO>();
 			if (dictionary.ContainsKey("contracts"))
@@ -404,7 +401,7 @@ namespace StaRTS.Main.Models.Commands.Pvp
 			}
 			if (dictionary.ContainsKey("faction"))
 			{
-				string name = Convert.ToString(dictionary["faction"], CultureInfo.InvariantCulture);
+				string name = Convert.ToString(dictionary["faction"]);
 				this.PlayerFaction = StringUtils.ParseEnum<FactionType>(name);
 			}
 			if (dictionary.ContainsKey("attackerDeployables"))
@@ -427,338 +424,6 @@ namespace StaRTS.Main.Models.Commands.Pvp
 				}
 			}
 			return this;
-		}
-
-		public PvpTarget()
-		{
-		}
-
-		protected internal PvpTarget(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).AttackerDeployableServerData);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).AvailableContraband);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).AvailableCredits);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).AvailableMaterials);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BaseMap);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BattleId);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BuildingLootContrabandMap);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BuildingLootCreditsMap);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BuildingLootMaterialsMap);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).Champions);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).Contracts);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).CreditsCharged);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).Equipment);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).GuildDonatedTroops);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).GuildId);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).GuildName);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerAttackRating);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerAttacksWon);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerDefenseRating);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerDefensesWon);
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerFaction);
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerId);
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerLevel);
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerName);
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerXp);
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PotentialMedalsToGain);
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PotentialMedalsToLose);
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PotentialTournamentRatingDeltaLose);
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PotentialTournamentRatingDeltaWin);
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).AttackerDeployableServerData = (Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).AvailableContraband = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).AvailableCredits = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).AvailableMaterials = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BaseMap = (Map)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BattleId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BuildingLootContrabandMap = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BuildingLootCreditsMap = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).BuildingLootMaterialsMap = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).Champions = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).Contracts = (List<ContractTO>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).CreditsCharged = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).Equipment = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).GuildDonatedTroops = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).GuildId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).GuildName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerAttackRating = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerAttacksWon = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerDefenseRating = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerDefensesWon = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerFaction = (FactionType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerLevel = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PlayerXp = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PotentialMedalsToGain = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PotentialMedalsToLose = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PotentialTournamentRatingDeltaLose = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((PvpTarget)GCHandledObjects.GCHandleToObject(instance)).PotentialTournamentRatingDeltaWin = *(int*)args;
-			return -1L;
 		}
 	}
 }

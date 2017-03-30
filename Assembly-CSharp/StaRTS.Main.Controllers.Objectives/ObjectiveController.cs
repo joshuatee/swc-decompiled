@@ -19,14 +19,12 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Objectives
 {
-	public class ObjectiveController : IViewClockTimeObserver, IEventObserver
+	public class ObjectiveController : IEventObserver, IViewClockTimeObserver
 	{
 		public delegate void OnUpdate(int timeRemaining);
 
@@ -154,14 +152,14 @@ namespace StaRTS.Main.Controllers.Objectives
 			CrateVO optional = Service.Get<IDataController>().GetOptional<CrateVO>(crateRewardUid);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("The objective {0} specifies an invalid crateRewardUid {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("The objective {0} specifies an invalid crateRewardUid {1}", new object[]
 				{
 					vO.Uid,
 					crateRewardUid
 				});
 				return;
 			}
-			string text = null;
+			string value = null;
 			if (objectiveContainerLEI != null)
 			{
 				FactionType faction = Service.Get<CurrentPlayer>().Faction;
@@ -169,17 +167,17 @@ namespace StaRTS.Main.Controllers.Objectives
 				{
 					if (faction == FactionType.Rebel)
 					{
-						text = optional.RebelLEIUid;
+						value = optional.RebelLEIUid;
 					}
 				}
 				else
 				{
-					text = optional.EmpireLEIUid;
+					value = optional.EmpireLEIUid;
 				}
 			}
 			if (objectiveBgCollected == null || objectiveContainer == null || objectiveContainerLEI == null || objectiveBgComplete == null || objectiveBgExpired == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ObjectiveViewData is initialized incompletely");
+				Service.Get<Logger>().Error("ObjectiveViewData is initialized incompletely");
 			}
 			else
 			{
@@ -197,8 +195,8 @@ namespace StaRTS.Main.Controllers.Objectives
 					}
 					else
 					{
-						objectiveContainerLEI.Visible = !string.IsNullOrEmpty(text);
-						objectiveContainer.Visible = string.IsNullOrEmpty(text);
+						objectiveContainerLEI.Visible = !string.IsNullOrEmpty(value);
+						objectiveContainer.Visible = string.IsNullOrEmpty(value);
 						objectiveBgActive.Visible = true;
 						objectiveBgExpired.Visible = false;
 						objectiveBgCollected.Visible = false;
@@ -267,7 +265,7 @@ namespace StaRTS.Main.Controllers.Objectives
 					}
 					else
 					{
-						statusLabel.TextColor = (flag ? ObjectiveController.TEXT_GREEN_COLOR : ObjectiveController.TEXT_GREEN_DIM_COLOR);
+						statusLabel.TextColor = ((!flag) ? ObjectiveController.TEXT_GREEN_DIM_COLOR : ObjectiveController.TEXT_GREEN_COLOR);
 						statusLabel.Text = lang.Get("OBJECTIVE_PROGRESS", new object[]
 						{
 							lang.ThousandsSeparated(objective.Count),
@@ -276,7 +274,7 @@ namespace StaRTS.Main.Controllers.Objectives
 					}
 					break;
 				case ObjectiveState.Complete:
-					statusLabel.TextColor = (flag ? ObjectiveController.TEXT_GREEN_COLOR : ObjectiveController.TEXT_GREEN_DIM_COLOR);
+					statusLabel.TextColor = ((!flag) ? ObjectiveController.TEXT_GREEN_DIM_COLOR : ObjectiveController.TEXT_GREEN_COLOR);
 					statusLabel.Text = lang.Get("OBJECTIVE_ACTIVE_UNLOCKED", new object[]
 					{
 						lang.ThousandsSeparated(objective.Count),
@@ -284,7 +282,7 @@ namespace StaRTS.Main.Controllers.Objectives
 					});
 					break;
 				case ObjectiveState.Rewarded:
-					statusLabel.TextColor = (flag ? ObjectiveController.TEXT_GREEN_COLOR : ObjectiveController.TEXT_GREEN_DIM_COLOR);
+					statusLabel.TextColor = ((!flag) ? ObjectiveController.TEXT_GREEN_DIM_COLOR : ObjectiveController.TEXT_GREEN_COLOR);
 					statusLabel.Text = lang.Get("OBJECTIVE_COLLECTED", new object[]
 					{
 						lang.ThousandsSeparated(objective.Count),
@@ -299,7 +297,7 @@ namespace StaRTS.Main.Controllers.Objectives
 				{
 					lang.ThousandsSeparated(objective.Target)
 				});
-				titleLabel.TextColor = (flag ? ObjectiveController.TEXT_WHITE_COLOR : ObjectiveController.TEXT_GREY_COLOR);
+				titleLabel.TextColor = ((!flag) ? ObjectiveController.TEXT_GREY_COLOR : ObjectiveController.TEXT_WHITE_COLOR);
 			}
 			UXSprite uXSprite = null;
 			UXSprite uXSprite2 = null;
@@ -371,7 +369,7 @@ namespace StaRTS.Main.Controllers.Objectives
 				projectorConfig.OutlineInner = GameConstants.CRATE_OUTLINE_INNER;
 				projectorConfig.OutlineOuter = GameConstants.CRATE_OUTLINE_OUTER;
 				objectiveData.GeoControlCrate = ProjectorUtils.GenerateProjector(projectorConfig);
-				uXSprite2.Alpha = (flag ? 1f : 0.5f);
+				uXSprite2.Alpha = ((!flag) ? 0.5f : 1f);
 			}
 			if (uXSprite != null)
 			{
@@ -379,60 +377,61 @@ namespace StaRTS.Main.Controllers.Objectives
 				ProjectorConfig projectorConfig2 = ProjectorUtils.GenerateGeometryConfig(iconVOFromObjective, uXSprite);
 				projectorConfig2.AnimPreference = AnimationPreference.AnimationPreferred;
 				objectiveData.GeoControlIcon = ProjectorUtils.GenerateProjector(projectorConfig2);
-				uXSprite.Alpha = (flag ? 1f : 0.5f);
+				uXSprite.Alpha = ((!flag) ? 0.5f : 1f);
 			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id != EventId.GameStateChanged)
+			switch (id)
 			{
+			case EventId.ObjectivesUpdated:
+			{
+				this.DisplayCombatProgress(cookie as ObjectiveProgress);
+				PlanetDetailsScreen highestLevelScreen = Service.Get<ScreenController>().GetHighestLevelScreen<PlanetDetailsScreen>();
+				if (highestLevelScreen != null)
+				{
+					highestLevelScreen.objectivesView.RefreshScreenForPlanetChange();
+					highestLevelScreen.largeObjectivesView.RefreshScreenForPlanetChange();
+				}
+				return EatResponse.NotEaten;
+			}
+			case EventId.UpdateObjectiveToastData:
+				this.completedObjectiveProgress.Add(cookie as ObjectiveProgress);
+				Service.Get<EventManager>().SendEvent(EventId.ShowObjectiveToast, null);
+				return EatResponse.NotEaten;
+			case EventId.ShowObjectiveToast:
+			{
+				IL_1E:
+				if (id == EventId.GameStateChanged)
+				{
+					IState currentState = Service.Get<GameStateMachine>().CurrentState;
+					if (currentState is BattleStartState || currentState is BattlePlayState || currentState is BattleEndState || currentState is BattlePlaybackState || currentState is BattleEndPlaybackState)
+					{
+						Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
+					}
+					else
+					{
+						Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
+					}
+					return EatResponse.NotEaten;
+				}
 				if (id != EventId.ScreenClosing)
 				{
-					switch (id)
-					{
-					case EventId.ObjectivesUpdated:
-					{
-						this.DisplayCombatProgress(cookie as ObjectiveProgress);
-						PlanetDetailsScreen highestLevelScreen = Service.Get<ScreenController>().GetHighestLevelScreen<PlanetDetailsScreen>();
-						if (highestLevelScreen != null)
-						{
-							highestLevelScreen.objectivesView.RefreshScreenForPlanetChange();
-							highestLevelScreen.largeObjectivesView.RefreshScreenForPlanetChange();
-						}
-						break;
-					}
-					case EventId.UpdateObjectiveToastData:
-						this.completedObjectiveProgress.Add(cookie as ObjectiveProgress);
-						Service.Get<EventManager>().SendEvent(EventId.ShowObjectiveToast, null);
-						break;
-					case EventId.ClaimObjectiveFailed:
-						this.currentlyClaiming = false;
-						break;
-					}
+					return EatResponse.NotEaten;
 				}
-				else
+				ScreenBase screenBase = cookie as ScreenBase;
+				if (screenBase is InventoryCrateCollectionScreen)
 				{
-					ScreenBase screenBase = cookie as ScreenBase;
-					if (screenBase is InventoryCrateCollectionScreen)
-					{
-						this.currentlyClaiming = false;
-					}
+					this.currentlyClaiming = false;
 				}
+				return EatResponse.NotEaten;
 			}
-			else
-			{
-				IState currentState = Service.Get<GameStateMachine>().CurrentState;
-				if (currentState is BattleStartState || currentState is BattlePlayState || currentState is BattleEndState || currentState is BattlePlaybackState || currentState is BattleEndPlaybackState)
-				{
-					Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
-				}
-				else
-				{
-					Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
-				}
+			case EventId.ClaimObjectiveFailed:
+				this.currentlyClaiming = false;
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			goto IL_1E;
 		}
 
 		public ObjectiveProgress GetNextCompletedObjective()
@@ -481,10 +480,10 @@ namespace StaRTS.Main.Controllers.Objectives
 			int serverTime = (int)Service.Get<ServerAPI>().ServerTime;
 			int totalSeconds = Math.Max(0, this.GetRemainingTime(serverTime, group));
 			isGrace = this.IsGracePeriod(serverTime, group);
-			timeRemainingString = (isGrace ? lang.Get("grace_period", new object[]
+			timeRemainingString = ((!isGrace) ? lang.Get("expires_in", new object[]
 			{
 				GameUtils.GetTimeLabelFromSeconds(totalSeconds)
-			}) : lang.Get("expires_in", new object[]
+			}) : lang.Get("grace_period", new object[]
 			{
 				GameUtils.GetTimeLabelFromSeconds(totalSeconds)
 			}));
@@ -512,48 +511,47 @@ namespace StaRTS.Main.Controllers.Objectives
 			{
 				return;
 			}
-			if (progress.State != ObjectiveState.Active)
+			if (progress.State == ObjectiveState.Active)
 			{
-				if (progress.State == ObjectiveState.Complete && !progress.ClaimAttempt)
+				ObjectiveVO vO = progress.VO;
+				if (vO == null)
 				{
-					this.currentlyClaiming = true;
-					this.objectiveManager.Claim(progress);
+					Service.Get<Logger>().ErrorFormat("ObjectiveVO does not exist, objectivData:", new object[]
+					{
+						progress.ObjectiveUid
+					});
+					return;
 				}
-				return;
-			}
-			ObjectiveVO vO = progress.VO;
-			if (vO != null)
-			{
 				string crateRewardUid = vO.CrateRewardUid;
 				CrateInfoModalScreen crateInfoModalScreen = CrateInfoModalScreen.CreateForObjectiveProgressInfo(crateRewardUid, progress);
 				crateInfoModalScreen.IsAlwaysOnTop = true;
 				Service.Get<ScreenController>().AddScreen(crateInfoModalScreen, true, false);
-				return;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("ObjectiveVO does not exist, objectivData:", new object[]
+			else if (progress.State == ObjectiveState.Complete && !progress.ClaimAttempt)
 			{
-				progress.ObjectiveUid
-			});
+				this.currentlyClaiming = true;
+				this.objectiveManager.Claim(progress);
+			}
 		}
 
 		private string GetBILoggingMessageForCrates(ObjectiveProgress progress, string location)
 		{
 			ObjectiveVO objectiveVO = Service.Get<IDataController>().Get<ObjectiveVO>(progress.ObjectiveUid);
-			string text = "";
+			string value = string.Empty;
 			PlanetDetailsScreen highestLevelScreen = Service.Get<ScreenController>().GetHighestLevelScreen<PlanetDetailsScreen>();
-			string text2 = "";
+			string value2 = string.Empty;
 			if (highestLevelScreen != null)
 			{
 				ObjectiveGroup objectiveGroup = this.player.Objectives[highestLevelScreen.viewingPlanetVO.Uid];
-				text = objectiveGroup.GroupId;
-				text2 = highestLevelScreen.viewingPlanetVO.PlanetBIName;
+				value = objectiveGroup.GroupId;
+				value2 = highestLevelScreen.viewingPlanetVO.PlanetBIName;
 			}
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append(text).Append("|");
+			stringBuilder.Append(value).Append("|");
 			stringBuilder.Append(objectiveVO.Uid).Append("|");
 			stringBuilder.Append(objectiveVO.CrateRewardUid).Append("|");
 			stringBuilder.Append(location).Append("|");
-			stringBuilder.Append(text2);
+			stringBuilder.Append(value2);
 			return stringBuilder.ToString();
 		}
 
@@ -576,81 +574,6 @@ namespace StaRTS.Main.Controllers.Objectives
 					text
 				}), 1.5f, 0.5f);
 			}
-		}
-
-		protected internal ObjectiveController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).addTestDataForToast(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).DisplayCombatProgress((ObjectiveProgress)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).GetAnimStateFromObjectiveState((ObjectiveState)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).GetBILoggingMessageForCrates((ObjectiveProgress)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).GetNextCompletedObjective());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).GetRemainingTime(*(int*)args, (ObjectiveGroup)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).HandleCrateClicked((ObjectiveProgress)GCHandledObjects.GCHandleToObject(*args), (UXButton)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).IsGracePeriod(*(int*)args, (ObjectiveGroup)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).OnCrateClickedFromDetail((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).ShouldShowObjectives());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ObjectiveController)GCHandledObjects.GCHandleToObject(instance)).UpdateObjectiveEntry((ObjectiveViewData)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
 		}
 	}
 }

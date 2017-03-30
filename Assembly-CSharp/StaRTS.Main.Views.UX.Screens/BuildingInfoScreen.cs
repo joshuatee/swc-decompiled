@@ -21,13 +21,11 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
-	public class BuildingInfoScreen : SelectedBuildingScreen, IViewClockTimeObserver, IEventObserver
+	public class BuildingInfoScreen : SelectedBuildingScreen, IEventObserver, IViewClockTimeObserver
 	{
 		protected const string GROUP_BUILDING_INFO = "BuildingInfo";
 
@@ -429,9 +427,9 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.buttonPrimaryAction = base.GetElement<UXButton>("ButtonPrimary");
 			if (this.useUpgradeGroup && this.nextBuildingInfo != null)
 			{
-				UXLabel uXLabel = this.useStorageGroup ? base.GetElement<UXLabel>("LabelUpgradeStorage") : base.GetElement<UXLabel>("LabelUpgrade");
+				UXLabel uXLabel = (!this.useStorageGroup) ? base.GetElement<UXLabel>("LabelUpgrade") : base.GetElement<UXLabel>("LabelUpgradeStorage");
 				uXLabel.Text = this.lang.Get("s_upgradeTime", new object[0]);
-				UXLabel uXLabel2 = this.useStorageGroup ? base.GetElement<UXLabel>("LabelUpgradeTimeStorage") : base.GetElement<UXLabel>("LabelUpgradeTime");
+				UXLabel uXLabel2 = (!this.useStorageGroup) ? base.GetElement<UXLabel>("LabelUpgradeTime") : base.GetElement<UXLabel>("LabelUpgradeTimeStorage");
 				uXLabel2.Text = GameUtils.GetTimeLabelFromSeconds(this.nextBuildingInfo.UpgradeTime);
 				this.buttonPrimaryAction.Visible = true;
 				UXUtils.SetupCostElements(this, "Cost", null, this.nextBuildingInfo.UpgradeCredits, this.nextBuildingInfo.UpgradeMaterials, this.nextBuildingInfo.UpgradeContraband, 0, !this.reqMet, null);
@@ -511,9 +509,11 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (!this.reqMet)
 				{
 					element3.Color = UXUtils.COLOR_COST_LOCKED;
-					return;
 				}
-				element3.Color = Color.white;
+				else
+				{
+					element3.Color = Color.white;
+				}
 			}
 		}
 
@@ -533,17 +533,13 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		protected string GetAssetNameFromGeometryConfig(IGeometryVO config)
 		{
-			if (!(config is IAssetVO))
-			{
-				return null;
-			}
-			return ((IAssetVO)config).AssetName;
+			return (!(config is IAssetVO)) ? null : ((IAssetVO)config).AssetName;
 		}
 
 		protected virtual void InitImages()
 		{
 			IGeometryVO imageGeometryConfig = this.GetImageGeometryConfig();
-			UXSprite element = base.GetElement<UXSprite>(this.useStorageGroup ? "BldgImageFrameStorage" : "BldgImageFrame");
+			UXSprite element = base.GetElement<UXSprite>((!this.useStorageGroup) ? "BldgImageFrame" : "BldgImageFrameStorage");
 			ProjectorConfig projectorConfig = ProjectorUtils.GenerateBuildingConfig(imageGeometryConfig as BuildingTypeVO, element);
 			projectorConfig.AnimPreference = AnimationPreference.AnimationAlways;
 			this.projector = ProjectorUtils.GenerateProjector(projectorConfig);
@@ -609,8 +605,8 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.lang.ThousandsSeparated(health2 - health)
 				});
-				this.sliders[sliderIndex].CurrentSlider.Value = ((health3 == 0) ? 0f : ((float)health / (float)health3));
-				this.sliders[sliderIndex].NextSlider.Value = ((health3 == 0) ? 0f : ((float)health2 / (float)health3));
+				this.sliders[sliderIndex].CurrentSlider.Value = ((health3 != 0) ? ((float)health / (float)health3) : 0f);
+				this.sliders[sliderIndex].NextSlider.Value = ((health3 != 0) ? ((float)health2 / (float)health3) : 0f);
 			}
 			else
 			{
@@ -645,7 +641,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.lang.ThousandsSeparated(health)
 			});
 			UXSlider currentSlider = this.sliders[this.hitpointSliderIndex].CurrentSlider;
-			currentSlider.Value = ((health == 0) ? 0f : ((float)num / (float)health));
+			currentSlider.Value = ((health != 0) ? ((float)num / (float)health) : 0f);
 		}
 
 		public void InitStorage(int sliderIndex, string description)
@@ -653,17 +649,17 @@ namespace StaRTS.Main.Views.UX.Screens
 			BuildingUpgradeCatalog buildingUpgradeCatalog = Service.Get<BuildingUpgradeCatalog>();
 			int storage = this.buildingInfo.Storage;
 			BuildingTypeVO nextLevel = buildingUpgradeCatalog.GetNextLevel(this.buildingInfo);
-			int num = (nextLevel == null) ? storage : nextLevel.Storage;
+			int num = (nextLevel != null) ? nextLevel.Storage : storage;
 			int storage2 = buildingUpgradeCatalog.GetMaxLevel(this.buildingInfo.UpgradeGroup).Storage;
 			SliderControl sliderControl = this.sliders[sliderIndex];
 			sliderControl.DescLabel.Text = this.lang.Get(description, new object[0]);
 			sliderControl.CurrentLabel.Text = this.lang.ThousandsSeparated(storage);
-			sliderControl.CurrentSlider.Value = ((storage2 == 0) ? 0f : ((float)storage / (float)storage2));
+			sliderControl.CurrentSlider.Value = ((storage2 != 0) ? ((float)storage / (float)storage2) : 0f);
 			sliderControl.NextLabel.Text = this.lang.Get("PLUS", new object[]
 			{
 				this.lang.ThousandsSeparated(num - storage)
 			});
-			sliderControl.NextSlider.Value = ((storage2 == 0) ? 0f : ((float)num / (float)storage2));
+			sliderControl.NextSlider.Value = ((storage2 != 0) ? ((float)num / (float)storage2) : 0f);
 		}
 
 		public virtual void OnViewClockTime(float dt)
@@ -671,10 +667,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (Service.Get<PostBattleRepairController>().IsEntityInRepair(this.selectedBuilding))
 			{
 				this.UpdateHitpoints();
-				return;
 			}
-			Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
-			this.observingClockViewTime = false;
+			else
+			{
+				Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
+				this.observingClockViewTime = false;
+			}
 		}
 
 		public override void OnDestroyElement()
@@ -711,7 +709,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			this.labelItemInfo.Visible = !this.labelItemInfo.Visible;
 			this.buttonInfo.Visible = !this.labelItemInfo.Visible;
-			UXSprite element = base.GetElement<UXSprite>(this.useStorageGroup ? "BldgImageFrameStorage" : "BldgImageFrame");
+			UXSprite element = base.GetElement<UXSprite>((!this.useStorageGroup) ? "BldgImageFrame" : "BldgImageFrameStorage");
 			element.Visible = !this.labelItemInfo.Visible;
 		}
 
@@ -894,7 +892,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			if (this.instantUpgradeBuildingKey != null && this.instantUpgradeBuildingUid != null)
 			{
-				BuildingInstantUpgradeRequest request = new BuildingInstantUpgradeRequest(this.instantUpgradeBuildingKey, this.instantUpgradeBuildingUid, "");
+				BuildingInstantUpgradeRequest request = new BuildingInstantUpgradeRequest(this.instantUpgradeBuildingKey, this.instantUpgradeBuildingUid, string.Empty);
 				BuildingInstantUpgradeCommand command = new BuildingInstantUpgradeCommand(request);
 				Service.Get<ServerAPI>().Enqueue(command);
 				this.instantUpgradeBuildingKey = null;
@@ -906,197 +904,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			return vo.UpgradeCredits <= currentPlayer.MaxCreditsAmount && vo.UpgradeMaterials <= currentPlayer.MaxMaterialsAmount && vo.UpgradeContraband <= currentPlayer.MaxContrabandAmount;
-		}
-
-		protected internal BuildingInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).AddTroopItem((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ConfirmInstantUpgrade(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ConfirmUpgrade();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ShowCurrencyTray);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).GetAssetNameFromGeometryConfig((IGeometryVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).GetImageGeometryConfig());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).HandleInstantUpgradeRequest();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).HasEnoughResourceCapacityToUpgrade((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitControls(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitGroups();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitHitpoints(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitImages();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitStorage(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnInfoClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnInfoStorageClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnInstantUpgradeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForDroidResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnTroopItemClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnUpgradeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RepositionGridItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetSelectedBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((BuildingInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateHitpoints();
-			return -1L;
 		}
 	}
 }

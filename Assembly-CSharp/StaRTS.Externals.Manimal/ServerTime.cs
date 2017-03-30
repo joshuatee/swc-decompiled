@@ -12,13 +12,5 @@ namespace StaRTS.Externals.Manimal
 				return Service.Get<ServerAPI>().ServerTime;
 			}
 		}
-
-		public ServerTime()
-		{
-		}
-
-		protected internal ServerTime(UIntPtr dummy)
-		{
-		}
 	}
 }

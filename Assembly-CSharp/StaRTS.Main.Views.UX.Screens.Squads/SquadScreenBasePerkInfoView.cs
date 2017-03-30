@@ -4,14 +4,11 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
 	public class SquadScreenBasePerkInfoView
 	{
-		public static readonly string PERK_ACTIVATION_INFO_VIEW = "PanelContainerModalPerks";
-
 		protected const string BUTTON_CLOSE = "BtnClose";
 
 		protected const string LABEL_MODAL_TITLE = "LabelModalTitlePerks";
@@ -60,6 +57,8 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		protected const string HIDE = "Hide";
 
+		public static readonly string PERK_ACTIVATION_INFO_VIEW = "PanelContainerModalPerks";
+
 		protected SquadSlidingScreen squadScreen;
 
 		protected PerkVO targetPerkVO;
@@ -105,28 +104,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		protected void OnCloseButtonClicked(UXButton btn)
 		{
 			this.HideAndCleanUp();
-		}
-
-		protected internal SquadScreenBasePerkInfoView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadScreenBasePerkInfoView)GCHandledObjects.GCHandleToObject(instance)).HideAndCleanUp();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadScreenBasePerkInfoView)GCHandledObjects.GCHandleToObject(instance)).InitUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadScreenBasePerkInfoView)GCHandledObjects.GCHandleToObject(instance)).OnCloseButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

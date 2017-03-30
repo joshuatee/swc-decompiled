@@ -35,15 +35,18 @@ namespace Net.RichardLord.Ash.Core
 			this.nodePool = new NodePool<TNode>();
 			this.entities = new Dictionary<Entity, TNode>();
 			this.components = new Dictionary<Type, string>();
-			PropertyInfo[] properties = typeof(TNode).GetProperties((global::BindingFlags)5);
+			PropertyInfo[] properties = typeof(TNode).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 			int i = 0;
 			int num = properties.Length;
 			while (i < num)
 			{
 				PropertyInfo propertyInfo = properties[i];
-				if (Array.IndexOf<string>(ComponentMatchingFamily<TNode>.reservedProperties, propertyInfo.Name) == -1 && !this.components.ContainsValue(propertyInfo.Name))
+				if (Array.IndexOf<string>(ComponentMatchingFamily<TNode>.reservedProperties, propertyInfo.Name) == -1)
 				{
-					this.components.Add(propertyInfo.PropertyType, propertyInfo.Name);
+					if (!this.components.ContainsValue(propertyInfo.Name))
+					{
+						this.components.Add(propertyInfo.PropertyType, propertyInfo.Name);
+					}
 				}
 				i++;
 			}
@@ -103,9 +106,11 @@ namespace Net.RichardLord.Ash.Core
 					this.nodePool.Cache(node);
 					this.game.UpdateSimComplete += new Action(this.ReleaseNodePoolCache);
 					this.game.UpdateViewComplete += new Action(this.ReleaseNodePoolCache);
-					return;
 				}
-				this.nodePool.Dispose(node);
+				else
+				{
+					this.nodePool.Dispose(node);
+				}
 			}
 		}
 

@@ -7,7 +7,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.GameStates
 {
@@ -84,43 +83,6 @@ namespace StaRTS.Main.Controllers.GameStates
 		public bool CanUpdateHomeContracts()
 		{
 			return true;
-		}
-
-		public BaseLayoutToolState()
-		{
-		}
-
-		protected internal BaseLayoutToolState(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BaseLayoutToolState)GCHandledObjects.GCHandleToObject(instance)).CanUpdateHomeContracts());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BaseLayoutToolState)GCHandledObjects.GCHandleToObject(instance)).OnEnter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BaseLayoutToolState)GCHandledObjects.GCHandleToObject(instance)).OnExit((IState)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BaseLayoutToolState)GCHandledObjects.GCHandleToObject(instance)).OnInfoPopupClosed(GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BaseLayoutToolState)GCHandledObjects.GCHandleToObject(instance)).SaveBLTSeenSharedPref();
-			return -1L;
 		}
 	}
 }

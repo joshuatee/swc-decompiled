@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSquadWarTurnsCommand(CheatSquadWarTurnsRequest request) : base("cheats.guildWar.setTurns", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSquadWarTurnsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

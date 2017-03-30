@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatResetHasActivatedFirstPerkCommand(PlayerIdRequest request) : base("cheats.perks.resetHasActivatedFirstPerk", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatResetHasActivatedFirstPerkCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

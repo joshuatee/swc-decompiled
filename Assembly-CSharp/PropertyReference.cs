@@ -1,20 +1,16 @@
 using System;
 using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
-[System.Serializable]
-public class PropertyReference : IUnitySerializable
+[Serializable]
+public class PropertyReference
 {
 	[SerializeField]
-	protected internal Component mTarget;
+	private Component mTarget;
 
 	[SerializeField]
-	protected internal string mName;
+	private string mName;
 
 	private FieldInfo mField;
 
@@ -218,7 +214,7 @@ public class PropertyReference : IUnitySerializable
 		{
 			if (Application.isPlaying)
 			{
-				Debug.LogError(string.Concat(new object[]
+				UnityEngine.Debug.LogError(string.Concat(new object[]
 				{
 					"Unable to convert ",
 					value.GetType(),
@@ -249,8 +245,8 @@ public class PropertyReference : IUnitySerializable
 		if (this.mTarget != null && !string.IsNullOrEmpty(this.mName))
 		{
 			Type type = this.mTarget.GetType();
-			this.mField = type.GetRuntimeField(this.mName);
-			this.mProperty = type.GetRuntimeProperty(this.mName);
+			this.mField = type.GetField(this.mName);
+			this.mProperty = type.GetProperty(this.mName);
 		}
 		else
 		{
@@ -270,7 +266,7 @@ public class PropertyReference : IUnitySerializable
 		Type from;
 		if (value == null)
 		{
-			if (!propertyType.GetTypeInfo().IsClass)
+			if (!propertyType.IsClass)
 			{
 				return false;
 			}
@@ -301,13 +297,13 @@ public class PropertyReference : IUnitySerializable
 
 	public static bool Convert(ref object value, Type from, Type to)
 	{
-		if (to.GetTypeInfo().IsAssignableFrom(from.GetTypeInfo()))
+		if (to.IsAssignableFrom(from))
 		{
 			return true;
 		}
 		if (to == typeof(string))
 		{
-			value = ((value != null) ? value.ToString() : "null");
+			value = ((value == null) ? "null" : value.ToString());
 			return true;
 		}
 		if (value == null)
@@ -320,7 +316,7 @@ public class PropertyReference : IUnitySerializable
 			if (from == typeof(string))
 			{
 				int num;
-				if (int.TryParse((string)value, ref num))
+				if (int.TryParse((string)value, out num))
 				{
 					value = num;
 					return true;
@@ -332,200 +328,11 @@ public class PropertyReference : IUnitySerializable
 				return true;
 			}
 		}
-		else if (to == typeof(float) && from == typeof(string) && float.TryParse((string)value, ref num2))
+		else if (to == typeof(float) && from == typeof(string) && float.TryParse((string)value, out num2))
 		{
 			value = num2;
 			return true;
 		}
 		return false;
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mTarget);
-		}
-		SerializedStateWriter.Instance.WriteString(this.mName);
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			this.mTarget = (SerializedStateReader.Instance.ReadUnityEngineObject() as Component);
-		}
-		this.mName = (SerializedStateReader.Instance.ReadString() as string);
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (this.mTarget != null)
-		{
-			this.mTarget = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mTarget) as Component);
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateWriter arg_23_0 = SerializedNamedStateWriter.Instance;
-			UnityEngine.Object arg_23_1 = this.mTarget;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_23_0.WriteUnityEngineObject(arg_23_1, &var_0_cp_0[var_0_cp_1] + 2225);
-		}
-		SerializedNamedStateWriter.Instance.WriteString(this.mName, &var_0_cp_0[var_0_cp_1] + 2281);
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateReader arg_1E_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			this.mTarget = (arg_1E_0.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 2225) as Component);
-		}
-		this.mName = (SerializedNamedStateReader.Instance.ReadString(&var_0_cp_0[var_0_cp_1] + 2281) as string);
-	}
-
-	protected internal PropertyReference(UIntPtr dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Cache());
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(PropertyReference.Convert(GCHandledObjects.GCHandleToObject(*args), (Type)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(PropertyReference.Convert((Type)GCHandledObjects.GCHandleToObject(*args), (Type)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Equals(GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Get());
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).isEnabled);
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).isValid);
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).name);
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).target);
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).GetHashCode());
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).GetPropertyType());
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Reset();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Set(GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Set((Component)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).name = Marshal.PtrToStringUni(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).target = (Component)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(PropertyReference.ToString((Component)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).ToString());
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		((PropertyReference)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
 	}
 }

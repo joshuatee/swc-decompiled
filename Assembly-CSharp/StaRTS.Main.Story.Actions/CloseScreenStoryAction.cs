@@ -7,7 +7,6 @@ using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Main.Views.UX.Screens.Squads;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -34,7 +33,7 @@ namespace StaRTS.Main.Story.Actions
 			ScreenBase highestLevelScreen = screenController.GetHighestLevelScreen<ClosableScreen>();
 			if (highestLevelScreen != null)
 			{
-				string name = highestLevelScreen.GetType().get_Name();
+				string name = highestLevelScreen.GetType().Name;
 				if (name == "PlanetDetailsScreen")
 				{
 					if (!Service.Get<BuildingLookupController>().HasNavigationCenter())
@@ -66,22 +65,6 @@ namespace StaRTS.Main.Story.Actions
 				}
 			}
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal CloseScreenStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CloseScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CloseScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

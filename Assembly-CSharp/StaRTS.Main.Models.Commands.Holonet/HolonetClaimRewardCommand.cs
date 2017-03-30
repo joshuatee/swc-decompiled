@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Holonet
 		public HolonetClaimRewardCommand(HolonetClaimRewardRequest request) : base("player.holonet.claimReward", request, new DefaultResponse())
 		{
 		}
-
-		protected internal HolonetClaimRewardCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

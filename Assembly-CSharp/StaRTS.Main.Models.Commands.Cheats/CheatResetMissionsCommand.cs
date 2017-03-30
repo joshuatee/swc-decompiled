@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatResetMissionsCommand(PlayerIdRequest request) : base("cheats.pve.reset", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatResetMissionsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -26,14 +26,12 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
-	public class BuildingMover : IUserInputObserver, IEventObserver
+	public class BuildingMover : IEventObserver, IUserInputObserver
 	{
 		private const float LIFT_DISTANCE_WORLD = 3f;
 
@@ -76,9 +74,11 @@ namespace StaRTS.Main.Views.World
 				if (value)
 				{
 					Service.Get<UserInputManager>().RegisterObserver(this, UserInputLayer.World);
-					return;
 				}
-				Service.Get<UserInputManager>().UnregisterObserver(this, UserInputLayer.World);
+				else
+				{
+					Service.Get<UserInputManager>().UnregisterObserver(this, UserInputLayer.World);
+				}
 			}
 		}
 
@@ -218,9 +218,11 @@ namespace StaRTS.Main.Views.World
 				worldLocation.x = Units.BoardToWorldX(num);
 				worldLocation.z = Units.BoardToWorldX(num2);
 				this.worldView.PanToLocation(worldLocation);
-				return;
 			}
-			Service.Get<StaRTSLogger>().Warn("Unable to place building " + buildingEntity.ID);
+			else
+			{
+				Service.Get<Logger>().Warn("Unable to place building " + buildingEntity.ID);
+			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
@@ -229,9 +231,12 @@ namespace StaRTS.Main.Views.World
 			{
 				if (id != EventId.GameStateChanged)
 				{
-					if (id == EventId.UserWantedEditBaseState && !(bool)cookie)
+					if (id == EventId.UserWantedEditBaseState)
 					{
-						this.eatDrags = true;
+						if (!(bool)cookie)
+						{
+							this.eatDrags = true;
+						}
 					}
 				}
 				else
@@ -385,35 +390,28 @@ namespace StaRTS.Main.Views.World
 			Entity buildingEntity = this.buildingSelector.GetBuildingEntity(target);
 			if (buildingEntity == null)
 			{
-				if (!this.eatDrags)
+				return (!this.eatDrags) ? EatResponse.NotEaten : EatResponse.Eaten;
+			}
+			if (this.lifted && this.buildingSelector.IsPartOfSelection(buildingEntity))
+			{
+				if (!this.moved)
 				{
-					return EatResponse.NotEaten;
+					this.moved = true;
+					Service.Get<UserInputManager>().ReleaseSubordinates(this, UserInputLayer.World, 0);
+				}
+				for (int i = 0; i < this.buildingSelector.AdditionalSelectedBuildings.Count; i++)
+				{
+					this.MoveLiftedBuilding(this.buildingSelector.AdditionalSelectedBuildings[i], groundPosition, true);
+				}
+				this.MoveLiftedBuilding(this.buildingSelector.SelectedBuilding, groundPosition, true);
+				this.canOccupy = this.EntireSelectionIsPlaceable();
+				if (this.canOccupy)
+				{
+					this.UpdatePrevValidBoardAnchors();
 				}
 				return EatResponse.Eaten;
 			}
-			else
-			{
-				if (this.lifted && this.buildingSelector.IsPartOfSelection(buildingEntity))
-				{
-					if (!this.moved)
-					{
-						this.moved = true;
-						Service.Get<UserInputManager>().ReleaseSubordinates(this, UserInputLayer.World, 0);
-					}
-					for (int i = 0; i < this.buildingSelector.AdditionalSelectedBuildings.Count; i++)
-					{
-						this.MoveLiftedBuilding(this.buildingSelector.AdditionalSelectedBuildings[i], groundPosition, true);
-					}
-					this.MoveLiftedBuilding(this.buildingSelector.SelectedBuilding, groundPosition, true);
-					this.canOccupy = this.EntireSelectionIsPlaceable();
-					if (this.canOccupy)
-					{
-						this.UpdatePrevValidBoardAnchors();
-					}
-					return EatResponse.Eaten;
-				}
-				return EatResponse.NotEaten;
-			}
+			return EatResponse.NotEaten;
 		}
 
 		public EatResponse OnRelease(int id)
@@ -498,15 +496,15 @@ namespace StaRTS.Main.Views.World
 		public void EnsureLoweredLiftedBuilding()
 		{
 			bool isPurchasing = this.buildingController.IsPurchasing;
-			if (this.lifted | isPurchasing)
+			if (this.lifted || isPurchasing)
 			{
-				this.LowerLiftedBuilding(isPurchasing ? DropKind.CancelPurchase : DropKind.JustDrop, true, this.lifted, true, !isPurchasing);
+				this.LowerLiftedBuilding((!isPurchasing) ? DropKind.JustDrop : DropKind.CancelPurchase, true, this.lifted, true, !isPurchasing);
 			}
 		}
 
 		private void OnConfirmPurchase(bool accept)
 		{
-			this.LowerLiftedBuilding(accept ? DropKind.ConfirmPurchase : DropKind.CancelPurchase, true, this.lifted, true, true);
+			this.LowerLiftedBuilding((!accept) ? DropKind.CancelPurchase : DropKind.ConfirmPurchase, true, this.lifted, true, true);
 		}
 
 		private void OnConfirmUnstashStamp(bool accept)
@@ -569,9 +567,11 @@ namespace StaRTS.Main.Views.World
 			{
 				this.UpdatePrevValidBoardAnchors();
 				this.LowerLiftedBuilding(DropKind.JustDrop, true, true, true, true);
-				return;
 			}
-			this.UpdateWallConnectorsInSelection(true);
+			else
+			{
+				this.UpdateWallConnectorsInSelection(true);
+			}
 		}
 
 		private void UpdatePrevValidBoardAnchors()
@@ -727,7 +727,7 @@ namespace StaRTS.Main.Views.World
 			}
 			UXController uXController = Service.Get<UXController>();
 			uXController.HUD.ToggleExitEditModeButton(true);
-			this.LowerLiftedBuilding(flag ? DropKind.ConfirmPurchase : DropKind.CancelPurchase, true, this.lifted, true, true);
+			this.LowerLiftedBuilding((!flag) ? DropKind.CancelPurchase : DropKind.ConfirmPurchase, true, this.lifted, true, true);
 		}
 
 		private void OnPayMeForDroidResult(object result, object cookie)
@@ -735,7 +735,7 @@ namespace StaRTS.Main.Views.World
 			bool flag = result != null;
 			UXController uXController = Service.Get<UXController>();
 			uXController.HUD.ToggleExitEditModeButton(true);
-			this.LowerLiftedBuilding(flag ? DropKind.ConfirmPurchase : DropKind.CancelPurchase, true, this.lifted, true, true);
+			this.LowerLiftedBuilding((!flag) ? DropKind.CancelPurchase : DropKind.ConfirmPurchase, true, this.lifted, true, true);
 		}
 
 		private void OnPickPlanetResult(object result, object cookie)
@@ -743,14 +743,14 @@ namespace StaRTS.Main.Views.World
 			bool flag = result != null;
 			UXController uXController = Service.Get<UXController>();
 			uXController.HUD.ToggleExitEditModeButton(true);
-			string tag = "";
+			string tag = string.Empty;
 			PlanetVO planetVO = (PlanetVO)cookie;
 			if (planetVO != null)
 			{
 				tag = planetVO.Uid;
 				Service.Get<SharedPlayerPrefs>().SetPref("1stPlaName", LangUtils.GetPlanetDisplayNameKey(planetVO.Uid));
 			}
-			this.LowerLiftedBuildingHelper(this.buildingSelector.SelectedBuilding, flag ? DropKind.ConfirmPurchase : DropKind.CancelPurchase, true, this.lifted, true, true, tag);
+			this.LowerLiftedBuildingHelper(this.buildingSelector.SelectedBuilding, (!flag) ? DropKind.CancelPurchase : DropKind.ConfirmPurchase, true, this.lifted, true, true, tag);
 			Service.Get<EventManager>().SendEvent(EventId.BuildingPurchaseModeEnded, null);
 		}
 
@@ -774,9 +774,9 @@ namespace StaRTS.Main.Views.World
 				int credits = buildingType.Credits;
 				int materials = buildingType.Materials;
 				int contraband = buildingType.Contraband;
-				string text = StringUtils.ToLowerCaseUnderscoreSeperated(buildingType.Type.ToString());
+				string value = StringUtils.ToLowerCaseUnderscoreSeperated(buildingType.Type.ToString());
 				StringBuilder stringBuilder = new StringBuilder();
-				stringBuilder.Append(text);
+				stringBuilder.Append(value);
 				stringBuilder.Append("|");
 				stringBuilder.Append(buildingType.BuildingID);
 				stringBuilder.Append("|");
@@ -816,12 +816,12 @@ namespace StaRTS.Main.Views.World
 					i++;
 				}
 			}
-			bool flag = !this.LowerLiftedBuildingHelper(selectedBuilding, dropKind, affectBoard, sendLoweredEvent, playLoweredSound, showContextButtons, "");
+			bool flag = !this.LowerLiftedBuildingHelper(selectedBuilding, dropKind, affectBoard, sendLoweredEvent, playLoweredSound, showContextButtons, string.Empty);
 			int j = 0;
 			int count2 = this.buildingSelector.AdditionalSelectedBuildings.Count;
 			while (j < count2)
 			{
-				this.LowerLiftedBuildingHelper(this.buildingSelector.AdditionalSelectedBuildings[j], dropKind, affectBoard, false, false, false, "");
+				this.LowerLiftedBuildingHelper(this.buildingSelector.AdditionalSelectedBuildings[j], dropKind, affectBoard, false, false, false, string.Empty);
 				j++;
 			}
 			if (sendLoweredEvent)
@@ -830,7 +830,7 @@ namespace StaRTS.Main.Views.World
 				{
 					Service.Get<EventManager>().SendEvent(EventId.UserLoweredBuilding, this.buildingSelector.AdditionalSelectedBuildings[k]);
 				}
-				Service.Get<EventManager>().SendEvent(EventId.UserLoweredBuilding, (!flag) ? selectedBuilding : null);
+				Service.Get<EventManager>().SendEvent(EventId.UserLoweredBuilding, flag ? null : selectedBuilding);
 			}
 			if (affectBoard && dropKind == DropKind.JustDrop && this.ShouldSaveAfterEveryMove())
 			{
@@ -946,11 +946,11 @@ namespace StaRTS.Main.Views.World
 			{
 				if (buildingInSelection != null)
 				{
-					Service.Get<StaRTSLogger>().Warn("Something went wrong placing " + buildingInSelection.ToString() + " we should not be hitting this case where prevValidBoardAnchorX and prevValidBoardAnchorZ do not contain buildingInSelection");
+					Service.Get<Logger>().Warn("Something went wrong placing " + buildingInSelection.ToString() + " we should not be hitting this case where prevValidBoardAnchorX and prevValidBoardAnchorZ do not contain buildingInSelection");
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().Warn("Something went wrong, we should not be hitting this case where prevValidBoardAnchorX and prevValidBoardAnchorZ do not contain buildingInSelection");
+					Service.Get<Logger>().Warn("Something went wrong, we should not be hitting this case where prevValidBoardAnchorX and prevValidBoardAnchorZ do not contain buildingInSelection");
 				}
 			}
 			if (affectBoard)
@@ -986,7 +986,7 @@ namespace StaRTS.Main.Views.World
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("LowerLiftedBuilding : Unexpected filter type {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("LowerLiftedBuilding : Unexpected filter type {0}", new object[]
 					{
 						boardItemComponent.BoardItem.Filter
 					});
@@ -1031,213 +1031,6 @@ namespace StaRTS.Main.Views.World
 			}
 			Service.Get<BuildingTooltipController>().EnsureBuildingTooltip((SmartEntity)buildingInSelection);
 			return true;
-		}
-
-		protected internal BuildingMover(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).AutoLiftSelectedBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).BuildingCanFit((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).BuildingIsPlacable((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).ClearPreviousAnchors();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).DestroyBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).EnsureLoweredLiftedBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).EntireSelectionIsPlaceable());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).EntireSelectionOutsideBoard());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).Lifted);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).LiftSelectedBuilding((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).LiftSelectedBuilding((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).LowerLiftedBuilding((DropKind)(*(int*)args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).LowerLiftedBuildingHelper((Entity)GCHandledObjects.GCHandleToObject(*args), (DropKind)(*(int*)(args + 1)), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0, *(sbyte*)(args + 5) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 6))));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).MoveLiftedBuilding((Entity)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).MoveLiftedBuilding((Entity)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnConfirmPurchase(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnConfirmUnstashStamp(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForDroidResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnPickPlanetResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).OnStartPurchaseBuilding((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).PlaceNewBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).ResetOnPress(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).RotateSelectedBuildings((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).SelectBuildingAfterCombiningMesh((Entity)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).Enabled = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).ShouldSaveAfterEveryMove());
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).SwitchAnchorBuildingInSelection((Entity)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).UnstashBuilding((Entity)GCHandledObjects.GCHandleToObject(*args), (Position)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).UpdatePrevValidBoardAnchors();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((BuildingMover)GCHandledObjects.GCHandleToObject(instance)).UpdateWallConnectorsInSelection(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

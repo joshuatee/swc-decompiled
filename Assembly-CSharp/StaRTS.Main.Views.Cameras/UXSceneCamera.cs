@@ -1,8 +1,6 @@
 using StaRTS.Utils;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Cameras
 {
@@ -26,10 +24,7 @@ namespace StaRTS.Main.Views.Cameras
 		protected void InitHelper(float offset, string name, int layer, int depth)
 		{
 			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(this.uxRoot);
-			gameObject.name = string.Format("UX {0} Root", new object[]
-			{
-				name
-			});
+			gameObject.name = string.Format("UX {0} Root", name);
 			gameObject.transform.position = this.uxRoot.transform.position + Vector3.right * offset;
 			this.uxRoot = gameObject;
 			Camera componentInChildren = gameObject.GetComponentInChildren<Camera>();
@@ -40,10 +35,7 @@ namespace StaRTS.Main.Views.Cameras
 			{
 				throw new Exception("Unable to find cloned " + name + " camera");
 			}
-			gameObject2.name = string.Format("UX {0} Camera", new object[]
-			{
-				name
-			});
+			gameObject2.name = string.Format("UX {0} Camera", name);
 			this.unityCamera = gameObject2.GetComponent<Camera>();
 			this.nguiCamera = this.unityCamera.gameObject.GetComponent<UICamera>();
 			this.unityCamera.eventMask = 0;
@@ -53,36 +45,13 @@ namespace StaRTS.Main.Views.Cameras
 			{
 				throw new Exception("Unable to find cloned " + name + " anchor");
 			}
-			this.uxAnchor.name = string.Format("UX {0} Anchor", new object[]
-			{
-				name
-			});
+			this.uxAnchor.name = string.Format("UX {0} Anchor", name);
 			this.scale = gameObject2.transform.localScale.x;
 			UnityUtils.SetLayerRecursively(this.uxRoot, layer);
 			this.unityCamera.cullingMask = 1 << layer;
 			this.unityCamera.depth = (float)depth;
 			this.unityCamera.enabled = false;
 			base.ReceiveEvents = false;
-		}
-
-		public UXSceneCamera()
-		{
-		}
-
-		protected internal UXSceneCamera(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((UXSceneCamera)GCHandledObjects.GCHandleToObject(instance)).Init(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((UXSceneCamera)GCHandledObjects.GCHandleToObject(instance)).InitHelper(*(float*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2), *(int*)(args + 3));
-			return -1L;
 		}
 	}
 }

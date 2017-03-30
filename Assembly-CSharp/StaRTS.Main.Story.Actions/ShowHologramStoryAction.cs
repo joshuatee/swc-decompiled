@@ -9,7 +9,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -21,11 +20,11 @@ namespace StaRTS.Main.Story.Actions
 
 		private const string GREET = "greet";
 
+		private const float SECONDS_DELAY_AFTER_TRANSITION = 1.5f;
+
 		private bool greet;
 
 		private uint timerId;
-
-		private const float SECONDS_DELAY_AFTER_TRANSITION = 1.5f;
 
 		public string Character
 		{
@@ -57,7 +56,7 @@ namespace StaRTS.Main.Story.Actions
 			}
 			catch (KeyNotFoundException ex)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Cannot find character {0}, in Story Action {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Cannot find character {0}, in Story Action {1}", new object[]
 				{
 					this.Character,
 					this.vo.Uid
@@ -140,44 +139,6 @@ namespace StaRTS.Main.Story.Actions
 			{
 				Service.Get<ViewTimerManager>().KillViewTimer(this.timerId);
 			}
-		}
-
-		protected internal ShowHologramStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShowHologramStoryAction)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ShowHologramStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShowHologramStoryAction)GCHandledObjects.GCHandleToObject(instance)).Character);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShowHologramStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ShowHologramStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ShowHologramStoryAction)GCHandledObjects.GCHandleToObject(instance)).TryPlayGreet();
-			return -1L;
 		}
 	}
 }

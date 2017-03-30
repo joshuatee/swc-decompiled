@@ -3,7 +3,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Squads
 {
@@ -102,68 +101,5 @@ namespace StaRTS.Main.Controllers.Squads
 		protected abstract void Poll();
 
 		protected abstract void PopulateSquadMsgsReceived(object response);
-
-		protected internal AbstractSquadServerAdapter(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).AdjustPollFrequency(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Disable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).DisableTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Enable((SquadController.SquadMsgsCallback)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Enabled);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).OnPollFinished(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Poll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).PopulateSquadMsgsReceived(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).ResetPollTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((AbstractSquadServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Enabled = (*(sbyte*)args != 0);
-			return -1L;
-		}
 	}
 }

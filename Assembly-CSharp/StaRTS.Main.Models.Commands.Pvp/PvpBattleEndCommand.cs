@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Pvp
 		public PvpBattleEndCommand(BattleEndRequest request) : base("player.pvp.battle.complete", request, new PvpBattleEndResponse())
 		{
 		}
-
-		protected internal PvpBattleEndCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -2,8 +2,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Core;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -69,66 +67,6 @@ namespace StaRTS.Main.Story.Actions
 			base.Execute();
 			Service.Get<EventManager>().SendEvent(EventId.ShowInfoPanel, this);
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal ShowHologramInfoStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).DisplayText);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).ImageName);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).PlanetPanel);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).TitleText);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).DisplayText = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).ImageName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).PlanetPanel = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((ShowHologramInfoStoryAction)GCHandledObjects.GCHandleToObject(instance)).TitleText = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
 		}
 	}
 }

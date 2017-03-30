@@ -30,9 +30,5 @@ namespace StaRTS.Utils.Scheduling
 		{
 			base.OnDeltaTime(dt);
 		}
-
-		protected internal SimTimerManager(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

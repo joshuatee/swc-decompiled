@@ -3,7 +3,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Elements
 {
@@ -170,9 +169,11 @@ namespace StaRTS.Main.Views.UX.Elements
 			if (0 <= i && i < this.addedItems.Count)
 			{
 				this.gridComponent.NGUICenterOnChild.CenterOn(this.addedItems[i].GetUIWidget.transform);
-				return;
 			}
-			Service.Get<StaRTSLogger>().Warn("SmoothScrollToItem invalid Index:" + i);
+			else
+			{
+				Service.Get<Logger>().Warn("SmoothScrollToItem invalid Index:" + i);
+			}
 		}
 
 		public void CullScrollObjects(bool enable, float cullFactor)
@@ -317,12 +318,12 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			if (this.gridComponent == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Missing gridComponent: " + this.gridComponent.gameObject.name);
+				Service.Get<Logger>().Warn("Missing gridComponent: " + this.gridComponent.gameObject.name);
 				return false;
 			}
 			if (this.gridComponent.NGUICenterOnChild == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Missing GUICenterOnChild: " + this.gridComponent.gameObject.name);
+				Service.Get<Logger>().Warn("Missing GUICenterOnChild: " + this.gridComponent.gameObject.name);
 				return false;
 			}
 			return true;
@@ -355,10 +356,10 @@ namespace StaRTS.Main.Views.UX.Elements
 			UXElement uXElement2 = this.FindUXElementForTransform(transformB);
 			if (uXElement == null || uXElement2 == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Missing NGUIOnCustomSortCallbacK UXElement Reference");
+				Service.Get<Logger>().Warn("Missing NGUIOnCustomSortCallbacK UXElement Reference");
 				return 0;
 			}
-			return this.comparisonCallback.Invoke(uXElement, uXElement2);
+			return this.comparisonCallback(uXElement, uXElement2);
 		}
 
 		private UXElement FindUXElementForTransform(Transform transform)
@@ -413,7 +414,7 @@ namespace StaRTS.Main.Views.UX.Elements
 			int num = this.addedItems.IndexOf(element);
 			if (num < 0)
 			{
-				Service.Get<StaRTSLogger>().Warn("Add element to grid before positioning: " + element.Root.name);
+				Service.Get<Logger>().Warn("Add element to grid before positioning: " + element.Root.name);
 				return;
 			}
 			if (this.IsArrangementCellSnap())
@@ -441,256 +442,6 @@ namespace StaRTS.Main.Views.UX.Elements
 		public void ResetScrollViewPosition()
 		{
 			this.component.ResetScrollViewPosition();
-		}
-
-		protected internal UXGrid(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).CenterElementsInPanel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).CullScrollObjects(*(sbyte*)args != 0, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).EnsureCenterOnChild());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).FindUXElementForTransform((Transform)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).CellHeight);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).CellWidth);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).IsScrollable);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).MaxItemsPerLine);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).RepositionCallback);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).GetCenteredElement());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).GetCenteredElementIndex());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).GetCurrentScrollPosition(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).GetParent());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).GetSortedIndex((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).HideScrollArrows();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).InternalDestroyComponent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).IsArrangementCellSnap());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).IsArrangementHorizontal());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).IsArrangementVertical());
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).IsGridComponentScrollable());
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).NGUIOnCustomSortCallbacK((Transform)GCHandledObjects.GCHandleToObject(*args), (Transform)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).OnCenteredCallback((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).OnCenteredFinishedCallback();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).RepositionElement((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).ResetScrollViewPosition();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).ScrollToItem(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGrid)GCHandledObjects.GCHandleToObject(instance)).ScrollToNextElement());
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).CellHeight = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).CellWidth = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).IsScrollable = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).MaxItemsPerLine = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).RepositionCallback = (Action)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SetAnimateSmoothly(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SetCenteredCallback((UXGrid.OnCentered)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SetCenteredFinishedCallback((UXGrid.OnCentered)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SetSortComparisonCallback((Comparison<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SetSortModeAlphebetical();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SetSortModeCustom();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SetSortModeHorizontal();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SetSortModeNone();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SetSortModeVertical();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).SmoothScrollToItem(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((UXGrid)GCHandledObjects.GCHandleToObject(instance)).UpdateScrollArrows();
-			return -1L;
 		}
 	}
 }

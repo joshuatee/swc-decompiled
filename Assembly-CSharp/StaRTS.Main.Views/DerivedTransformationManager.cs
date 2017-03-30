@@ -5,7 +5,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views
 {
@@ -41,12 +40,11 @@ namespace StaRTS.Main.Views
 				if (this.objectMap.Count == 0)
 				{
 					Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
-					return;
 				}
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Warn("Null object is being passed to RemoveDerivedTransformation");
+				Service.Get<Logger>().Warn("Null object is being passed to RemoveDerivedTransformation");
 			}
 		}
 
@@ -54,8 +52,8 @@ namespace StaRTS.Main.Views
 		{
 			foreach (KeyValuePair<GameObject, DerivedTransformationObject> current in this.objectMap)
 			{
-				GameObject key = current.get_Key();
-				DerivedTransformationObject value = current.get_Value();
+				GameObject key = current.Key;
+				DerivedTransformationObject value = current.Value;
 				if (key == null)
 				{
 					if (!this.alreadyLoggedGameObjectNullError)
@@ -65,7 +63,7 @@ namespace StaRTS.Main.Views
 						{
 							text = value.BaseTransformationObject.name;
 						}
-						Service.Get<StaRTSLogger>().ErrorFormat("GameObject being added to DerivedTransformationManager is being destroyed. Associated base object is {0}.", new object[]
+						Service.Get<Logger>().ErrorFormat("GameObject being added to DerivedTransformationManager is being destroyed. Associated base object is {0}.", new object[]
 						{
 							text
 						});
@@ -89,28 +87,6 @@ namespace StaRTS.Main.Views
 					}
 				}
 			}
-		}
-
-		protected internal DerivedTransformationManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DerivedTransformationManager)GCHandledObjects.GCHandleToObject(instance)).AddDerivedTransformation((GameObject)GCHandledObjects.GCHandleToObject(*args), (DerivedTransformationObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DerivedTransformationManager)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DerivedTransformationManager)GCHandledObjects.GCHandleToObject(instance)).RemoveDerivedTransformation((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

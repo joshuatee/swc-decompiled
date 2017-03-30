@@ -5,8 +5,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -56,7 +54,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			TextureVO optional = Service.Get<IDataController>().GetOptional<TextureVO>(textureUid);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Cannot find texture with uid {0}", new object[]
+				Service.Get<Logger>().WarnFormat("Cannot find texture with uid {0}", new object[]
 				{
 					textureUid
 				});
@@ -84,7 +82,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				TextureVO optional = Service.Get<IDataController>().GetOptional<TextureVO>(array[0]);
 				if (optional == null)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Cannot find texture with uid {0}", new object[]
+					Service.Get<Logger>().WarnFormat("Cannot find texture with uid {0}", new object[]
 					{
 						array[0]
 					});
@@ -99,34 +97,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				i++;
 			}
 			element.RepositionItems();
-		}
-
-		protected internal AbstractSquadWarInfoScreenTab(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractSquadWarInfoScreenTab)GCHandledObjects.GCHandleToObject(instance)).PopulateBgTexture(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractSquadWarInfoScreenTab)GCHandledObjects.GCHandleToObject(instance)).PopulateGrid((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AbstractSquadWarInfoScreenTab)GCHandledObjects.GCHandleToObject(instance)).ShowContents(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractSquadWarInfoScreenTab)GCHandledObjects.GCHandleToObject(instance)).TabButtonOnSelect((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
 		}
 	}
 }

@@ -23,26 +23,11 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class TransportController : IEventObserver
 	{
-		private static readonly Vector3 SPAWN_POSITION = new Vector3(60f, 12f, 60f);
-
-		private static readonly Vector3 FACTORY_ORIENTATION = new Vector3(-1f, 0f, 0f);
-
-		private static readonly Vector3 STARPORT_ORIENTATION = new Vector3(-1f, 0f, 0f);
-
-		private static readonly Vector3 DOCK_OFFSET = new Vector3(0f, 1f, 3.8f);
-
-		private static readonly float FACTORY_WALL_HEIGHT = 1.7f;
-
-		private string TRANSPORT_SHIP_EMPIRE;
-
-		private string TRANSPORT_SHIP_REBEL;
-
 		private const string FACTORY_PRODUCT = "FactoryProduct";
 
 		private const float VEHICLE_SCALE = 0.8f;
@@ -63,6 +48,22 @@ namespace StaRTS.Main.Controllers
 
 		private const float VEHICLE_SPAWN_DELAY = 3f;
 
+		private const int MAX_TROOP_EFFECTS_PER_STARPORT = 10;
+
+		private static readonly Vector3 SPAWN_POSITION = new Vector3(60f, 12f, 60f);
+
+		private static readonly Vector3 FACTORY_ORIENTATION = new Vector3(-1f, 0f, 0f);
+
+		private static readonly Vector3 STARPORT_ORIENTATION = new Vector3(-1f, 0f, 0f);
+
+		private static readonly Vector3 DOCK_OFFSET = new Vector3(0f, 1f, 3.8f);
+
+		private static readonly float FACTORY_WALL_HEIGHT = 1.7f;
+
+		private string TRANSPORT_SHIP_EMPIRE = "ThetaClassBarge1";
+
+		private string TRANSPORT_SHIP_REBEL = "Cr25transport1";
+
 		private Dictionary<int, GameObject> landingFxObjects;
 
 		private Dictionary<int, GameObject> takeOffFxObjects;
@@ -72,8 +73,6 @@ namespace StaRTS.Main.Controllers
 		private Dictionary<int, AssetHandle> takeOffFxHandles;
 
 		private int activeEffectsCount;
-
-		private const int MAX_TROOP_EFFECTS_PER_STARPORT = 10;
 
 		private EntityController entityController;
 
@@ -95,9 +94,6 @@ namespace StaRTS.Main.Controllers
 
 		public TransportController()
 		{
-			this.TRANSPORT_SHIP_EMPIRE = "ThetaClassBarge1";
-			this.TRANSPORT_SHIP_REBEL = "Cr25transport1";
-			base..ctor();
 			this.entityController = Service.Get<EntityController>();
 			this.sdc = Service.Get<IDataController>();
 			this.fxManager = Service.Get<FXManager>();
@@ -135,16 +131,16 @@ namespace StaRTS.Main.Controllers
 		private void CallbackSpawnVehicle(uint id, object cookie)
 		{
 			KeyValuePair<Contract, Entity> keyValuePair = (KeyValuePair<Contract, Entity>)cookie;
-			Contract key = keyValuePair.get_Key();
-			Entity value = keyValuePair.get_Value();
+			Contract key = keyValuePair.Key;
+			Entity value = keyValuePair.Value;
 			this.SpawnVehicle(key, value);
 		}
 
 		private void StarportReached(object cookie)
 		{
 			KeyValuePair<Entity, ContractEventData> keyValuePair = (KeyValuePair<Entity, ContractEventData>)cookie;
-			Entity key = keyValuePair.get_Key();
-			ContractEventData value = keyValuePair.get_Value();
+			Entity key = keyValuePair.Key;
+			ContractEventData value = keyValuePair.Value;
 			this.RemoveTransportRequest(value);
 			TroopTypeVO troop = this.sdc.Get<TroopTypeVO>(value.Contract.ProductUid);
 			StorageSpreadUtils.AddTroopToStarportVisually(key, troop);
@@ -162,7 +158,7 @@ namespace StaRTS.Main.Controllers
 
 		private void LoadAndPlayEffects(object cookie)
 		{
-			int key = ((KeyValuePair<int, Vector3>)cookie).get_Key();
+			int key = ((KeyValuePair<int, Vector3>)cookie).Key;
 			if (!this.landingFxHandles.ContainsKey(key))
 			{
 				AssetHandle value = AssetHandle.Invalid;
@@ -180,10 +176,10 @@ namespace StaRTS.Main.Controllers
 		private void OnLandingFxSuccess(object asset, object cookie)
 		{
 			KeyValuePair<int, Vector3> keyValuePair = (KeyValuePair<int, Vector3>)cookie;
-			int key = keyValuePair.get_Key();
+			int key = keyValuePair.Key;
 			GameObject gameObject = (GameObject)asset;
 			gameObject = Service.Get<AssetManager>().CloneGameObject(gameObject);
-			gameObject.transform.position = keyValuePair.get_Value();
+			gameObject.transform.position = keyValuePair.Value;
 			Service.Get<ViewTimerManager>().CreateViewTimer(0.2f, false, new TimerDelegate(this.CallbackPlayParticle), gameObject);
 			if (!this.landingFxObjects.ContainsKey(key))
 			{
@@ -194,10 +190,10 @@ namespace StaRTS.Main.Controllers
 		private void OnTakeOffFxSuccess(object asset, object cookie)
 		{
 			KeyValuePair<int, Vector3> keyValuePair = (KeyValuePair<int, Vector3>)cookie;
-			int key = keyValuePair.get_Key();
+			int key = keyValuePair.Key;
 			GameObject gameObject = (GameObject)asset;
 			gameObject = Service.Get<AssetManager>().CloneGameObject(gameObject);
-			gameObject.transform.position = keyValuePair.get_Value();
+			gameObject.transform.position = keyValuePair.Value;
 			Service.Get<ViewTimerManager>().CreateViewTimer(5f, false, new TimerDelegate(this.CallbackPlayParticle), gameObject);
 			if (!this.takeOffFxObjects.ContainsKey(key))
 			{
@@ -225,7 +221,7 @@ namespace StaRTS.Main.Controllers
 
 		private void UnloadEffects(object cookie)
 		{
-			int key = ((KeyValuePair<int, Vector3>)cookie).get_Key();
+			int key = ((KeyValuePair<int, Vector3>)cookie).Key;
 			if (this.landingFxObjects.ContainsKey(key))
 			{
 				UnityEngine.Object.Destroy(this.landingFxObjects[key]);
@@ -376,7 +372,7 @@ namespace StaRTS.Main.Controllers
 			TroopTypeVO optional = this.sdc.GetOptional<TroopTypeVO>(contract.ProductUid);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Could not find troop with uid " + contract.ProductUid);
+				Service.Get<Logger>().Error("Could not find troop with uid " + contract.ProductUid);
 				return true;
 			}
 			bool flag = this.DespawnVehicle(contractEntity);
@@ -440,42 +436,28 @@ namespace StaRTS.Main.Controllers
 			pathingManager.StartPathing(smartEntity, (SmartEntity)entity, smartEntity.TransformComp, false, out flag, 0, new PathTroopParams
 			{
 				TroopWidth = smartEntity.SizeComp.Width,
-				DPS = 0,
-				MinRange = 0u,
 				MaxRange = 2u,
 				MaxSpeed = troopComp.SpeedVO.MaxSpeed,
 				PathSearchWidth = troopComp.TroopType.PathSearchWidth,
 				IsMelee = true,
-				IsOverWall = false,
-				IsHealer = false,
-				CrushesWalls = false,
-				IsTargetShield = false,
 				TargetInRangeModifier = troopComp.TroopType.TargetInRangeModifier
 			}, new PathBoardParams
 			{
-				IgnoreWall = (teamComp != null && teamComp.IsDefender()),
-				Destructible = false
+				IgnoreWall = (teamComp != null && teamComp.IsDefender())
 			}, false, true);
 			if (!flag)
 			{
 				pathingManager.StartPathing(smartEntity, (SmartEntity)entity, smartEntity.TransformComp, false, out flag, 0, new PathTroopParams
 				{
 					TroopWidth = smartEntity.SizeComp.Width,
-					DPS = 0,
-					MinRange = 0u,
 					MaxRange = 2u,
 					MaxSpeed = troopComp.SpeedVO.MaxSpeed,
 					PathSearchWidth = troopComp.TroopType.PathSearchWidth,
 					IsMelee = true,
-					IsOverWall = false,
-					IsHealer = false,
-					CrushesWalls = false,
-					IsTargetShield = false,
 					TargetInRangeModifier = troopComp.TroopType.TargetInRangeModifier
 				}, new PathBoardParams
 				{
-					IgnoreWall = true,
-					Destructible = false
+					IgnoreWall = true
 				}, false, true);
 			}
 			smartEntity.StateComp.CurState = EntityState.Moving;
@@ -486,11 +468,14 @@ namespace StaRTS.Main.Controllers
 			}
 			if (this.numTroopEffectsByStarport.ContainsKey(entity))
 			{
-				Dictionary<Entity, int> arg_283_0 = this.numTroopEffectsByStarport;
-				Entity key = entity;
-				int num = arg_283_0[key];
-				arg_283_0[key] = num + 1;
-				if (num >= 10)
+				Dictionary<Entity, int> dictionary;
+				Dictionary<Entity, int> expr_24E = dictionary = this.numTroopEffectsByStarport;
+				Entity key;
+				Entity expr_252 = key = entity;
+				int num = dictionary[key];
+				int num2;
+				expr_24E[expr_252] = (num2 = num) + 1;
+				if (num2 >= 10)
 				{
 					showFullEffect = false;
 				}
@@ -509,9 +494,10 @@ namespace StaRTS.Main.Controllers
 		private void OnTroopEffectFinished(Entity troopEntity, Entity starportEntity)
 		{
 			this.troopEffectsByEntity.Remove(troopEntity);
-			Dictionary<Entity, int> expr_15 = this.numTroopEffectsByStarport;
-			int num = expr_15[starportEntity];
-			expr_15[starportEntity] = num - 1;
+			Dictionary<Entity, int> dictionary;
+			Dictionary<Entity, int> expr_13 = dictionary = this.numTroopEffectsByStarport;
+			int num = dictionary[starportEntity];
+			expr_13[starportEntity] = num - 1;
 		}
 
 		private bool CountTransportRequest(ContractEventData contractData)
@@ -590,13 +576,37 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.WorldReset)
+			if (id != EventId.ContractStarted && id != EventId.ContractContinued)
 			{
 				if (id != EventId.TroopRecruited)
 				{
 					if (id != EventId.BuildingReplaced)
 					{
-						if (id == EventId.WorldReset)
+						if (id != EventId.WorldReset)
+						{
+							if (id != EventId.TroopReachedPathEnd)
+							{
+								if (id == EventId.ContractCanceled)
+								{
+									ContractEventData contractEventData = cookie as ContractEventData;
+									DeliveryType deliveryType = contractEventData.Contract.DeliveryType;
+									if (deliveryType == DeliveryType.Vehicle)
+									{
+										this.DespawnVehicle(contractEventData.Entity);
+									}
+								}
+							}
+							else
+							{
+								Entity entity = cookie as Entity;
+								if (entity.Get<ShooterComponent>() == null && entity.Get<DroidComponent>() == null && this.troopEffectsByEntity.ContainsKey(entity))
+								{
+									TransportTroopEffect transportTroopEffect = this.troopEffectsByEntity[entity];
+									transportTroopEffect.OnTroopReachedPathEnd();
+								}
+							}
+						}
+						else
 						{
 							if (this.troopEffectsByEntity != null)
 							{
@@ -618,16 +628,16 @@ namespace StaRTS.Main.Controllers
 					}
 					else
 					{
-						Entity entity = (Entity)cookie;
-						StarportComponent starportComponent = entity.Get<StarportComponent>();
+						Entity entity2 = (Entity)cookie;
+						StarportComponent starportComponent = entity2.Get<StarportComponent>();
 						if (starportComponent != null && this.numTroopEffectsByStarport != null)
 						{
 							foreach (KeyValuePair<Entity, int> current2 in this.numTroopEffectsByStarport)
 							{
-								if (current2.get_Key().Get<StarportComponent>() == null)
+								if (current2.Key.Get<StarportComponent>() == null)
 								{
-									this.numTroopEffectsByStarport[entity] = current2.get_Value();
-									this.numTroopEffectsByStarport.Remove(current2.get_Key());
+									this.numTroopEffectsByStarport[entity2] = current2.Value;
+									this.numTroopEffectsByStarport.Remove(current2.Key);
 									break;
 								}
 							}
@@ -636,61 +646,26 @@ namespace StaRTS.Main.Controllers
 				}
 				else
 				{
-					ContractEventData contractEventData = cookie as ContractEventData;
-					DeliveryType deliveryType = contractEventData.Contract.DeliveryType;
-					if (deliveryType != DeliveryType.Infantry)
+					ContractEventData contractEventData2 = cookie as ContractEventData;
+					DeliveryType deliveryType2 = contractEventData2.Contract.DeliveryType;
+					if (deliveryType2 != DeliveryType.Infantry)
 					{
-						if (deliveryType == DeliveryType.Vehicle)
+						if (deliveryType2 == DeliveryType.Vehicle)
 						{
-							this.SpawnTransport(contractEventData);
-							return EatResponse.NotEaten;
+							this.SpawnTransport(contractEventData2);
+							goto IL_9D;
 						}
-						if (deliveryType != DeliveryType.Mercenary)
+						if (deliveryType2 != DeliveryType.Mercenary)
 						{
-							return EatResponse.NotEaten;
+							goto IL_9D;
 						}
 					}
-					this.SpawnInfantry(contractEventData);
+					this.SpawnInfantry(contractEventData2);
+					IL_9D:;
 				}
 			}
 			else
 			{
-				if (id <= EventId.ContractStarted)
-				{
-					if (id != EventId.TroopReachedPathEnd)
-					{
-						if (id != EventId.ContractStarted)
-						{
-							return EatResponse.NotEaten;
-						}
-					}
-					else
-					{
-						Entity entity2 = cookie as Entity;
-						if (entity2.Get<ShooterComponent>() == null && entity2.Get<DroidComponent>() == null && this.troopEffectsByEntity.ContainsKey(entity2))
-						{
-							TransportTroopEffect transportTroopEffect = this.troopEffectsByEntity[entity2];
-							transportTroopEffect.OnTroopReachedPathEnd();
-							return EatResponse.NotEaten;
-						}
-						return EatResponse.NotEaten;
-					}
-				}
-				else if (id != EventId.ContractContinued)
-				{
-					if (id != EventId.ContractCanceled)
-					{
-						return EatResponse.NotEaten;
-					}
-					ContractEventData contractEventData2 = cookie as ContractEventData;
-					DeliveryType deliveryType2 = contractEventData2.Contract.DeliveryType;
-					if (deliveryType2 == DeliveryType.Vehicle)
-					{
-						this.DespawnVehicle(contractEventData2.Entity);
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
 				ContractEventData contractEventData3 = cookie as ContractEventData;
 				if (contractEventData3.Contract.DeliveryType == DeliveryType.Vehicle)
 				{
@@ -698,124 +673,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal TransportController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).ArrivingAtBuilding(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).BuildSpline((LinearSpline)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3)), (Entity)GCHandledObjects.GCHandleToObject(args[4]), (ContractEventData)GCHandledObjects.GCHandleToObject(args[5]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransportController)GCHandledObjects.GCHandleToObject(instance)).CountTransportRequest((ContractEventData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransportController)GCHandledObjects.GCHandleToObject(instance)).DespawnVehicle((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).FactoryReached(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransportController)GCHandledObjects.GCHandleToObject(instance)).FindIdleStarport((ContractEventData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransportController)GCHandledObjects.GCHandleToObject(instance)).FindIdleTransport((TransportTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).LoadAndPlayEffects(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransportController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).OnLandingFxSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).OnTakeOffFxSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).OnTroopEffectFinished((Entity)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).OnVehicleAssetLoadSuccess((GameObject)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]), *(float*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).PlayParticle((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).RemoveTransportRequest((ContractEventData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).SpawnInfantry((ContractEventData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).SpawnTransport((ContractEventData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransportController)GCHandledObjects.GCHandleToObject(instance)).SpawnVehicle((Contract)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).StarportReached(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((TransportController)GCHandledObjects.GCHandleToObject(instance)).UnloadEffects(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -21,10 +21,7 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -67,12 +64,12 @@ namespace StaRTS.Main.Controllers
 			{
 				' '
 			});
-			this.costByHqLevel.Add(-1, Convert.ToInt32(array[0], CultureInfo.InvariantCulture));
+			this.costByHqLevel.Add(-1, Convert.ToInt32(array[0]));
 			int i;
 			for (i = 0; i < array.Length; i++)
 			{
 				int key = i + 1;
-				int value = Convert.ToInt32(array[i], CultureInfo.InvariantCulture);
+				int value = Convert.ToInt32(array[i]);
 				this.costByHqLevel.Add(key, value);
 			}
 			this.maxHqLevel = i;
@@ -119,7 +116,7 @@ namespace StaRTS.Main.Controllers
 			int pvpMatchCost = this.GetPvpMatchCost();
 			if (pvpMatchCost != target.CreditsCharged)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Pvp target credit cost mismatch. Client: {0}, Server: {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Pvp target credit cost mismatch. Client: {0}, Server: {1}", new object[]
 				{
 					pvpMatchCost,
 					target.CreditsCharged
@@ -169,9 +166,11 @@ namespace StaRTS.Main.Controllers
 			if (currentState is BattleStartState)
 			{
 				BattleStartState.GoToBattleStartState((BattleStartState)currentState, data, new TransitionCompleteDelegate(this.OnBattleReady));
-				return;
 			}
-			BattleStartState.GoToBattleStartState(data, new TransitionCompleteDelegate(this.OnBattleReady));
+			else
+			{
+				BattleStartState.GoToBattleStartState(data, new TransitionCompleteDelegate(this.OnBattleReady));
+			}
 		}
 
 		private void OnPvpError(uint statusCode, object cookie)
@@ -253,11 +252,11 @@ namespace StaRTS.Main.Controllers
 			int currentXPAmount = currentPlayer.CurrentXPAmount;
 			int playerMedals = currentPlayer.PlayerMedals;
 			float num = GameConstants.PVP_MATCH_BONUS_ATTACKER_SLOPE * (float)playerMedals + GameConstants.PVP_MATCH_BONUS_ATTACKER_Y_INTERCEPT;
-			int num2 = (int)Math.Round((double)((float)currentXPAmount * num));
+			int value = (int)Math.Round((double)((float)currentXPAmount * num));
 			StringBuilder stringBuilder = new StringBuilder();
 			stringBuilder.Append(cause);
 			stringBuilder.Append("|");
-			stringBuilder.Append(num2);
+			stringBuilder.Append(value);
 			stringBuilder.Append("|");
 			stringBuilder.Append(currentXPAmount);
 			stringBuilder.Append("|");
@@ -342,9 +341,7 @@ namespace StaRTS.Main.Controllers
 			currentPlayer.DefenseRating += endResponse.BattleEntry.Attacker.DefenseRatingDelta;
 			if (endResponse.BattleEntry.Won)
 			{
-				CurrentPlayer expr_93 = currentPlayer;
-				int attacksWon = expr_93.AttacksWon;
-				expr_93.AttacksWon = attacksWon + 1;
+				currentPlayer.AttacksWon++;
 			}
 			AchievementController achievementController = Service.Get<AchievementController>();
 			achievementController.TryUnlockAchievementByValue(AchievementType.LootCreditsPvp, currentPlayer.BattleHistory.GetTotalPvpCreditsLooted());
@@ -390,155 +387,6 @@ namespace StaRTS.Main.Controllers
 			getReplayCommand.AddFailureCallback(new AbstractCommand<GetReplayRequest, GetReplayResponse>.OnFailureCallback(replayMapDataLoader.OnReplayLoadFailed));
 			Service.Get<ServerAPI>().Sync(getReplayCommand);
 			Service.Get<BattlePlaybackController>().LogReplayViewed(battleId, defender.PlayerId, sharerPlayerId);
-		}
-
-		protected internal PvpManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpManager)GCHandledObjects.GCHandleToObject(instance)).CurrentPvpTarget);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpManager)GCHandledObjects.GCHandleToObject(instance)).GetBattlesThatHappenOffline());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpManager)GCHandledObjects.GCHandleToObject(instance)).GetPvpMatchCost());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).HandleNotEnoughCreditsForNextBattle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).KillSearchTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).KillTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnBattleReady();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnCountdownComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnNotEnoughCreditsModalResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnPvpBattleComplete((PvpBattleEndResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnPvpCheatTargetFound((PvpTarget)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnPvpGetNextTargetFailure();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnPvpRevengeFound((PvpTarget)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnPvpTargetFound((PvpTarget)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnTargetReady((PvpTarget)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).OnTransitionInStartLoadHome();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).PurchaseNextBattle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpManager)GCHandledObjects.GCHandleToObject(instance)).PVPOpponentNotFoundMessage(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).ReleasePvpTarget();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).ReplayBattle(Marshal.PtrToStringUni(*(IntPtr*)args), (BattleParticipant)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).CurrentPvpTarget = (PvpTarget)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).StartCountdown();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).StartRevenge(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((PvpManager)GCHandledObjects.GCHandleToObject(instance)).StartSearchTimer();
-			return -1L;
 		}
 	}
 }

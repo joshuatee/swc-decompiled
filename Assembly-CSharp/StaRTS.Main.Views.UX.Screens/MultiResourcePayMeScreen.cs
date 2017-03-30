@@ -9,8 +9,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -21,6 +19,13 @@ namespace StaRTS.Main.Views.UX.Screens
 		private List<string> multiItemSpriteNames;
 
 		private List<string> multiItemLabelTexts;
+
+		private MultiResourcePayMeScreen(int crystals, string title, string message, List<string> spriteNames, List<string> labelTexts) : base(false, title, message, string.Empty, false)
+		{
+			this.crystals = crystals;
+			this.multiItemSpriteNames = spriteNames;
+			this.multiItemLabelTexts = labelTexts;
+		}
 
 		public static bool ShowIfNotEnoughMultipleCurrencies(string[] cost, string purchaseContext, OnScreenModalResult onModalResult)
 		{
@@ -66,13 +71,13 @@ namespace StaRTS.Main.Views.UX.Screens
 				List<string> list2 = new List<string>();
 				foreach (KeyValuePair<CurrencyType, int> current in dictionary)
 				{
-					CurrencyType key = current.get_Key();
-					int value = current.get_Value();
+					CurrencyType key = current.Key;
+					int value = current.Value;
 					flag &= GameUtils.HasEnoughCurrencyStorage(key, value);
 					list.Add(UXUtils.GetCurrencyItemAssetName(key.ToString()));
 					string currencyStringId = LangUtils.GetCurrencyStringId(key);
-					string text = lang.Get(currencyStringId, new object[0]);
-					list2.Add(lang.ThousandsSeparated(value) + " " + text);
+					string str = lang.Get(currencyStringId, new object[0]);
+					list2.Add(lang.ThousandsSeparated(value) + " " + str);
 				}
 				if (flag)
 				{
@@ -94,13 +99,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			dictionary.Clear();
 			dictionary = null;
 			return false;
-		}
-
-		private MultiResourcePayMeScreen(int crystals, string title, string message, List<string> spriteNames, List<string> labelTexts) : base(false, title, message, string.Empty, false)
-		{
-			this.crystals = crystals;
-			this.multiItemSpriteNames = spriteNames;
-			this.multiItemLabelTexts = labelTexts;
 		}
 
 		protected override void SetupControls()
@@ -153,33 +151,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				return;
 			}
 			Service.Get<EventManager>().SendEvent(EventId.UINotEnoughSoftCurrencyClose, base.ModalResultCookie);
-		}
-
-		protected internal MultiResourcePayMeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((MultiResourcePayMeScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((MultiResourcePayMeScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((MultiResourcePayMeScreen)GCHandledObjects.GCHandleToObject(instance)).SetupControls();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MultiResourcePayMeScreen.ShowIfNotEnoughMultipleCurrencies((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[2])));
 		}
 	}
 }

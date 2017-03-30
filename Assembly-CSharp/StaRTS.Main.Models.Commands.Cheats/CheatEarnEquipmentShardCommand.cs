@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatEarnEquipmentShardCommand(CheatEarnEquipmentShardRequest request) : base("cheats.equipment.earnShard", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatEarnEquipmentShardCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

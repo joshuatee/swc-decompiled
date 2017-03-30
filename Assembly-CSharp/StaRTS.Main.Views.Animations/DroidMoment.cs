@@ -7,14 +7,11 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Animations
 {
 	public class DroidMoment
 	{
-		private static readonly Vector3 RIG_OFFSET = new Vector3(2000f, 1000f, 0f);
-
 		private const string MODEL_ASSET = "workerdroidui_neu-ani";
 
 		private const string ASSET_STAGER = "AssetStager";
@@ -34,6 +31,8 @@ namespace StaRTS.Main.Views.Animations
 		private const int STATE_SHOWING = 1;
 
 		private const int STATE_HIDING = 2;
+
+		private static readonly Vector3 RIG_OFFSET = new Vector3(2000f, 1000f, 0f);
 
 		private int state;
 
@@ -91,13 +90,15 @@ namespace StaRTS.Main.Views.Animations
 				if (this.rigHandle == AssetHandle.Invalid || this.modelHandle == AssetHandle.Invalid || this.rigAnim == null || this.modelAnim == null || this.state == 2)
 				{
 					this.DestroyDroidMoment();
-					return;
 				}
-				this.rigAnim.enabled = true;
-				this.modelAnim.enabled = true;
-				this.rigGameObject.SetActive(true);
-				this.modelGameObject.SetActive(true);
-				this.ShowDroidMoment();
+				else
+				{
+					this.rigAnim.enabled = true;
+					this.modelAnim.enabled = true;
+					this.rigGameObject.SetActive(true);
+					this.modelGameObject.SetActive(true);
+					this.ShowDroidMoment();
+				}
 			}
 		}
 
@@ -118,12 +119,14 @@ namespace StaRTS.Main.Views.Animations
 			}
 			if (this.rigAnim != null && this.modelAnim != null)
 			{
-				this.StartAnimation(happy ? 2 : 1);
+				this.StartAnimation((!happy) ? 1 : 2);
 				Service.Get<ViewTimerManager>().CreateViewTimer(3f, false, new TimerDelegate(this.OnExitAnimationFinishedTimer), null);
 				this.state = 2;
-				return;
 			}
-			this.DestroyDroidMoment();
+			else
+			{
+				this.DestroyDroidMoment();
+			}
 		}
 
 		private void StartAnimation(int animId)
@@ -185,40 +188,6 @@ namespace StaRTS.Main.Views.Animations
 				this.rigHandle = AssetHandle.Invalid;
 			}
 			this.state = 0;
-		}
-
-		protected internal DroidMoment(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DroidMoment)GCHandledObjects.GCHandleToObject(instance)).DestroyDroidMoment();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DroidMoment)GCHandledObjects.GCHandleToObject(instance)).HideDroidMoment(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DroidMoment)GCHandledObjects.GCHandleToObject(instance)).OnAssetLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((DroidMoment)GCHandledObjects.GCHandleToObject(instance)).ShowDroidMoment();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((DroidMoment)GCHandledObjects.GCHandleToObject(instance)).StartAnimation(*(int*)args);
-			return -1L;
 		}
 	}
 }

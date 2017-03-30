@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.TargetedBundleOffers
 		public TriggerTargetedOfferCommand(TargetedOfferIDRequest request) : base("player.store.offers.trigger", request, new TriggerTargetedOfferResponse())
 		{
 		}
-
-		protected internal TriggerTargetedOfferCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

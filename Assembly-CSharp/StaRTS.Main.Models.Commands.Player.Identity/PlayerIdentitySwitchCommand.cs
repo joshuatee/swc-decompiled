@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Player.Identity
 		public PlayerIdentitySwitchCommand(PlayerIdentityRequest request) : base("player.identity.switch", request, new PlayerIdentitySwitchResponse())
 		{
 		}
-
-		protected internal PlayerIdentitySwitchCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

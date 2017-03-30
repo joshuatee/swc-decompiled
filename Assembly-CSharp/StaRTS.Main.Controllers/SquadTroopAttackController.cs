@@ -13,7 +13,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -88,8 +87,8 @@ namespace StaRTS.Main.Controllers
 			this.spawnQueue = new List<TroopTypeVO>();
 			foreach (KeyValuePair<string, int> current in squadTroops)
 			{
-				TroopTypeVO item = dataController.Get<TroopTypeVO>(current.get_Key());
-				for (int i = 0; i < current.get_Value(); i++)
+				TroopTypeVO item = dataController.Get<TroopTypeVO>(current.Key);
+				for (int i = 0; i < current.Value; i++)
 				{
 					this.spawnQueue.Add(item);
 				}
@@ -131,7 +130,7 @@ namespace StaRTS.Main.Controllers
 		private void OnSpawnTimer(uint id, object cookie)
 		{
 			TroopTypeVO troopVO = this.spawnQueue[0];
-			TeamType teamType = (TeamType)cookie;
+			TeamType teamType = (TeamType)((int)cookie);
 			Entity entity = Service.Get<TroopController>().DeployTroopWithOffset(troopVO, ref this.currentOffsetIndex, this.spawnPosition, false, teamType);
 			if (entity != null)
 			{
@@ -139,9 +138,11 @@ namespace StaRTS.Main.Controllers
 				if (this.spawnQueue.Count > 0)
 				{
 					this.CreateSpawnTimer(teamType);
-					return;
 				}
-				this.Spawning = false;
+				else
+				{
+					this.Spawning = false;
+				}
 			}
 		}
 
@@ -168,68 +169,6 @@ namespace StaRTS.Main.Controllers
 			IntPosition position = new IntPosition(this.spawnPosition.x - 1, this.spawnPosition.z);
 			Vector3 worldPos = Units.BoardToWorldVec(position);
 			Service.Get<FXManager>().CreateFXAtPosition(assetName, worldPos, Quaternion.AngleAxis(-90f, Vector3.up));
-		}
-
-		protected internal SquadTroopAttackController(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).CompareTroops((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (TroopTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).CreateSpawnTimer((TeamType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).DeploySquadTroops(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).DeploySquadTroops(*(*(IntPtr*)args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).Spawning);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).OnDeploy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).PlaceSquadFlag((FactionType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).Spawning = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadTroopAttackController)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadTroopSpawnQueue((TeamType)(*(int*)args));
-			return -1L;
 		}
 	}
 }

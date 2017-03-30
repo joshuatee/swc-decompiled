@@ -1,7 +1,6 @@
 using StaRTS.Main.Views.World;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities.Projectiles
 {
@@ -49,16 +48,6 @@ namespace StaRTS.Main.Views.Entities.Projectiles
 				this.view.MeshTracker.position = new Vector3(vector.x, 0f, vector.z);
 			}
 			base.CurrentLocation = vector;
-		}
-
-		protected internal ProjectileViewArcPath(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ProjectileViewArcPath)GCHandledObjects.GCHandleToObject(instance)).OnUpdate(*(float*)args);
-			return -1L;
 		}
 	}
 }

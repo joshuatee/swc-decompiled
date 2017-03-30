@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.TargetedBundleOffers
 		public ReserveTargetedOfferCommand(ReserveTargetedOfferIDRequest request) : base("player.store.offers.reserve", request, new DefaultResponse())
 		{
 		}
-
-		protected internal ReserveTargetedOfferCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

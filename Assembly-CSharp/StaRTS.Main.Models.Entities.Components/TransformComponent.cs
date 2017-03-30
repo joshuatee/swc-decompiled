@@ -1,6 +1,5 @@
 using Net.RichardLord.Ash.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Entities.Components
 {
@@ -85,60 +84,6 @@ namespace StaRTS.Main.Models.Entities.Components
 		public int MaxZ()
 		{
 			return this.Z + this.boardDepth - 1;
-		}
-
-		protected internal TransformComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).CenterGridX());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).CenterGridZ());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).CenterX());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).CenterZ());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).BoardDepth);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).BoardWidth);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).MaxX());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).MaxZ());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).MinX());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransformComponent)GCHandledObjects.GCHandleToObject(instance)).MinZ());
 		}
 	}
 }

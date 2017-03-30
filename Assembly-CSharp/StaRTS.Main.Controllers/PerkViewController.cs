@@ -20,9 +20,7 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -110,29 +108,29 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.BuildingConstructed)
+			switch (id)
 			{
-				if (id == EventId.BuildingLevelUpgraded || id == EventId.BuildingConstructed)
+			case EventId.BuildingLevelUpgraded:
+			case EventId.BuildingConstructed:
+			{
+				ContractEventData contractEventData = cookie as ContractEventData;
+				Entity entity = (cookie as ContractEventData).Entity;
+				BuildingComponent buildingComp = ((SmartEntity)entity).BuildingComp;
+				if (entity != null && buildingComp != null && contractEventData.BuildingVO != null && Service.Get<PerkManager>().IsPerkAppliedToBuilding(contractEventData.BuildingVO))
 				{
-					ContractEventData contractEventData = cookie as ContractEventData;
-					Entity entity = (cookie as ContractEventData).Entity;
-					BuildingComponent buildingComp = ((SmartEntity)entity).BuildingComp;
-					if (entity != null && buildingComp != null && contractEventData.BuildingVO != null && Service.Get<PerkManager>().IsPerkAppliedToBuilding(contractEventData.BuildingVO))
-					{
-						Service.Get<BuildingController>().UpdateBuildingHighlightForPerks(entity);
-					}
+					Service.Get<BuildingController>().UpdateBuildingHighlightForPerks(entity);
 				}
+				return EatResponse.NotEaten;
 			}
-			else if (id != EventId.WorldLoadComplete)
-			{
-				if (id != EventId.GameStateChanged)
+			case EventId.BuildingSwapped:
+				IL_19:
+				if (id == EventId.WorldLoadComplete)
 				{
-					if (id == EventId.ActivePerksUpdated)
-					{
-						this.RefreshPerkBuildingHighlightTimer();
-					}
+					this.HighlightActivePerkBuildings();
+					this.RefreshPerkBuildingHighlightTimer();
+					return EatResponse.NotEaten;
 				}
-				else
+				if (id == EventId.GameStateChanged)
 				{
 					IState currentState = Service.Get<GameStateMachine>().CurrentState;
 					if (currentState is HomeState)
@@ -140,14 +138,16 @@ namespace StaRTS.Main.Controllers
 						this.HighlightActivePerkBuildings();
 						this.RefreshPerkBuildingHighlightTimer();
 					}
+					return EatResponse.NotEaten;
 				}
-			}
-			else
-			{
-				this.HighlightActivePerkBuildings();
+				if (id != EventId.ActivePerksUpdated)
+				{
+					return EatResponse.NotEaten;
+				}
 				this.RefreshPerkBuildingHighlightTimer();
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			goto IL_19;
 		}
 
 		private void HighlightActivePerkBuildings()
@@ -214,7 +214,7 @@ namespace StaRTS.Main.Controllers
 				array = perkByGroupAndTier.PerkEffects;
 				if (perkEffects.Length != num)
 				{
-					Service.Get<StaRTSLogger>().Error("PerkEffects list not consistent between " + perkByGroupAndTier.Uid + " and " + targetPerkVO.Uid);
+					Service.Get<Logger>().Error("PerkEffects list not consistent between " + perkByGroupAndTier.Uid + " and " + targetPerkVO.Uid);
 				}
 			}
 			statGrid.Clear();
@@ -240,6 +240,7 @@ namespace StaRTS.Main.Controllers
 		public string GetFormattedValueBasedOnEffectType(PerkEffectVO currentVO, PerkEffectVO prevVO)
 		{
 			Lang lang = Service.Get<Lang>();
+			string empty = string.Empty;
 			string displayValueForPerk = this.GetDisplayValueForPerk(currentVO);
 			string id = currentVO.StatValueFormatStringId;
 			if (prevVO != null)
@@ -264,7 +265,7 @@ namespace StaRTS.Main.Controllers
 		private string GetDisplayValueForPerk(PerkEffectVO vo)
 		{
 			string type = vo.Type;
-			string result = "";
+			string result = string.Empty;
 			if ("troopRequestTime" == type)
 			{
 				result = LangUtils.FormatTime((long)vo.TroopRequestTimeDiscount);
@@ -313,7 +314,7 @@ namespace StaRTS.Main.Controllers
 				perkNameForGroup
 			});
 			bool alwaysOnTop = true;
-			YesNoScreen.ShowModal(title, message, false, false, false, alwaysOnTop, new OnScreenModalResult(this.OnCancelPerkModalResult), perkId, false);
+			YesNoScreen.ShowModal(title, message, false, false, false, alwaysOnTop, new OnScreenModalResult(this.OnCancelPerkModalResult), perkId);
 		}
 
 		public uint GetLastViewedPerkTime()
@@ -348,9 +349,11 @@ namespace StaRTS.Main.Controllers
 				string perkGroup = perkVO.PerkGroup;
 				list.Add(perkGroup);
 				this.SetPerkBadgeList(list);
-				return;
 			}
-			Service.Get<StaRTSLogger>().Error("PerkViewController.AddToPerkBadgeList Failed to find Perk Data for: " + perkId);
+			else
+			{
+				Service.Get<Logger>().Error("PerkViewController.AddToPerkBadgeList Failed to find Perk Data for: " + perkId);
+			}
 		}
 
 		public void RemovePerkGroupFromBadgeList(string perkGroup)
@@ -387,11 +390,13 @@ namespace StaRTS.Main.Controllers
 
 		private void TrimPerkBadgeList(ref List<string> perkBadges, int amtToRemove)
 		{
-			int num = 0;
-			while (num < amtToRemove && perkBadges.Count != 0)
+			for (int i = 0; i < amtToRemove; i++)
 			{
+				if (perkBadges.Count == 0)
+				{
+					break;
+				}
 				perkBadges.RemoveAt(0);
-				num++;
 			}
 		}
 
@@ -421,9 +426,12 @@ namespace StaRTS.Main.Controllers
 					if (available.ContainsKey(text))
 					{
 						PerkVO perkData = Service.Get<IDataController>().Get<PerkVO>(available[text]);
-						if (!perkManager.IsPerkLevelLocked(perkData, level) && !perkManager.IsPerkReputationLocked(perkData, level, available) && !perkManager.IsPerkGroupActive(text) && !perkManager.IsPerkGroupInCooldown(text))
+						if (!perkManager.IsPerkLevelLocked(perkData, level) && !perkManager.IsPerkReputationLocked(perkData, level, available))
 						{
-							list.Add(text);
+							if (!perkManager.IsPerkGroupActive(text) && !perkManager.IsPerkGroupInCooldown(text))
+							{
+								list.Add(text);
+							}
 						}
 					}
 				}
@@ -435,7 +443,7 @@ namespace StaRTS.Main.Controllers
 		private void SetPerkBadgeList(List<string> badgedGroups)
 		{
 			SharedPlayerPrefs sharedPlayerPrefs = Service.Get<SharedPlayerPrefs>();
-			string text = "";
+			string text = string.Empty;
 			if (badgedGroups != null)
 			{
 				int count = badgedGroups.Count;
@@ -515,134 +523,6 @@ namespace StaRTS.Main.Controllers
 					i++;
 				}
 			}
-		}
-
-		protected internal PerkViewController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).AddToPerkBadgeList(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).GetBadgedPerkCount());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).GetDisplayValueForPerk((PerkEffectVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).GetFormattedValueBasedOnEffectType((PerkEffectVO)GCHandledObjects.GCHandleToObject(*args), (PerkEffectVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).GetListOfBadgedPerkGroups());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).GetPerkDescForGroup(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).GetPerkNameForGroup(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).HighlightActivePerkBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).IsPerkGroupBadged(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).OnCancelPerkModalResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).OnPerksButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).RefreshPerkBuildingHighlightTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).RegisterEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).RemovePerkGroupFromBadgeList(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).SetPerkBadgeList((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).SetPerkImage((UXTexture)GCHandledObjects.GCHandleToObject(*args), (PerkVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).SetupStatGridForPerk((PerkVO)GCHandledObjects.GCHandleToObject(*args), (UXGrid)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), *(sbyte*)(args + 5) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).ShowActivePerksScreen((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).ShowCancelPerkAlert(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).ShowSquadLevelUpIfPending();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((PerkViewController)GCHandledObjects.GCHandleToObject(instance)).UpdateLastViewedPerkTime();
-			return -1L;
 		}
 	}
 }

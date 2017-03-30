@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UserInput
 {
@@ -9,6 +8,8 @@ namespace StaRTS.Main.Views.UserInput
 		private const int MAX_FINGERS = 1;
 
 		private const float SCROLL_THRESHOLD = 0.03f;
+
+		private const float ZOOM_FACTOR = 4f;
 
 		private float curScroll;
 
@@ -20,12 +21,13 @@ namespace StaRTS.Main.Views.UserInput
 		{
 			if (this.inited && this.enabled)
 			{
-				this.HandleMouseChanges();
+				this.HandleMouseChangesPrimaryButton();
+				this.HandleMouseChangesSecondaryButton();
 				this.HandleScrollWheel();
 			}
 		}
 
-		private void HandleMouseChanges()
+		private void HandleMouseChangesPrimaryButton()
 		{
 			bool mouseButton = Input.GetMouseButton(0);
 			Vector3 mousePosition = Input.mousePosition;
@@ -35,7 +37,7 @@ namespace StaRTS.Main.Views.UserInput
 			Vector3 zero = Vector3.zero;
 			bool flag = this.lastIsPressed[0] != mouseButton;
 			bool flag2 = this.lastScreenPosition[0] != vector;
-			if (mouseButton | flag2)
+			if (mouseButton || flag2)
 			{
 				if (mouseButton && !flag)
 				{
@@ -52,7 +54,7 @@ namespace StaRTS.Main.Views.UserInput
 				}
 				else if (base.Raycast(UserInputLayer.World, vector, ref gameObject, ref zero))
 				{
-					userInputLayer = ((gameObject == null) ? UserInputLayer.InternalLowest : UserInputLayer.World);
+					userInputLayer = ((!(gameObject == null)) ? UserInputLayer.World : UserInputLayer.InternalLowest);
 				}
 			}
 			else
@@ -81,6 +83,31 @@ namespace StaRTS.Main.Views.UserInput
 			}
 		}
 
+		private void HandleMouseChangesSecondaryButton()
+		{
+			if (!Input.GetMouseButton(1))
+			{
+				this.isPressed2ndMouseBut = false;
+				this.lastScreenPos2ndMouseBut = Vector2.zero;
+				return;
+			}
+			Vector3 mousePosition = Input.mousePosition;
+			Vector2 vector = new Vector2(mousePosition.x, mousePosition.y);
+			if (!this.isPressed2ndMouseBut)
+			{
+				this.isPressed2ndMouseBut = true;
+				this.lastScreenPos2ndMouseBut = vector;
+				return;
+			}
+			float num = (vector.y - this.lastScreenPos2ndMouseBut.y) / (float)Screen.height;
+			this.lastScreenPos2ndMouseBut = vector;
+			if (num == 0f)
+			{
+				return;
+			}
+			base.SendOnScroll(num * 4f, vector, UserInputLayer.InternalLowest);
+		}
+
 		private void HandleScrollWheel()
 		{
 			if (!this.lastIsPressed[0] && this.lastLayer[0] != UserInputLayer.UX && this.lastScreenPosition[0].x >= 0f && this.lastScreenPosition[0].x < (float)Screen.width && this.lastScreenPosition[0].y >= 0f && this.lastScreenPosition[0].y < (float)Screen.height)
@@ -88,7 +115,7 @@ namespace StaRTS.Main.Views.UserInput
 				float axis = Input.GetAxis("Mouse ScrollWheel");
 				if (axis != 0f)
 				{
-					float num = (float)((axis > 0f) ? 1 : -1);
+					float num = (float)((axis <= 0f) ? -1 : 1);
 					this.curScroll += axis;
 					if (num * this.curScroll >= 0.03f)
 					{
@@ -97,28 +124,6 @@ namespace StaRTS.Main.Views.UserInput
 					}
 				}
 			}
-		}
-
-		protected internal MouseManager(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((MouseManager)GCHandledObjects.GCHandleToObject(instance)).HandleMouseChanges();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((MouseManager)GCHandledObjects.GCHandleToObject(instance)).HandleScrollWheel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((MouseManager)GCHandledObjects.GCHandleToObject(instance)).OnUpdate();
-			return -1L;
 		}
 	}
 }

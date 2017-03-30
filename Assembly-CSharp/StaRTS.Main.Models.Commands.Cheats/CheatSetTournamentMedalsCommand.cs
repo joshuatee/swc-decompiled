@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetTournamentMedalsCommand(CheatPointsRequest request) : base("cheats.setTournamentMedal", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSetTournamentMedalsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

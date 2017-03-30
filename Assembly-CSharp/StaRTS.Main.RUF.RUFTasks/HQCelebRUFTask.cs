@@ -1,5 +1,4 @@
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.RUF.RUFTasks
 {
@@ -14,18 +13,10 @@ namespace StaRTS.Main.RUF.RUFTasks
 
 		public override void Process(bool continueProcessing)
 		{
-			bool arg_06_0 = base.ShouldProcess;
+			if (base.ShouldProcess)
+			{
+			}
 			base.Process(continueProcessing);
-		}
-
-		protected internal HQCelebRUFTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HQCelebRUFTask)GCHandledObjects.GCHandleToObject(instance)).Process(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

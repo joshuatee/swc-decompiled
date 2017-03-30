@@ -10,7 +10,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -123,33 +122,35 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		public virtual EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id != EventId.SquadScreenOpenedOrClosed)
+			switch (id)
 			{
-				switch (id)
+			case EventId.SquadPerkUpdated:
+			case EventId.PerkInvestment:
+			case EventId.PerkUnlocked:
+			case EventId.PerkUpgraded:
+				this.RefreshSquadLevel();
+				this.screen.UpdateBadges();
+				break;
+			case EventId.SquadLeveledUp:
+				this.RefreshSquadLevel();
+				if (this.IsVisible())
 				{
-				case EventId.SquadPerkUpdated:
-				case EventId.PerkInvestment:
-				case EventId.PerkUnlocked:
-				case EventId.PerkUpgraded:
-					this.RefreshSquadLevel();
-					this.screen.UpdateBadges();
-					break;
-				case EventId.SquadLeveledUp:
-					this.RefreshSquadLevel();
-					if (this.IsVisible())
-					{
-						Service.Get<PerkViewController>().ShowSquadLevelUpIfPending();
-					}
-					this.screen.UpdateBadges();
-					break;
-				case EventId.PerkCelebClosed:
-					this.screen.UpdateBadges();
-					break;
+					Service.Get<PerkViewController>().ShowSquadLevelUpIfPending();
 				}
-			}
-			else if (!(bool)cookie)
-			{
-				this.SetDefaultTabActive();
+				this.screen.UpdateBadges();
+				break;
+			case EventId.PerkCelebClosed:
+				this.screen.UpdateBadges();
+				break;
+			default:
+				if (id == EventId.SquadScreenOpenedOrClosed)
+				{
+					if (!(bool)cookie)
+					{
+						this.SetDefaultTabActive();
+					}
+				}
+				break;
 			}
 			return EatResponse.NotEaten;
 		}
@@ -354,124 +355,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			num += perkViewController.GetBadgedPerkCount();
 			this.perkTabBadge.Value = num;
 			return num;
-		}
-
-		protected internal SquadScreenAdvancementView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).CreateAndAddActivateTab((SquadSlidingScreen)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).CreateAndAddUpgradeTab((SquadSlidingScreen)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).GetDisplayCurrencyTrayType());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).HandleTabDestruction();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).HideView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).InitPerkTabs();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).IsVisible());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).OnAdvancementTabSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).OnSquadLevelSelected((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).OnTabButtonSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).RefreshSquadLevel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).RegisterEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).SetDefaultTabActive();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).ShowView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).UnregisterEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenAdvancementView)GCHandledObjects.GCHandleToObject(instance)).UpdateBadge());
 		}
 	}
 }

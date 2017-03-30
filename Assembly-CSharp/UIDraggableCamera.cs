@@ -1,23 +1,20 @@
 using System;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/Interaction/Draggable Camera"), RequireComponent(typeof(Camera))]
-public class UIDraggableCamera : MonoBehaviour, IUnitySerializable
+public class UIDraggableCamera : MonoBehaviour
 {
 	public Transform rootForBounds;
 
-	public Vector2 scale;
+	public Vector2 scale = Vector2.one;
 
 	public float scrollWheelFactor;
 
-	public UIDragObject.DragEffect dragEffect;
+	public UIDragObject.DragEffect dragEffect = UIDragObject.DragEffect.MomentumAndSpring;
 
-	public bool smoothDragStart;
+	public bool smoothDragStart = true;
 
-	public float momentumAmount;
+	public float momentumAmount = 35f;
 
 	private Camera mCam;
 
@@ -25,7 +22,7 @@ public class UIDraggableCamera : MonoBehaviour, IUnitySerializable
 
 	private bool mPressed;
 
-	private Vector2 mMomentum;
+	private Vector2 mMomentum = Vector2.zero;
 
 	private Bounds mBounds;
 
@@ -115,7 +112,6 @@ public class UIDraggableCamera : MonoBehaviour, IUnitySerializable
 				if (component != null)
 				{
 					component.enabled = false;
-					return;
 				}
 			}
 			else if (this.dragEffect == UIDragObject.DragEffect.MomentumAndSpring)
@@ -192,265 +188,5 @@ public class UIDraggableCamera : MonoBehaviour, IUnitySerializable
 			this.mScroll = 0f;
 		}
 		NGUIMath.SpringDampen(ref this.mMomentum, 9f, deltaTime);
-	}
-
-	public UIDraggableCamera()
-	{
-		this.scale = Vector2.one;
-		this.dragEffect = UIDragObject.DragEffect.MomentumAndSpring;
-		this.smoothDragStart = true;
-		this.momentumAmount = 35f;
-		this.mMomentum = Vector2.zero;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.rootForBounds);
-		}
-		if (depth <= 7)
-		{
-			this.scale.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteSingle(this.scrollWheelFactor);
-		SerializedStateWriter.Instance.WriteInt32((int)this.dragEffect);
-		SerializedStateWriter.Instance.WriteBoolean(this.smoothDragStart);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteSingle(this.momentumAmount);
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			this.rootForBounds = (SerializedStateReader.Instance.ReadUnityEngineObject() as Transform);
-		}
-		if (depth <= 7)
-		{
-			this.scale.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		this.scrollWheelFactor = SerializedStateReader.Instance.ReadSingle();
-		this.dragEffect = (UIDragObject.DragEffect)SerializedStateReader.Instance.ReadInt32();
-		this.smoothDragStart = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.momentumAmount = SerializedStateReader.Instance.ReadSingle();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (this.rootForBounds != null)
-		{
-			this.rootForBounds = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.rootForBounds) as Transform);
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateWriter arg_23_0 = SerializedNamedStateWriter.Instance;
-			UnityEngine.Object arg_23_1 = this.rootForBounds;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_23_0.WriteUnityEngineObject(arg_23_1, &var_0_cp_0[var_0_cp_1] + 558);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 572);
-			this.scale.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteSingle(this.scrollWheelFactor, &var_0_cp_0[var_0_cp_1] + 578);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.dragEffect, &var_0_cp_0[var_0_cp_1] + 596);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.smoothDragStart, &var_0_cp_0[var_0_cp_1] + 607);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteSingle(this.momentumAmount, &var_0_cp_0[var_0_cp_1] + 623);
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateReader arg_1E_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			this.rootForBounds = (arg_1E_0.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 558) as Transform);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 572);
-			this.scale.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		this.scrollWheelFactor = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 578);
-		this.dragEffect = (UIDragObject.DragEffect)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 596);
-		this.smoothDragStart = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 607);
-		SerializedNamedStateReader.Instance.Align();
-		this.momentumAmount = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 623);
-	}
-
-	protected internal UIDraggableCamera(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static long $Get0(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDraggableCamera)instance).rootForBounds);
-	}
-
-	public static void $Set0(object instance, long value)
-	{
-		((UIDraggableCamera)instance).rootForBounds = (Transform)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static float $Get1(object instance, int index)
-	{
-		UIDraggableCamera expr_06_cp_0 = (UIDraggableCamera)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.scale.x;
-		case 1:
-			return expr_06_cp_0.scale.y;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set1(object instance, float value, int index)
-	{
-		UIDraggableCamera expr_06_cp_0 = (UIDraggableCamera)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.scale.x = value;
-			return;
-		case 1:
-			expr_06_cp_0.scale.y = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get2(object instance)
-	{
-		return ((UIDraggableCamera)instance).scrollWheelFactor;
-	}
-
-	public static void $Set2(object instance, float value)
-	{
-		((UIDraggableCamera)instance).scrollWheelFactor = value;
-	}
-
-	public static bool $Get3(object instance)
-	{
-		return ((UIDraggableCamera)instance).smoothDragStart;
-	}
-
-	public static void $Set3(object instance, bool value)
-	{
-		((UIDraggableCamera)instance).smoothDragStart = value;
-	}
-
-	public static float $Get4(object instance)
-	{
-		return ((UIDraggableCamera)instance).momentumAmount;
-	}
-
-	public static void $Set4(object instance, float value)
-	{
-		((UIDraggableCamera)instance).momentumAmount = value;
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).CalculateConstrainOffset());
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).ConstrainToBounds(*(sbyte*)args != 0));
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Drag(*(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).currentMomentum);
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Press(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Scroll(*(float*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).currentMomentum = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UIDraggableCamera)GCHandledObjects.GCHandleToObject(instance)).Update();
-		return -1L;
 	}
 }

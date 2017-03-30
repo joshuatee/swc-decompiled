@@ -44,9 +44,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 			}
 			return OnCompleteAction.Desync;
 		}
-
-		protected internal SquadWarAttackPlayerStartCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

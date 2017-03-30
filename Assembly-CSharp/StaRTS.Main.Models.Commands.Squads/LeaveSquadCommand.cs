@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public LeaveSquadCommand(PlayerIdRequest request) : base("guild.leave", request, new DefaultResponse())
 		{
 		}
-
-		protected internal LeaveSquadCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

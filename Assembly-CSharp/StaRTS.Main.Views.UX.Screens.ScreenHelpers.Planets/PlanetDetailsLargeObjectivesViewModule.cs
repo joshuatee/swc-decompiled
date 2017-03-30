@@ -10,7 +10,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 {
@@ -98,14 +97,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		private Lang lang;
 
-		private string tempTimeString;
+		private string tempTimeString = string.Empty;
 
 		private bool tempIsGrace;
 
-		public PlanetDetailsLargeObjectivesViewModule(PlanetDetailsScreen screen)
+		public PlanetDetailsLargeObjectivesViewModule(PlanetDetailsScreen screen) : base(screen)
 		{
-			this.tempTimeString = string.Empty;
-			base..ctor(screen);
 			this.player = Service.Get<CurrentPlayer>();
 			this.objectiveController = Service.Get<ObjectiveController>();
 			this.lang = Service.Get<Lang>();
@@ -184,7 +181,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				ObjectiveGroup objectiveGroup = this.player.Objectives[this.screen.viewingPlanetVO.Uid];
 				if (objectiveGroup == null)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Player objectives for planet {0} are null", new object[]
+					Service.Get<Logger>().WarnFormat("Player objectives for planet {0} are null", new object[]
 					{
 						this.screen.viewingPlanetVO.Uid
 					});
@@ -242,7 +239,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			}
 			else
 			{
-				this.relocation.GetUIWidget.GetComponent<UILabel>().overflowMethod = UILabel.Overflow.ShrinkContent;
 				this.relocation.Text = this.lang.Get("RELOCATE_TO_PLANET_MESSAGE", new object[]
 				{
 					planetDisplayName
@@ -286,20 +282,20 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			this.objectiveController.GetTimeData(this.lang, objectiveGroup, ref this.tempIsGrace, ref this.tempTimeString);
 			if (objectiveSeriesVO.SpecialEvent)
 			{
-				this.header.Text = (this.tempIsGrace ? this.lang.Get(objectiveSeriesVO.ObjectiveExpiringString, new object[0]) : this.lang.Get(objectiveSeriesVO.ObjectiveString, new object[0]));
+				this.header.Text = ((!this.tempIsGrace) ? this.lang.Get(objectiveSeriesVO.ObjectiveString, new object[0]) : this.lang.Get(objectiveSeriesVO.ObjectiveExpiringString, new object[0]));
 			}
 			else
 			{
-				this.header.Text = (this.tempIsGrace ? this.lang.Get("OBJECTIVES_DETAILS_HEADER_EXPIRED", new object[]
+				this.header.Text = ((!this.tempIsGrace) ? this.lang.Get("OBJECTIVE_DETAILS_HEADER", new object[]
 				{
 					planetDisplayName
-				}) : this.lang.Get("OBJECTIVE_DETAILS_HEADER", new object[]
+				}) : this.lang.Get("OBJECTIVES_DETAILS_HEADER_EXPIRED", new object[]
 				{
 					planetDisplayName
 				}));
 			}
 			this.timer.Text = this.tempTimeString;
-			this.timer.TextColor = (this.tempIsGrace ? ObjectiveController.TEXT_YELLOW_COLOR : ObjectiveController.TEXT_RED_COLOR);
+			this.timer.TextColor = ((!this.tempIsGrace) ? ObjectiveController.TEXT_RED_COLOR : ObjectiveController.TEXT_YELLOW_COLOR);
 		}
 
 		public void OnClose()
@@ -332,52 +328,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				}
 				this.grid.Clear();
 			}
-		}
-
-		protected internal PlanetDetailsLargeObjectivesViewModule(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetDetailsLargeObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).Hide();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetDetailsLargeObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).OnBackButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetDetailsLargeObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).OnClose();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetDetailsLargeObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetDetailsLargeObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetDetailsLargeObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshScreenForPlanetChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetDetailsLargeObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).Show();
-			return -1L;
 		}
 	}
 }

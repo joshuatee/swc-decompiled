@@ -19,8 +19,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -318,11 +316,13 @@ namespace StaRTS.Main.Views.UX.Screens
 					this.labelUpgradeTime.Text = GameUtils.GetTimeLabelFromSeconds(remainingTimeForView);
 					int crystalCostToFinishContract = ContractUtils.GetCrystalCostToFinishContract(this.activeContract);
 					UXUtils.SetupCostElements(this, "FinishCost", null, 0, 0, 0, crystalCostToFinishContract, 0, !ArmoryUtils.IsBuildingRequirementMet(this.nextEquipmentVoUpgrade), null);
-					return;
 				}
-				this.activeContract = null;
-				this.DisableTimers();
-				this.Redraw();
+				else
+				{
+					this.activeContract = null;
+					this.DisableTimers();
+					this.Redraw();
+				}
 			}
 		}
 
@@ -355,10 +355,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.activeContract = contract;
 				this.EnableTimers();
-				return;
 			}
-			this.activeContract = null;
-			this.DisableTimers();
+			else
+			{
+				this.activeContract = null;
+				this.DisableTimers();
+			}
 		}
 
 		private void Redraw()
@@ -367,41 +369,22 @@ namespace StaRTS.Main.Views.UX.Screens
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			for (int i = 1; i <= 3; i++)
 			{
-				base.GetElement<UXElement>(string.Format("TroopImageQ{0}", new object[]
-				{
-					i
-				})).Visible = false;
+				base.GetElement<UXElement>(string.Format("TroopImageQ{0}", i)).Visible = false;
 			}
 			int quality = (int)this.selectedEquipment.Quality;
-			base.GetElement<UXElement>(string.Format("TroopImageQ{0}", new object[]
-			{
-				quality
-			})).Visible = true;
-			base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", new object[]
-			{
-				quality
-			})).Visible = true;
+			base.GetElement<UXElement>(string.Format("TroopImageQ{0}", quality)).Visible = true;
+			base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", quality)).Visible = true;
 			base.GetElement<UXElement>("TroopImage").Visible = false;
 			int quality2 = (int)this.selectedEquipment.Quality;
-			base.GetElement<UXLabel>(string.Format("LabelQualityQ{0}", new object[]
-			{
-				quality2
-			})).Text = LangUtils.GetShardQuality(this.selectedEquipment.Quality);
-			UXSprite element = base.GetElement<UXSprite>(string.Format("SpriteTroopSelectedItemImageQ{0}", new object[]
-			{
-				quality2
-			}));
+			base.GetElement<UXLabel>(string.Format("LabelQualityQ{0}", quality2)).Text = LangUtils.GetShardQuality(this.selectedEquipment.Quality);
+			UXSprite element = base.GetElement<UXSprite>(string.Format("SpriteTroopSelectedItemImageQ{0}", quality2));
 			ProjectorConfig projectorConfig = ProjectorUtils.GenerateEquipmentConfig(this.selectedEquipment, element, true);
 			projectorConfig.AnimPreference = AnimationPreference.AnimationPreferred;
-			projectorConfig.buildingEquipmentShaderName = "UnlitTexture_Fade";
 			this.equipmentImage = ProjectorUtils.GenerateProjector(projectorConfig);
 			this.SetProgressBarElements(currentPlayer, quality2);
 			base.SetupFragmentSprite(quality2);
 			base.GetElement<UXLabel>("LabelTroopInfo").Text = this.lang.Get(this.selectedEquipment.EquipmentDescription, new object[0]);
-			base.GetElement<UXLabel>(string.Format("LabelQuantityOwnQ{0}", new object[]
-			{
-				quality2
-			})).Visible = false;
+			base.GetElement<UXLabel>(string.Format("LabelQuantityOwnQ{0}", quality2)).Visible = false;
 			this.PopulateAvailablePlanetsPanel(sdc);
 			this.SetUpUpgradeElements(false);
 			base.GetElement<UXElement>("MovementSpeed").Visible = false;
@@ -459,7 +442,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (nextLevel == null)
 			{
 				element3.Text = this.lang.Get("MAX_LEVEL", new object[0]);
-				element.Value = 1f;
+				element.Value = 0f;
 				element5.Visible = false;
 				return;
 			}
@@ -479,7 +462,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				element5.Visible = false;
 				return;
 			}
-			int num = player.Shards.ContainsKey(equipmentID) ? player.Shards[equipmentID] : 0;
+			int num = (!player.Shards.ContainsKey(equipmentID)) ? 0 : player.Shards[equipmentID];
 			int upgradeShards;
 			if (player.UnlockedLevels.Equipment.Has(this.selectedEquipment))
 			{
@@ -488,10 +471,10 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (!this.forResearchLab)
 				{
 					element4.Visible = true;
-					element4.Text = ((num >= upgradeShards) ? this.lang.Get("ARMORY_UPGRADE_CTA", new object[0]) : this.lang.Get("EQUIPMENT_UPGRADE_LOCKED", new object[]
+					element4.Text = ((num < upgradeShards) ? this.lang.Get("EQUIPMENT_UPGRADE_LOCKED", new object[]
 					{
 						this.CalculateFragmentsNeededForUnlock(nextLevel.UpgradeShards, this.selectedEquipment.EquipmentID)
-					}));
+					}) : this.lang.Get("ARMORY_UPGRADE_CTA", new object[0]));
 				}
 			}
 			else
@@ -506,7 +489,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			});
 			if (upgradeShards == 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
+				Service.Get<Logger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
 				{
 					nextLevel.Uid
 				});
@@ -526,12 +509,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				EquipmentEffectVO equipmentEffectVO = sdc.Get<EquipmentEffectVO>(this.selectedEquipment.EffectUids[i]);
 				EquipmentEffectVO equipmentEffectVO2 = null;
-				if (this.nextEquipmentVoUpgrade != null && this.nextEquipmentVoUpgrade.EffectUids.Length != 0 && this.nextEquipmentVoUpgrade.EffectUids.Length > i)
+				if (this.nextEquipmentVoUpgrade != null && this.nextEquipmentVoUpgrade.EffectUids.Length > 0 && this.nextEquipmentVoUpgrade.EffectUids.Length > i)
 				{
 					equipmentEffectVO2 = sdc.Get<EquipmentEffectVO>(this.nextEquipmentVoUpgrade.EffectUids[i]);
 				}
 				ArmorType armorType = ArmorType.Invalid;
-				if (equipmentEffectVO.AffectedBuildingIds != null && equipmentEffectVO.AffectedBuildingIds.Length != 0)
+				if (equipmentEffectVO.AffectedBuildingIds != null && equipmentEffectVO.AffectedBuildingIds.Length > 0)
 				{
 					BuildingTypeVO minLevel = Service.Get<BuildingUpgradeCatalog>().GetMinLevel(equipmentEffectVO.AffectedBuildingIds[0]);
 					if (minLevel != null)
@@ -539,7 +522,7 @@ namespace StaRTS.Main.Views.UX.Screens
 						armorType = minLevel.ArmorType;
 					}
 				}
-				else if (equipmentEffectVO.AffectedTroopIds != null && equipmentEffectVO.AffectedTroopIds.Length != 0)
+				else if (equipmentEffectVO.AffectedTroopIds != null && equipmentEffectVO.AffectedTroopIds.Length > 0)
 				{
 					TroopTypeVO minLevel2 = Service.Get<TroopUpgradeCatalog>().GetMinLevel(equipmentEffectVO.AffectedTroopIds[0]);
 					if (minLevel2 != null)
@@ -553,7 +536,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					BuffTypeVO buffTypeVO = sdc.Get<BuffTypeVO>(equipmentEffectVO.BuffUids[j]);
 					BuffTypeVO buffTypeVO2 = null;
-					if (equipmentEffectVO2 != null && equipmentEffectVO2.BuffUids.Length != 0 && equipmentEffectVO2.BuffUids.Length > j)
+					if (equipmentEffectVO2 != null && equipmentEffectVO2.BuffUids.Length > 0 && equipmentEffectVO2.BuffUids.Length > j)
 					{
 						buffTypeVO2 = sdc.Get<BuffTypeVO>(equipmentEffectVO2.BuffUids[j]);
 					}
@@ -561,7 +544,7 @@ namespace StaRTS.Main.Views.UX.Screens
 					int nextValue = num5;
 					if (ArmoryUtils.IsEquipmentOwned(Service.Get<CurrentPlayer>(), this.selectedEquipment))
 					{
-						nextValue = ((buffTypeVO2 == null) ? num5 : buffTypeVO2.Values[(int)armorType]);
+						nextValue = ((buffTypeVO2 != null) ? buffTypeVO2.Values[(int)armorType] : num5);
 					}
 					string buffString = this.GetBuffString(buffTypeVO.Modify);
 					this.SetupBar(num, buffString, num5, nextValue, 1, false);
@@ -580,10 +563,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			for (int k = num; k <= 3; k++)
 			{
-				base.GetElement<UXElement>(string.Format("pBar{0}", new object[]
-				{
-					num
-				})).Visible = false;
+				base.GetElement<UXElement>(string.Format("pBar{0}", num)).Visible = false;
 				num++;
 			}
 		}
@@ -615,7 +595,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				bool flag = ArmoryUtils.HasEnoughCapacityToActivateEquipment(player.ActiveArmory, this.selectedEquipment);
 				bool flag2 = ArmoryUtils.IsEquipmentValidForPlanet(this.selectedEquipment, player.PlanetId);
-				element3.Enabled = (flag & flag2);
+				element3.Enabled = (flag && flag2);
 				element2.Text = this.lang.Get("ARMORY_ACTIVATE", new object[0]);
 				if (!flag2)
 				{
@@ -660,23 +640,23 @@ namespace StaRTS.Main.Views.UX.Screens
 						base.GetElement<UXLabel>("LabelUpgradeTimeStatic").Text = this.lang.Get("s_TimeRemaining", new object[0]);
 						base.GetElement<UXElement>("ContainerUpgradeTime").Visible = true;
 						this.UpdateContractTimers();
-						return;
 					}
-					element2.VisuallyDisableButton();
-					return;
+					else
+					{
+						element2.VisuallyDisableButton();
+					}
+				}
+				else if (armoryController.IsEquipmentUpgradeable(this.selectedEquipment, this.nextEquipmentVoUpgrade))
+				{
+					element2.VisuallyEnableButton();
+					element2.Enabled = true;
+					this.SetUpUpgradeElements(true);
 				}
 				else
 				{
-					if (armoryController.IsEquipmentUpgradeable(this.selectedEquipment, this.nextEquipmentVoUpgrade))
-					{
-						element2.VisuallyEnableButton();
-						element2.Enabled = true;
-						this.SetUpUpgradeElements(true);
-						return;
-					}
 					this.SetTitleText(element, "BUILDING_INFO", this.selectedEquipment.EquipmentName, this.selectedEquipment.Lvl);
 					element2.Enabled = false;
-					BuildingTypeVO buildingTypeVO = (this.nextEquipmentVoUpgrade.BuildingRequirement == null) ? null : sdc.Get<BuildingTypeVO>(this.nextEquipmentVoUpgrade.BuildingRequirement);
+					BuildingTypeVO buildingTypeVO = (this.nextEquipmentVoUpgrade.BuildingRequirement != null) ? sdc.Get<BuildingTypeVO>(this.nextEquipmentVoUpgrade.BuildingRequirement) : null;
 					if (buildingTypeVO != null && !ArmoryUtils.IsBuildingRequirementMet(this.nextEquipmentVoUpgrade))
 					{
 						element4.Text = this.lang.Get("EQUIPMENT_REQUIRES_BUILDING", new object[]
@@ -684,23 +664,20 @@ namespace StaRTS.Main.Views.UX.Screens
 							LangUtils.GetBuildingDisplayName(buildingTypeVO),
 							buildingTypeVO.Lvl
 						});
-						return;
 					}
-					if (!ArmoryUtils.IsEquipmentOwned(player, this.selectedEquipment))
+					else if (!ArmoryUtils.IsEquipmentOwned(player, this.selectedEquipment))
 					{
 						element4.Text = this.lang.Get("EQUIPMENT_LOCKED", new object[]
 						{
 							this.CalculateFragmentsNeededForUnlock(this.selectedEquipment.UpgradeShards, this.selectedEquipment.EquipmentID)
 						});
-						return;
 					}
-					if (!ArmoryUtils.CanAffordEquipment(player, this.nextEquipmentVoUpgrade))
+					else if (!ArmoryUtils.CanAffordEquipment(player, this.nextEquipmentVoUpgrade))
 					{
 						element4.Text = this.lang.Get("EQUIPMENT_UPGRADE_LOCKED", new object[]
 						{
 							this.CalculateFragmentsNeededForUnlock(this.nextEquipmentVoUpgrade.UpgradeShards, this.selectedEquipment.EquipmentID)
 						});
-						return;
 					}
 				}
 			}
@@ -769,15 +746,15 @@ namespace StaRTS.Main.Views.UX.Screens
 				while (i < num)
 				{
 					EquipmentEffectVO equipmentEffectVO = dataController.Get<EquipmentEffectVO>(effectUids[i]);
-					if (equipmentEffectVO.AffectedTroopIds != null && equipmentEffectVO.AffectedTroopIds.Length != 0)
+					if (equipmentEffectVO.AffectedTroopIds != null && equipmentEffectVO.AffectedTroopIds.Length > 0)
 					{
 						return this.lang.Get("trp_title_" + equipmentEffectVO.AffectedTroopIds[0], new object[0]);
 					}
-					if (equipmentEffectVO.AffectedSpecialAttackIds != null && equipmentEffectVO.AffectedSpecialAttackIds.Length != 0)
+					if (equipmentEffectVO.AffectedSpecialAttackIds != null && equipmentEffectVO.AffectedSpecialAttackIds.Length > 0)
 					{
 						return this.lang.Get("shp_title_" + equipmentEffectVO.AffectedSpecialAttackIds[0], new object[0]);
 					}
-					if (equipmentEffectVO.AffectedBuildingIds != null && equipmentEffectVO.AffectedBuildingIds.Length != 0)
+					if (equipmentEffectVO.AffectedBuildingIds != null && equipmentEffectVO.AffectedBuildingIds.Length > 0)
 					{
 						return this.lang.Get("bld_title_" + equipmentEffectVO.AffectedBuildingIds[0], new object[0]);
 					}
@@ -803,7 +780,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			return this.lang.Get(id, new object[]
 			{
-				""
+				string.Empty
 			});
 		}
 
@@ -815,27 +792,33 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void SetupLeftTableItem(int index, string title, string desc)
 		{
 			bool flag = !string.IsNullOrEmpty(title);
-			base.GetElement<UXElement>(string.Format("InfoRow{0}", new object[]
-			{
-				index
-			})).Visible = flag;
+			base.GetElement<UXElement>(string.Format("InfoRow{0}", index)).Visible = flag;
 			if (flag)
 			{
-				base.GetElement<UXLabel>(string.Format("InfoTitle{0}", new object[]
-				{
-					index
-				})).Text = this.lang.Get(title, new object[0]);
-				base.GetElement<UXLabel>(string.Format("InfoDetail{0}", new object[]
-				{
-					index
-				})).Text = desc;
+				base.GetElement<UXLabel>(string.Format("InfoTitle{0}", index)).Text = this.lang.Get(title, new object[0]);
+				base.GetElement<UXLabel>(string.Format("InfoDetail{0}", index)).Text = desc;
 			}
 		}
 
 		private void OnMainButtonClicked(UXButton button)
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-			if (!this.forResearchLab)
+			if (this.forResearchLab)
+			{
+				if (this.activeContract != null)
+				{
+					Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructionsError(this.lang.Get("UPGRADE_CONTRACT_ACTIVE", new object[0]));
+					return;
+				}
+				if (this.selectedBuilding == null)
+				{
+					Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructionsError(this.lang.Get("UPGRADE_RESEARCH_CENTER_ACTIVE", new object[0]));
+					return;
+				}
+				Service.Get<ISupportController>().StartEquipmentUpgrade(this.nextEquipmentVoUpgrade, this.selectedBuilding);
+				this.CloseFromResearchScreen();
+			}
+			else
 			{
 				if (ArmoryUtils.IsEquipmentActive(currentPlayer, this.selectedEquipment))
 				{
@@ -846,20 +829,7 @@ namespace StaRTS.Main.Views.UX.Screens
 					Service.Get<ArmoryController>().ActivateEquipment(this.selectedEquipment.EquipmentID);
 				}
 				this.OnBackButtonClicked(null);
-				return;
 			}
-			if (this.activeContract != null)
-			{
-				Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructionsError(this.lang.Get("UPGRADE_CONTRACT_ACTIVE", new object[0]));
-				return;
-			}
-			if (this.selectedBuilding == null)
-			{
-				Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructionsError(this.lang.Get("UPGRADE_RESEARCH_CENTER_ACTIVE", new object[0]));
-				return;
-			}
-			Service.Get<ISupportController>().StartEquipmentUpgrade(this.nextEquipmentVoUpgrade, this.selectedBuilding);
-			this.CloseFromResearchScreen();
 		}
 
 		private void OnFinishClicked(UXButton button)
@@ -872,9 +842,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (crystalCostToFinishContract >= GameConstants.CRYSTAL_SPEND_WARNING_MINIMUM)
 			{
 				FinishNowScreen.ShowModal(this.selectedBuilding, new OnScreenModalResult(this.FinishContract), null);
-				return;
 			}
-			this.FinishContract(this.selectedBuilding, null);
+			else
+			{
+				this.FinishContract(this.selectedBuilding, null);
+			}
 		}
 
 		private void FinishContract(object result, object cookie)
@@ -938,11 +910,11 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			int num = (int)button.Tag;
 			int count = this.equipmentList.Count;
-			int index = (num < 0) ? (count - 1) : 0;
+			int index = (num >= 0) ? 0 : (count - 1);
 			EquipmentVO equipmentVO = this.equipmentList[index];
 			for (int i = count - 1; i >= 0; i--)
 			{
-				int index2 = (num < 0) ? (count - 1 - i) : i;
+				int index2 = (num >= 0) ? i : (count - 1 - i);
 				EquipmentVO equipmentVO2 = this.equipmentList[index2];
 				if (equipmentVO2 == this.selectedEquipment)
 				{
@@ -959,238 +931,32 @@ namespace StaRTS.Main.Views.UX.Screens
 		protected void SetupBar(int index, string labelString, int currentValue, int nextValue, int maxValue, bool showBars)
 		{
 			bool flag = labelString != null;
-			base.GetElement<UXElement>(string.Format("pBar{0}", new object[]
-			{
-				index
-			})).Visible = flag;
+			base.GetElement<UXElement>(string.Format("pBar{0}", index)).Visible = flag;
 			if (!flag)
 			{
 				return;
 			}
-			UXLabel element = base.GetElement<UXLabel>(string.Format("LabelpBar{0}", new object[]
-			{
-				index
-			}));
+			UXLabel element = base.GetElement<UXLabel>(string.Format("LabelpBar{0}", index));
 			element.Text = labelString;
-			UXSlider element2 = base.GetElement<UXSlider>(string.Format("pBarCurrent{0}", new object[]
-			{
-				index
-			}));
-			UXSlider element3 = base.GetElement<UXSlider>(string.Format("pBarNext{0}", new object[]
-			{
-				index
-			}));
+			UXSlider element2 = base.GetElement<UXSlider>(string.Format("pBarCurrent{0}", index));
+			UXSlider element3 = base.GetElement<UXSlider>(string.Format("pBarNext{0}", index));
 			element2.Visible = showBars;
 			element3.Visible = showBars;
-			base.GetElement<UXSprite>(string.Format("SpritepBarBkg{0}", new object[]
-			{
-				index
-			})).Visible = showBars;
-			element3.Visible = (nextValue > currentValue & showBars);
+			base.GetElement<UXSprite>(string.Format("SpritepBarBkg{0}", index)).Visible = showBars;
+			element3.Visible = (nextValue > currentValue && showBars);
 			element2.Value = MathUtils.NormalizeRange((float)currentValue, 0f, (float)maxValue);
 			element3.Value = MathUtils.NormalizeRange((float)nextValue, 0f, (float)maxValue);
-			UXLabel element4 = base.GetElement<UXLabel>(string.Format("LabelpBar{0}Current", new object[]
-			{
-				index
-			}));
+			UXLabel element4 = base.GetElement<UXLabel>(string.Format("LabelpBar{0}Current", index));
 			element4.Text = this.lang.Get("perkEffect_descMod_PosPct", new object[]
 			{
 				this.lang.ThousandsSeparated(currentValue)
 			});
-			UXLabel element5 = base.GetElement<UXLabel>(string.Format("LabelpBar{0}Next", new object[]
-			{
-				index
-			}));
+			UXLabel element5 = base.GetElement<UXLabel>(string.Format("LabelpBar{0}Next", index));
 			element5.Visible = (this.forResearchLab && nextValue > currentValue);
 			element5.Text = this.lang.Get("perkEffect_descMod_PosPct", new object[]
 			{
 				this.lang.ThousandsSeparated(nextValue - currentValue)
 			});
-		}
-
-		protected internal EquipmentInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).CalculateFragmentsNeededForUnlock(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).CheckActiveContract();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).CloseFromResearchScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).DisableTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).DisplayBarsForEquipmentBuffs((IDataController)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).EnableTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).FinishContract(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).GetAffectedUnit());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).GetBuffString((BuffModify)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnBackButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnFinishClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnMainButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPrevOrNextButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).PopulateAvailablePlanetsPanel((IDataController)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).Redraw();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetProgressBarElements((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetTitleText((UXLabel)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetUpArmoryScreenInfo((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupBar(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), *(sbyte*)(args + 5) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupLeftTableItem(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupPerksButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetUpResearchLabScreenInfo((IDataController)GCHandledObjects.GCHandleToObject(*args), (CurrentPlayer)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetUpUpgradeElements(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ToggleParentScreenVisibility(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((EquipmentInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateContractTimers();
-			return -1L;
 		}
 	}
 }

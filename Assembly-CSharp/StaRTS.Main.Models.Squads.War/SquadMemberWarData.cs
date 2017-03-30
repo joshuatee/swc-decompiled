@@ -5,8 +5,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Squads.War
 {
@@ -28,11 +26,7 @@ namespace StaRTS.Main.Models.Squads.War
 		{
 			get
 			{
-				if (this.WarRewards == null || this.WarRewards.Count <= 0)
-				{
-					return null;
-				}
-				return this.WarRewards[0];
+				return (this.WarRewards == null || this.WarRewards.Count <= 0) ? null : this.WarRewards[0];
 			}
 		}
 
@@ -47,15 +41,15 @@ namespace StaRTS.Main.Models.Squads.War
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary.ContainsKey("id"))
 			{
-				this.SquadMemberId = Convert.ToString(dictionary["id"], CultureInfo.InvariantCulture);
+				this.SquadMemberId = Convert.ToString(dictionary["id"]);
 			}
 			if (dictionary.ContainsKey("name"))
 			{
-				this.SquadMemberName = Convert.ToString(dictionary["name"], CultureInfo.InvariantCulture);
+				this.SquadMemberName = Convert.ToString(dictionary["name"]);
 			}
 			if (dictionary.ContainsKey("victoryPoints"))
 			{
-				this.VictoryPointsLeft = Convert.ToInt32(dictionary["victoryPoints"], CultureInfo.InvariantCulture);
+				this.VictoryPointsLeft = Convert.ToInt32(dictionary["victoryPoints"]);
 			}
 			if (dictionary.ContainsKey("warMap") && dictionary["warMap"] != null)
 			{
@@ -114,35 +108,6 @@ namespace StaRTS.Main.Models.Squads.War
 		public string ToJson()
 		{
 			return Serializer.Start().End().ToString();
-		}
-
-		protected internal SquadMemberWarData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMemberWarData)GCHandledObjects.GCHandleToObject(instance)).CompareExpirationDates((SquadWarRewardData)GCHandledObjects.GCHandleToObject(*args), (SquadWarRewardData)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMemberWarData)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMemberWarData)GCHandledObjects.GCHandleToObject(instance)).WarReward);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMemberWarData)GCHandledObjects.GCHandleToObject(instance)).RemoveSquadWarReward());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMemberWarData)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

@@ -5,12 +5,17 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX
 {
 	public class HUDResourceView
 	{
+		private const string ANIM_TRIGGER_START = "SpinStart";
+
+		private const string ANIM_TRIGGER_STOP = "SpinStop";
+
+		private const float ANIM_OFF_DELAY = 0.5f;
+
 		private UXSlider slider;
 
 		private UXLabel label;
@@ -38,12 +43,6 @@ namespace StaRTS.Main.Views.UX
 		private uint animOffTimerId;
 
 		private int animOffNameHash;
-
-		private const string ANIM_TRIGGER_START = "SpinStart";
-
-		private const string ANIM_TRIGGER_STOP = "SpinStop";
-
-		private const float ANIM_OFF_DELAY = 0.5f;
 
 		public bool NeedsUpdate
 		{
@@ -116,11 +115,13 @@ namespace StaRTS.Main.Views.UX
 						this.KillAnimOffTimer();
 					}
 					this.NeedsUpdate = true;
-					return;
 				}
-				this.tickerStartAmount = desiredAmount;
-				this.currentViewAmount = desiredAmount;
-				this.SyncUI();
+				else
+				{
+					this.tickerStartAmount = desiredAmount;
+					this.currentViewAmount = desiredAmount;
+					this.SyncUI();
+				}
 			}
 		}
 
@@ -173,7 +174,7 @@ namespace StaRTS.Main.Views.UX
 		{
 			if (this.slider != null)
 			{
-				this.slider.Value = ((this.maxAmount <= 0) ? 0f : ((float)this.currentViewAmount / (float)this.maxAmount));
+				this.slider.Value = ((this.maxAmount > 0) ? ((float)this.currentViewAmount / (float)this.maxAmount) : 0f);
 			}
 			if (this.label != null && Service.IsSet<Lang>())
 			{
@@ -182,60 +183,17 @@ namespace StaRTS.Main.Views.UX
 				if (this.maxAmount == -1)
 				{
 					this.label.Text = text;
-					return;
 				}
-				string text2 = lang.ThousandsSeparated(this.maxAmount);
-				this.label.Text = lang.Get("FRACTION", new object[]
+				else
 				{
-					text,
-					text2
-				});
+					string text2 = lang.ThousandsSeparated(this.maxAmount);
+					this.label.Text = lang.Get("FRACTION", new object[]
+					{
+						text,
+						text2
+					});
+				}
 			}
-		}
-
-		protected internal HUDResourceView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUDResourceView)GCHandledObjects.GCHandleToObject(instance)).NeedsUpdate);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HUDResourceView)GCHandledObjects.GCHandleToObject(instance)).KillAnimOffTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HUDResourceView)GCHandledObjects.GCHandleToObject(instance)).NeedsUpdate = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((HUDResourceView)GCHandledObjects.GCHandleToObject(instance)).Visible = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HUDResourceView)GCHandledObjects.GCHandleToObject(instance)).SetAmount(*(int*)args, *(int*)(args + 1), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HUDResourceView)GCHandledObjects.GCHandleToObject(instance)).SyncUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((HUDResourceView)GCHandledObjects.GCHandleToObject(instance)).Update(*(float*)args);
-			return -1L;
 		}
 	}
 }

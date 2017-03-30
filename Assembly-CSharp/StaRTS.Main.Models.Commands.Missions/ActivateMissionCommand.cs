@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Missions
 		public ActivateMissionCommand(MissionIdRequest request) : base("player.missions.activateMission", request, new DefaultResponse())
 		{
 		}
-
-		protected internal ActivateMissionCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

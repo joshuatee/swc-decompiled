@@ -16,10 +16,8 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Controls
 {
@@ -185,7 +183,7 @@ namespace StaRTS.Main.Views.UX.Controls
 
 		private const string HN_UI_NO_RESULTS = "hn_ui_no_results";
 
-		private const string SHARE_ICON_SPRITE_NAME = "icoShareIOS";
+		private const string SHARE_ICON_SPRITE_NAME = "icoShareAndroid";
 
 		private const float SPINNER_SCALE_X_LARGE = 2f;
 
@@ -217,7 +215,13 @@ namespace StaRTS.Main.Views.UX.Controls
 
 		private bool showViewCounts;
 
-		private Dictionary<string, string> sourceBackgrounds;
+		private Dictionary<string, string> sourceBackgrounds = new Dictionary<string, string>
+		{
+			{
+				"official",
+				"MakerBgOfficial"
+			}
+		};
 
 		private ScreenBase parentScreen;
 
@@ -239,14 +243,6 @@ namespace StaRTS.Main.Views.UX.Controls
 
 		public VideoSummaryDisplay(ScreenBase parentScreen, VideoSummaryData summaryData)
 		{
-			this.sourceBackgrounds = new Dictionary<string, string>
-			{
-				{
-					"official",
-					"MakerBgOfficial"
-				}
-			};
-			base..ctor();
 			this.parentScreen = parentScreen;
 			this.summaryData = summaryData;
 			this.thumbSpinnerUIVisibile = false;
@@ -257,11 +253,7 @@ namespace StaRTS.Main.Views.UX.Controls
 
 		private string GetUniqueNamePostfix()
 		{
-			if (!string.IsNullOrEmpty(this.summaryData.UILabel))
-			{
-				return " (" + this.summaryData.UILabel + ")";
-			}
-			return string.Empty;
+			return (!string.IsNullOrEmpty(this.summaryData.UILabel)) ? (" (" + this.summaryData.UILabel + ")") : string.Empty;
 		}
 
 		private void ShowOrHideThumbnail(bool show)
@@ -270,9 +262,8 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (this.summaryData.Style == VideoSummaryStyle.Holonet)
 			{
 				this.parentScreen.GetElement<UXElement>("VideoClippingPanel").Visible = show;
-				return;
 			}
-			if (this.summaryData.Style == VideoSummaryStyle.SquadChat)
+			else if (this.summaryData.Style == VideoSummaryStyle.SquadChat)
 			{
 				this.parentScreen.GetElement<UXElement>("MakerTimeChatBottom" + uniqueNamePostfix).Visible = show;
 			}
@@ -336,8 +327,8 @@ namespace StaRTS.Main.Views.UX.Controls
 		{
 			if (this.thumbSpinnerUI == null)
 			{
-				string name = "";
-				string name2 = "";
+				string name = string.Empty;
+				string name2 = string.Empty;
 				switch (this.summaryData.Style)
 				{
 				case VideoSummaryStyle.Featured:
@@ -395,19 +386,19 @@ namespace StaRTS.Main.Views.UX.Controls
 			UXLabel element = this.parentScreen.GetElement<UXLabel>(elementName);
 			StringBuilder stringBuilder = new StringBuilder();
 			TimeSpan timeSpan = TimeSpan.FromSeconds((double)lengthInSeconds);
-			if (timeSpan.get_Hours() >= 1)
+			if (timeSpan.Hours >= 1)
 			{
-				stringBuilder.Append(timeSpan.get_Hours().ToString("00"));
+				stringBuilder.Append(timeSpan.Hours.ToString("00"));
 				stringBuilder.Append(":");
-				stringBuilder.Append(timeSpan.get_Minutes().ToString("00"));
+				stringBuilder.Append(timeSpan.Minutes.ToString("00"));
 				stringBuilder.Append(":");
-				stringBuilder.Append(timeSpan.get_Seconds().ToString("00"));
+				stringBuilder.Append(timeSpan.Seconds.ToString("00"));
 			}
 			else
 			{
-				stringBuilder.Append(timeSpan.get_Minutes().ToString("00"));
+				stringBuilder.Append(timeSpan.Minutes.ToString("00"));
 				stringBuilder.Append(":");
-				stringBuilder.Append(timeSpan.get_Seconds().ToString("00"));
+				stringBuilder.Append(timeSpan.Seconds.ToString("00"));
 			}
 			element.Text = stringBuilder.ToString();
 		}
@@ -419,24 +410,26 @@ namespace StaRTS.Main.Views.UX.Controls
 			{
 				element.OnClicked = null;
 				element.Visible = false;
-				return;
 			}
-			element.OnClicked = new UXButtonClickedDelegate(this.OnPlayClicked);
-			element.Visible = true;
-			this.playAction = logName;
+			else
+			{
+				element.OnClicked = new UXButtonClickedDelegate(this.OnPlayClicked);
+				element.Visible = true;
+				this.playAction = logName;
+			}
 		}
 
 		private void SetupVideoLength(string labelName)
 		{
 			VideoData videoData = this.summaryData.GetVideoData();
-			this.SetVideoLength(labelName, this.inResetMode ? 0 : videoData.Length);
+			this.SetVideoLength(labelName, (!this.inResetMode) ? videoData.Length : 0);
 		}
 
 		private void SetupVideoTitle(string labelName)
 		{
 			VideoData videoData = this.summaryData.GetVideoData();
 			UXLabel element = this.parentScreen.GetElement<UXLabel>(labelName);
-			element.Text = (this.inResetMode ? "" : this.CleanseString(videoData.Title));
+			element.Text = ((!this.inResetMode) ? this.CleanseString(videoData.Title) : string.Empty);
 		}
 
 		private void SetupViewCount(string labelName)
@@ -444,24 +437,26 @@ namespace StaRTS.Main.Views.UX.Controls
 			UXLabel element = this.parentScreen.GetElement<UXLabel>(labelName);
 			if (this.inResetMode || !this.showViewCounts)
 			{
-				element.Text = "";
-				return;
+				element.Text = string.Empty;
 			}
-			VideoData videoData = this.summaryData.GetVideoData();
-			element.Text = Service.Get<Lang>().Get("hn_ui_views", new object[]
+			else
 			{
-				videoData.Viewcount.ToString()
-			});
+				VideoData videoData = this.summaryData.GetVideoData();
+				element.Text = Service.Get<Lang>().Get("hn_ui_views", new object[]
+				{
+					videoData.Viewcount.ToString()
+				});
+			}
 		}
 
 		private void SetupVideoDate(string labelName)
 		{
 			UXLabel element = this.parentScreen.GetElement<UXLabel>(labelName);
 			VideoData videoData = this.summaryData.GetVideoData();
-			element.Text = (this.inResetMode ? "" : Service.Get<Lang>().Get("hn_ui_uploaded", new object[]
+			element.Text = ((!this.inResetMode) ? Service.Get<Lang>().Get("hn_ui_uploaded", new object[]
 			{
 				videoData.Timestamp.ToString("d")
-			}));
+			}) : string.Empty);
 		}
 
 		private void SetupViewCountAndDate(string labelName)
@@ -469,16 +464,17 @@ namespace StaRTS.Main.Views.UX.Controls
 			UXLabel element = this.parentScreen.GetElement<UXLabel>(labelName);
 			if (this.inResetMode)
 			{
-				element.Text = "";
-				return;
+				element.Text = string.Empty;
 			}
-			if (!this.showViewCounts)
+			else if (!this.showViewCounts)
 			{
 				this.SetupVideoDate(labelName);
-				return;
 			}
-			VideoData videoData = this.summaryData.GetVideoData();
-			element.Text = this.GetViewsAndUploadedString(videoData.Viewcount.ToString(), videoData.Timestamp.ToString("d"));
+			else
+			{
+				VideoData videoData = this.summaryData.GetVideoData();
+				element.Text = this.GetViewsAndUploadedString(videoData.Viewcount.ToString(), videoData.Timestamp.ToString("d"));
+			}
 		}
 
 		private void SetupVideoCreator(string labelName, string langTag = null)
@@ -491,18 +487,19 @@ namespace StaRTS.Main.Views.UX.Controls
 			VideoData videoData = this.summaryData.GetVideoData();
 			if (this.inResetMode || string.IsNullOrEmpty(videoData.Author))
 			{
-				element.Text = "";
-				return;
+				element.Text = string.Empty;
 			}
-			if (langTag == null)
+			else if (langTag == null)
 			{
 				element.Text = videoData.Author;
-				return;
 			}
-			element.Text = Service.Get<Lang>().Get(langTag, new object[]
+			else
 			{
-				videoData.Author
-			});
+				element.Text = Service.Get<Lang>().Get(langTag, new object[]
+				{
+					videoData.Author
+				});
+			}
 		}
 
 		private void SetupSourceType(string bgName, string labelName)
@@ -512,9 +509,11 @@ namespace StaRTS.Main.Views.UX.Controls
 				UXElement element = this.parentScreen.GetElement<UXElement>(bgName);
 				element.Visible = false;
 				this.parentScreen.GetElement<UXLabel>(labelName).Visible = false;
-				return;
 			}
-			this.UpdateSourceType(this.sourceType);
+			else
+			{
+				this.UpdateSourceType(this.sourceType);
+			}
 		}
 
 		private string GetVideoSharingSource()
@@ -549,9 +548,11 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (Service.Get<SquadController>().StateManager.GetCurrentSquad() == null)
 			{
 				Service.Get<ScreenController>().AddScreen(new SquadJoinScreen());
-				return;
 			}
-			this.ShowShareToSquad(this.summaryData.Guid);
+			else
+			{
+				this.ShowShareToSquad(this.summaryData.Guid);
+			}
 		}
 
 		private void OnShareFacebookButtonClicked(UXButton button)
@@ -568,7 +569,7 @@ namespace StaRTS.Main.Views.UX.Controls
 
 		private void SetupSharing(string shareButtonName, string fbButtonName, string googleButtonName)
 		{
-			this.SetupSharing(shareButtonName, "", fbButtonName, googleButtonName);
+			this.SetupSharing(shareButtonName, string.Empty, fbButtonName, googleButtonName);
 		}
 
 		private void SetupSharing(string shareButtonName, string shareIconName, string fbButtonName, string googleButtonName)
@@ -578,7 +579,7 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (!string.IsNullOrEmpty(shareIconName))
 			{
 				UXSprite element2 = this.parentScreen.GetElement<UXSprite>(shareIconName);
-				element2.SpriteName = "icoShareIOS";
+				element2.SpriteName = "icoShareAndroid";
 			}
 			element = this.parentScreen.GetElement<UXButton>(fbButtonName);
 			element.OnClicked = new UXButtonClickedDelegate(this.OnShareFacebookButtonClicked);
@@ -614,10 +615,12 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (!string.IsNullOrEmpty(videoData.YoutubeId))
 			{
 				string uniqueNamePostfix = this.GetUniqueNamePostfix();
-				string text = "MakerButtonFB";
+				string str = "MakerButtonFB";
+				string str2 = "MakerButtonGoogle";
 				if (this.summaryData.Style == VideoSummaryStyle.Search)
 				{
-					text = "MakerButtonFBMoreVideos";
+					str = "MakerButtonFBMoreVideos";
+					str2 = "MakerButtonGoogleMoreVideos";
 					UXButton element = this.parentScreen.GetElement<UXButton>("MakerButtonSlideOutMoreVideos" + uniqueNamePostfix);
 					UXElement element2 = this.parentScreen.GetElement<UXElement>("MakerContainerSlideOutShareMoreVideos" + uniqueNamePostfix);
 					element.OnClicked = null;
@@ -625,9 +628,12 @@ namespace StaRTS.Main.Views.UX.Controls
 				}
 				else if (this.summaryData.Style == VideoSummaryStyle.PostView)
 				{
-					text = "CMakerButtonFBPostView";
+					str = "CMakerButtonFBPostView";
+					str2 = "DMakerButtonGooglePostView";
 				}
-				UXButton element3 = this.parentScreen.GetElement<UXButton>(text + uniqueNamePostfix);
+				UXButton element3 = this.parentScreen.GetElement<UXButton>(str + uniqueNamePostfix);
+				element3.Visible = true;
+				element3 = this.parentScreen.GetElement<UXButton>(str2 + uniqueNamePostfix);
 				element3.Visible = true;
 			}
 			UXTable element4 = this.parentScreen.GetElement<UXTable>("MakerTableShareButtonsPostView");
@@ -758,7 +764,7 @@ namespace StaRTS.Main.Views.UX.Controls
 			string id;
 			if (!Service.Get<VideoDataManager>().SourceTypes.TryGetValue(type, out id))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Video Source Type '{0}' not found in types", new object[]
+				Service.Get<Logger>().ErrorFormat("Video Source Type '{0}' not found in types", new object[]
 				{
 					type
 				});
@@ -767,7 +773,7 @@ namespace StaRTS.Main.Views.UX.Controls
 			string spriteName;
 			if (!this.sourceBackgrounds.TryGetValue(type, out spriteName))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Video Source Type '{0}' not found in backgrounds", new object[]
+				Service.Get<Logger>().ErrorFormat("Video Source Type '{0}' not found in backgrounds", new object[]
 				{
 					type
 				});
@@ -793,7 +799,7 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (authorType == "official")
 			{
 				UXLabel element = this.parentScreen.GetElement<UXLabel>(authorLabelName);
-				element.Text = "";
+				element.Text = string.Empty;
 			}
 		}
 
@@ -820,11 +826,11 @@ namespace StaRTS.Main.Views.UX.Controls
 			case VideoSummaryStyle.SquadChatEmpty:
 				return string.Empty;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("Video summary style {0} not handled", new object[]
+			Service.Get<Logger>().ErrorFormat("Video summary style {0} not handled", new object[]
 			{
 				this.summaryData.Style
 			});
-			return "";
+			return string.Empty;
 		}
 
 		private void UpdateThumbnail()
@@ -832,9 +838,11 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (this.inResetMode)
 			{
 				this.ShowOrHideThumbnail(false);
-				return;
 			}
-			this.DownloadThumbnail();
+			else
+			{
+				this.DownloadThumbnail();
+			}
 		}
 
 		private string CleanseString(string input)
@@ -844,7 +852,7 @@ namespace StaRTS.Main.Views.UX.Controls
 
 		private void GenerateMessageFeatured()
 		{
-			string id = (this.summaryData.Style == VideoSummaryStyle.FeaturedError) ? "hn_ui_display_error" : "hn_ui_no_results";
+			string id = (this.summaryData.Style != VideoSummaryStyle.FeaturedError) ? "hn_ui_no_results" : "hn_ui_display_error";
 			this.parentScreen.GetElement<UXLabel>("MakerLabelErrorMsgFeatured").Text = Service.Get<Lang>().Get(id, new object[0]);
 			UXButton element = this.parentScreen.GetElement<UXButton>("MakerButtonErrorRetryFeatured");
 			this.SetupRetryButton(element);
@@ -852,7 +860,7 @@ namespace StaRTS.Main.Views.UX.Controls
 
 		private void GenerateMessageSearch()
 		{
-			string id = (this.summaryData.Style == VideoSummaryStyle.SearchError) ? "hn_ui_display_error" : "hn_ui_no_results";
+			string id = (this.summaryData.Style != VideoSummaryStyle.SearchError) ? "hn_ui_no_results" : "hn_ui_display_error";
 			this.parentScreen.GetElement<UXLabel>("MakerLabelErrorMsgMoreVideos").Text = Service.Get<Lang>().Get(id, new object[0]);
 			UXButton element = this.parentScreen.GetElement<UXButton>("MakerButtonErrorRetryMoreVideos");
 			this.SetupRetryButton(element);
@@ -867,8 +875,8 @@ namespace StaRTS.Main.Views.UX.Controls
 				this.inResetMode = false;
 			}
 			this.parentScreen.GetElement<UXElement>("MakerContainerErrorMsgCC").Visible = true;
-			string id = (this.summaryData.Style == VideoSummaryStyle.HolonetError) ? "hn_ui_display_error" : "hn_ui_no_results";
-			this.parentScreen.GetElement<UXLabel>("MakerLabelErrorMsgCC").Text = (this.inResetMode ? "" : Service.Get<Lang>().Get(id, new object[0]));
+			string id = (this.summaryData.Style != VideoSummaryStyle.HolonetError) ? "hn_ui_no_results" : "hn_ui_display_error";
+			this.parentScreen.GetElement<UXLabel>("MakerLabelErrorMsgCC").Text = ((!this.inResetMode) ? Service.Get<Lang>().Get(id, new object[0]) : string.Empty);
 			UXButton element = this.parentScreen.GetElement<UXButton>("MakerButtonErrorRetryCC");
 			this.SetupRetryButton(element);
 		}
@@ -882,9 +890,9 @@ namespace StaRTS.Main.Views.UX.Controls
 				this.inResetMode = false;
 			}
 			string uniqueNamePostfix = this.GetUniqueNamePostfix();
-			string id = (this.summaryData.Style == VideoSummaryStyle.SquadChatError) ? "hn_ui_display_error" : "hn_ui_no_results";
+			string id = (this.summaryData.Style != VideoSummaryStyle.SquadChatError) ? "hn_ui_no_results" : "hn_ui_display_error";
 			UXLabel element = this.parentScreen.GetElement<UXLabel>("MakerLabelErrorMsgChat" + uniqueNamePostfix);
-			element.Text = (this.inResetMode ? "" : Service.Get<Lang>().Get(id, new object[0]));
+			element.Text = ((!this.inResetMode) ? Service.Get<Lang>().Get(id, new object[0]) : string.Empty);
 			UXButton element2 = this.parentScreen.GetElement<UXButton>("MakerButtonErrorRetryChat" + uniqueNamePostfix);
 			this.SetupRetryButton(element2);
 		}
@@ -900,10 +908,12 @@ namespace StaRTS.Main.Views.UX.Controls
 			{
 				button.OnClicked = null;
 				button.Visible = false;
-				return;
 			}
-			button.OnClicked = new UXButtonClickedDelegate(this.OnRetryDownload);
-			button.Visible = true;
+			else
+			{
+				button.OnClicked = new UXButtonClickedDelegate(this.OnRetryDownload);
+				button.Visible = true;
+			}
 		}
 
 		private void OnRetryDownload(UXButton button)
@@ -973,43 +983,38 @@ namespace StaRTS.Main.Views.UX.Controls
 			{
 			case VideoSummaryStyle.Featured:
 				this.GenerateSummaryFeatured();
-				return;
+				break;
 			case VideoSummaryStyle.Search:
 				this.GenerateSummarySearch();
-				return;
+				break;
 			case VideoSummaryStyle.PostView:
 				this.GenerateSummaryPostView();
-				return;
+				break;
 			case VideoSummaryStyle.SquadChat:
 				this.GenerateSummaryChat();
-				return;
+				break;
 			case VideoSummaryStyle.Holonet:
 				this.GenerateSummaryHolonet();
-				return;
+				break;
 			case VideoSummaryStyle.HolonetFeatured:
 				this.GenerateSummaryHolonetFeatured();
-				return;
+				break;
 			case VideoSummaryStyle.FeaturedError:
 			case VideoSummaryStyle.FeaturedEmpty:
 				this.GenerateMessageFeatured();
-				return;
+				break;
 			case VideoSummaryStyle.SearchError:
 			case VideoSummaryStyle.SearchEmpty:
 				this.GenerateMessageSearch();
-				return;
+				break;
 			case VideoSummaryStyle.HolonetError:
 			case VideoSummaryStyle.HolonetEmpty:
 				this.GenerateMessageHolonet();
-				return;
-			case VideoSummaryStyle.HolonetFeaturedError:
-			case VideoSummaryStyle.HolonetFeaturedEmpty:
 				break;
 			case VideoSummaryStyle.SquadChatError:
 			case VideoSummaryStyle.SquadChatEmpty:
 				this.GenerateMessageSquadChat();
 				break;
-			default:
-				return;
 			}
 		}
 
@@ -1026,7 +1031,6 @@ namespace StaRTS.Main.Views.UX.Controls
 				if (highestLevelScreen != null)
 				{
 					highestLevelScreen.CloseSquadWarScreen(new TransitionCompleteDelegate(this.OnHomeStateTransitionComplete));
-					return;
 				}
 			}
 			else
@@ -1055,331 +1059,6 @@ namespace StaRTS.Main.Views.UX.Controls
 				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal VideoSummaryDisplay(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).CleanseString(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).CreateLoadingUI((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).DownloadThumbnail();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateMessageFeatured();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateMessageHolonet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateMessageSearch();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateMessageSquadChat();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateOrResetSummary();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateSummary();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateSummaryChat();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateSummaryFeatured();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateSummaryHolonet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateSummaryHolonetFeatured();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateSummaryPostView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GenerateSummarySearch();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GetAuthorLabelName());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GetGuid());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GetUniqueNamePostfix());
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GetVideoSharingSource());
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).GetViewsAndUploadedString(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).HideSearchSpinnerUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).IsEmptyMessage());
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).OnHomeStateTransitionComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).OnPlayClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).OnQueryRetry((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).OnRetryDownload((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).OnShareFacebookButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).OnShareGoogleButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).OnShareSquadButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).OnVideoDetails(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).ReceivedThumbnail();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).Recycle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupPlayButton(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupRetryButton((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupSharing(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupSharing(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupSourceType(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupVideoCreator(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupVideoDate(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupVideoLength(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupVideoTitle(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupViewCount(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetupViewCountAndDate(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).SetVideoLength(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).ShowLoading();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).ShowOrHideThumbnail(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).ShowSearchSpinnerUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).ShowShareToSquad(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).TrackVideoSharing((VideoSharingNetwork)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).UpdateAuthorDisplay(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).UpdateSourceType(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).UpdateSourceTypeDisplay(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((VideoSummaryDisplay)GCHandledObjects.GCHandleToObject(instance)).UpdateThumbnail();
-			return -1L;
 		}
 	}
 }

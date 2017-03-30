@@ -3,7 +3,6 @@ using StaRTS.Main.Models.Static;
 using StaRTS.Main.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -33,28 +32,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.lang.ThousandsSeparated(storage2 - storage)
 			});
-			this.sliders[sliderIndex].CurrentSlider.Value = ((storage3 == 0) ? 0f : ((float)storage / (float)storage3));
-			this.sliders[sliderIndex].NextSlider.Value = ((storage3 == 0) ? 0f : ((float)storage2 / (float)storage3));
+			this.sliders[sliderIndex].CurrentSlider.Value = ((storage3 != 0) ? ((float)storage / (float)storage3) : 0f);
+			this.sliders[sliderIndex].NextSlider.Value = ((storage3 != 0) ? ((float)storage2 / (float)storage3) : 0f);
 			int num = StorageSpreadUtils.CalculateAssumedCurrencyInStorage(this.buildingInfo.Currency, this.selectedBuilding);
 			int storage4 = this.buildingInfo.Storage;
-			float meterValue = (storage4 == 0) ? 0f : ((float)num / (float)storage4);
+			float meterValue = (storage4 != 0) ? ((float)num / (float)storage4) : 0f;
 			this.projector.Config.MeterValue = meterValue;
-		}
-
-		protected internal StorageUpgradeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StorageUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((StorageUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateCapacity(*(int*)args);
-			return -1L;
 		}
 	}
 }

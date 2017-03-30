@@ -2,17 +2,16 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
+using System.Diagnostics;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Elements
 {
-	public class UXGridComponent : AbstractUXListComponent, IUnitySerializable
+	public class UXGridComponent : AbstractUXListComponent
 	{
 		private bool manualCullGUIObjects;
 
-		private float cullingFactor;
+		private float cullingFactor = 2f;
 
 		public UIGrid NGUIGrid
 		{
@@ -30,11 +29,7 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			get
 			{
-				if (!(this.NGUIGrid == null))
-				{
-					return this.NGUIGrid.cellWidth;
-				}
-				return 0f;
+				return (!(this.NGUIGrid == null)) ? this.NGUIGrid.cellWidth : 0f;
 			}
 			set
 			{
@@ -49,11 +44,7 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			get
 			{
-				if (!(this.NGUIGrid == null))
-				{
-					return this.NGUIGrid.cellHeight;
-				}
-				return 0f;
+				return (!(this.NGUIGrid == null)) ? this.NGUIGrid.cellHeight : 0f;
 			}
 			set
 			{
@@ -68,11 +59,7 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			get
 			{
-				if (!(this.NGUIGrid == null))
-				{
-					return this.NGUIGrid.maxPerLine;
-				}
-				return 0;
+				return (!(this.NGUIGrid == null)) ? this.NGUIGrid.maxPerLine : 0;
 			}
 			set
 			{
@@ -135,7 +122,7 @@ namespace StaRTS.Main.Views.UX.Elements
 			if (this.NGUIGrid != null)
 			{
 				this.NGUIGrid.Reposition();
-				if (base.gameObject.activeInHierarchy & delayedReposition)
+				if (base.gameObject.activeInHierarchy && delayedReposition)
 				{
 					flag = false;
 					base.StartCoroutine(this.DelayedReposition());
@@ -177,13 +164,12 @@ namespace StaRTS.Main.Views.UX.Elements
 			}
 		}
 
-		[IteratorStateMachine(typeof(UXGridComponent.<DelayedReposition>d__23))]
+		[DebuggerHidden]
 		private IEnumerator DelayedReposition()
 		{
-			yield return null;
-			this.NGUIGrid.Reposition();
-			this.OnReposition();
-			yield break;
+			UXGridComponent.<DelayedReposition>c__Iterator1B <DelayedReposition>c__Iterator1B = new UXGridComponent.<DelayedReposition>c__Iterator1B();
+			<DelayedReposition>c__Iterator1B.<>f__this = this;
+			return <DelayedReposition>c__Iterator1B;
 		}
 
 		public override void Scroll(float location)
@@ -212,11 +198,7 @@ namespace StaRTS.Main.Views.UX.Elements
 			{
 				return Vector3.zero;
 			}
-			if (this.NGUIGrid.arrangement != UIGrid.Arrangement.Vertical)
-			{
-				return Vector3.right * this.NGUIGrid.cellWidth;
-			}
-			return Vector3.up * this.NGUIGrid.cellHeight;
+			return (this.NGUIGrid.arrangement != UIGrid.Arrangement.Vertical) ? (Vector3.right * this.NGUIGrid.cellWidth) : (Vector3.up * this.NGUIGrid.cellHeight);
 		}
 
 		protected override void OnDrag()
@@ -240,9 +222,11 @@ namespace StaRTS.Main.Views.UX.Elements
 					cullFactor = 2f;
 				}
 				this.cullingFactor = cullFactor;
-				return;
 			}
-			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			else
+			{
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			}
 		}
 
 		public override void OnViewFrameTime(float dt)
@@ -292,17 +276,19 @@ namespace StaRTS.Main.Views.UX.Elements
 			if (base.gameObject.activeInHierarchy)
 			{
 				base.StartCoroutine(this.DelayedCenterElementsInPanel());
-				return;
 			}
-			this.DoCenterElementsInPanel();
+			else
+			{
+				this.DoCenterElementsInPanel();
+			}
 		}
 
-		[IteratorStateMachine(typeof(UXGridComponent.<DelayedCenterElementsInPanel>d__30))]
+		[DebuggerHidden]
 		private IEnumerator DelayedCenterElementsInPanel()
 		{
-			yield return null;
-			this.DoCenterElementsInPanel();
-			yield break;
+			UXGridComponent.<DelayedCenterElementsInPanel>c__Iterator1C <DelayedCenterElementsInPanel>c__Iterator1C = new UXGridComponent.<DelayedCenterElementsInPanel>c__Iterator1C();
+			<DelayedCenterElementsInPanel>c__Iterator1C.<>f__this = this;
+			return <DelayedCenterElementsInPanel>c__Iterator1C;
 		}
 
 		private void DoCenterElementsInPanel()
@@ -312,204 +298,17 @@ namespace StaRTS.Main.Views.UX.Elements
 			{
 				component.contentPivot = UIWidget.Pivot.Center;
 				component.ResetPosition();
-				return;
 			}
-			Bounds bounds = NGUIMath.CalculateAbsoluteWidgetBounds(this.NGUIGrid.transform);
-			UIPanel componentInParent = this.NGUIGrid.GetComponentInParent<UIPanel>();
-			Vector3[] worldCorners = componentInParent.worldCorners;
-			Vector3 zero = Vector3.zero;
-			zero.x = bounds.center.x - (worldCorners[0].x + worldCorners[2].x) / 2f;
-			zero.y = bounds.center.y - (worldCorners[0].y + worldCorners[2].y) / 2f;
-			this.NGUIGrid.transform.position -= zero;
-		}
-
-		public UXGridComponent()
-		{
-			this.cullingFactor = 2f;
-			base..ctor();
-		}
-
-		public override void Unity_Serialize(int depth)
-		{
-		}
-
-		public override void Unity_Deserialize(int depth)
-		{
-		}
-
-		public override void Unity_RemapPPtrs(int depth)
-		{
-		}
-
-		public override void Unity_NamedSerialize(int depth)
-		{
-		}
-
-		public override void Unity_NamedDeserialize(int depth)
-		{
-		}
-
-		protected internal UXGridComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).CenterElementsInPanel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).CullScrollObjects(*(sbyte*)args != 0, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).DelayedCenterElementsInPanel());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).DelayedReposition());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).DoCenterElementsInPanel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).CellHeight);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).CellWidth);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).Grid);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).MaxItemsPerLine);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).NGUIGrid);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).GetCurrentScrollPosition(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).GetItemDimension());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).Init();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).OnDrag();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).RepositionItems(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).Scroll(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).CellHeight = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).CellWidth = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).Grid = (UXGrid)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).MaxItemsPerLine = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).NGUIGrid = (UIGrid)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((UXGridComponent)GCHandledObjects.GCHandleToObject(instance)).UpdateScrollArrows();
-			return -1L;
+			else
+			{
+				Bounds bounds = NGUIMath.CalculateAbsoluteWidgetBounds(this.NGUIGrid.transform);
+				UIPanel componentInParent = this.NGUIGrid.GetComponentInParent<UIPanel>();
+				Vector3[] worldCorners = componentInParent.worldCorners;
+				Vector3 zero = Vector3.zero;
+				zero.x = bounds.center.x - (worldCorners[0].x + worldCorners[2].x) / 2f;
+				zero.y = bounds.center.y - (worldCorners[0].y + worldCorners[2].y) / 2f;
+				this.NGUIGrid.transform.position -= zero;
+			}
 		}
 	}
 }

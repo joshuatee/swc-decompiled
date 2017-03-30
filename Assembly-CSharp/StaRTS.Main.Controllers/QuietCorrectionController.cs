@@ -11,8 +11,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -53,7 +51,7 @@ namespace StaRTS.Main.Controllers
 					int num = array.Length;
 					while (i < num)
 					{
-						uint item = Convert.ToUInt32(array[i], CultureInfo.InvariantCulture);
+						uint item = Convert.ToUInt32(array[i]);
 						this.StatusWhitelist.Add(item);
 						serverAPI.GetDispatcher().SuccessStatuses.Add(item);
 						i++;
@@ -73,7 +71,7 @@ namespace StaRTS.Main.Controllers
 			this.input = input;
 			this.correctedCallback = callback;
 			ICommand command = input.Commands[start];
-			Service.Get<StaRTSLogger>().WarnFormat("Quietly correct client to match server - {0}", new object[]
+			Service.Get<Logger>().WarnFormat("Quietly correct client to match server - {0}", new object[]
 			{
 				command.Description
 			});
@@ -118,38 +116,6 @@ namespace StaRTS.Main.Controllers
 				this.Enabled = GameConstants.QUIET_CORRECTION_ENABLED;
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal QuietCorrectionController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((QuietCorrectionController)GCHandledObjects.GCHandleToObject(instance)).CorrectBatch((Batch)GCHandledObjects.GCHandleToObject(*args), (List<Data>)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), (QuietCorrectionController.HandleBatch)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QuietCorrectionController)GCHandledObjects.GCHandleToObject(instance)).Enabled);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QuietCorrectionController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((QuietCorrectionController)GCHandledObjects.GCHandleToObject(instance)).OnResyncSuccess((GetSyncContentResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((QuietCorrectionController)GCHandledObjects.GCHandleToObject(instance)).Enabled = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

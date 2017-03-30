@@ -14,7 +14,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -32,20 +31,16 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		protected UXButton buttonTutorialConfirm;
 
-		private List<UXCheckbox> unlockablePlanetList;
+		private List<UXCheckbox> unlockablePlanetList = new List<UXCheckbox>();
 
-		public NavigationCenterUpgradeScreen(Entity selectedBuilding)
+		public NavigationCenterUpgradeScreen(Entity selectedBuilding) : base(selectedBuilding)
 		{
-			this.unlockablePlanetList = new List<UXCheckbox>();
-			base..ctor(selectedBuilding);
 			this.tutorialMode = false;
 			this.useUpgradeGroup = true;
 		}
 
-		public NavigationCenterUpgradeScreen(Entity selectedBuilding, BuildingTypeVO buildingTypeVO, OnScreenModalResult callback)
+		public NavigationCenterUpgradeScreen(Entity selectedBuilding, BuildingTypeVO buildingTypeVO, OnScreenModalResult callback) : base(selectedBuilding)
 		{
-			this.unlockablePlanetList = new List<UXCheckbox>();
-			base..ctor(selectedBuilding);
 			this.buildingInfo = buildingTypeVO;
 			this.callback = callback;
 			this.tutorialMode = true;
@@ -65,7 +60,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.labelViewGalaxyMap.Text = this.lang.Get("s_ViewGalaxyMap", new object[0]);
 			base.GetElement<UXElement>("LabelInfo").Visible = false;
 			base.GetElement<UXElement>("LowLayoutGroup").Visible = false;
-			base.GetElement<UXLabel>("LabelUpgradeUnlockPlanet").Text = "";
+			base.GetElement<UXLabel>("LabelUpgradeUnlockPlanet").Text = string.Empty;
 			this.labelUpgradeUnlockPlanet = base.GetElement<UXLabel>("LabelUpgradeUnlockPlanet");
 			if (this.tutorialMode)
 			{
@@ -83,13 +78,13 @@ namespace StaRTS.Main.Views.UX.Screens
 				});
 				this.labelHQUpgradeDesc.Visible = false;
 			}
-			base.GetElement<UXLabel>("LabelUpgradeTime").Text = GameUtils.GetTimeLabelFromSeconds(this.tutorialMode ? this.buildingInfo.Time : this.nextBuildingInfo.Time);
+			base.GetElement<UXLabel>("LabelUpgradeTime").Text = GameUtils.GetTimeLabelFromSeconds((!this.tutorialMode) ? this.nextBuildingInfo.Time : this.buildingInfo.Time);
 			base.GetElement<UXElement>("UpgradeTime").Visible = true;
 			base.GetElement<UXLabel>("LabelUpgrade").Text = this.lang.Get("PLANETS_GNC_CONSTR_TIME", new object[0]);
 			this.buttonPrimaryAction.Enabled = false;
 			base.GetElement<UXLabel>("CostLabelConfirm").Text = this.lang.Get("PLANETS_GNC_UNLOCK_MODAL_BUTTON_CONFIRM", new object[0]);
 			this.labelUnlockPlanetTimer = base.GetElement<UXLabel>("LabelUnlockPlanetTimer");
-			this.labelUnlockPlanetTimer.Text = "";
+			this.labelUnlockPlanetTimer.Text = string.Empty;
 		}
 
 		protected override void InitButtons()
@@ -153,11 +148,13 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.sliders[sliderIndex].NextSlider.Value = (float)(1 + this.buildingInfo.Lvl) / num;
 				this.sliders[sliderIndex].CurrentSlider.Value = (float)this.buildingInfo.Lvl / num;
 				this.sliders[sliderIndex].CurrentLabel.Text = this.buildingInfo.Lvl.ToString();
-				return;
 			}
-			this.sliders[sliderIndex].NextSlider.Value = (float)(1 + this.buildingInfo.Lvl + 1) / num;
-			this.sliders[sliderIndex].CurrentSlider.Value = (float)(this.buildingInfo.Lvl + 1) / num;
-			this.sliders[sliderIndex].CurrentLabel.Text = (this.buildingInfo.Lvl + 1).ToString();
+			else
+			{
+				this.sliders[sliderIndex].NextSlider.Value = (float)(1 + this.buildingInfo.Lvl + 1) / num;
+				this.sliders[sliderIndex].CurrentSlider.Value = (float)(this.buildingInfo.Lvl + 1) / num;
+				this.sliders[sliderIndex].CurrentLabel.Text = (this.buildingInfo.Lvl + 1).ToString();
+			}
 		}
 
 		protected void InitPlanetSlots()
@@ -241,33 +238,36 @@ namespace StaRTS.Main.Views.UX.Screens
 				return;
 			}
 			TournamentVO activeTournamentOnPlanet = TournamentController.GetActiveTournamentOnPlanet(this.selectedPlanet.Uid);
-			if (activeTournamentOnPlanet == null)
+			if (activeTournamentOnPlanet != null)
 			{
-				this.labelUnlockPlanetTimer.Text = "";
-				return;
-			}
-			TimedEventState state = TimedEventUtils.GetState(activeTournamentOnPlanet);
-			if (state == TimedEventState.Live)
-			{
-				int secondsRemaining = TimedEventUtils.GetSecondsRemaining(activeTournamentOnPlanet);
-				string text = LangUtils.FormatTime((long)secondsRemaining);
-				this.labelUnlockPlanetTimer.Text = this.lang.Get("PLANETS_GNC_UPGRADE_CONFLICT_ENDS", new object[]
+				TimedEventState state = TimedEventUtils.GetState(activeTournamentOnPlanet);
+				if (state == TimedEventState.Live)
 				{
-					text
-				});
-				return;
-			}
-			if (state == TimedEventState.Upcoming)
-			{
-				int secondsRemaining2 = TimedEventUtils.GetSecondsRemaining(activeTournamentOnPlanet);
-				string text2 = LangUtils.FormatTime((long)secondsRemaining2);
-				this.labelUnlockPlanetTimer.Text = this.lang.Get("PLANETS_GNC_UPGRADE_NEXT_CONFLICT_BEGINS", new object[]
+					int secondsRemaining = TimedEventUtils.GetSecondsRemaining(activeTournamentOnPlanet);
+					string text = LangUtils.FormatTime((long)secondsRemaining);
+					this.labelUnlockPlanetTimer.Text = this.lang.Get("PLANETS_GNC_UPGRADE_CONFLICT_ENDS", new object[]
+					{
+						text
+					});
+				}
+				else if (state == TimedEventState.Upcoming)
 				{
-					text2
-				});
-				return;
+					int secondsRemaining2 = TimedEventUtils.GetSecondsRemaining(activeTournamentOnPlanet);
+					string text2 = LangUtils.FormatTime((long)secondsRemaining2);
+					this.labelUnlockPlanetTimer.Text = this.lang.Get("PLANETS_GNC_UPGRADE_NEXT_CONFLICT_BEGINS", new object[]
+					{
+						text2
+					});
+				}
+				else
+				{
+					this.labelUnlockPlanetTimer.Text = string.Empty;
+				}
 			}
-			this.labelUnlockPlanetTimer.Text = "";
+			else
+			{
+				this.labelUnlockPlanetTimer.Text = string.Empty;
+			}
 		}
 
 		protected override void HandleClose(UXButton button)
@@ -443,142 +443,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			base.GetElement<UXSprite>("SpriteHighlightPlanetPanel").Visible = false;
 			Service.Get<UXController>().MiscElementsManager.HideArrow();
-		}
-
-		protected internal NavigationCenterUpgradeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).ActivateHighlight();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).ConfirmUpgrade();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).DeactivateHighlight();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).HandleClose((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).HandleInstantUpgradeRequest();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitGroups();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitPlanetSlots();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitUpgradePlanetSlider(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnConfirmation(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnInstantUpgradeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForDroidResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnTutorialConfirmClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnUpgradeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnUpgradeButtonClickedRetry(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).PlanetSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((NavigationCenterUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).ViewGalaxyMapClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

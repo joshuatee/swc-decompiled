@@ -10,22 +10,11 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
 	public class TournamentEndedScreen : ClosableScreen
 	{
-		private Tournament tournament;
-
-		private TournamentVO tournamentVO;
-
-		private TournamentTierVO tierVO;
-
-		private TournamentRank playerRank;
-
-		private uint timerId;
-
 		private const string LABEL_TITLE = "DialogTournamentsTitle";
 
 		private const string REWARD_MESSAGE = "LabelBody";
@@ -57,6 +46,16 @@ namespace StaRTS.Main.Views.UX.Screens
 		private const string ANIM_SHOW = "Show";
 
 		private const float ANIM_DELAY = 0.5f;
+
+		private Tournament tournament;
+
+		private TournamentVO tournamentVO;
+
+		private TournamentTierVO tierVO;
+
+		private TournamentRank playerRank;
+
+		private uint timerId;
 
 		public TournamentEndedScreen(Tournament tournament) : base("gui_tournaments")
 		{
@@ -134,52 +133,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			base.Close(modalResult);
 			Service.Get<EventManager>().SendEvent(EventId.UITournamentEndSelection, new ActionMessageBIData("close", this.tournamentVO.Uid));
-		}
-
-		protected internal TournamentEndedScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TournamentEndedScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TournamentEndedScreen)GCHandledObjects.GCHandleToObject(instance)).InitImages();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TournamentEndedScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TournamentEndedScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TournamentEndedScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TournamentEndedScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewLeaderboardClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TournamentEndedScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateRewards();
-			return -1L;
 		}
 	}
 }

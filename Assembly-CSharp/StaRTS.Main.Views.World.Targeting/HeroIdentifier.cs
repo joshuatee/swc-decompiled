@@ -6,7 +6,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World.Targeting
 {
@@ -28,46 +27,41 @@ namespace StaRTS.Main.Views.World.Targeting
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.GameStateChanged)
+			switch (id)
 			{
-				if (id != EventId.TroopViewReady)
-				{
-					if (id == EventId.GameStateChanged)
-					{
-						Type type = (Type)cookie;
-						if (type == typeof(BattleEndState) || type == typeof(BattleEndPlaybackState))
-						{
-							this.CleanupAllDecals();
-						}
-					}
-				}
-				else
+			case EventId.HeroDeployed:
+			case EventId.AddDecalToTroop:
+				this.OnHeroDeployed(cookie as Entity);
+				return EatResponse.NotEaten;
+			case EventId.TroopAbilityActivate:
+			case EventId.TroopAbilityDeactivate:
+			case EventId.TroopAbilityCoolDownComplete:
+			case EventId.ChampionDeployed:
+			{
+				IL_2E:
+				if (id == EventId.TroopViewReady)
 				{
 					EntityViewParams entityViewParams = cookie as EntityViewParams;
 					this.OnHeroOrChampionViewReady(entityViewParams.Entity);
+					return EatResponse.NotEaten;
 				}
-			}
-			else
-			{
-				if (id != EventId.HeroDeployed)
+				if (id != EventId.GameStateChanged)
 				{
-					switch (id)
-					{
-					case EventId.HeroKilled:
-					case EventId.ChampionKilled:
-						this.OnHeroOrChampionKilled(cookie as Entity);
-						return EatResponse.NotEaten;
-					case EventId.ChampionDeployed:
-						return EatResponse.NotEaten;
-					case EventId.AddDecalToTroop:
-						break;
-					default:
-						return EatResponse.NotEaten;
-					}
+					return EatResponse.NotEaten;
 				}
-				this.OnHeroDeployed(cookie as Entity);
+				Type type = (Type)cookie;
+				if (type == typeof(BattleEndState) || type == typeof(BattleEndPlaybackState))
+				{
+					this.CleanupAllDecals();
+				}
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			case EventId.HeroKilled:
+			case EventId.ChampionKilled:
+				this.OnHeroOrChampionKilled(cookie as Entity);
+				return EatResponse.NotEaten;
+			}
+			goto IL_2E;
 		}
 
 		private HeroDecal FindDecal(Entity entity)
@@ -119,44 +113,6 @@ namespace StaRTS.Main.Views.World.Targeting
 				i++;
 			}
 			this.decals.Clear();
-		}
-
-		protected internal HeroIdentifier(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HeroIdentifier)GCHandledObjects.GCHandleToObject(instance)).CleanupAllDecals();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HeroIdentifier)GCHandledObjects.GCHandleToObject(instance)).FindDecal((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HeroIdentifier)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((HeroIdentifier)GCHandledObjects.GCHandleToObject(instance)).OnHeroDeployed((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HeroIdentifier)GCHandledObjects.GCHandleToObject(instance)).OnHeroOrChampionKilled((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HeroIdentifier)GCHandledObjects.GCHandleToObject(instance)).OnHeroOrChampionViewReady((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

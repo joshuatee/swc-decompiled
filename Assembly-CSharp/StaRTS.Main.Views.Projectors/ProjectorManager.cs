@@ -3,7 +3,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Projectors
 {
@@ -38,7 +37,7 @@ namespace StaRTS.Main.Views.Projectors
 				num = this.highestUnusedIndex;
 				this.highestUnusedIndex++;
 			}
-			Service.Get<StaRTSLogger>().DebugFormat("* About to assign {0} to booth {1}", new object[]
+			Service.Get<Logger>().DebugFormat("* About to assign {0} to booth {1}", new object[]
 			{
 				projector.Config.FrameSprite,
 				num
@@ -70,9 +69,8 @@ namespace StaRTS.Main.Views.Projectors
 			if (this.unusedIndices.Count == 0)
 			{
 				this.unusedIndices.Add(projectorIndex);
-				return;
 			}
-			if (!this.unusedIndices.Contains(projectorIndex))
+			else if (!this.unusedIndices.Contains(projectorIndex))
 			{
 				int index = ProjectorManager.BinarySearch(ref this.unusedIndices, 0, this.unusedIndices.Count, projectorIndex);
 				this.unusedIndices.Insert(index, projectorIndex);
@@ -95,27 +93,6 @@ namespace StaRTS.Main.Views.Projectors
 				return ProjectorManager.BinarySearch(ref list, num, rightPosition, item);
 			}
 			return ProjectorManager.BinarySearch(ref list, leftPosition, num, item);
-		}
-
-		protected internal ProjectorManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectorManager)GCHandledObjects.GCHandleToObject(instance)).AddProjector((GeometryProjector)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ProjectorManager)GCHandledObjects.GCHandleToObject(instance)).DestroyProjector((UXSprite)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ProjectorManager)GCHandledObjects.GCHandleToObject(instance)).RemoveProjector((GeometryProjector)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

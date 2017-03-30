@@ -2,8 +2,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.ServerMessages
 {
@@ -38,32 +36,9 @@ namespace StaRTS.Main.Controllers.ServerMessages
 			{
 				Dictionary<string, object> dictionary = list[i] as Dictionary<string, object>;
 				Dictionary<string, object> dictionary2 = dictionary["message"] as Dictionary<string, object>;
-				this.keepAliveTime = Convert.ToUInt32(dictionary2["keepAliveTime"], CultureInfo.InvariantCulture);
+				this.keepAliveTime = Convert.ToUInt32(dictionary2["keepAliveTime"]);
 			}
 			return this;
-		}
-
-		public KeepAliveMessage()
-		{
-		}
-
-		protected internal KeepAliveMessage(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((KeepAliveMessage)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((KeepAliveMessage)GCHandledObjects.GCHandleToObject(instance)).MessageCookie);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((KeepAliveMessage)GCHandledObjects.GCHandleToObject(instance)).MessageEventId);
 		}
 	}
 }

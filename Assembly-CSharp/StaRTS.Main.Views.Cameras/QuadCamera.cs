@@ -3,9 +3,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Cameras
 {
@@ -38,10 +36,7 @@ namespace StaRTS.Main.Views.Cameras
 			this.name = name;
 			this.srcCameras = new List<Camera>();
 			this.dstCameras = new List<Camera>();
-			GameObject gameObject = new GameObject(string.Format("{0} Camera", new object[]
-			{
-				name
-			}));
+			GameObject gameObject = new GameObject(string.Format("{0} Camera", name));
 			gameObject.layer = layer;
 			Transform transform = gameObject.transform;
 			transform.position = position;
@@ -74,12 +69,8 @@ namespace StaRTS.Main.Views.Cameras
 			while (i < count)
 			{
 				Camera camera = cameras[i];
-				if (camera != null)
-				{
-					camera.enabled = false;
-					camera.targetTexture = renderTexture;
-					camera.enabled = true;
-				}
+				camera.targetTexture = renderTexture;
+				camera.enabled = true;
 				i++;
 			}
 			return renderTexture;
@@ -94,7 +85,6 @@ namespace StaRTS.Main.Views.Cameras
 				Camera camera = cameras[i];
 				if (!(camera == null))
 				{
-					camera.enabled = false;
 					camera.targetTexture = null;
 					camera.enabled = enable;
 					if (destroy)
@@ -116,10 +106,7 @@ namespace StaRTS.Main.Views.Cameras
 		{
 			if (needQuad)
 			{
-				this.quadGameObject = new GameObject(string.Format("{0} Quad", new object[]
-				{
-					this.name
-				}));
+				this.quadGameObject = new GameObject(string.Format("{0} Quad", this.name));
 				this.quadGameObject.transform.position = this.unityCamera.gameObject.transform.position - new Vector3((float)Screen.width * 0.5f, 0.5f, (float)Screen.height * 0.5f);
 				this.quadGameObject.transform.localScale = new Vector3((float)Screen.width, 0f, (float)Screen.height);
 				this.quadMesh = UnityUtils.CreateQuadMesh(0f);
@@ -162,44 +149,6 @@ namespace StaRTS.Main.Views.Cameras
 				this.quadGameObject = null;
 				this.quadMaterial = null;
 			}
-		}
-
-		protected internal QuadCamera(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((QuadCamera)GCHandledObjects.GCHandleToObject(instance)).CreateMaterial(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((QuadCamera)GCHandledObjects.GCHandleToObject(instance)).DestroyRenderObjects();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QuadCamera)GCHandledObjects.GCHandleToObject(instance)).IsRendering());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QuadCamera)GCHandledObjects.GCHandleToObject(instance)).PrepareCameras((List<Camera>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((QuadCamera)GCHandledObjects.GCHandleToObject(instance)).RestoreCameras((List<Camera>)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((QuadCamera)GCHandledObjects.GCHandleToObject(instance)).StartRendering(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

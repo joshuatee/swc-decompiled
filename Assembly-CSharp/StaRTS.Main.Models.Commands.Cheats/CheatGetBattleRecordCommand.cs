@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatGetBattleRecordCommand(string battleId) : base("cheats.getBattleRecord", new CheatGetBattleRecordRequest(battleId), new CheatGetBattleRecordResponse(battleId))
 		{
 		}
-
-		protected internal CheatGetBattleRecordCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

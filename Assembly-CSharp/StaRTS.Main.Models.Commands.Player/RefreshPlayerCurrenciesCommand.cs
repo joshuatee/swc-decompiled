@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public RefreshPlayerCurrenciesCommand(PlayerIdRequest request) : base("player.get", request, new ExternalCurrencySyncResponse())
 		{
 		}
-
-		protected internal RefreshPlayerCurrenciesCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

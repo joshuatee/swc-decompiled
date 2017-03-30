@@ -10,7 +10,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Main.Views.UX.Screens.Leaderboard;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -144,39 +143,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				Service.Get<BILoggingController>().TrackGameAction(highestLevelHQ.ToString(), "UI_squadwar_joinsquad", ServerTime.Time.ToString(), null);
 				Service.Get<ScreenController>().AddScreen(new SquadJoinScreen());
-				return;
 			}
-			if (flag2)
+			else if (flag2)
 			{
 				squadController.WarManager.StartMatchMakingPreparation();
 			}
-		}
-
-		protected internal SquadWarStartScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarStartScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadWarStartScreen)GCHandledObjects.GCHandleToObject(instance)).LogMemberAttemptingWarStart();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadWarStartScreen)GCHandledObjects.GCHandleToObject(instance)).OnNextButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadWarStartScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
 		}
 	}
 }

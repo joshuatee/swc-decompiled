@@ -3,7 +3,6 @@ using StaRTS.Main.Views.UX.Screens.Leaderboard;
 using StaRTS.Main.Views.UX.Screens.Squads;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -39,16 +38,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			ScreenController screenController = Service.Get<ScreenController>();
 			return screenController.GetHighestLevelScreen<SquadBuildingScreen>() != null || screenController.GetHighestLevelScreen<SquadCreateScreen>() != null || screenController.GetHighestLevelScreen<SquadIntroScreen>() != null || screenController.GetHighestLevelScreen<SquadJoinRequestScreen>() != null || screenController.GetHighestLevelScreen<SquadJoinScreen>() != null || screenController.GetHighestLevelScreen<AbstractSquadRequestScreen>() != null || screenController.GetHighestLevelScreen<SquadSlidingScreen>() != null || screenController.GetHighestLevelScreen<SquadTroopRequestScreen>() != null || screenController.GetHighestLevelScreen<SquadUpgradeScreen>() != null;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ScreenUtils.GetDeployableInfoParentScreen());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ScreenUtils.IsAnySquadScreenOpen());
 		}
 	}
 }

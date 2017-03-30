@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Externals.BI
 {
@@ -35,7 +33,7 @@ namespace StaRTS.Externals.BI
 
 		public string ToURL(BILog log)
 		{
-			StringBuilder stringBuilder = new StringBuilder(log.UseSecondaryUrl ? this.secondaryNoProxyURL : this.primaryURL);
+			StringBuilder stringBuilder = new StringBuilder((!log.UseSecondaryUrl) ? this.primaryURL : this.secondaryNoProxyURL);
 			Dictionary<string, string> paramDict = log.GetParamDict();
 			foreach (string current in paramDict.Keys)
 			{
@@ -45,26 +43,6 @@ namespace StaRTS.Externals.BI
 				stringBuilder.Append(paramDict[current]);
 			}
 			return stringBuilder.ToString();
-		}
-
-		protected internal PlaydomLogCreator(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlaydomLogCreator)GCHandledObjects.GCHandleToObject(instance)).CreateWWWDataFromBILog((BILog)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlaydomLogCreator)GCHandledObjects.GCHandleToObject(instance)).SetURL(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlaydomLogCreator)GCHandledObjects.GCHandleToObject(instance)).ToURL((BILog)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

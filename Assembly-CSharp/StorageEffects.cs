@@ -13,9 +13,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 public class StorageEffects : IEventObserver
 {
@@ -95,15 +93,13 @@ public class StorageEffects : IEventObserver
 		if (currentFullnessPercent >= collectNotificationPercentage && previousFullnessPercent < collectNotificationPercentage)
 		{
 			Service.Get<FXManager>().CreateAndAttachFXToEntity(entity, buildingVO.FillStateAssetName, "fillState", new FXManager.AttachedFXLoadedCallback(this.OnFillStateLoaded), currentFullnessPercent, false, Vector3.zero);
-			return;
 		}
-		if (currentFullnessPercent >= collectNotificationPercentage)
+		else if (currentFullnessPercent >= collectNotificationPercentage)
 		{
 			GameObject attachedGameObject = entity.Get<GameObjectViewComponent>().GetAttachedGameObject("fillState");
 			if (attachedGameObject != null)
 			{
 				this.UpdateFillStateMeshes(attachedGameObject, entity, currentFullnessPercent);
-				return;
 			}
 		}
 		else if (currentFullnessPercent < collectNotificationPercentage && previousFullnessPercent >= collectNotificationPercentage)
@@ -164,49 +160,5 @@ public class StorageEffects : IEventObserver
 			}
 		}
 		return EatResponse.NotEaten;
-	}
-
-	protected internal StorageEffects(UIntPtr dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((StorageEffects)GCHandledObjects.GCHandleToObject(instance)).GetCollectNotificationPercentage((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((StorageEffects)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((StorageEffects)GCHandledObjects.GCHandleToObject(instance)).OnFillStateLoaded((GameObject)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]), *(float*)(args + 2));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		((StorageEffects)GCHandledObjects.GCHandleToObject(instance)).UpdateFillState((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((StorageEffects)GCHandledObjects.GCHandleToObject(instance)).UpdateFillStateFX((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), *(float*)(args + 2), *(float*)(args + 3));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((StorageEffects)GCHandledObjects.GCHandleToObject(instance)).UpdateFillStateMesh((GameObject)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((StorageEffects)GCHandledObjects.GCHandleToObject(instance)).UpdateFillStateMeshes((GameObject)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]), *(float*)(args + 2));
-		return -1L;
 	}
 }

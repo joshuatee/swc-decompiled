@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Account.External
 		public UnregisterExternalAccountCommand(UnregisterExternalAccountRequest request) : base("player.account.external.unregister", request, new DefaultResponse())
 		{
 		}
-
-		protected internal UnregisterExternalAccountCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -1,7 +1,6 @@
-using MD5;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace StaRTS.Utils
 {
@@ -9,34 +8,25 @@ namespace StaRTS.Utils
 	{
 		public static byte[] ComputeHmacHash(string algorithm, string secret, string plainText)
 		{
-			return CryptoUtility.ComputeHash(plainText, secret);
+			if (algorithm == "HmacSHA256")
+			{
+				HMAC hMAC = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+				return hMAC.ComputeHash(Encoding.UTF8.GetBytes(plainText));
+			}
+			throw new ArgumentException(string.Format("Unknown algorithm {0}", algorithm));
 		}
 
 		public static string ComputeMD5Hash(string input)
 		{
-			string fingerPrint = new MD5
+			MD5 mD = MD5.Create();
+			byte[] bytes = Encoding.ASCII.GetBytes(input);
+			byte[] array = mD.ComputeHash(bytes);
+			StringBuilder stringBuilder = new StringBuilder();
+			for (int i = 0; i < array.Length; i++)
 			{
-				Value = input
-			}.FingerPrint;
-			return fingerPrint.ToLower();
-		}
-
-		public CryptographyUtils()
-		{
-		}
-
-		protected internal CryptographyUtils(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CryptographyUtils.ComputeHmacHash(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CryptographyUtils.ComputeMD5Hash(Marshal.PtrToStringUni(*(IntPtr*)args)));
+				stringBuilder.Append(array[i].ToString("x2"));
+			}
+			return stringBuilder.ToString();
 		}
 	}
 }

@@ -2,9 +2,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Squads.War
 {
@@ -34,7 +32,7 @@ namespace StaRTS.Main.Models.Squads.War
 				}
 				if (dictionary.ContainsKey("name"))
 				{
-					this.SquadName = WWW.UnEscapeURL(Convert.ToString(dictionary["name"], CultureInfo.InvariantCulture));
+					this.SquadName = WWW.UnEscapeURL(Convert.ToString(dictionary["name"]));
 				}
 				if (dictionary.ContainsKey("faction"))
 				{
@@ -60,20 +58,6 @@ namespace StaRTS.Main.Models.Squads.War
 		public string ToJson()
 		{
 			return Serializer.Start().End().ToString();
-		}
-
-		protected internal SquadWarSquadData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarSquadData)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarSquadData)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

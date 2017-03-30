@@ -11,8 +11,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -52,23 +50,25 @@ namespace StaRTS.Main.Controllers
 			if (upgradeLevelOfDeployable == 0)
 			{
 				this.AttemptToUpgradeUnitWithShards(shardId, 1);
-				return;
 			}
-			IDeployableVO deployableVOForLevelInGroup = this.GetDeployableVOForLevelInGroup(upgradeLevelOfDeployable, targetType, targetGroupId);
-			if (deployableVOForLevelInGroup == null)
+			else
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("No deployableVO found for targetType: {0}, targetGroup: {1}, upgradeLevel: {2}", new object[]
+				IDeployableVO deployableVOForLevelInGroup = this.GetDeployableVOForLevelInGroup(upgradeLevelOfDeployable, targetType, targetGroupId);
+				if (deployableVOForLevelInGroup == null)
 				{
-					targetType,
-					targetGroupId,
-					upgradeLevelOfDeployable
-				});
-				return;
-			}
-			if (num - count < deployableVOForLevelInGroup.UpgradeShardCount && num >= deployableVOForLevelInGroup.UpgradeShardCount)
-			{
-				this.AllowResearchBuildingBadging = true;
-				Service.Get<EventManager>().SendEvent(EventId.ShardUnitNowUpgradable, deployableVOForLevelInGroup.Uid);
+					Service.Get<Logger>().ErrorFormat("No deployableVO found for targetType: {0}, targetGroup: {1}, upgradeLevel: {2}", new object[]
+					{
+						targetType,
+						targetGroupId,
+						upgradeLevelOfDeployable
+					});
+					return;
+				}
+				if (num - count < deployableVOForLevelInGroup.UpgradeShardCount && num >= deployableVOForLevelInGroup.UpgradeShardCount)
+				{
+					this.AllowResearchBuildingBadging = true;
+					Service.Get<EventManager>().SendEvent(EventId.ShardUnitNowUpgradable, deployableVOForLevelInGroup.Uid);
+				}
 			}
 		}
 
@@ -215,20 +215,47 @@ namespace StaRTS.Main.Controllers
 			{
 				int nextLevel = currentPlayer.UnlockedLevels.Troops.GetNextLevel(current);
 				TroopTypeVO byLevel = troopUpgradeCatalog.GetByLevel(current, nextLevel);
-				if (byLevel != null && byLevel.PlayerFacing && byLevel.Type != TroopType.Champion && byLevel.Faction == currentPlayer.Faction && !string.IsNullOrEmpty(byLevel.UpgradeShardUid) && this.DoesUserHaveUpgradeShardRequirement(byLevel))
+				if (byLevel != null)
 				{
-					bool result = true;
-					return result;
+					if (byLevel.PlayerFacing)
+					{
+						if (byLevel.Type != TroopType.Champion)
+						{
+							if (byLevel.Faction == currentPlayer.Faction)
+							{
+								if (!string.IsNullOrEmpty(byLevel.UpgradeShardUid))
+								{
+									if (this.DoesUserHaveUpgradeShardRequirement(byLevel))
+									{
+										bool result = true;
+										return result;
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 			foreach (string current2 in starshipUpgradeCatalog.AllUpgradeGroups())
 			{
 				int nextLevel2 = currentPlayer.UnlockedLevels.Starships.GetNextLevel(current2);
 				SpecialAttackTypeVO byLevel2 = starshipUpgradeCatalog.GetByLevel(current2, nextLevel2);
-				if (byLevel2 != null && byLevel2.PlayerFacing && byLevel2.Faction == currentPlayer.Faction && !string.IsNullOrEmpty(byLevel2.UpgradeShardUid) && this.DoesUserHaveUpgradeShardRequirement(byLevel2))
+				if (byLevel2 != null)
 				{
-					bool result = true;
-					return result;
+					if (byLevel2.PlayerFacing)
+					{
+						if (byLevel2.Faction == currentPlayer.Faction)
+						{
+							if (!string.IsNullOrEmpty(byLevel2.UpgradeShardUid))
+							{
+								if (this.DoesUserHaveUpgradeShardRequirement(byLevel2))
+								{
+									bool result = true;
+									return result;
+								}
+							}
+						}
+					}
 				}
 			}
 			return false;
@@ -332,7 +359,7 @@ namespace StaRTS.Main.Controllers
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("GetUpgradeLevelOfDeployable; Unexpected type: " + type + "with group: " + groupId);
+				Service.Get<Logger>().Error("GetUpgradeLevelOfDeployable; Unexpected type: " + type + "with group: " + groupId);
 			}
 			return result;
 		}
@@ -385,106 +412,6 @@ namespace StaRTS.Main.Controllers
 		{
 			bool isUnlock = vo.Lvl == 1;
 			Service.Get<ScreenController>().AddScreen(new DeployableUnlockedCelebrationScreen(vo, isSpecialAttack, isUnlock), QueueScreenBehavior.QueueAndDeferTillClosed);
-		}
-
-		protected internal DeployableShardUnlockController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).AttemptToUpgradeUnitWithShards(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).DoesUserHaveAnyUpgradeableShardUnits());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).DoesUserHaveUpgradeShardRequirement((IDeployableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).AllowResearchBuildingBadging);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).GetDeployableVOForLevelInGroup(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).GetDeployableVOFromShard((ShardVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).GetShardAmount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).GetUpgradeLevelOfDeployable(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).GetUpgradeQualityForDeployable((IDeployableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).GetUpgradeQualityForDeployableUID(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).GrantUnlockShards(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).IsShardDeployableReadyToUpgrade(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).IsUIDForAShardUpgradableDeployable(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).QueueShowDeployableUnlocks();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).AllowResearchBuildingBadging = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).ShowDeployableUnlockedCelebration((IDeployableVO)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((DeployableShardUnlockController)GCHandledObjects.GCHandleToObject(instance)).SpendDeployableShard(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
 		}
 	}
 }

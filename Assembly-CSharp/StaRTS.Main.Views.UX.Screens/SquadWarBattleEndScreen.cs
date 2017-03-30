@@ -15,7 +15,6 @@ using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -227,7 +226,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			get
 			{
-				return "";
+				return string.Empty;
 			}
 		}
 
@@ -318,17 +317,17 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.lastBattle = Service.Get<BattlePlaybackController>().CurrentBattleEntry;
 				BattleRecord currentBattleRecord = Service.Get<BattlePlaybackController>().CurrentBattleRecord;
-				this.battleType = ((currentBattleRecord != null) ? currentBattleRecord.BattleType : BattleType.ClientBattle);
+				this.battleType = ((currentBattleRecord == null) ? BattleType.ClientBattle : currentBattleRecord.BattleType);
 			}
 			else
 			{
 				CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
 				this.lastBattle = currentBattle;
-				this.battleType = ((currentBattle != null) ? currentBattle.Type : BattleType.ClientBattle);
+				this.battleType = ((currentBattle == null) ? BattleType.ClientBattle : currentBattle.Type);
 			}
 			if (this.lastBattle == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Last battle is null");
+				Service.Get<Logger>().Error("Last battle is null");
 				return;
 			}
 			base.GetElement<UXLabel>("LabelPercentageSquadWar").Text = this.lang.Get("PERCENTAGE", new object[]
@@ -349,12 +348,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				bool flag2 = this.lastBattle.Defender.PlayerFaction != FactionType.Smuggler;
 				bool won = this.lastBattle.Won;
-				string text = (this.lastBattle.Defender.PlayerFaction == FactionType.Empire) ? "squadwars_end_celeb_empire" : "squadwars_end_celeb_rebel";
-				string text2 = (this.lastBattle.Attacker.PlayerFaction == FactionType.Empire) ? "squadwars_end_celeb_empire" : "squadwars_end_celeb_rebel";
+				string text = (this.lastBattle.Defender.PlayerFaction != FactionType.Empire) ? "squadwars_end_celeb_rebel" : "squadwars_end_celeb_empire";
+				string text2 = (this.lastBattle.Attacker.PlayerFaction != FactionType.Empire) ? "squadwars_end_celeb_rebel" : "squadwars_end_celeb_empire";
 				this.currentOwnerTexture = base.GetElement<UXTexture>("TextureFactionIconCurrent");
-				this.currentOwnerTexture.LoadTexture((!flag2 & won) ? text2 : text);
+				this.currentOwnerTexture.LoadTexture((flag2 || !won) ? text : text2);
 				this.newOwnerTexture = base.GetElement<UXTexture>("TextureFactionIconNew");
-				this.newOwnerTexture.LoadTexture(won ? text2 : text);
+				this.newOwnerTexture.LoadTexture((!won) ? text : text2);
 				if (won)
 				{
 					SquadWarManager warManager = Service.Get<SquadController>().WarManager;
@@ -450,7 +449,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			else if (text == "DisableUplink" && num2 > 0)
 			{
-				float delay = (num > 0) ? 0.433f : 0.183f;
+				float delay = (num <= 0) ? 0.183f : 0.433f;
 				Service.Get<AudioManager>().PlayAudioRepeat("sfx_stinger_uplink_disabled", num2, delay, 1.35f);
 			}
 			component.SetTrigger(text);
@@ -494,9 +493,9 @@ namespace StaRTS.Main.Views.UX.Screens
 			int damagePercent = battle.DamagePercent;
 			int earnedStars = battle.EarnedStars;
 			bool flag = earnedStars >= 3 || (earnedStars >= 2 && damagePercent >= 50) || (earnedStars >= 1 && damagePercent < 50);
-			base.GetElement<UXSprite>("SpriteIconVictoryPointLeftSquadWar").Color = ((earnedStars >= 1) ? Color.white : Color.gray);
-			base.GetElement<UXSprite>("SpriteIconVictoryPointMiddleSquadWar").Color = ((earnedStars >= 2) ? Color.white : Color.gray);
-			base.GetElement<UXSprite>("SpriteIconVictoryPointRightSquadWar").Color = ((earnedStars >= 3) ? Color.white : Color.gray);
+			base.GetElement<UXSprite>("SpriteIconVictoryPointLeftSquadWar").Color = ((earnedStars < 1) ? Color.gray : Color.white);
+			base.GetElement<UXSprite>("SpriteIconVictoryPointMiddleSquadWar").Color = ((earnedStars < 2) ? Color.gray : Color.white);
+			base.GetElement<UXSprite>("SpriteIconVictoryPointRightSquadWar").Color = ((earnedStars < 3) ? Color.gray : Color.white);
 			base.GetElement<UXSprite>("SpriteIconCheckLeftSquadWar").Visible = (earnedStars >= 1);
 			base.GetElement<UXSprite>("SpriteIconCheckMiddleSquadWar").Visible = (earnedStars >= 2);
 			base.GetElement<UXSprite>("SpriteIconCheckRightSquadWar").Visible = (earnedStars >= 3);
@@ -505,102 +504,13 @@ namespace StaRTS.Main.Views.UX.Screens
 				base.GetElement<UXLabel>("LabelVictoryPointReqLeftSquadWar").Text = this.lang.Get("DESTROY_HQ", new object[0]);
 				base.GetElement<UXLabel>("LabelVictoryPointReqMiddleSquadWar").Text = this.lang.Get("DAMAGE_50", new object[0]);
 				base.GetElement<UXLabel>("LabelVictoryPointReqRightSquadWar").Text = this.lang.Get("DAMAGE_100", new object[0]);
-				return;
 			}
-			base.GetElement<UXLabel>("LabelVictoryPointReqLeftSquadWar").Text = this.lang.Get("DAMAGE_50", new object[0]);
-			base.GetElement<UXLabel>("LabelVictoryPointReqMiddleSquadWar").Text = this.lang.Get("DAMAGE_100", new object[0]);
-			base.GetElement<UXLabel>("LabelVictoryPointReqRightSquadWar").Text = this.lang.Get("DESTROY_HQ", new object[0]);
-		}
-
-		protected internal SquadWarBattleEndScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).ReplayPrefix);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).StarsPlaceHolderName);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardAmountName);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardDefaultName);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardIconName);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardLevelName);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardName);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardQualityName);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopHeroDecalName);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitVictoryPoints((BattleEntry)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnSquadWarBattleEndButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadWarBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).SetupView();
-			return -1L;
+			else
+			{
+				base.GetElement<UXLabel>("LabelVictoryPointReqLeftSquadWar").Text = this.lang.Get("DAMAGE_50", new object[0]);
+				base.GetElement<UXLabel>("LabelVictoryPointReqMiddleSquadWar").Text = this.lang.Get("DAMAGE_100", new object[0]);
+				base.GetElement<UXLabel>("LabelVictoryPointReqRightSquadWar").Text = this.lang.Get("DESTROY_HQ", new object[0]);
+			}
 		}
 	}
 }

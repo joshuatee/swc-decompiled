@@ -15,9 +15,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -186,7 +184,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			while (i < count)
 			{
 				UXCheckbox uXCheckbox = this.tabs[i];
-				uXCheckbox.Selected = (this.curTab == (BattleLogTab)uXCheckbox.Tag);
+				uXCheckbox.Selected = (this.curTab == (BattleLogTab)((int)uXCheckbox.Tag));
 				i++;
 			}
 			this.SetupCurTabElements();
@@ -240,11 +238,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				return 0;
 			}
-			if (a.EndBattleServerTime >= b.EndBattleServerTime)
-			{
-				return -1;
-			}
-			return 1;
+			return (a.EndBattleServerTime >= b.EndBattleServerTime) ? -1 : 1;
 		}
 
 		private void OnTabCheckboxSelected(UXCheckbox checkbox, bool selected)
@@ -253,7 +247,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				return;
 			}
-			BattleLogTab battleLogTab = (BattleLogTab)checkbox.Tag;
+			BattleLogTab battleLogTab = (BattleLogTab)((int)checkbox.Tag);
 			if (battleLogTab != this.curTab)
 			{
 				this.SetTab(battleLogTab);
@@ -292,15 +286,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			bool flag3 = Service.Get<SquadController>().StateManager.GetCurrentSquad() != null;
 			bool visible = flag2;
 			bool visible2 = !flag && entry.IsPvP() && !entry.Revenged && entry.PlanetId == currentPlayer.PlanetId;
-			bool visible3 = flag2 & flag3;
+			bool visible3 = flag2 && flag3;
 			uint time = ServerTime.Time;
 			int totalSeconds = (int)(time - entry.EndBattleServerTime);
 			int count = this.itemGrid.Count;
-			string text = string.Format("{0}{1}", new object[]
-			{
-				"BattleLogItem",
-				count
-			});
+			string text = string.Format("{0}{1}", "BattleLogItem", count);
 			UXElement item = this.itemGrid.CloneTemplateItem(text);
 			bool won = entry.Won;
 			Color winResultColor = UXUtils.GetWinResultColor(won);
@@ -328,9 +318,9 @@ namespace StaRTS.Main.Views.UX.Screens
 			UXLabel subElement6 = this.itemGrid.GetSubElement<UXLabel>(text, "LabelBtnRevenge");
 			subElement6.Text = this.lang.Get("s_Revenge", new object[0]);
 			bool flag4 = this.curTab == BattleLogTab.Attack;
-			int value2 = flag4 ? entry.LootCreditsEarned : entry.LootCreditsDeducted;
-			int value3 = flag4 ? entry.LootMaterialsEarned : entry.LootMaterialsDeducted;
-			int value4 = flag4 ? entry.LootContrabandEarned : entry.LootContrabandDeducted;
+			int value2 = (!flag4) ? entry.LootCreditsDeducted : entry.LootCreditsEarned;
+			int value3 = (!flag4) ? entry.LootMaterialsDeducted : entry.LootMaterialsEarned;
+			int value4 = (!flag4) ? entry.LootContrabandDeducted : entry.LootContrabandEarned;
 			UXLabel subElement7 = this.itemGrid.GetSubElement<UXLabel>(text, "LabelCredits");
 			subElement7.Text = this.lang.ThousandsSeparated(value2);
 			UXLabel subElement8 = this.itemGrid.GetSubElement<UXLabel>(text, "LabelMaterials");
@@ -355,7 +345,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				entry.DamagePercent
 			});
 			UXLabel subElement13 = this.itemGrid.GetSubElement<UXLabel>(text, "LabelResult");
-			subElement13.Text = this.lang.Get(won ? "YOU_WON" : "YOU_LOST", new object[0]);
+			subElement13.Text = this.lang.Get((!won) ? "YOU_LOST" : "YOU_WON", new object[0]);
 			subElement13.TextColor = winResultColor;
 			UXLabel subElement14 = this.itemGrid.GetSubElement<UXLabel>(text, "LabelTimeStamp");
 			subElement14.Text = this.lang.Get("TIME_AGO", new object[]
@@ -414,14 +404,14 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				foreach (KeyValuePair<string, int> current in attackerDeployedData.TroopData)
 				{
-					string key = current.get_Key();
+					string key = current.Key;
 					int num = 0;
 					if (dictionary != null && dictionary.ContainsKey(key))
 					{
 						num = dictionary[key];
 						dictionary.Remove(key);
 					}
-					num += current.get_Value();
+					num += current.Value;
 					TroopTypeVO troopTypeVO = this.sdc.Get<TroopTypeVO>(key);
 					int unitQuality = deployableShardUnlockController.GetUpgradeQualityForDeployable(troopTypeVO);
 					this.AddExpendedItem(expendedGrid, entryItemUid, key, troopTypeVO, num, unitQuality, entry);
@@ -431,11 +421,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				foreach (KeyValuePair<string, int> current2 in dictionary)
 				{
-					if (current2.get_Value() >= 1)
+					if (current2.Value >= 1)
 					{
-						TroopTypeVO troopTypeVO2 = Service.Get<IDataController>().Get<TroopTypeVO>(current2.get_Key());
+						TroopTypeVO troopTypeVO2 = Service.Get<IDataController>().Get<TroopTypeVO>(current2.Key);
 						int unitQuality = deployableShardUnlockController.GetUpgradeQualityForDeployable(troopTypeVO2);
-						this.AddExpendedItem(expendedGrid, entryItemUid, current2.get_Key(), troopTypeVO2, current2.get_Value(), unitQuality, entry);
+						this.AddExpendedItem(expendedGrid, entryItemUid, current2.Key, troopTypeVO2, current2.Value, unitQuality, entry);
 					}
 				}
 			}
@@ -443,8 +433,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				foreach (KeyValuePair<string, int> current3 in attackerDeployedData.SpecialAttackData)
 				{
-					string key2 = current3.get_Key();
-					int value = current3.get_Value();
+					string key2 = current3.Key;
+					int value = current3.Value;
 					SpecialAttackTypeVO specialAttackTypeVO = this.sdc.Get<SpecialAttackTypeVO>(key2);
 					int unitQuality = deployableShardUnlockController.GetUpgradeQualityForDeployable(specialAttackTypeVO);
 					this.AddExpendedItem(expendedGrid, entryItemUid, key2, specialAttackTypeVO, value, unitQuality, entry);
@@ -454,8 +444,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				foreach (KeyValuePair<string, int> current4 in attackerDeployedData.HeroData)
 				{
-					string key3 = current4.get_Key();
-					int value2 = current4.get_Value();
+					string key3 = current4.Key;
+					int value2 = current4.Value;
 					TroopTypeVO troopTypeVO3 = this.sdc.Get<TroopTypeVO>(key3);
 					int unitQuality = deployableShardUnlockController.GetUpgradeQualityForDeployable(troopTypeVO3);
 					this.AddExpendedItem(expendedGrid, entryItemUid, key3, troopTypeVO3, value2, unitQuality, entry);
@@ -465,8 +455,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				foreach (KeyValuePair<string, int> current5 in attackerDeployedData.ChampionData)
 				{
-					string key4 = current5.get_Key();
-					int value3 = current5.get_Value();
+					string key4 = current5.Key;
+					int value3 = current5.Value;
 					TroopTypeVO troop = this.sdc.Get<TroopTypeVO>(key4);
 					int unitQuality = 0;
 					this.AddExpendedItem(expendedGrid, entryItemUid, key4, troop, value3, unitQuality, entry);
@@ -487,10 +477,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			UXElement uXElement = expendedGrid.CloneTemplateItem(troopUid);
 			uXElement.Root.name = UXUtils.FormatAppendedName(uXElement.Root.name, entryItemUid);
 			UXLabel subElement = expendedGrid.GetSubElement<UXLabel>(troopUid, UXUtils.FormatAppendedName("LabelTroopsExpended", entryItemUid));
-			subElement.Text = ((count > 0) ? this.lang.Get("TROOP_MULTIPLIER", new object[]
+			subElement.Text = ((count <= 0) ? string.Empty : this.lang.Get("TROOP_MULTIPLIER", new object[]
 			{
 				count
-			}) : "");
+			}));
 			UXLabel subElement2 = expendedGrid.GetSubElement<UXLabel>(troopUid, UXUtils.FormatAppendedName("LabelTroopLevel", entryItemUid));
 			subElement2.Text = LangUtils.GetLevelText(troop.Lvl);
 			UXSprite subElement3 = expendedGrid.GetSubElement<UXSprite>(troopUid, UXUtils.FormatAppendedName("SpriteTroopsImage", entryItemUid));
@@ -540,10 +530,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (Service.Get<CurrentPlayer>().ProtectedUntil > ServerTime.Time)
 			{
 				DisableProtectionAlertScreen.ShowModal(new OnScreenModalResult(this.OnConfirmInvalidation), button.Tag);
-				return;
 			}
-			GameUtils.ExitEditState();
-			this.StartRevenge(button.Tag as BattleEntry);
+			else
+			{
+				GameUtils.ExitEditState();
+				this.StartRevenge(button.Tag as BattleEntry);
+			}
 		}
 
 		private void OnConfirmInvalidation(object result, object cookie)
@@ -551,9 +543,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (result != null)
 			{
 				this.StartRevenge(cookie as BattleEntry);
-				return;
 			}
-			this.ToggleRevengeButtons(true);
+			else
+			{
+				this.ToggleRevengeButtons(true);
+			}
 		}
 
 		private void StartRevenge(BattleEntry entry)
@@ -597,121 +591,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.ToggleRevengeButtons(true);
 			}
 			return base.OnEvent(id, cookie);
-		}
-
-		protected internal BattleLogScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).AddBattleLogItem((BattleEntry)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).AddExpendedItem((UXGrid)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (IUpgradeableVO)GCHandledObjects.GCHandleToObject(args[3]), *(int*)(args + 4), *(int*)(args + 5), (BattleEntry)GCHandledObjects.GCHandleToObject(args[6]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).AddExpendedItems((BattleEntry)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (UXGrid)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BattleLogScreen.CompareBattleLogEntry((BattleEntry)GCHandledObjects.GCHandleToObject(*args), (BattleEntry)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).GetBattleLogEntries(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).OnConfirmInvalidation(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).OnReplayButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).OnRevengeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).OnShareButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).OnTabCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).SetTab((BattleLogTab)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).SetupCurTabElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTab((BattleLogTab)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).StartRevenge((BattleEntry)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((BattleLogScreen)GCHandledObjects.GCHandleToObject(instance)).ToggleRevengeButtons(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

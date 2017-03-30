@@ -8,9 +8,5 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 		public DegenerateCondition(ConditionVO vo, IConditionParent parent) : base(vo, parent)
 		{
 		}
-
-		protected internal DegenerateCondition(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -3,7 +3,6 @@ using StaRTS.Main.Utils;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 {
@@ -47,56 +46,40 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		public void RefreshScreenForPlanetChange()
 		{
-			if (!base.Player.IsPlanetUnlocked(this.screen.viewingPlanetVO.Uid))
+			if (base.Player.IsPlanetUnlocked(this.screen.viewingPlanetVO.Uid))
+			{
+				this.lockedGroup.Visible = false;
+				if (GameUtils.IsPlanetCurrentOne(this.screen.viewingPlanetVO.Uid))
+				{
+					this.relocateButton.Visible = false;
+					this.relocateButton.Enabled = false;
+				}
+				else
+				{
+					this.relocateButton.Visible = true;
+					this.relocateButton.Enabled = true;
+					if (Service.Get<CurrentPlayer>().IsRelocationRequirementMet())
+					{
+						this.relocateButtonLabel.TextColor = UXUtils.COLOR_ENABLED;
+					}
+					else
+					{
+						this.relocateButtonLabel.TextColor = UXUtils.COLOR_ENABLED;
+					}
+				}
+			}
+			else
 			{
 				this.lockedGroup.Visible = true;
 				this.relocateButtonLabel.TextColor = UXUtils.COLOR_LABEL_DISABLED;
 				this.relocateButton.Visible = false;
 				this.relocateButton.Enabled = false;
-				return;
 			}
-			this.lockedGroup.Visible = false;
-			if (GameUtils.IsPlanetCurrentOne(this.screen.viewingPlanetVO.Uid))
-			{
-				this.relocateButton.Visible = false;
-				this.relocateButton.Enabled = false;
-				return;
-			}
-			this.relocateButton.Visible = true;
-			this.relocateButton.Enabled = true;
-			if (Service.Get<CurrentPlayer>().IsRelocationRequirementMet())
-			{
-				this.relocateButtonLabel.TextColor = UXUtils.COLOR_ENABLED;
-				return;
-			}
-			this.relocateButtonLabel.TextColor = UXUtils.COLOR_ENABLED;
 		}
 
 		public void OnRelocateButton(UXButton button)
 		{
 			ConfirmRelocateScreen.ShowModal(this.screen.viewingPlanetVO, null, null);
-		}
-
-		protected internal PlanetDetailsRelocateViewModule(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetDetailsRelocateViewModule)GCHandledObjects.GCHandleToObject(instance)).OnRelocateButton((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetDetailsRelocateViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetDetailsRelocateViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshScreenForPlanetChange();
-			return -1L;
 		}
 	}
 }

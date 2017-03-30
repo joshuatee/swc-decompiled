@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public GetFeaturedSquadsCommand(PlayerIdRequest request) : base("guild.list.open", request, new FeaturedSquadsResponse())
 		{
 		}
-
-		protected internal GetFeaturedSquadsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

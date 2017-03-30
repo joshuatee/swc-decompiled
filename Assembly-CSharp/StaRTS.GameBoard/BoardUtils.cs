@@ -3,7 +3,6 @@ using StaRTS.Main.Models.Entities;
 using StaRTS.Main.Utils;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.GameBoard
 {
@@ -11,9 +10,9 @@ namespace StaRTS.GameBoard
 	{
 		public static void RasterLine(Board<Entity> board, int x0, int y0, int x1, int y1, ref List<BoardCell<Entity>> cells)
 		{
-			int num = (x1 > x0) ? 1 : -1;
+			int num = (x1 <= x0) ? -1 : 1;
 			int num2 = (x1 - x0) * num;
-			int num3 = (y1 > y0) ? 1 : -1;
+			int num3 = (y1 <= y0) ? -1 : 1;
 			int num4 = (y1 - y0) * num3;
 			if (num2 > num4)
 			{
@@ -38,36 +37,38 @@ namespace StaRTS.GameBoard
 					}
 					cells.Add(board.GetCellAt(num8, num9));
 				}
-				return;
 			}
-			int num10 = num2 * 2 - num4;
-			int num11 = num2 * 2;
-			int num12 = (num2 - num4) * 2;
-			int num13 = x0;
-			int num14 = y0;
-			cells.Add(board.GetCellAt(num13, num14));
-			while (num14 != y1)
+			else
 			{
-				if (num10 <= 0)
-				{
-					num10 += num11;
-					num14 += num3;
-				}
-				else
-				{
-					num10 += num12;
-					num13 += num;
-					num14 += num3;
-				}
+				int num10 = num2 * 2 - num4;
+				int num11 = num2 * 2;
+				int num12 = (num2 - num4) * 2;
+				int num13 = x0;
+				int num14 = y0;
 				cells.Add(board.GetCellAt(num13, num14));
+				while (num14 != y1)
+				{
+					if (num10 <= 0)
+					{
+						num10 += num11;
+						num14 += num3;
+					}
+					else
+					{
+						num10 += num12;
+						num13 += num;
+						num14 += num3;
+					}
+					cells.Add(board.GetCellAt(num13, num14));
+				}
 			}
 		}
 
 		public static BoardCell<Entity> WhereDoesLineCrossFlag(Board<Entity> board, int x0, int y0, int x1, int y1, uint crossFlag)
 		{
-			int num = (x1 > x0) ? 1 : -1;
+			int num = (x1 <= x0) ? -1 : 1;
 			int num2 = (x1 - x0) * num;
-			int num3 = (y1 > y0) ? 1 : -1;
+			int num3 = (y1 <= y0) ? -1 : 1;
 			int num4 = (y1 - y0) * num3;
 			if (num2 > num4)
 			{
@@ -130,15 +131,11 @@ namespace StaRTS.GameBoard
 		{
 			if (target != null && cell.Children != null)
 			{
-				using (IEnumerator<BoardItem<Entity>> enumerator = cell.Children.GetEnumerator())
+				foreach (BoardItem<Entity> current in cell.Children)
 				{
-					while (enumerator.MoveNext())
+					if (current.Data == target)
 					{
-						BoardItem<Entity> current = enumerator.get_Current();
-						if (current.Data == target)
-						{
-							return true;
-						}
+						return true;
 					}
 				}
 				return false;
@@ -195,9 +192,9 @@ namespace StaRTS.GameBoard
 			bool overWalls = troop.ShooterComp.ShooterVO.OverWalls;
 			bool isFlying = troop.TroopComp.TroopType.IsFlying;
 			hitShieldCell = null;
-			int num = (x1 > x0) ? 1 : -1;
+			int num = (x1 <= x0) ? -1 : 1;
 			int num2 = (x1 - x0) * num;
-			int num3 = (y1 > y0) ? 1 : -1;
+			int num3 = (y1 <= y0) ? -1 : 1;
 			int num4 = (y1 - y0) * num3;
 			if (num2 > num4)
 			{
@@ -274,9 +271,9 @@ namespace StaRTS.GameBoard
 
 		public static bool HasLineOfClearance(Board<Entity> board, int x0, int y0, int x1, int y1, int troopWidth)
 		{
-			int num = (x1 > x0) ? 1 : -1;
+			int num = (x1 <= x0) ? -1 : 1;
 			int num2 = (x1 - x0) * num;
-			int num3 = (y1 > y0) ? 1 : -1;
+			int num3 = (y1 <= y0) ? -1 : 1;
 			int num4 = (y1 - y0) * num3;
 			if (num2 > num4)
 			{
@@ -345,56 +342,14 @@ namespace StaRTS.GameBoard
 
 		public static int GetChessboardDistance(int x0, int z0, int x1, int z1)
 		{
-			int num = (x0 > x1) ? (x0 - x1) : (x1 - x0);
-			int num2 = (z0 > z1) ? (z0 - z1) : (z1 - z0);
-			if (num <= num2)
-			{
-				return num2;
-			}
-			return num;
+			int num = (x0 <= x1) ? (x1 - x0) : (x0 - x1);
+			int num2 = (z0 <= z1) ? (z1 - z0) : (z0 - z1);
+			return (num <= num2) ? num2 : num;
 		}
 
 		public static int GetHalfWidthForOffset(int width)
 		{
 			return (width - 1) / 2;
-		}
-
-		public BoardUtils()
-		{
-		}
-
-		protected internal BoardUtils(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BoardUtils.CheckIfCellContainsTarget((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (BoardCell<Entity>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BoardUtils.CheckIfCellShieldBorderIsFromShieldTarget((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (BoardCell<Entity>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BoardUtils.GetChessboardDistance(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BoardUtils.GetHalfWidthForOffset(*(int*)args));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BoardUtils.HasLineOfClearance((Board<Entity>)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BoardUtils.IsCellBlockingLineOfSight((BoardCell<Entity>)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0));
 		}
 	}
 }

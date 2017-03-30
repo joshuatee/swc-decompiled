@@ -17,13 +17,10 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
-	public class PrizeInventoryScreen : ClosableScreen, IViewClockTimeObserver, IEventObserver
+	public class PrizeInventoryScreen : ClosableScreen, IEventObserver, IViewClockTimeObserver
 	{
 		private const string GO_TO_STORE_ITEM_ID = "Id_Store";
 
@@ -86,8 +83,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		private const string ITEM_LABEL_REQ = "LabelItemRequirement";
 
 		private const string ITEM_LABEL_REWARD = "LabelCurrencyAmount";
-
-		private const string ITEM_LABLE_EXPIRATION = "LabelItemExpiration";
 
 		private const string ITEM_ICON = "SpriteItemImage";
 
@@ -192,10 +187,10 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void UpdateTabJewels()
 		{
 			ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
-			this.cratesJewel.Value = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCratesNotViewed), CultureInfo.InvariantCulture);
+			this.cratesJewel.Value = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCratesNotViewed));
 			this.buildingsJewel.Value = 0;
-			this.troopsJewel.Value = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryTroopsNotViewed), CultureInfo.InvariantCulture);
-			this.currencyJewel.Value = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCurrencyNotViewed), CultureInfo.InvariantCulture);
+			this.troopsJewel.Value = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryTroopsNotViewed));
+			this.currencyJewel.Value = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCurrencyNotViewed));
 		}
 
 		protected override void InitButtons()
@@ -213,10 +208,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void SetupTab(InventoryTab tab, string tabName)
 		{
 			UXCheckbox element = base.GetElement<UXCheckbox>(tabName);
-			if (element != null)
-			{
-				this.SetupTab(tab, element);
-			}
+			this.SetupTab(tab, element);
 		}
 
 		private void SetupTab(InventoryTab tab, UXCheckbox tabButton)
@@ -228,7 +220,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void OnTabCheckboxSelected(UXCheckbox checkbox, bool selected)
 		{
-			InventoryTab inventoryTab = (InventoryTab)checkbox.Tag;
+			InventoryTab inventoryTab = (InventoryTab)((int)checkbox.Tag);
 			if (!selected)
 			{
 				return;
@@ -256,7 +248,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			while (i < count)
 			{
 				UXCheckbox uXCheckbox = this.tabs[i];
-				uXCheckbox.Selected = (this.curTab == (InventoryTab)uXCheckbox.Tag);
+				uXCheckbox.Selected = (this.curTab == (InventoryTab)((int)uXCheckbox.Tag));
 				i++;
 			}
 			this.SetupCurTabElements();
@@ -341,9 +333,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.itemGrid.Count > 0)
 			{
 				this.emptyCategoryLabel.Visible = false;
-				return;
 			}
-			this.emptyCategoryLabel.Visible = true;
+			else
+			{
+				this.emptyCategoryLabel.Visible = true;
+			}
 		}
 
 		private void AddTroops(List<UXElement> list)
@@ -351,10 +345,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			TroopUpgradeCatalog troopUpgradeCatalog = Service.Get<TroopUpgradeCatalog>();
 			foreach (KeyValuePair<string, int> current in this.cp.Prizes.Troops)
 			{
-				if (current.get_Value() > 0)
+				if (current.Value > 0)
 				{
 					PrizeType prizeType = PrizeType.Infantry;
-					TroopTypeVO minLevel = troopUpgradeCatalog.GetMinLevel(current.get_Key());
+					TroopTypeVO minLevel = troopUpgradeCatalog.GetMinLevel(current.Key);
 					switch (minLevel.Type)
 					{
 					case TroopType.Vehicle:
@@ -367,15 +361,15 @@ namespace StaRTS.Main.Views.UX.Screens
 						prizeType = PrizeType.Hero;
 						break;
 					}
-					UXElement item = this.CreateTileWithPrizeInfo(current.get_Key(), current.get_Value(), prizeType);
+					UXElement item = this.CreateTileWithPrizeInfo(current.Key, current.Value, prizeType);
 					list.Add(item);
 				}
 			}
 			foreach (KeyValuePair<string, int> current2 in this.cp.Prizes.SpecialAttacks)
 			{
-				if (current2.get_Value() > 0)
+				if (current2.Value > 0)
 				{
-					UXElement item2 = this.CreateTileWithPrizeInfo(current2.get_Key(), current2.get_Value(), PrizeType.SpecialAttack);
+					UXElement item2 = this.CreateTileWithPrizeInfo(current2.Key, current2.Value, PrizeType.SpecialAttack);
 					list.Add(item2);
 				}
 			}
@@ -385,9 +379,9 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			foreach (KeyValuePair<string, int> current in this.cp.Prizes.CurrencyResources)
 			{
-				if (current.get_Value() > 0)
+				if (current.Value > 0)
 				{
-					UXElement item = this.CreateTileWithPrizeInfo(current.get_Key(), current.get_Value(), PrizeType.Currency);
+					UXElement item = this.CreateTileWithPrizeInfo(current.Key, current.Value, PrizeType.Currency);
 					list.Add(item);
 				}
 			}
@@ -398,10 +392,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			uint time = ServerTime.Time;
 			foreach (KeyValuePair<string, CrateData> current in this.cp.Prizes.Crates.Available)
 			{
-				CrateData value = current.get_Value();
+				CrateData value = current.Value;
 				if (!value.Claimed && (!value.DoesExpire || value.ExpiresTimeStamp > time))
 				{
-					UXElement item = this.CreateTileWithPrizeInfo(current.get_Key(), 1, PrizeType.Crate);
+					UXElement item = this.CreateTileWithPrizeInfo(current.Key, 1, PrizeType.Crate);
 					list.Add(item);
 				}
 			}
@@ -423,9 +417,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (cRATE_INVENTORY_TO_STORE_LINK_SORT == 1)
 			{
 				list.Insert(0, item);
-				return;
 			}
-			if (cRATE_INVENTORY_TO_STORE_LINK_SORT == 2)
+			else if (cRATE_INVENTORY_TO_STORE_LINK_SORT == 2)
 			{
 				list.Add(item);
 			}
@@ -598,10 +591,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			else
 			{
-				prizeInventoryItemTag.CountLabel.Text = string.Format("x{0}", new object[]
-				{
-					count
-				});
+				prizeInventoryItemTag.CountLabel.Text = string.Format("x{0}", count);
 				prizeInventoryItemTag.CountLabel.Visible = true;
 				subElement5.Visible = false;
 			}
@@ -631,31 +621,29 @@ namespace StaRTS.Main.Views.UX.Screens
 				Service.Get<EventManager>().SendEvent(EventId.InventoryCrateStoreOpen, prizeInventoryItemTag.IconAssetName);
 				Service.Get<ScreenController>().CloseAll();
 				GameUtils.OpenStoreTreasureTab();
-				return;
 			}
-			if (prizeInventoryItemTag.PrizeType == PrizeType.Crate)
+			else if (prizeInventoryItemTag.PrizeType == PrizeType.Crate)
 			{
 				button.Enabled = false;
 				CrateData crateData = this.cp.Prizes.Crates.Available[prizeInventoryItemTag.PrizeID];
 				GameUtils.OpenInventoryCrateModal(crateData, new OnScreenModalResult(this.OnCrateInfoModalClosed));
 				Service.Get<EventManager>().SendEvent(EventId.InventoryCrateTapped, crateData.CrateId + "|" + crateData.UId);
-				return;
 			}
-			int num = TimedEventPrizeUtils.TransferPrizeFromInventory(prizeInventoryItemTag.PrizeType, prizeInventoryItemTag.PrizeID);
-			if (num > 0)
+			else
 			{
-				prizeInventoryItemTag.CountLabel.Text = string.Format("x{0}", new object[]
+				int num = TimedEventPrizeUtils.TransferPrizeFromInventory(prizeInventoryItemTag.PrizeType, prizeInventoryItemTag.PrizeID);
+				if (num > 0)
 				{
-					num
-				});
+					prizeInventoryItemTag.CountLabel.Text = string.Format("x{0}", num);
+				}
+				else if (num == 0)
+				{
+					this.itemGrid.RemoveItem(prizeInventoryItemTag.TileElement);
+					base.DestroyElement(prizeInventoryItemTag.TileElement);
+					this.itemGrid.RepositionItems();
+				}
+				this.ToggleEmptyTabMessage();
 			}
-			else if (num == 0)
-			{
-				this.itemGrid.RemoveItem(prizeInventoryItemTag.TileElement);
-				base.DestroyElement(prizeInventoryItemTag.TileElement);
-				this.itemGrid.RepositionItems();
-			}
-			this.ToggleEmptyTabMessage();
 		}
 
 		public override void OnDestroyElement()
@@ -720,9 +708,12 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		public override EatResponse OnEvent(EventId id, object cookie)
 		{
-			if ((id == EventId.InventoryCrateOpenedAndGranted || id == EventId.InventoryCrateCollectionClosed) && this.curTab == InventoryTab.Crate)
+			if (id == EventId.InventoryCrateOpenedAndGranted || id == EventId.InventoryCrateCollectionClosed)
 			{
-				this.SetupCurTabElements();
+				if (this.curTab == InventoryTab.Crate)
+				{
+					this.SetupCurTabElements();
+				}
 			}
 			return base.OnEvent(id, cookie);
 		}
@@ -743,168 +734,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 				return;
 			}
-		}
-
-		protected internal PrizeInventoryScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).AddBuildings((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).AddCrates((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).AddCurrencyItems((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).AddGoToStoreItem((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).AddTroops((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).CreateInventoryGridItem(Marshal.PtrToStringUni(*(IntPtr*)args), (PrizeType)(*(int*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), *(int*)(args + 4), (IGeometryVO)GCHandledObjects.GCHandleToObject(args[5]), *(int*)(args + 6)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).CreateTileWithPrizeInfo(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), (PrizeType)(*(int*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).InitTabJewels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnCrateInfoModalClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnGridRepositioned((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnInfoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnTabCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnTileClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).SetTab((InventoryTab)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).SetupCurTabElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).SetupGridItemQuality(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTab((InventoryTab)(*(int*)args), (UXCheckbox)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTab((InventoryTab)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).SortCrateListByExpiration((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).ToggleEmptyTabMessage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((PrizeInventoryScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateTabJewels();
-			return -1L;
 		}
 	}
 }

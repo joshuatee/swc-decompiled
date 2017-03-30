@@ -8,10 +8,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Externals.DMOAnalytics
 {
@@ -28,7 +25,7 @@ namespace StaRTS.Externals.DMOAnalytics
 		public DMOAnalyticsController()
 		{
 			Service.Set<DMOAnalyticsController>(this);
-			this.analytics = new DefaultDMOAnalyticsManager();
+			this.analytics = AndroidDMOAnalyticsController.CreateAndInitializeAndroidDMOAnalyticsController("CBA6B997-F072-4C23-978E-39A23D947BD4", "5DF2AAE8-5FD8-4373-BDB0-C2D7BBABD8B3");
 			this.LogAppStart();
 		}
 
@@ -127,7 +124,7 @@ namespace StaRTS.Externals.DMOAnalytics
 			serializer.AddString("currency", "USD");
 			serializer.Add<double>("gross_revenue", 0.0);
 			serializer.End();
-			Service.Get<StaRTSLogger>().Debug("LogAdAction: " + serializer.ToString());
+			Service.Get<Logger>().Debug("LogAdAction: " + serializer.ToString());
 			this.analytics.LogEventWithContext("ad_action", serializer.ToString());
 		}
 
@@ -135,18 +132,18 @@ namespace StaRTS.Externals.DMOAnalytics
 		{
 			if (string.IsNullOrEmpty(userId))
 			{
-				Service.Get<StaRTSLogger>().Error("LogUserInfo: " + userIdDomain + " : userId is null");
+				Service.Get<Logger>().Error("LogUserInfo: " + userIdDomain + " : userId is null");
 				return;
 			}
 			if (!Service.IsSet<CurrentPlayer>())
 			{
-				Service.Get<StaRTSLogger>().Error("LogUserInfo: CurrentPlayer is not set.");
+				Service.Get<Logger>().Error("LogUserInfo: CurrentPlayer is not set.");
 				return;
 			}
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			if (string.IsNullOrEmpty(currentPlayer.PlayerId))
 			{
-				Service.Get<StaRTSLogger>().Error("LogUserInfo: Player.PlayerId is NullOrEmpty");
+				Service.Get<Logger>().Error("LogUserInfo: Player.PlayerId is NullOrEmpty");
 				return;
 			}
 			Serializer serializer = Serializer.Start();
@@ -159,29 +156,20 @@ namespace StaRTS.Externals.DMOAnalytics
 
 		public void LogInAppCurrencyAction(int currencyAmount, string itemType, string itemId, int itemCount, string type, string subType)
 		{
-			this.LogInAppCurrencyAction(currencyAmount, itemType, itemId, itemCount, type, subType, "");
+			this.LogInAppCurrencyAction(currencyAmount, itemType, itemId, itemCount, type, subType, string.Empty);
 		}
 
 		public void LogInAppCurrencyAction(int currencyAmount, string itemType, string itemId, int itemCount, string type, string subType, string context)
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			StringBuilder stringBuilder = new StringBuilder();
-			if (itemType.get_Length() == 0)
+			if (itemType.Length == 0)
 			{
-				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{{\"item_id\":\"{0}\",\"item_count\":\"{1}\"}}", new object[]
-				{
-					itemId,
-					itemCount
-				});
+				stringBuilder.AppendFormat("{{\"item_id\":\"{0}\",\"item_count\":\"{1}\"}}", itemId, itemCount);
 			}
 			else
 			{
-				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{{\"item_id\":\"{0}|{1}\",\"item_count\":\"{2}\"}}", new object[]
-				{
-					itemType,
-					itemId,
-					itemCount
-				});
+				stringBuilder.AppendFormat("{{\"item_id\":\"{0}|{1}\",\"item_count\":\"{2}\"}}", itemType, itemId, itemCount);
 			}
 			string val = stringBuilder.ToString();
 			int itemAmount = currentPlayer.Inventory.GetItemAmount("crystals");
@@ -193,7 +181,7 @@ namespace StaRTS.Externals.DMOAnalytics
 			serializer.Add<string>("item", val);
 			serializer.AddString("type", type);
 			serializer.AddString("subtype", subType);
-			if (context.get_Length() > 0)
+			if (context.Length > 0)
 			{
 				serializer.AddString("context", context);
 			}
@@ -213,11 +201,7 @@ namespace StaRTS.Externals.DMOAnalytics
 			serializer.AddString("type", type);
 			serializer.Add<int>("level", this.GetHQLevel());
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{{\"item_id\":\"{0}\",\"item_count\":\"{1}\"}}", new object[]
-			{
-				productId,
-				amount
-			});
+			stringBuilder.AppendFormat("{{\"item_id\":\"{0}\",\"item_count\":\"{1}\"}}", productId, amount);
 			serializer.Add<string>("item", stringBuilder.ToString());
 			serializer.End();
 			this.analytics.LogEventWithContext("payment_action", serializer.ToString());
@@ -287,149 +271,11 @@ namespace StaRTS.Externals.DMOAnalytics
 			if (paused)
 			{
 				this.LogAppBackground();
-				return;
 			}
-			this.LogAppForeground();
-		}
-
-		protected internal DMOAnalyticsController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).FlushAnalyticsQueue();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).GetHQLevel());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).HandleApplicationPause(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).Init();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogAdAction(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogAge(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogAppBackground();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogAppEnd();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogAppForeground();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogAppStart();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogEvent(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogEventWithContext(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogGameAction(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogInAppCurrencyAction(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogInAppCurrencyAction(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), Marshal.PtrToStringUni(*(IntPtr*)(args + 6)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogNotificationImpression(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogNotificationReengage(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogPaymentAction(Marshal.PtrToStringUni(*(IntPtr*)args), *(double*)(args + 1), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).LogUserInfo(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).SetCanUseNetwork(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((DMOAnalyticsController)GCHandledObjects.GCHandleToObject(instance)).SetDebugLogging(*(sbyte*)args != 0);
-			return -1L;
+			else
+			{
+				this.LogAppForeground();
+			}
 		}
 	}
 }

@@ -1,8 +1,6 @@
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Externals.FileManagement
 {
@@ -19,7 +17,7 @@ namespace StaRTS.Externals.FileManagement
 
 		public void Init(FmsOptions options, FmsCallback onReady, FmsCallback onFailed)
 		{
-			string manifestUrl = "";
+			string manifestUrl = string.Empty;
 			this.environment = options.Env.ToString().ToLower();
 			FmsMode mode = options.Mode;
 			if (mode != FmsMode.Passthrough)
@@ -47,21 +45,21 @@ namespace StaRTS.Externals.FileManagement
 		{
 			if (this.manifestLoader == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("A file URL was requested for {0} but the manifest has not been instantiated.", new object[]
+				Service.Get<Logger>().WarnFormat("A file URL was requested for {0} but the manifest has not been instantiated.", new object[]
 				{
 					relativePath
 				});
-				return "";
+				return string.Empty;
 			}
 			if (this.manifestLoader.IsLoaded())
 			{
 				return this.manifestLoader.GetManifest().TranslateFileUrl(relativePath);
 			}
-			Service.Get<StaRTSLogger>().WarnFormat("A file URL was requested for {0}, but the manifest is not ready.", new object[]
+			Service.Get<Logger>().WarnFormat("A file URL was requested for {0}, but the manifest is not ready.", new object[]
 			{
 				relativePath
 			});
-			return "";
+			return string.Empty;
 		}
 
 		public int GetFileVersion(string relativePath)
@@ -82,41 +80,6 @@ namespace StaRTS.Externals.FileManagement
 		public string GetManifestEnvironment()
 		{
 			return this.environment;
-		}
-
-		protected internal FMS(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FMS)GCHandledObjects.GCHandleToObject(instance)).GetFileUrl(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FMS)GCHandledObjects.GCHandleToObject(instance)).GetFileVersion(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FMS)GCHandledObjects.GCHandleToObject(instance)).GetManifestEnvironment());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FMS)GCHandledObjects.GCHandleToObject(instance)).GetManifestLoader());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FMS)GCHandledObjects.GCHandleToObject(instance)).GetManifestVersion());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((FMS)GCHandledObjects.GCHandleToObject(instance)).Init((FmsOptions)GCHandledObjects.GCHandleToObject(*args), (FmsCallback)GCHandledObjects.GCHandleToObject(args[1]), (FmsCallback)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
 		}
 	}
 }

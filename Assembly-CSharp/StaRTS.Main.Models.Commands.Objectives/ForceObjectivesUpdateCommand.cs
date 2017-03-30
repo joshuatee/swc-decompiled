@@ -2,7 +2,6 @@ using StaRTS.Externals.Manimal.TransferObjects.Request;
 using StaRTS.Main.Models.Player;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Objectives
 {
@@ -29,16 +28,6 @@ namespace StaRTS.Main.Models.Commands.Objectives
 				currentPlayer.Objectives[this.planetUid] = base.ResponseResult.Group;
 			}
 			base.OnSuccess();
-		}
-
-		protected internal ForceObjectivesUpdateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ForceObjectivesUpdateCommand)GCHandledObjects.GCHandleToObject(instance)).OnSuccess();
-			return -1L;
 		}
 	}
 }

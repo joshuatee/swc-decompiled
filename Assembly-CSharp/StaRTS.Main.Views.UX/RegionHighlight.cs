@@ -7,7 +7,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX
 {
@@ -95,28 +94,6 @@ namespace StaRTS.Main.Views.UX
 		{
 			this.buttonHighlight = null;
 			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
-		}
-
-		protected internal RegionHighlight(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RegionHighlight)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((RegionHighlight)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((RegionHighlight)GCHandledObjects.GCHandleToObject(instance)).UpdateHighlightPosition(*(float*)args);
-			return -1L;
 		}
 	}
 }

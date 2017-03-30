@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public SquadWarTroopDonateCommand(TroopDonateRequest request) : base("guild.war.troops.donate", request, new TroopDonateResponse())
 		{
 		}
-
-		protected internal SquadWarTroopDonateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

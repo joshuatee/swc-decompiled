@@ -6,7 +6,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Objectives
 {
@@ -22,14 +21,17 @@ namespace StaRTS.Main.Controllers.Objectives
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id == EventId.TroopPlacedOnBoard && base.IsEventValidForBattleObjective())
+			if (id == EventId.TroopPlacedOnBoard)
 			{
-				SmartEntity smartEntity = (SmartEntity)cookie;
-				TroopComponent troopComponent = smartEntity.Get<TroopComponent>();
-				TeamComponent teamComponent = smartEntity.Get<TeamComponent>();
-				if (teamComponent != null && teamComponent.TeamType == TeamType.Attacker && troopComponent != null && troopComponent.TroopType.TroopID == this.troopId)
+				if (base.IsEventValidForBattleObjective())
 				{
-					this.parent.Progress(this, 1);
+					SmartEntity smartEntity = (SmartEntity)cookie;
+					TroopComponent troopComponent = smartEntity.Get<TroopComponent>();
+					TeamComponent teamComponent = smartEntity.Get<TeamComponent>();
+					if (teamComponent != null && teamComponent.TeamType == TeamType.Attacker && troopComponent != null && troopComponent.TroopType.TroopID == this.troopId)
+					{
+						this.parent.Progress(this, 1);
+					}
 				}
 			}
 			return EatResponse.NotEaten;
@@ -39,21 +41,6 @@ namespace StaRTS.Main.Controllers.Objectives
 		{
 			Service.Get<EventManager>().UnregisterObserver(this, EventId.TroopPlacedOnBoard);
 			base.Destroy();
-		}
-
-		protected internal DeployTroopIdObjectiveProcessor(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DeployTroopIdObjectiveProcessor)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployTroopIdObjectiveProcessor)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

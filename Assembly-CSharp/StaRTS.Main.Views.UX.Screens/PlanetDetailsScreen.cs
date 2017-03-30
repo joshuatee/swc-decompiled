@@ -14,7 +14,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -221,12 +220,14 @@ namespace StaRTS.Main.Views.UX.Screens
 		public void CloseSubScreenAndReturnToMainSelect()
 		{
 			CampaignScreenSection campaignScreenSection = this.currentSection;
-			if (campaignScreenSection == CampaignScreenSection.Campaign)
+			if (campaignScreenSection != CampaignScreenSection.Campaign)
+			{
+				this.GoToMainSelectScreen();
+			}
+			else
 			{
 				this.pveView.ReturnToMainSelect();
-				return;
 			}
-			this.GoToMainSelectScreen();
 		}
 
 		public void AnimateShowUI()
@@ -521,197 +522,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.largeObjectivesView.OnClose();
 			this.planetInfoView.OnClose();
 			this.eventManager.SendEvent(EventId.PlanetDetailsScreenClosed, EventPriority.Default);
-		}
-
-		protected internal PlanetDetailsScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).AnimateHideUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).AnimateShowUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).ButtonPlanetActionClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).CloseSubScreenAndReturnToMainSelect();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).AllowGarbageCollection);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).CurrentPlanet);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).viewingPlanetVO);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).GetPlanetFrustumDistance(*(float*)args));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).GetTransitionLookOffset());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).GoToAllCampaigns();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).GoToGalaxyFromPlanetScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).GoToGalaxyFromPlanetScreen((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).GoToMainSelectScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).HandleClose((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).HideObjectivesUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).HidePlanetInfoUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).InitElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).OnGalaxyButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).OnPlanetNextClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).OnPlanetPrevClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).SelectCampaign((CampaignVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).CurrentPlanet = (Planet)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).viewingPlanetVO = (PlanetVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).ShowObjectivesUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).ShowPlanetInfoUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).Transition();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentPlanet((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((PlanetDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).UpdatePvpPanel(*(sbyte*)args != 0, (TournamentVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

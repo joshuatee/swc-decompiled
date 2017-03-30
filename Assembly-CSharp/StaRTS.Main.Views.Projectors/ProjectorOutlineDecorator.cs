@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Projectors
 {
@@ -25,8 +24,8 @@ namespace StaRTS.Main.Views.Projectors
 			{
 				return;
 			}
-			float value = config.Outline ? config.OutlineInner : 0f;
-			float value2 = config.Outline ? config.OutlineOuter : 0f;
+			float value = (!config.Outline) ? 0f : config.OutlineInner;
+			float value2 = (!config.Outline) ? 0f : config.OutlineOuter;
 			Renderer[] componentsInChildren = config.MainAsset.GetComponentsInChildren<Renderer>();
 			int i = 0;
 			int num = componentsInChildren.Length;
@@ -61,38 +60,6 @@ namespace StaRTS.Main.Views.Projectors
 		public UITexture GetProjectorUITexture()
 		{
 			return this.baseRenderer.GetProjectorUITexture();
-		}
-
-		protected internal ProjectorOutlineDecorator(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ProjectorOutlineDecorator)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectorOutlineDecorator)GCHandledObjects.GCHandleToObject(instance)).DoesRenderTextureNeedReload());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectorOutlineDecorator)GCHandledObjects.GCHandleToObject(instance)).GetProjectorUITexture());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ProjectorOutlineDecorator)GCHandledObjects.GCHandleToObject(instance)).PostRender((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ProjectorOutlineDecorator)GCHandledObjects.GCHandleToObject(instance)).Render((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Utils.Json
 {
@@ -10,13 +8,13 @@ namespace StaRTS.Utils.Json
 	{
 		private readonly string json;
 
-		private readonly StringBuilder sb;
+		private readonly StringBuilder sb = new StringBuilder();
 
 		private int index;
 
-		private int jsonLength;
+		private int jsonLength = -1;
 
-		private int nextBackslash;
+		private int nextBackslash = -1;
 
 		private JsonTokens lookAheadToken;
 
@@ -26,9 +24,22 @@ namespace StaRTS.Utils.Json
 
 		private static List<Dictionary<string, object>> pool;
 
-		public static void StaticReset()
+		public JsonParser(string json) : this(json, 0, false)
 		{
-			JsonParser.pool.Clear();
+		}
+
+		public JsonParser(string json, int startFrom) : this(json, startFrom, false)
+		{
+		}
+
+		public JsonParser(string json, int startFrom, bool internStrings)
+		{
+			this.json = json;
+			this.jsonLength = ((json != null) ? json.Length : 0);
+			this.index = startFrom;
+			this.internStrings = internStrings;
+			this.nextBackslash = 0;
+			this.FindNextBackslash();
 		}
 
 		static JsonParser()
@@ -64,35 +75,14 @@ namespace StaRTS.Utils.Json
 			JsonParser.jsonTokenMap[110] = JsonTokens.Null;
 		}
 
-		public JsonParser(string json) : this(json, 0, false)
+		public static void StaticReset()
 		{
-		}
-
-		public JsonParser(string json, int startFrom) : this(json, startFrom, false)
-		{
-		}
-
-		public JsonParser(string json, int startFrom, bool internStrings)
-		{
-			this.sb = new StringBuilder();
-			this.jsonLength = -1;
-			this.nextBackslash = -1;
-			base..ctor();
-			this.json = json;
-			this.jsonLength = ((json == null) ? 0 : json.get_Length());
-			this.index = startFrom;
-			this.internStrings = internStrings;
-			this.nextBackslash = 0;
-			this.FindNextBackslash();
+			JsonParser.pool.Clear();
 		}
 
 		public object Parse()
 		{
-			if (this.jsonLength != 0)
-			{
-				return this.ParseValue();
-			}
-			return null;
+			return (this.jsonLength != 0) ? this.ParseValue() : null;
 		}
 
 		private Dictionary<string, object> ParseObject()
@@ -123,7 +113,7 @@ namespace StaRTS.Utils.Json
 						break;
 					}
 					string key = this.ParseString();
-					JsonTokens jsonTokens2 = (this.lookAheadToken != JsonTokens.None) ? this.lookAheadToken : this.NextTokenCore();
+					JsonTokens jsonTokens2 = (this.lookAheadToken == JsonTokens.None) ? this.NextTokenCore() : this.lookAheadToken;
 					this.lookAheadToken = JsonTokens.None;
 					if (jsonTokens2 != JsonTokens.Colon)
 					{
@@ -134,10 +124,10 @@ namespace StaRTS.Utils.Json
 				}
 			}
 			this.lookAheadToken = JsonTokens.None;
-			goto IL_A6;
+			goto IL_CC;
 			Block_5:
 			dictionary.Clear();
-			IL_A6:
+			IL_CC:
 			if (dictionary.Count == 0)
 			{
 				JsonParser.pool.Add(dictionary);
@@ -174,27 +164,15 @@ namespace StaRTS.Utils.Json
 		private object ParseValue()
 		{
 			JsonTokens jsonTokens = this.LookAhead();
-			if (jsonTokens <= JsonTokens.ArrayOpen)
+			switch (jsonTokens)
 			{
-				if (jsonTokens == JsonTokens.ObjectOpen)
-				{
-					return this.ParseObject();
-				}
-				if (jsonTokens == JsonTokens.ArrayOpen)
-				{
-					return this.ParseArray();
-				}
-			}
-			else
-			{
-				if (jsonTokens == JsonTokens.String)
-				{
-					return this.ParseString();
-				}
-				if (jsonTokens == JsonTokens.Number)
-				{
-					return this.ParseNumber();
-				}
+			case JsonTokens.ObjectOpen:
+				return this.ParseObject();
+			case JsonTokens.ObjectClose:
+			case JsonTokens.ArrayClose:
+			case JsonTokens.Colon:
+			case JsonTokens.Comma:
+				IL_2F:
 				switch (jsonTokens)
 				{
 				case JsonTokens.WordFirst:
@@ -206,9 +184,18 @@ namespace StaRTS.Utils.Json
 				case JsonTokens.Null:
 					this.lookAheadToken = JsonTokens.None;
 					return null;
+				default:
+					return null;
 				}
+				break;
+			case JsonTokens.ArrayOpen:
+				return this.ParseArray();
+			case JsonTokens.String:
+				return this.ParseString();
+			case JsonTokens.Number:
+				return this.ParseNumber();
 			}
-			return null;
+			goto IL_2F;
 		}
 
 		private void FindNextBackslash()
@@ -221,7 +208,7 @@ namespace StaRTS.Utils.Json
 
 		private string NewString(string s)
 		{
-			return s;
+			return (!this.internStrings) ? s : string.Intern(s);
 		}
 
 		private string ParseString()
@@ -238,19 +225,16 @@ namespace StaRTS.Utils.Json
 				this.index = num + 1;
 				return this.NewString(s);
 			}
-			this.sb.set_Length(0);
+			this.sb.Length = 0;
 			int num2 = -1;
 			while (this.index < this.jsonLength)
 			{
-				string arg_8B_0 = this.json;
-				int num3 = this.index;
-				this.index = num3 + 1;
-				char c = arg_8B_0.get_Chars(num3);
+				char c = this.json[this.index++];
 				if (c == '"')
 				{
 					if (num2 != -1)
 					{
-						if (this.sb.get_Length() == 0)
+						if (this.sb.Length == 0)
 						{
 							this.FindNextBackslash();
 							return this.NewString(this.json.Substring(num2, this.index - num2 - 1));
@@ -278,69 +262,62 @@ namespace StaRTS.Utils.Json
 						this.sb.Append(this.json.Substring(num2, this.index - num2 - 1));
 						num2 = -1;
 					}
-					string arg_171_0 = this.json;
-					num3 = this.index;
-					this.index = num3 + 1;
-					char c2 = arg_171_0.get_Chars(num3);
-					if (c2 <= '\\')
+					char c2 = this.json[this.index++];
+					switch (c2)
 					{
-						if (c2 != '"')
-						{
-							if (c2 != '/')
-							{
-								if (c2 == '\\')
-								{
-									this.sb.Append('\\');
-								}
-							}
-							else
-							{
-								this.sb.Append('/');
-							}
-						}
-						else
+					case 'n':
+						this.sb.Append('\n');
+						continue;
+					case 'o':
+					case 'p':
+					case 'q':
+					case 's':
+						IL_1BD:
+						if (c2 == '"')
 						{
 							this.sb.Append('"');
+							continue;
 						}
-					}
-					else if (c2 <= 'f')
-					{
-						if (c2 != 'b')
+						if (c2 == '/')
 						{
-							if (c2 == 'f')
-							{
-								this.sb.Append('\f');
-							}
+							this.sb.Append('/');
+							continue;
 						}
-						else
+						if (c2 == '\\')
+						{
+							this.sb.Append('\\');
+							continue;
+						}
+						if (c2 == 'b')
 						{
 							this.sb.Append('\b');
+							continue;
 						}
-					}
-					else if (c2 != 'n')
-					{
-						switch (c2)
+						if (c2 != 'f')
 						{
-						case 'r':
-							this.sb.Append('\r');
-							break;
-						case 't':
-							this.sb.Append('\t');
-							break;
-						case 'u':
-							if (this.jsonLength - this.index >= 4)
-							{
-								uint num4 = this.ParseUnicode(this.json.get_Chars(this.index), this.json.get_Chars(this.index + 1), this.json.get_Chars(this.index + 2), this.json.get_Chars(this.index + 3));
-								this.sb.Append((char)num4);
-								this.index += 4;
-							}
-							break;
+							continue;
 						}
-					}
-					else
+						this.sb.Append('\f');
+						continue;
+					case 'r':
+						this.sb.Append('\r');
+						continue;
+					case 't':
+						this.sb.Append('\t');
+						continue;
+					case 'u':
 					{
-						this.sb.Append('\n');
+						if (this.jsonLength - this.index < 4)
+						{
+							continue;
+						}
+						uint num3 = this.ParseUnicode(this.json[this.index], this.json[this.index + 1], this.json[this.index + 2], this.json[this.index + 3]);
+						this.sb.Append((char)num3);
+						this.index += 4;
+						continue;
 					}
+					}
+					goto IL_1BD;
 				}
 			}
 			this.FindNextBackslash();
@@ -378,16 +355,14 @@ namespace StaRTS.Utils.Json
 		{
 			this.lookAheadToken = JsonTokens.None;
 			int num = this.index - 1;
-			char c = this.json.get_Chars(this.index);
+			char c = this.json[this.index];
 			while ((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')
 			{
-				int num2 = this.index + 1;
-				this.index = num2;
-				if (num2 == this.jsonLength)
+				if (++this.index == this.jsonLength)
 				{
 					return null;
 				}
-				c = this.json.get_Chars(this.index);
+				c = this.json[this.index];
 			}
 			return this.NewString(this.json.Substring(num, this.index - num));
 		}
@@ -404,11 +379,9 @@ namespace StaRTS.Utils.Json
 		private JsonTokens NextTokenCore()
 		{
 			char c;
-			for (c = this.json.get_Chars(this.index); c <= ' '; c = this.json.get_Chars(this.index))
+			for (c = this.json[this.index]; c <= ' '; c = this.json[this.index])
 			{
-				int num = this.index + 1;
-				this.index = num;
-				if (num == this.jsonLength)
+				if (++this.index == this.jsonLength)
 				{
 					return JsonTokens.None;
 				}
@@ -421,81 +394,13 @@ namespace StaRTS.Utils.Json
 			JsonTokens jsonTokens = JsonParser.jsonTokenMap[(int)c];
 			if (jsonTokens >= JsonTokens.WordFirst)
 			{
-				int num;
 				do
 				{
-					c = this.json.get_Chars(this.index);
-					if (c < 'a' || c > 'z')
-					{
-						break;
-					}
-					num = this.index + 1;
-					this.index = num;
+					c = this.json[this.index];
 				}
-				while (num < this.jsonLength);
+				while (c >= 'a' && c <= 'z' && ++this.index < this.jsonLength);
 			}
 			return jsonTokens;
-		}
-
-		protected internal JsonParser(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((JsonParser)GCHandledObjects.GCHandleToObject(instance)).FindNextBackslash();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JsonParser)GCHandledObjects.GCHandleToObject(instance)).LookAhead());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JsonParser)GCHandledObjects.GCHandleToObject(instance)).NewString(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JsonParser)GCHandledObjects.GCHandleToObject(instance)).NextTokenCore());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JsonParser)GCHandledObjects.GCHandleToObject(instance)).Parse());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JsonParser)GCHandledObjects.GCHandleToObject(instance)).ParseArray());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JsonParser)GCHandledObjects.GCHandleToObject(instance)).ParseNumber());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JsonParser)GCHandledObjects.GCHandleToObject(instance)).ParseObject());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JsonParser)GCHandledObjects.GCHandleToObject(instance)).ParseString());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JsonParser)GCHandledObjects.GCHandleToObject(instance)).ParseValue());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			JsonParser.StaticReset();
-			return -1L;
 		}
 	}
 }

@@ -9,7 +9,6 @@ using StaRTS.Main.Views.World;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.GameStates
 {
@@ -39,7 +38,7 @@ namespace StaRTS.Main.Controllers.GameStates
 			{
 				PlanetView view = Service.Get<WorldInitializer>().View;
 				view.ZoomOutImmediate();
-				view.ZoomIn(false);
+				view.ZoomIn();
 			}
 			HomeState homeState = new HomeState();
 			bool result = homeState.Setup(onComplete);
@@ -61,7 +60,7 @@ namespace StaRTS.Main.Controllers.GameStates
 			HomeMapDataLoader mapDataLoader = Service.Get<HomeMapDataLoader>();
 			GameStateMachine gameStateMachine = Service.Get<GameStateMachine>();
 			bool flag = gameStateMachine.CurrentState is WarBoardState;
-			this.transitionToHomeState = (!Service.Get<WorldTransitioner>().IsCurrentWorldHome() | flag);
+			this.transitionToHomeState = (!Service.Get<WorldTransitioner>().IsCurrentWorldHome() || flag);
 			if (this.transitionToHomeState)
 			{
 				AbstractTransition transition;
@@ -139,53 +138,6 @@ namespace StaRTS.Main.Controllers.GameStates
 		public bool CanUpdateHomeContracts()
 		{
 			return true;
-		}
-
-		protected internal HomeState(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeState)GCHandledObjects.GCHandleToObject(instance)).CanUpdateHomeContracts());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeState)GCHandledObjects.GCHandleToObject(instance)).ForceReloadMap);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(HomeState.GoToHomeState((TransitionCompleteDelegate)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(HomeState.GoToHomeStateAndReloadMap());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HomeState)GCHandledObjects.GCHandleToObject(instance)).OnEnter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HomeState)GCHandledObjects.GCHandleToObject(instance)).OnExit((IState)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((HomeState)GCHandledObjects.GCHandleToObject(instance)).ForceReloadMap = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HomeState)GCHandledObjects.GCHandleToObject(instance)).Setup((TransitionCompleteDelegate)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

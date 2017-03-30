@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public GetSquadWarStatusCommand(GetSquadWarStatusRequest request) : base("guild.war.status", request, new GetSquadWarStatusResponse())
 		{
 		}
-
-		protected internal GetSquadWarStatusCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -2,7 +2,6 @@ using Net.RichardLord.Ash.Core;
 using StaRTS.Main.Utils;
 using StaRTS.Main.Views.UX.Elements;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -37,25 +36,9 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.lang.ThousandsSeparated(storage)
 			});
 			UXSlider currentSlider = this.sliders[sliderIndex].CurrentSlider;
-			float num2 = (storage == 0) ? 0f : ((float)num / (float)storage);
+			float num2 = (storage != 0) ? ((float)num / (float)storage) : 0f;
 			currentSlider.Value = num2;
 			this.projector.Config.MeterValue = num2;
-		}
-
-		protected internal StorageInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StorageInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((StorageInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateAmountStored(*(int*)args);
-			return -1L;
 		}
 	}
 }

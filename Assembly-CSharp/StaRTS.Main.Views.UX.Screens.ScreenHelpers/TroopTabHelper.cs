@@ -2,7 +2,6 @@ using StaRTS.Main.Models;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 {
@@ -49,7 +48,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 				result = TroopTab.Destroyer;
 				break;
 			default:
-				Service.Get<StaRTSLogger>().WarnFormat("Cannot convert TroopRole {0} to TroopTab", new object[]
+				Service.Get<Logger>().WarnFormat("Cannot convert TroopRole {0} to TroopTab", new object[]
 				{
 					role
 				});
@@ -76,27 +75,13 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 				result = TroopTab.Hero;
 				break;
 			default:
-				Service.Get<StaRTSLogger>().WarnFormat("Cannot convert TroopType {0} to TroopTab", new object[]
+				Service.Get<Logger>().WarnFormat("Cannot convert TroopType {0} to TroopTab", new object[]
 				{
 					type
 				});
 				break;
 			}
 			return result;
-		}
-
-		protected internal TroopTabHelper(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopTabHelper)GCHandledObjects.GCHandleToObject(instance)).ConvertTroopRoleToTab((TroopRole)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopTabHelper)GCHandledObjects.GCHandleToObject(instance)).ConvertTroopTypeToTab((TroopType)(*(int*)args)));
 		}
 	}
 }

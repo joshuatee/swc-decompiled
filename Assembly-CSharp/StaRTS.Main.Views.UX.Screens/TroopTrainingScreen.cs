@@ -21,10 +21,8 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -461,13 +459,9 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.deliveryType = ContractUtils.GetTroopContractTypeByBuilding(this.buildingInfo);
 			if (this.deliveryType == DeliveryType.Hero)
 			{
-				using (IEnumerator<KeyValuePair<string, InventoryEntry>> enumerator = Service.Get<CurrentPlayer>().GetAllHeroes().GetEnumerator())
+				foreach (KeyValuePair<string, InventoryEntry> current in Service.Get<CurrentPlayer>().GetAllHeroes())
 				{
-					while (enumerator.MoveNext())
-					{
-						KeyValuePair<string, InventoryEntry> current = enumerator.get_Current();
-						this.trainingSpaceTotal -= current.get_Value().Scale * current.get_Value().Amount;
-					}
+					this.trainingSpaceTotal -= current.Value.Scale * current.Value.Amount;
 				}
 			}
 			this.housingSpace = 0;
@@ -603,9 +597,11 @@ namespace StaRTS.Main.Views.UX.Screens
 				element.Visible = true;
 				base.GetElement<UXLabel>("LabelTutorialText").Text = this.lang.Get("BLURB_CANTINA", new object[0]);
 				base.GetElement<UXTexture>("TutorialTexture").LoadTexture("NPC_Cantina");
-				return;
 			}
-			element.Visible = false;
+			else
+			{
+				element.Visible = false;
+			}
 		}
 
 		private void InitEligibleDeployables()
@@ -615,21 +611,18 @@ namespace StaRTS.Main.Views.UX.Screens
 			List<IDeployableVO> list = new List<IDeployableVO>();
 			if (this.deliveryType == DeliveryType.Starship)
 			{
-				using (Dictionary<string, SpecialAttackTypeVO>.ValueCollection.Enumerator enumerator = dataController.GetAll<SpecialAttackTypeVO>().GetEnumerator())
+				foreach (SpecialAttackTypeVO current in dataController.GetAll<SpecialAttackTypeVO>())
 				{
-					while (enumerator.MoveNext())
-					{
-						SpecialAttackTypeVO current = enumerator.Current;
-						list.Add(current);
-					}
-					goto IL_8C;
+					list.Add(current);
 				}
 			}
-			foreach (TroopTypeVO current2 in dataController.GetAll<TroopTypeVO>())
+			else
 			{
-				list.Add(current2);
+				foreach (TroopTypeVO current2 in dataController.GetAll<TroopTypeVO>())
+				{
+					list.Add(current2);
+				}
 			}
-			IL_8C:
 			int i = 0;
 			int count = list.Count;
 			while (i < count)
@@ -697,7 +690,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				while (enumerator.MoveNext())
 				{
-					TroopRole troopRole = (TroopRole)enumerator.get_Current();
+					TroopRole troopRole = (TroopRole)((int)enumerator.Current);
 					if (this.eligibleTroopRoles.Contains(troopRole))
 					{
 						TroopTab key = this.tabHelper.ConvertTroopRoleToTab(troopRole);
@@ -710,8 +703,8 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void SetupItemQuality(string itemUid, int quality, bool hero)
 		{
-			string cardName = hero ? "CardHeroQ{0}" : "CardQ{0}";
-			string name = hero ? "CardHeroDefault" : "CardDefault";
+			string cardName = (!hero) ? "CardQ{0}" : "CardHeroQ{0}";
+			string name = (!hero) ? "CardDefault" : "CardHeroDefault";
 			this.troopItemGrid.GetSubElement<UXElement>(itemUid, name).Visible = false;
 			UXElement uXElement = UXUtils.SetCardQuality(this, this.troopItemGrid, itemUid, quality, cardName);
 			if (uXElement != null)
@@ -758,33 +751,33 @@ namespace StaRTS.Main.Views.UX.Screens
 				TroopTab currentTab = (TroopTab)this.tabHelper.CurrentTab;
 				if (currentTab == TroopTab.All || !(deployableVO is TroopTypeVO))
 				{
-					goto IL_12F;
+					goto IL_146;
 				}
 				TroopRole troopRole = ((TroopTypeVO)deployableVO).TroopRole;
 				TroopTab troopTab = this.tabHelper.ConvertTroopRoleToTab(troopRole);
 				if (currentTab == troopTab)
 				{
-					goto IL_12F;
+					goto IL_146;
 				}
-				IL_4E7:
+				IL_561:
 				i++;
 				continue;
-				IL_12F:
+				IL_146:
 				BuildingTypeVO buildingTypeVO = null;
 				bool flag2 = unlockController.IsUnlocked(deployableVO, 0, out buildingTypeVO);
 				TroopTrainingTag troopTrainingTag = new TroopTrainingTag(deployableVO, flag2);
 				string uid = deployableVO.Uid;
 				UXElement uXElement = this.troopItemGrid.CloneTemplateItem(uid);
 				uXElement.Tag = troopTrainingTag;
-				UXLabel subElement = this.troopItemGrid.GetSubElement<UXLabel>(uid, flag ? "CostHeroLabel" : "CostLabel");
+				UXLabel subElement = this.troopItemGrid.GetSubElement<UXLabel>(uid, (!flag) ? "CostLabel" : "CostHeroLabel");
 				troopTrainingTag.CostLabel = subElement;
 				int credits = deployableVO.Credits;
 				int materials = deployableVO.Materials;
 				int contraband = deployableVO.Contraband;
 				this.UpdateCostWithAppliedPerks(ref credits, ref materials, ref contraband);
-				UXUtils.SetupCostElements(this, flag ? "CostHero" : "Cost", uid, credits, materials, contraband, 0, false, null);
+				UXUtils.SetupCostElements(this, (!flag) ? "Cost" : "CostHero", uid, credits, materials, contraband, 0, false, null);
 				ActiveArmory activeArmory = Service.Get<CurrentPlayer>().ActiveArmory;
-				UXSprite subElement2 = this.troopItemGrid.GetSubElement<UXSprite>(uid, flag ? "SpriteHeroItemImage" : "SpriteTroopItemImage");
+				UXSprite subElement2 = this.troopItemGrid.GetSubElement<UXSprite>(uid, (!flag) ? "SpriteTroopItemImage" : "SpriteHeroItemImage");
 				ProjectorConfig projectorConfig = ProjectorUtils.GenerateGeometryConfig(deployableVO, subElement2, true);
 				Service.Get<EventManager>().SendEvent(EventId.ButtonCreated, new GeometryTag(deployableVO, projectorConfig, activeArmory));
 				projectorConfig.AnimPreference = AnimationPreference.NoAnimation;
@@ -795,11 +788,11 @@ namespace StaRTS.Main.Views.UX.Screens
 					TroopTypeVO troop = deployableVO as TroopTypeVO;
 					Service.Get<SkinController>().GetApplicableSkin(troop, activeArmory.Equipment, out text);
 				}
-				UXLabel subElement3 = this.troopItemGrid.GetSubElement<UXLabel>(uid, flag ? "LabelHeroLevel" : "LabelTroopLevel");
+				UXLabel subElement3 = this.troopItemGrid.GetSubElement<UXLabel>(uid, (!flag) ? "LabelTroopLevel" : "LabelHeroLevel");
 				subElement3.Text = LangUtils.GetLevelText(deployableVO.Lvl);
-				string cardName = flag ? "CardHeroQ{0}" : "CardQ{0}";
+				string cardName = (!flag) ? "CardQ{0}" : "CardHeroQ{0}";
 				UXUtils.HideAllQualityCards(this.troopItemGrid, uid, cardName);
-				string name = flag ? "CardHeroDefault" : "CardDefault";
+				string name = (!flag) ? "CardDefault" : "CardHeroDefault";
 				this.troopItemGrid.GetSubElement<UXElement>(uid, name).Visible = true;
 				int upgradeQualityForDeployable = Service.Get<DeployableShardUnlockController>().GetUpgradeQualityForDeployable(deployableVO);
 				if (upgradeQualityForDeployable > 0)
@@ -815,7 +808,7 @@ namespace StaRTS.Main.Views.UX.Screens
 						this.SetupItemQuality(uid, quality, flag);
 					}
 				}
-				UXButton subElement4 = this.troopItemGrid.GetSubElement<UXButton>(uid, flag ? "HeroBtnInfo" : "BtnInfo");
+				UXButton subElement4 = this.troopItemGrid.GetSubElement<UXButton>(uid, (!flag) ? "BtnInfo" : "HeroBtnInfo");
 				subElement4.Tag = uXElement;
 				subElement4.OnClicked = new UXButtonClickedDelegate(this.OnTroopItemInfoClicked);
 				if (flag2 && !string.IsNullOrEmpty(deployableVO.BuildingRequirement))
@@ -828,10 +821,10 @@ namespace StaRTS.Main.Views.UX.Screens
 					}
 				}
 				troopTrainingTag.ReqMet = flag2;
-				UXSprite subElement5 = this.troopItemGrid.GetSubElement<UXSprite>(uid, flag ? "SpriteDimHero" : "SpriteDim");
+				UXSprite subElement5 = this.troopItemGrid.GetSubElement<UXSprite>(uid, (!flag) ? "SpriteDim" : "SpriteDimHero");
 				subElement5.Visible = !flag2;
 				troopTrainingTag.Dimmer = subElement5;
-				UXLabel subElement6 = this.troopItemGrid.GetSubElement<UXLabel>(uid, flag ? "LabelLockedHero" : "LabelRequirement");
+				UXLabel subElement6 = this.troopItemGrid.GetSubElement<UXLabel>(uid, (!flag) ? "LabelRequirement" : "LabelLockedHero");
 				if (!flag2)
 				{
 					if (deployableVO.UnlockedByEvent)
@@ -849,9 +842,9 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 				else
 				{
-					subElement6.Text = "";
+					subElement6.Text = string.Empty;
 				}
-				UXButton subElement7 = this.troopItemGrid.GetSubElement<UXButton>(uid, flag ? "ButtonHeroItemCard" : "ButtonTroopItemCard");
+				UXButton subElement7 = this.troopItemGrid.GetSubElement<UXButton>(uid, (!flag) ? "ButtonTroopItemCard" : "ButtonHeroItemCard");
 				subElement7.Tag = uXElement;
 				subElement7.OnPressed = new UXButtonPressedDelegate(this.OnTroopItemButtonPressed);
 				subElement7.OnReleased = new UXButtonReleasedDelegate(this.OnItemButtonReleased);
@@ -859,7 +852,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.UpdateTroopButtonEnabled(troopTrainingTag);
 				this.UpdateGridItemPerkElement(troopTrainingTag, perkGroupName, isPerkApplied, flag2);
 				list.Add(uXElement);
-				goto IL_4E7;
+				goto IL_561;
 			}
 			list.Sort(new Comparison<UXElement>(TroopTrainingScreen.CompareTroopItem));
 			if (this.buildingInfo.Type != BuildingType.HeroMobilizer)
@@ -897,7 +890,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				return;
 			}
 			base.RevertToOriginalNameRecursively(optionalSubElement.Root, tag.Troop.Uid);
-			optionalSubElement.Visible = (isPerkApplied & reqMet);
+			optionalSubElement.Visible = (isPerkApplied && reqMet);
 			if (optionalSubElement.Visible)
 			{
 				Animation component = optionalSubElement.Root.GetComponent<Animation>();
@@ -944,7 +937,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			int num = troop.Order - troop2.Order;
 			if (num == 0)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Troop {0} matches order ({1}) of {2}", new object[]
+				Service.Get<Logger>().WarnFormat("Troop {0} matches order ({1}) of {2}", new object[]
 				{
 					troop.Uid,
 					troop.Order,
@@ -964,9 +957,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.classHintLabel.Visible = true;
 				this.classHintLabel.Text = this.lang.Get("trp_class_hint_" + this.tabHelper.CurrentTab.ToString(), new object[0]);
-				return;
 			}
-			this.classHintLabel.Visible = false;
+			else
+			{
+				this.classHintLabel.Visible = false;
+			}
 		}
 
 		private void AddNewQueueListItem(int index)
@@ -1055,10 +1050,12 @@ namespace StaRTS.Main.Views.UX.Screens
 					this.specialInstructionsCounterMax = 0;
 					this.specialInstructionsCounter = 0;
 					this.specialInstructionsTroopUid = null;
-					return;
 				}
-				TroopTrainingTag troopTrainingTagFromUpgradeGroup = this.GetTroopTrainingTagFromUpgradeGroup(tag.UnitVO.UpgradeGroup);
-				Service.Get<UXController>().MiscElementsManager.ShowTroopCounter(troopTrainingTagFromUpgradeGroup.TroopButton, this.specialInstructionsCounter, this.specialInstructionsCounterMax);
+				else
+				{
+					TroopTrainingTag troopTrainingTagFromUpgradeGroup = this.GetTroopTrainingTagFromUpgradeGroup(tag.UnitVO.UpgradeGroup);
+					Service.Get<UXController>().MiscElementsManager.ShowTroopCounter(troopTrainingTagFromUpgradeGroup.TroopButton, this.specialInstructionsCounter, this.specialInstructionsCounterMax);
+				}
 			}
 		}
 
@@ -1067,10 +1064,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.buildingInfo.Type == BuildingType.HeroMobilizer)
 			{
 				this.RedrawHeroQueueItems();
-				return;
 			}
-			this.RedrawTroopQueueItems();
-			this.RepositionAndScroll();
+			else
+			{
+				this.RedrawTroopQueueItems();
+				this.RepositionAndScroll();
+			}
 		}
 
 		private void RedrawTroopQueueItems()
@@ -1081,8 +1080,8 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.activeItemGeometry.Destroy();
 				}
-				this.itemTimeLabelActive.Text = "";
-				this.itemCountLabelActive.Text = "";
+				this.itemTimeLabelActive.Text = string.Empty;
+				this.itemCountLabelActive.Text = string.Empty;
 				this.itemTimeSliderActive.Visible = false;
 				this.itemButtonActive.Visible = false;
 			}
@@ -1096,7 +1095,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				ProjectorConfig projectorConfig = ProjectorUtils.GenerateGeometryConfig(queuedUnitTrainingTag.UnitVO, this.itemIconSpriteActive);
 				Service.Get<EventManager>().SendEvent(EventId.ButtonCreated, new GeometryTag(queuedUnitTrainingTag.UnitVO, projectorConfig, Service.Get<CurrentPlayer>().ActiveArmory));
 				projectorConfig.AnimPreference = AnimationPreference.AnimationAlways;
-				projectorConfig.AnimState = ((queuedUnitTrainingTag.UnitVO is TroopTypeVO) ? AnimState.Walk : AnimState.Idle);
+				projectorConfig.AnimState = ((!(queuedUnitTrainingTag.UnitVO is TroopTypeVO)) ? AnimState.Idle : AnimState.Walk);
 				if (this.activeItemGeometry == null || !projectorConfig.IsEquivalentTo(this.activeItemGeometry.Config))
 				{
 					this.activeItemGeometry = ProjectorUtils.GenerateProjector(projectorConfig);
@@ -1153,15 +1152,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			List<string> list = new List<string>();
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			IEnumerable<KeyValuePair<string, InventoryEntry>> allHeroes = currentPlayer.GetAllHeroes();
-			using (IEnumerator<KeyValuePair<string, InventoryEntry>> enumerator = allHeroes.GetEnumerator())
+			foreach (KeyValuePair<string, InventoryEntry> current in allHeroes)
 			{
-				while (enumerator.MoveNext())
+				if (current.Value.Amount > 0)
 				{
-					KeyValuePair<string, InventoryEntry> current = enumerator.get_Current();
-					if (current.get_Value().Amount > 0)
-					{
-						list.Add(current.get_Key());
-					}
+					list.Add(current.Key);
 				}
 			}
 			int num = 0;
@@ -1169,34 +1164,13 @@ namespace StaRTS.Main.Views.UX.Screens
 			bool flag = currentPlayer.Faction == FactionType.Rebel;
 			for (int i = 1; i <= 3; i++)
 			{
-				UXElement element = base.GetElement<UXElement>(string.Format("HeroSlot{0}", new object[]
-				{
-					i
-				}));
-				UXButton element2 = base.GetElement<UXButton>(string.Format("BtnCancel{0}", new object[]
-				{
-					i
-				}));
-				UXSprite element3 = base.GetElement<UXSprite>(string.Format("HeroSlotFrame{0}", new object[]
-				{
-					i
-				}));
-				UXSprite element4 = base.GetElement<UXSprite>(string.Format("SpriteLockedHeroSlot{0}", new object[]
-				{
-					i
-				}));
-				UXLabel element5 = base.GetElement<UXLabel>(string.Format("LabelLocked{0}", new object[]
-				{
-					i
-				}));
-				UXSlider element6 = base.GetElement<UXSlider>(string.Format("pBarTrainTime{0}", new object[]
-				{
-					i
-				}));
-				UXLabel element7 = base.GetElement<UXLabel>(string.Format("LabelpBarTrainTime{0}", new object[]
-				{
-					i
-				}));
+				UXElement element = base.GetElement<UXElement>(string.Format("HeroSlot{0}", i));
+				UXButton element2 = base.GetElement<UXButton>(string.Format("BtnCancel{0}", i));
+				UXSprite element3 = base.GetElement<UXSprite>(string.Format("HeroSlotFrame{0}", i));
+				UXSprite element4 = base.GetElement<UXSprite>(string.Format("SpriteLockedHeroSlot{0}", i));
+				UXLabel element5 = base.GetElement<UXLabel>(string.Format("LabelLocked{0}", i));
+				UXSlider element6 = base.GetElement<UXSlider>(string.Format("pBarTrainTime{0}", i));
+				UXLabel element7 = base.GetElement<UXLabel>(string.Format("LabelpBarTrainTime{0}", i));
 				TroopTrainingTag troopTrainingTag;
 				if (element.Tag == null)
 				{
@@ -1211,18 +1185,15 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					troopTrainingTag = (element.Tag as TroopTrainingTag);
 				}
-				UXSprite element8 = base.GetElement<UXSprite>(string.Format("SpriteHeroDecal{0}", new object[]
-				{
-					i
-				}));
-				element8.SpriteName = (flag ? "HeroDecalRebel" : "HeroDecalEmpire");
+				UXSprite element8 = base.GetElement<UXSprite>(string.Format("SpriteHeroDecal{0}", i));
+				element8.SpriteName = ((!flag) ? "HeroDecalEmpire" : "HeroDecalRebel");
 				element8.Color = Color.white;
 				QueuedUnitTrainingTag queuedUnitTrainingTag = null;
 				if (num < this.queuedUnits.Count)
 				{
 					queuedUnitTrainingTag = this.queuedUnits[num++];
 				}
-				element5.Text = "";
+				element5.Text = string.Empty;
 				if (queuedUnitTrainingTag != null)
 				{
 					bool flag2 = i == 1;
@@ -1230,8 +1201,8 @@ namespace StaRTS.Main.Views.UX.Screens
 					element2.Visible = true;
 					ProjectorConfig projectorConfig = ProjectorUtils.GenerateGeometryConfig(queuedUnitTrainingTag.UnitVO, element3);
 					Service.Get<EventManager>().SendEvent(EventId.ButtonCreated, new GeometryTag(queuedUnitTrainingTag.UnitVO, projectorConfig, Service.Get<CurrentPlayer>().ActiveArmory));
-					projectorConfig.AnimState = (flag2 ? AnimState.Walk : AnimState.Idle);
-					projectorConfig.AnimPreference = (flag2 ? AnimationPreference.AnimationAlways : AnimationPreference.AnimationPreferred);
+					projectorConfig.AnimState = ((!flag2) ? AnimState.Idle : AnimState.Walk);
+					projectorConfig.AnimPreference = ((!flag2) ? AnimationPreference.AnimationPreferred : AnimationPreference.AnimationAlways);
 					troopTrainingTag.Projector = ProjectorUtils.GenerateProjector(projectorConfig);
 					if (flag2)
 					{
@@ -1366,11 +1337,14 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				return;
 			}
-			this.titleLabel.Text = (this.titleLabel.Text = this.lang.Get("BUILDING_INFO", new object[]
+			UXLabel arg_57_0 = this.titleLabel;
+			string text = this.lang.Get("BUILDING_INFO", new object[]
 			{
 				LangUtils.GetBuildingDisplayName(this.buildingInfo),
 				this.buildingInfo.Lvl
-			}));
+			});
+			this.titleLabel.Text = text;
+			arg_57_0.Text = text;
 			this.perksTitleLabel.Text = this.titleLabel.Text;
 			bool flag = this.trainingSpace >= this.trainingSpaceTotal;
 			bool flag2 = this.trainingSpace <= 0;
@@ -1477,7 +1451,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.specialInstructionsCounter = 0;
 				this.specialInstructionsCounterMax = maxCount;
 				QueuedUnitTrainingTag queuedItemDataFromUpgradeGroup = this.GetQueuedItemDataFromUpgradeGroup(troopTrainingTag.Troop.UpgradeGroup);
-				Service.Get<UXController>().MiscElementsManager.ShowTroopCounter(troopTrainingTag.TroopButton, (queuedItemDataFromUpgradeGroup == null) ? 0 : queuedItemDataFromUpgradeGroup.Contracts.Count, this.specialInstructionsCounterMax);
+				Service.Get<UXController>().MiscElementsManager.ShowTroopCounter(troopTrainingTag.TroopButton, (queuedItemDataFromUpgradeGroup != null) ? queuedItemDataFromUpgradeGroup.Contracts.Count : 0, this.specialInstructionsCounterMax);
 			}
 		}
 
@@ -1493,20 +1467,20 @@ namespace StaRTS.Main.Views.UX.Screens
 			case BuildingType.FleetCommand:
 				this.housingSpace = currentPlayer.Inventory.SpecialAttack.GetTotalStorageAmount();
 				this.housingSpaceTotal = currentPlayer.Inventory.SpecialAttack.GetTotalStorageCapacity();
-				goto IL_9C;
+				goto IL_B2;
 			case BuildingType.HeroMobilizer:
 				this.housingSpace = currentPlayer.Inventory.Hero.GetTotalStorageAmount();
 				this.housingSpaceTotal = currentPlayer.Inventory.Hero.GetTotalStorageCapacity();
-				goto IL_9C;
+				goto IL_B2;
 			default:
 				if (type != BuildingType.Cantina)
 				{
-					goto IL_9C;
+					goto IL_B2;
 				}
 				break;
 			}
 			GameUtils.GetStarportTroopCounts(out this.housingSpace, out this.housingSpaceTotal);
-			IL_9C:
+			IL_B2:
 			bool enabled = this.housingSpace + ContractUtils.CalculateSpaceOccupiedByQueuedTroops(this.selectedBuilding) <= this.housingSpaceTotal;
 			int i = 0;
 			int count = this.availableTrainerBuildings.Count;
@@ -1532,7 +1506,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 				i++;
 			}
-			string text = "";
+			string text = string.Empty;
 			type = this.buildingInfo.Type;
 			switch (type)
 			{
@@ -1584,9 +1558,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.blockedContract)
 			{
 				this.itemTimeSliderActive.Value = 1f;
-				return;
 			}
-			this.itemTimeSliderActive.Value = 1f - tag.TimeLeftFloat / (float)tag.TimeTotal;
+			else
+			{
+				this.itemTimeSliderActive.Value = 1f - tag.TimeLeftFloat / (float)tag.TimeTotal;
+			}
 		}
 
 		private void UpdateTimeLeftLabels(QueuedUnitTrainingTag tag)
@@ -1595,10 +1571,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.timeLabel.Text = this.lang.Get("STARPORT_FULL", new object[0]);
 				this.itemTimeLabelActive.Text = this.lang.Get("STOPPED", new object[0]);
-				return;
 			}
-			this.timeLabel.Text = GameUtils.GetTimeLabelFromSeconds(this.totalSecondsLeft);
-			this.itemTimeLabelActive.Text = GameUtils.GetTimeLabelFromSeconds(tag.TimeLeft);
+			else
+			{
+				this.timeLabel.Text = GameUtils.GetTimeLabelFromSeconds(this.totalSecondsLeft);
+				this.itemTimeLabelActive.Text = GameUtils.GetTimeLabelFromSeconds(tag.TimeLeft);
+			}
 		}
 
 		private void UpdateTrainingLabels()
@@ -1607,7 +1585,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.instructionsLabel.Text = this.regularInstructions;
 			this.finishButton.Visible = (flag && !this.blockedContract);
 			int crystals = this.CalculateBuyoutCost();
-			string costElementName = (this.deliveryType == DeliveryType.Hero) ? "FinishCostHeroes" : "FinishCost";
+			string costElementName = (this.deliveryType != DeliveryType.Hero) ? "FinishCost" : "FinishCostHeroes";
 			UXUtils.SetupCostElements(this, costElementName, null, 0, 0, 0, crystals, false, null);
 			this.timeStatic.Visible = (flag && !this.blockedContract);
 			this.timeLabel.Visible = flag;
@@ -1615,9 +1593,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.deliveryType == DeliveryType.Hero && this.housingSpace == this.housingSpaceTotal)
 			{
 				this.instructionsLabel.Visible = false;
-				return;
 			}
-			this.instructionsLabel.Visible = !flag;
+			else
+			{
+				this.instructionsLabel.Visible = !flag;
+			}
 		}
 
 		private int CalculateBuyoutCost()
@@ -1674,9 +1654,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.totalSecondsLeft = 0;
 				this.KillTrainingTimers();
-				return;
 			}
-			if (!this.timersRunning)
+			else if (!this.timersRunning)
 			{
 				this.timersRunning = true;
 				Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
@@ -1737,9 +1716,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.KillTrainingTimers();
 				this.RefreshView();
-				return;
 			}
-			if (finishedContract)
+			else if (finishedContract)
 			{
 				this.DequeueTroop(tag, false);
 				this.RefreshView();
@@ -1822,18 +1800,18 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			if (tag == null)
 			{
-				Service.Get<StaRTSLogger>().Error("QueuedUnitTrainingTag:tag is empty");
+				Service.Get<Logger>().Error("QueuedUnitTrainingTag:tag is empty");
 				return;
 			}
 			if (tag.Contracts == null || tag.Contracts.Count < 1)
 			{
-				Service.Get<StaRTSLogger>().Error("Contract is empty");
+				Service.Get<Logger>().Error("Contract is empty");
 				return;
 			}
 			string productUid = tag.Contracts[tag.Contracts.Count - 1].ProductUid;
 			if (string.IsNullOrEmpty(productUid))
 			{
-				Service.Get<StaRTSLogger>().Error("productUID is not valid");
+				Service.Get<Logger>().Error("productUID is not valid");
 				return;
 			}
 			this.supportController.CancelTroopTrainContract(productUid, this.selectedBuilding);
@@ -1882,7 +1860,7 @@ namespace StaRTS.Main.Views.UX.Screens
 					this.SetSelectedBuilding(selectedBuilding);
 					this.InitScreen();
 					this.RefreshView();
-					return;
+					break;
 				}
 				i++;
 			}
@@ -1914,7 +1892,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			if (this.trainingSpace + tag.Troop.Size > this.trainingSpaceTotal)
 			{
-				string id = "";
+				string id = string.Empty;
 				DeliveryType deliveryType = this.deliveryType;
 				switch (deliveryType)
 				{
@@ -1959,22 +1937,22 @@ namespace StaRTS.Main.Views.UX.Screens
 					}
 				}
 			}
-			string text;
-			string text2;
+			string value;
+			string value2;
 			if (this.deliveryType == DeliveryType.Starship)
 			{
-				text = StringUtils.ToLowerCaseUnderscoreSeperated((tag.Troop as SpecialAttackTypeVO).SpecialAttackID);
-				text2 = (tag.Troop as SpecialAttackTypeVO).SpecialAttackID;
+				value = StringUtils.ToLowerCaseUnderscoreSeperated((tag.Troop as SpecialAttackTypeVO).SpecialAttackID);
+				value2 = (tag.Troop as SpecialAttackTypeVO).SpecialAttackID;
 			}
 			else
 			{
-				text = StringUtils.ToLowerCaseUnderscoreSeperated((tag.Troop as TroopTypeVO).Type.ToString());
-				text2 = (tag.Troop as TroopTypeVO).TroopID;
+				value = StringUtils.ToLowerCaseUnderscoreSeperated((tag.Troop as TroopTypeVO).Type.ToString());
+				value2 = (tag.Troop as TroopTypeVO).TroopID;
 			}
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append(text);
+			stringBuilder.Append(value);
 			stringBuilder.Append("|");
-			stringBuilder.Append(text2);
+			stringBuilder.Append(value2);
 			stringBuilder.Append("|");
 			stringBuilder.Append(tag.Troop.Lvl);
 			stringBuilder.Append("|train");
@@ -1986,9 +1964,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (PayMeScreen.ShowIfNotEnoughCurrency(credits, materials, contraband, stringBuilder.ToString(), new OnScreenModalResult(this.OnPayMeForCurrencyResult)))
 			{
 				this.KillButtonTimers();
-				return;
 			}
-			this.ConfirmTraining();
+			else
+			{
+				this.ConfirmTraining();
+			}
 		}
 
 		private void UpdateCostWithAppliedPerks(ref int credits, ref int materials, ref int contraband)
@@ -2028,9 +2008,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (GameUtils.HandleSoftCurrencyFlow(result, cookie))
 			{
 				this.ConfirmTraining();
-				return;
 			}
-			this.confirmingTraining = null;
+			else
+			{
+				this.confirmingTraining = null;
+			}
 		}
 
 		private void OnQueueItemButtonPressed(UXButton button)
@@ -2100,27 +2082,34 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.OnTroopItemButtonClicked(troopTrainingTag);
 				troopTrainingTag.TroopButton.OnClicked = null;
-				return;
 			}
-			this.OnQueueItemButtonClicked(this.GetQueuedItemDataFromUpgradeGroup(troopTrainingTag.Troop.UpgradeGroup));
+			else
+			{
+				this.OnQueueItemButtonClicked(this.GetQueuedItemDataFromUpgradeGroup(troopTrainingTag.Troop.UpgradeGroup));
+			}
 		}
 
 		public override EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ContractInvalidForStorage)
+			switch (id)
 			{
+			case EventId.TroopRecruited:
+			case EventId.StarshipMobilized:
+			case EventId.HeroMobilized:
+				if ((cookie as ContractEventData).Entity == this.selectedBuilding)
+				{
+					this.CheckTroopContract(true);
+				}
+				goto IL_AF;
+			case EventId.TroopLoadingIntoStarport:
+				IL_1B:
 				switch (id)
 				{
-				case EventId.TroopRecruited:
-				case EventId.StarshipMobilized:
-				case EventId.HeroMobilized:
-					if ((cookie as ContractEventData).Entity == this.selectedBuilding)
-					{
-						this.CheckTroopContract(true);
-					}
-					break;
-				case EventId.TroopLoadingIntoStarport:
-					break;
+				case EventId.InventoryTroopUpdated:
+				case EventId.InventorySpecialAttackUpdated:
+				case EventId.InventoryHeroUpdated:
+					this.UpdateHousingSpace();
+					goto IL_AF;
 				default:
 					if (id == EventId.ContractInvalidForStorage)
 					{
@@ -2129,408 +2118,20 @@ namespace StaRTS.Main.Views.UX.Screens
 							this.blockedContract = true;
 							this.CheckTroopContract(false);
 						}
+						goto IL_AF;
 					}
-					break;
-				}
-			}
-			else
-			{
-				switch (id)
-				{
-				case EventId.InventoryTroopUpdated:
-				case EventId.InventorySpecialAttackUpdated:
-				case EventId.InventoryHeroUpdated:
-					this.UpdateHousingSpace();
-					break;
-				default:
-					if (id == EventId.DenyUserInput)
+					if (id != EventId.DenyUserInput)
 					{
-						this.KillButtonTimers();
+						goto IL_AF;
 					}
-					break;
+					this.KillButtonTimers();
+					goto IL_AF;
 				}
+				break;
 			}
+			goto IL_1B;
+			IL_AF:
 			return base.OnEvent(id, cookie);
-		}
-
-		protected internal TroopTrainingScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).AddNewQueueListItem(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).AdjustTotalSecondsLeft(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).AdjustTrainingSpace(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).CalculateBuyoutCost());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).CalculateTotalSecondsLeftForView());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).CheckTroopContract(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TroopTrainingScreen.CompareTroopItem((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).ConfirmTraining();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).DequeueTroop((QueuedUnitTrainingTag)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).DisableTabSelection();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).DisableTroopItemScrolling();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).ShowCurrencyTray);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).GetQueuedItemDataFromUpgradeGroup(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).GetTroopTrainingTagFromUpgradeGroup(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).HandleContract((Contract)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).InitEligibleDeployables();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).InitNPC();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).InitQueueItemGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).InitScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).InitTabs();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).InitTroopItemGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).InitVariables();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).KillButtonTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).KillTrainingTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnFinishButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnGridDrag((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnItemButtonPressed((TroopTrainingTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnItemButtonReleased((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnPrevOrNextButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnQueueItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnQueueItemButtonClicked((QueuedUnitTrainingTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnQueueItemButtonPressed((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnTroopItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnTroopItemButtonClicked((TroopTrainingTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnTroopItemButtonPressed((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnTroopItemInfoClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnTroopTabChanged();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).QueueTroop((QueuedUnitTrainingTag)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), (Contract)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).RedrawHeroQueueItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).RedrawQueueItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).RedrawTroopQueueItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).RepositionAndScroll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).ResetScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).SetSpecialInstructions(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).SetupItemQuality(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).SetupPerksButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).TryAddTrainerBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).UnitIsEligibleForThisScreen((IDeployableVO)GCHandledObjects.GCHandleToObject(*args), (CurrentPlayer)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateAllTroopButtonStates();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateGridItemPerkElement((TroopTrainingTag)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateHousingSpace();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateItemPanel(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateTimeLeftLabels((QueuedUnitTrainingTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateTimeLeftSlider((QueuedUnitTrainingTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateTrainingLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			((TroopTrainingScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateTroopButtonEnabled((TroopTrainingTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

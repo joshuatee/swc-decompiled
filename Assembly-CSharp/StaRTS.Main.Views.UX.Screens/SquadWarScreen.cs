@@ -20,9 +20,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -125,10 +123,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		private const string GROUP_WAR_TIMER = "WarTimer";
 
 		private const string LABEL_ACTION_AND_COOLDOWN_TIMER = "LabelActionTimer";
-
-		private static readonly Color TEXT_ACTION_TIMER_COLOR = new Color(0.847058833f, 0f, 0f);
-
-		private static readonly Color TEXT_COOLDOWN_TIMER_COLOR = new Color(0.06666667f, 0.7058824f, 0.9254902f);
 
 		private const string GROUP_FILTER = "GroupFilter";
 
@@ -261,6 +255,10 @@ namespace StaRTS.Main.Views.UX.Screens
 		private const string CONTAINER_PLAYER_COLLAPSED = "ContainerPlayerCollapsed";
 
 		private const string CONTAINER_OPPONENT_COLLAPSED = "ContainerOpponentCollapsed";
+
+		private static readonly Color TEXT_ACTION_TIMER_COLOR = new Color(0.847058833f, 0f, 0f);
+
+		private static readonly Color TEXT_COOLDOWN_TIMER_COLOR = new Color(0.06666667f, 0.7058824f, 0.9254902f);
 
 		private UXGrid gridBuffPlayerPlanets;
 
@@ -397,52 +395,29 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		public override EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.WarPhaseChanged)
+			switch (id)
 			{
-				if (id != EventId.SquadScreenOpenedOrClosed)
+			case EventId.WarBoardParticipantBuildingSelected:
+			case EventId.WarBoardFlyoutHidden:
+				this.DeselectAllBuffBases();
+				goto IL_1A9;
+			case EventId.WarBoardBuffBaseBuildingSelected:
+			case EventId.WarBoardBuildingDeselected:
+				IL_1E:
+				if (id == EventId.WarBuffBaseCaptured)
 				{
-					if (id != EventId.CurrentPlayerMemberDataUpdated)
-					{
-						if (id == EventId.WarPhaseChanged)
-						{
-							switch ((SquadWarStatusType)cookie)
-							{
-							case SquadWarStatusType.PhaseOpen:
-								this.Close(null);
-								HomeState.GoToHomeState(null, false);
-								break;
-							case SquadWarStatusType.PhasePrepGrace:
-								this.ShowPrepGracePhase();
-								break;
-							case SquadWarStatusType.PhaseAction:
-								this.ShowActionPhase();
-								break;
-							case SquadWarStatusType.PhaseActionGrace:
-								this.ShowActionGracePhase();
-								break;
-							case SquadWarStatusType.PhaseCooldown:
-								this.ShowCooldownPhase();
-								break;
-							}
-						}
-					}
-					else
-					{
-						SquadWarStatusType currentStatus = Service.Get<SquadController>().WarManager.GetCurrentStatus();
-						if (currentStatus == SquadWarStatusType.PhasePrep || currentStatus == SquadWarStatusType.PhasePrepGrace)
-						{
-							this.UpdateRequestTroopsLabel();
-						}
-						else if (currentStatus == SquadWarStatusType.PhaseCooldown)
-						{
-							this.TryShowWarEndedScreen();
-						}
-					}
+					this.UpdateBuffOwnership(true);
+					goto IL_1A9;
 				}
-				else
+				if (id == EventId.WarVictoryPointsUpdated)
+				{
+					this.UpdateWarElements();
+					goto IL_1A9;
+				}
+				if (id == EventId.SquadScreenOpenedOrClosed)
 				{
 					bool flag = (bool)cookie;
-					if (this.Visible & flag)
+					if (this.Visible && flag)
 					{
 						this.Visible = false;
 					}
@@ -462,26 +437,48 @@ namespace StaRTS.Main.Views.UX.Screens
 							this.gridBuffOpponentPlanets.CenterElementsInPanel();
 						}
 					}
+					goto IL_1A9;
 				}
-			}
-			else if (id <= EventId.WarVictoryPointsUpdated)
-			{
-				if (id != EventId.WarBuffBaseCaptured)
+				if (id == EventId.CurrentPlayerMemberDataUpdated)
 				{
-					if (id == EventId.WarVictoryPointsUpdated)
+					SquadWarStatusType currentStatus = Service.Get<SquadController>().WarManager.GetCurrentStatus();
+					if (currentStatus == SquadWarStatusType.PhasePrep || currentStatus == SquadWarStatusType.PhasePrepGrace)
 					{
-						this.UpdateWarElements();
+						this.UpdateRequestTroopsLabel();
 					}
+					else if (currentStatus == SquadWarStatusType.PhaseCooldown)
+					{
+						this.TryShowWarEndedScreen();
+					}
+					goto IL_1A9;
 				}
-				else
+				if (id != EventId.WarPhaseChanged)
 				{
-					this.UpdateBuffOwnership(true);
+					goto IL_1A9;
 				}
+				switch ((int)cookie)
+				{
+				case 0:
+					this.Close(null);
+					HomeState.GoToHomeState(null, false);
+					break;
+				case 2:
+					this.ShowPrepGracePhase();
+					break;
+				case 3:
+					this.ShowActionPhase();
+					break;
+				case 4:
+					this.ShowActionGracePhase();
+					break;
+				case 5:
+					this.ShowCooldownPhase();
+					break;
+				}
+				goto IL_1A9;
 			}
-			else if (id == EventId.WarBoardParticipantBuildingSelected || id == EventId.WarBoardFlyoutHidden)
-			{
-				this.DeselectAllBuffBases();
-			}
+			goto IL_1E;
+			IL_1A9:
 			return base.OnEvent(id, cookie);
 		}
 
@@ -648,12 +645,14 @@ namespace StaRTS.Main.Views.UX.Screens
 			element2.Visible = !flag;
 			if (squadType == SquadWarSquadType.PLAYER_SQUAD)
 			{
-				this.buttonFilterPlayer = (flag ? element : element2);
+				this.buttonFilterPlayer = ((!flag) ? element2 : element);
 				this.buttonFilterPlayer.OnSelected = new UXCheckboxSelectedDelegate(this.OnFilterPlayerCheckboxSelected);
-				return;
 			}
-			this.buttonFilterOpponent = (flag ? element : element2);
-			this.buttonFilterOpponent.OnSelected = new UXCheckboxSelectedDelegate(this.OnFilterOpponentCheckboxSelected);
+			else
+			{
+				this.buttonFilterOpponent = ((!flag) ? element2 : element);
+				this.buttonFilterOpponent.OnSelected = new UXCheckboxSelectedDelegate(this.OnFilterOpponentCheckboxSelected);
+			}
 		}
 
 		private void UpdateDynamicElements(string squadNameFaction, bool isEmpire)
@@ -684,27 +683,27 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.gridBuffNeutralPlanets.SetTemplateItem("BuffPlanetNeutral");
 			this.gridBuffOpponentPlanets = base.GetElement<UXGrid>("GridBuffPlanetsOpponent");
 			this.gridBuffOpponentPlanets.SetTemplateItem("BuffPlanetOpponent");
-			string text = "PlayerReb";
-			string text2 = "PlayerEmp";
-			string text3 = "OpponentReb";
-			string text4 = "OpponentEmp";
+			string str = "PlayerReb";
+			string str2 = "PlayerEmp";
+			string str3 = "OpponentReb";
+			string str4 = "OpponentEmp";
 			this.labelBuffNeutralPlanets = base.GetElement<UXLabel>("LabelCapturedNeutral");
-			this.labelBuffPlayerRebelPlanets = this.GetLabelWithName("LabelCaptured" + text);
-			this.labelBuffPlayerEmpirePlanets = this.GetLabelWithName("LabelCaptured" + text2);
-			this.labelBuffOpponentRebelPlanets = this.GetLabelWithName("LabelCaptured" + text3);
-			this.labelBuffOpponentEmpirePlanets = this.GetLabelWithName("LabelCaptured" + text4);
-			this.spriteBuffPlayerRebelPlanets = this.GetSpriteWithName("SpriteCapturedBgGlow" + text);
-			this.spriteBuffPlayerEmpirePlanets = this.GetSpriteWithName("SpriteCapturedBgGlow" + text2);
-			this.spriteBuffOpponentRebelPlanets = this.GetSpriteWithName("SpriteCapturedBgGlow" + text3);
-			this.spriteBuffOpponentEmpirePlanets = this.GetSpriteWithName("SpriteCapturedBgGlow" + text4);
-			this.groupCapturedPlayerRebel = this.GetElementWithName("Captured" + text);
-			this.groupCapturedPlayerEmpire = this.GetElementWithName("Captured" + text2);
-			this.groupCapturedOpponentRebel = this.GetElementWithName("Captured" + text3);
-			this.groupCapturedOpponentEmpire = this.GetElementWithName("Captured" + text4);
-			this.groupCapturedGlowPlayerRebel = this.GetElementWithName("CapturedGlow" + text);
-			this.groupCapturedGlowPlayerEmpire = this.GetElementWithName("CapturedGlow" + text2);
-			this.groupCapturedGlowOpponentRebel = this.GetElementWithName("CapturedGlow" + text3);
-			this.groupCapturedGlowOpponentEmpire = this.GetElementWithName("CapturedGlow" + text4);
+			this.labelBuffPlayerRebelPlanets = this.GetLabelWithName("LabelCaptured" + str);
+			this.labelBuffPlayerEmpirePlanets = this.GetLabelWithName("LabelCaptured" + str2);
+			this.labelBuffOpponentRebelPlanets = this.GetLabelWithName("LabelCaptured" + str3);
+			this.labelBuffOpponentEmpirePlanets = this.GetLabelWithName("LabelCaptured" + str4);
+			this.spriteBuffPlayerRebelPlanets = this.GetSpriteWithName("SpriteCapturedBgGlow" + str);
+			this.spriteBuffPlayerEmpirePlanets = this.GetSpriteWithName("SpriteCapturedBgGlow" + str2);
+			this.spriteBuffOpponentRebelPlanets = this.GetSpriteWithName("SpriteCapturedBgGlow" + str3);
+			this.spriteBuffOpponentEmpirePlanets = this.GetSpriteWithName("SpriteCapturedBgGlow" + str4);
+			this.groupCapturedPlayerRebel = this.GetElementWithName("Captured" + str);
+			this.groupCapturedPlayerEmpire = this.GetElementWithName("Captured" + str2);
+			this.groupCapturedOpponentRebel = this.GetElementWithName("Captured" + str3);
+			this.groupCapturedOpponentEmpire = this.GetElementWithName("Captured" + str4);
+			this.groupCapturedGlowPlayerRebel = this.GetElementWithName("CapturedGlow" + str);
+			this.groupCapturedGlowPlayerEmpire = this.GetElementWithName("CapturedGlow" + str2);
+			this.groupCapturedGlowOpponentRebel = this.GetElementWithName("CapturedGlow" + str3);
+			this.groupCapturedGlowOpponentEmpire = this.GetElementWithName("CapturedGlow" + str4);
 			this.UpdateBuffOwnership(false);
 		}
 
@@ -811,7 +810,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			bool flag3 = squadData.Faction == FactionType.Empire;
 			bool flag4 = this.gridBuffPlayerPlanets.Count > 0;
 			bool flag5 = this.gridBuffOpponentPlanets.Count > 0;
-			bool visible = flag4 & flag2;
+			bool visible = flag4 && flag2;
 			bool visible2 = flag4 && !flag2;
 			this.gridBuffPlayerPlanets.CenterElementsInPanel();
 			this.labelBuffPlayerRebelPlanets.Visible = visible2;
@@ -819,7 +818,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.spriteBuffPlayerRebelPlanets.Visible = visible2;
 			this.spriteBuffPlayerEmpirePlanets.Visible = visible;
 			this.gridBuffNeutralPlanets.CenterElementsInPanel();
-			bool visible3 = flag5 & flag3;
+			bool visible3 = flag5 && flag3;
 			bool visible4 = flag5 && !flag3;
 			this.gridBuffOpponentPlanets.CenterElementsInPanel();
 			this.labelBuffOpponentRebelPlanets.Visible = visible4;
@@ -913,9 +912,11 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (SquadUtils.IsPlayerSquadWarTroopsAtMaxCapacity())
 				{
 					element2.Text = this.lang.Get("WAR_BOARD_REQUEST_TROOPS_MAX_CAPACITY", new object[0]);
-					return;
 				}
-				element2.Text = this.lang.Get("WAR_BOARD_REQUEST_TROOPS", new object[0]);
+				else
+				{
+					element2.Text = this.lang.Get("WAR_BOARD_REQUEST_TROOPS", new object[0]);
+				}
 			}
 		}
 
@@ -1190,9 +1191,8 @@ namespace StaRTS.Main.Views.UX.Screens
 					this.groupCapturedGlowOpponentEmpire = grid.GetSubElement<UXElement>(warBuffVO.Uid, "CapturedGlowOpponentEmp");
 					this.groupCapturedGlowOpponentRebel.Visible = !flag;
 					this.groupCapturedGlowOpponentEmpire.Visible = flag;
-					return;
 				}
-				if (grid == this.gridBuffPlayerPlanets)
+				else if (grid == this.gridBuffPlayerPlanets)
 				{
 					this.groupCapturedGlowPlayerRebel = grid.GetSubElement<UXElement>(warBuffVO.Uid, "CapturedGlowPlayerReb");
 					this.groupCapturedGlowPlayerEmpire = grid.GetSubElement<UXElement>(warBuffVO.Uid, "CapturedGlowPlayerEmp");
@@ -1271,7 +1271,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			int num = 0;
 			if (currentStatus == SquadWarStatusType.PhasePrep || currentStatus == SquadWarStatusType.PhaseAction || currentStatus == SquadWarStatusType.PhaseCooldown)
 			{
-				SquadWarSquadType squadType2 = (squadType == SquadWarSquadType.PLAYER_SQUAD) ? SquadWarSquadType.OPPONENT_SQUAD : SquadWarSquadType.PLAYER_SQUAD;
+				SquadWarSquadType squadType2 = (squadType != SquadWarSquadType.PLAYER_SQUAD) ? SquadWarSquadType.PLAYER_SQUAD : SquadWarSquadType.OPPONENT_SQUAD;
 				if (warManager.GetSquadData(squadType2) == null)
 				{
 					return;
@@ -1308,12 +1308,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			UXLabel element5 = base.GetElement<UXLabel>("LabelListAvailableStars" + squadTypeString);
 			element5.Text = this.lang.Get("WAR_PLAYER_DETAILS_POINTS_LEFT", new object[]
 			{
-				""
+				string.Empty
 			});
 			UXLabel element6 = base.GetElement<UXLabel>("LabelListAttacksRemaining" + squadTypeString);
 			element6.Text = this.lang.Get("WAR_PLAYER_DETAILS_TURNS_LEFT", new object[]
 			{
-				""
+				string.Empty
 			});
 		}
 
@@ -1322,35 +1322,35 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (count == 0)
 			{
 				this.groupBattleMessageCount.Visible = false;
-				return;
 			}
-			this.groupBattleMessageCount.Visible = true;
-			this.labelBattleMessageCount.Text = count.ToString();
+			else
+			{
+				this.groupBattleMessageCount.Visible = true;
+				this.labelBattleMessageCount.Text = count.ToString();
+			}
 		}
 
 		private void ShowGracePeriodAlertScreen(SquadWarStatusType status, int endTimeStamp)
 		{
-			string text = "";
-			string timerTextUID = "";
-			string messageUID = "";
-			if (status != SquadWarStatusType.PhasePrepGrace)
+			string text = string.Empty;
+			string timerTextUID = string.Empty;
+			string messageUID = string.Empty;
+			switch (status)
 			{
-				if (status == SquadWarStatusType.PhaseActionGrace)
-				{
-					text = "WAR_BOARD_ACTION_GRACE_PHASE";
-					timerTextUID = "WAR_BOARD_ACTION_PHASE_TIME_REMAINING";
-					messageUID = "WAR_BOARD_ACTION_GRACE_PHASE_DESC";
-				}
-			}
-			else
-			{
+			case SquadWarStatusType.PhasePrepGrace:
 				text = "WAR_BOARD_PREP_GRACE_PHASE";
 				timerTextUID = "WAR_BOARD_PREP_PHASE_TIME_REMAINING";
 				messageUID = "WAR_BOARD_PREP_GRACE_PHASE_DESC";
+				break;
+			case SquadWarStatusType.PhaseActionGrace:
+				text = "WAR_BOARD_ACTION_GRACE_PHASE";
+				timerTextUID = "WAR_BOARD_ACTION_PHASE_TIME_REMAINING";
+				messageUID = "WAR_BOARD_ACTION_GRACE_PHASE_DESC";
+				break;
 			}
 			if (string.IsNullOrEmpty(text))
 			{
-				Service.Get<StaRTSLogger>().Warn("Attempting to display Grace Period Alert Screen at inappropriate phase!!!");
+				Service.Get<Logger>().Warn("Attempting to display Grace Period Alert Screen at inappropriate phase!!!");
 				return;
 			}
 			TimerAlertScreen screen = new TimerAlertScreen(text, timerTextUID, messageUID, "WAR_OK", endTimeStamp, new OnScreenModalResult(this.OnGracePeriodAlertScreenClosed));
@@ -1442,10 +1442,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				Service.Get<AudioManager>().PlayAudio("sfx_ui_squadwar_dropdown_close");
 				this.dropdownOpponentGroup.SetTrigger("hide");
-				return;
 			}
-			Service.Get<AudioManager>().PlayAudio("sfx_ui_squadwar_dropdown_open");
-			this.dropdownOpponentGroup.SetTrigger("show");
+			else
+			{
+				Service.Get<AudioManager>().PlayAudio("sfx_ui_squadwar_dropdown_open");
+				this.dropdownOpponentGroup.SetTrigger("show");
+			}
 		}
 
 		private void TogglePlayerList(UXButton button)
@@ -1455,342 +1457,17 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				Service.Get<AudioManager>().PlayAudio("sfx_ui_squadwar_dropdown_close");
 				this.dropdownPlayerGroup.SetTrigger("hide");
-				return;
 			}
-			Service.Get<AudioManager>().PlayAudio("sfx_ui_squadwar_dropdown_open");
-			this.dropdownPlayerGroup.SetTrigger("show");
+			else
+			{
+				Service.Get<AudioManager>().PlayAudio("sfx_ui_squadwar_dropdown_open");
+				this.dropdownPlayerGroup.SetTrigger("show");
+			}
 		}
 
 		private void OnStartNewWarClicked(UXButton button)
 		{
 			Service.Get<SquadController>().WarManager.StartMatchMakingPreparation();
-		}
-
-		protected internal SquadWarScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).CloseGracePeriodAlertScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).CloseSquadWarScreen((TransitionCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).CreateBuffBaseElement((UXGrid)GCHandledObjects.GCHandleToObject(*args), (WarBuffVO)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(args[3]), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), Marshal.PtrToStringUni(*(IntPtr*)(args + 6)), (SquadWarSquadData)GCHandledObjects.GCHandleToObject(args[7]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).CreateSquadMemberGridItem((UXGrid)GCHandledObjects.GCHandleToObject(*args), (SquadWarParticipantState)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).DeselectAllBuffBases();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).DeselectBuffBasesInGrid((UXGrid)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).DestroyOldBuffElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).DisableAllBuffBaseGrids();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).DisableBuffBasesInGrid((UXGrid)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).GetElementWithName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).GetFactionString((SquadWarSquadData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).GetLabelWithName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).GetSpriteWithName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).GetSquadTypeString((SquadWarSquadType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).HandleClose((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).InitActionAndCooldownPhase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).InitBuffBaseUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).InitDynamicElements((SquadWarSquadType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).InitPrepPhase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnBuffBaseClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnCloseButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnEditWarBaseButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnFilterOpponentCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnFilterPlayerCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnGracePeriodAlertScreenClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnRequestTroopsButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnSquadMemberItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnStartNewWarClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).PopulateSquadMemberGrid((SquadWarSquadType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshFilterCheckboxForSquad((SquadWarSquadType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).SetBattleMessageCount(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).SetBuffBaseUI((SquadWarStatusType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).SetTimeRemaining(*(int*)args, (SquadWarStatusType)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).ShowActionAndCooldownPhaseCommonUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).ShowActionGracePhase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).ShowActionPhase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).ShowCooldownPhase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).ShowGracePeriodAlertScreen((SquadWarStatusType)(*(int*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).ShowPrepGracePhase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).ShowPrepPhase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).ToggleOpponentList((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).TogglePlayerList((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).TryShowWarEndedScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateBuffOwnership(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateDynamicElements(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateRequestTroopsLabel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadMemberGrids();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadWarStats();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadWarStats((SquadWarSquadType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((SquadWarScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateWarElements();
-			return -1L;
 		}
 	}
 }

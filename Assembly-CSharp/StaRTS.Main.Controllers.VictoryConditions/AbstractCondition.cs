@@ -2,7 +2,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.VictoryConditions
 {
@@ -27,9 +26,11 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 				{
 					'|'
 				});
-				return;
 			}
-			this.prepareArgs = new string[0];
+			else
+			{
+				this.prepareArgs = new string[0];
+			}
 		}
 
 		public virtual void Destroy()
@@ -54,32 +55,6 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 
 		public virtual void Start()
 		{
-		}
-
-		protected internal AbstractCondition(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractCondition)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCondition)GCHandledObjects.GCHandleToObject(instance)).GetConditionVo());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCondition)GCHandledObjects.GCHandleToObject(instance)).IsConditionSatisfied());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractCondition)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

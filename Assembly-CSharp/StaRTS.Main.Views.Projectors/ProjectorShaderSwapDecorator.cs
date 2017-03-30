@@ -7,17 +7,16 @@ using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Projectors
 {
 	public class ProjectorShaderSwapDecorator : IProjectorRenderer
 	{
-		private static readonly string TOD_SHADER_SWAP_SRC = "UnlitTexture_Index0";
-
 		private const string MISSING_MESH_RENDERER_SHARED_MATERIAL = "sharedMaterial missing on {0}";
 
 		private const string MISSING_SKINNED_RENDERER_SHARED_MATERIAL = "skinnedMeshRenderer missing on {0}";
+
+		private static readonly string TOD_SHADER_SWAP_SRC = "UnlitTexture_Index0";
 
 		private static readonly string[] TOD_SHADER_SWAP_LIST = new string[]
 		{
@@ -98,7 +97,7 @@ namespace StaRTS.Main.Views.Projectors
 			{
 				if (componentsInChildren[i].sharedMaterial == null)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("sharedMaterial missing on {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("sharedMaterial missing on {0}", new object[]
 					{
 						assetGameObject.name
 					});
@@ -124,7 +123,7 @@ namespace StaRTS.Main.Views.Projectors
 			{
 				if (componentsInChildren2[j].sharedMaterial == null)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("skinnedMeshRenderer missing on {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("skinnedMeshRenderer missing on {0}", new object[]
 					{
 						assetGameObject.name
 					});
@@ -169,7 +168,7 @@ namespace StaRTS.Main.Views.Projectors
 			}
 			if (this.config.EnableCrateHoloShaderSwap && this.holoCrateSwapShaderSrc == null)
 			{
-				this.holoCrateSwapShaderSrc = Service.Get<AssetManager>().Shaders.GetShader("Unlit/Transparent");
+				this.holoCrateSwapShaderSrc = Service.Get<AssetManager>().Shaders.GetShader("HologramScanlines");
 			}
 		}
 
@@ -189,62 +188,6 @@ namespace StaRTS.Main.Views.Projectors
 		public UITexture GetProjectorUITexture()
 		{
 			return this.baseRenderer.GetProjectorUITexture();
-		}
-
-		protected internal ProjectorShaderSwapDecorator(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ProjectorShaderSwapDecorator)GCHandledObjects.GCHandleToObject(instance)).AttemptShaderSwapIfNeeded((Material)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ProjectorShaderSwapDecorator)GCHandledObjects.GCHandleToObject(instance)).CreateNonSharedMaterials((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ProjectorShaderSwapDecorator)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectorShaderSwapDecorator)GCHandledObjects.GCHandleToObject(instance)).DoesRenderTextureNeedReload());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ProjectorShaderSwapDecorator)GCHandledObjects.GCHandleToObject(instance)).EnsureSwapShaderSrc();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectorShaderSwapDecorator)GCHandledObjects.GCHandleToObject(instance)).GetProjectorUITexture());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ProjectorShaderSwapDecorator)GCHandledObjects.GCHandleToObject(instance)).Initialize((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ProjectorShaderSwapDecorator)GCHandledObjects.GCHandleToObject(instance)).PostRender((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ProjectorShaderSwapDecorator)GCHandledObjects.GCHandleToObject(instance)).Render((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

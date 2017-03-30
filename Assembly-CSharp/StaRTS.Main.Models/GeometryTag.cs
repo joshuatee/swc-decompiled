@@ -3,8 +3,6 @@ using StaRTS.Main.Models.Player.Misc;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Views.Projectors;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models
 {
@@ -50,16 +48,6 @@ namespace StaRTS.Main.Models
 			this.tooltipText = tooltipText;
 			this.battle = battle;
 			this.armory = armory;
-		}
-
-		internal GeometryTag(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GeometryTag)GCHandledObjects.GCHandleToObject(instance)).Init((IGeometryVO)GCHandledObjects.GCHandleToObject(*args), (ProjectorConfig)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), (BattleEntry)GCHandledObjects.GCHandleToObject(args[4]), (ActiveArmory)GCHandledObjects.GCHandleToObject(args[5]));
-			return -1L;
 		}
 	}
 }

@@ -12,13 +12,5 @@ namespace StaRTS.Main.Models.Squads
 		public Dictionary<string, int> Donations;
 
 		public int DonationCount;
-
-		public SqmDonationData()
-		{
-		}
-
-		protected internal SqmDonationData(UIntPtr dummy)
-		{
-		}
 	}
 }

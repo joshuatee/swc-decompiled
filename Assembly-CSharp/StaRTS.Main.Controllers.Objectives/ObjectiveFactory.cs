@@ -1,7 +1,6 @@
 using StaRTS.Main.Models;
 using StaRTS.Main.Models.ValueObjects;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Objectives
 {
@@ -44,11 +43,6 @@ namespace StaRTS.Main.Controllers.Objectives
 			default:
 				return new AbstractObjectiveProcessor(vo, parent);
 			}
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ObjectiveFactory.GetProcessor((ObjectiveVO)GCHandledObjects.GCHandleToObject(*args), (ObjectiveManager)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

@@ -3,7 +3,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Performance
 {
@@ -14,6 +13,8 @@ namespace StaRTS.Main.Controllers.Performance
 		private const float SECONDS_PER_PEAK = 5f;
 
 		private const int NUM_AVERAGED_SAMPLES = 1;
+
+		private AndroidJavaObject pluginActivity;
 
 		private FrameSample[] samples;
 
@@ -117,10 +118,12 @@ namespace StaRTS.Main.Controllers.Performance
 			if (enable)
 			{
 				Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
-				return;
 			}
-			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
-			this.Reset();
+			else
+			{
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+				this.Reset();
+			}
 		}
 
 		private void Reset()
@@ -182,9 +185,7 @@ namespace StaRTS.Main.Controllers.Performance
 		{
 			this.samples[this.nextSample].frames = this.currentFrames;
 			this.samples[this.nextSample].seconds = this.currentSeconds;
-			int num = this.nextSample + 1;
-			this.nextSample = num;
-			if (num == 1)
+			if (++this.nextSample == 1)
 			{
 				this.nextSample = 0;
 			}
@@ -194,7 +195,12 @@ namespace StaRTS.Main.Controllers.Performance
 
 		private long CaptureDeviceMemUsage()
 		{
-			return 0L;
+			if (this.pluginActivity == null)
+			{
+				AndroidJavaClass androidJavaClass = new AndroidJavaClass("com.disney.starts.PluginActivity");
+				this.pluginActivity = androidJavaClass.CallStatic<AndroidJavaObject>("getInstance", new object[0]);
+			}
+			return this.pluginActivity.Call<long>("getMemoryUsage", new object[0]);
 		}
 
 		private void SendFPS(float fps)
@@ -275,81 +281,6 @@ namespace StaRTS.Main.Controllers.Performance
 				this.miterMem.Next();
 			}
 			this.miterMem.Reset();
-		}
-
-		protected internal PerformanceMonitor(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).CaptureDeviceMemUsage());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).ComputeFPS();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).Enable(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).RegisterFPSObserver((IPerformanceObserver)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).RegisterMemObserver((IPerformanceObserver)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).SaveSample();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).SendFPS(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).SendMemStats();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).UnregisterFPSObserver((IPerformanceObserver)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PerformanceMonitor)GCHandledObjects.GCHandleToObject(instance)).UnregisterMemObserver((IPerformanceObserver)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -6,9 +6,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player.World
 {
@@ -18,7 +15,7 @@ namespace StaRTS.Main.Models.Player.World
 
 		private const string NEXT_BUILDING_NUMBER_KEY = "next";
 
-		private string planetUid;
+		private string planetUid = string.Empty;
 
 		public List<Building> Buildings
 		{
@@ -60,21 +57,22 @@ namespace StaRTS.Main.Models.Player.World
 			}
 			if (dictionary.ContainsKey("next"))
 			{
-				this.NextBuildingNumber = Convert.ToInt32(dictionary["next"], CultureInfo.InvariantCulture);
+				this.NextBuildingNumber = Convert.ToInt32(dictionary["next"]);
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Debug("Map does not contain nextBuildingNumber.");
+				Service.Get<Logger>().Debug("Map does not contain nextBuildingNumber.");
 			}
 			return this;
 		}
 
 		public void GetAllBuildingsWithBaseUid(string baseUId, List<Building> outMatchingBuildings)
 		{
+			string text = string.Empty;
 			for (int i = 0; i < this.Buildings.Count; i++)
 			{
 				Building building = this.Buildings[i];
-				string text = building.Uid;
+				text = building.Uid;
 				int indexOfFirstNumericCharacter = StringUtils.GetIndexOfFirstNumericCharacter(text);
 				if (indexOfFirstNumericCharacter > 0)
 				{
@@ -101,9 +99,9 @@ namespace StaRTS.Main.Models.Player.World
 				int num2 = -1;
 				if (indexOfFirstNumericCharacter > 0)
 				{
-					string text2 = text.Substring(indexOfFirstNumericCharacter);
+					string s = text.Substring(indexOfFirstNumericCharacter);
 					text = text.Substring(0, indexOfFirstNumericCharacter);
-					if (int.TryParse(text2, ref num2) && text == buildingID && num2 > num)
+					if (int.TryParse(s, out num2) && text == buildingID && num2 > num)
 					{
 						num = num2;
 						result = building;
@@ -202,122 +200,12 @@ namespace StaRTS.Main.Models.Player.World
 
 		public void OnRemoveBuildingFromMap()
 		{
-			int nextBuildingNumber = this.NextBuildingNumber;
-			this.NextBuildingNumber = nextBuildingNumber - 1;
+			this.NextBuildingNumber--;
 		}
 
 		public int GetNextBuildingNumberAndIncrement()
 		{
-			int nextBuildingNumber = this.NextBuildingNumber;
-			this.NextBuildingNumber = nextBuildingNumber + 1;
-			return nextBuildingNumber;
-		}
-
-		public Map()
-		{
-			this.planetUid = "";
-			base..ctor();
-		}
-
-		protected internal Map(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).FindHighestHqLevel());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).Buildings);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).NextBuildingNumber);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).Planet);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((Map)GCHandledObjects.GCHandleToObject(instance)).GetAllBuildingsWithBaseUid(Marshal.PtrToStringUni(*(IntPtr*)args), (List<Building>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).GetHighestLevelBuilding(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).GetNextBuildingNumberAndIncrement());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).GetSquadStorageCapacity());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((Map)GCHandledObjects.GCHandleToObject(instance)).InitializePlanet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((Map)GCHandledObjects.GCHandleToObject(instance)).OnRemoveBuildingFromMap();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).PlanetId());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((Map)GCHandledObjects.GCHandleToObject(instance)).ReinitializePlanet(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).ScoutTowerExists());
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((Map)GCHandledObjects.GCHandleToObject(instance)).Buildings = (List<Building>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((Map)GCHandledObjects.GCHandleToObject(instance)).NextBuildingNumber = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((Map)GCHandledObjects.GCHandleToObject(instance)).Planet = (PlanetVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Map)GCHandledObjects.GCHandleToObject(instance)).ToJson());
+			return this.NextBuildingNumber++;
 		}
 	}
 }

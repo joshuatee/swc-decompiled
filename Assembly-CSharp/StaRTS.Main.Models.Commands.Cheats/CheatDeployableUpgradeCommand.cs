@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatDeployableUpgradeCommand(CheatDeployableUpgradeRequest request) : base("cheats.deployable.upgrade", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatDeployableUpgradeCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

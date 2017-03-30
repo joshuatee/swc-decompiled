@@ -13,13 +13,13 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.World
 {
 	public class ReplayMapDataLoader : IMapDataLoader
 	{
+		private const WorldType worldType = WorldType.Replay;
+
 		private MapLoadedDelegate OnMapLoaded;
 
 		private BattleParticipant defender;
@@ -27,8 +27,6 @@ namespace StaRTS.Main.Controllers.World
 		private string replayOwnerPlayerId;
 
 		private GetReplayResponse replayResponseData;
-
-		private const WorldType worldType = WorldType.Replay;
 
 		public ReplayMapDataLoader()
 		{
@@ -78,7 +76,7 @@ namespace StaRTS.Main.Controllers.World
 			replayData.RecordId = entryData.RecordID;
 			entryData.SharerPlayerId = this.replayOwnerPlayerId;
 			bool flag = Service.Get<CurrentPlayer>().PlayerId == entryData.AttackerID || this.replayOwnerPlayerId == entryData.AttackerID;
-			entryData.Won = (flag ? (entryData.EarnedStars > 0) : (entryData.EarnedStars == 0));
+			entryData.Won = ((!flag) ? (entryData.EarnedStars == 0) : (entryData.EarnedStars > 0));
 			Service.Get<EventManager>().SendEvent(EventId.BattleRecordRetrieved, this.replayResponseData);
 		}
 
@@ -130,68 +128,6 @@ namespace StaRTS.Main.Controllers.World
 				return Service.Get<IDataController>().Get<PlanetVO>(this.replayResponseData.ReplayData.PlanetId);
 			}
 			return null;
-		}
-
-		protected internal ReplayMapDataLoader(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetFactionAssetName());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetPlanetData());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetPreloads());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetProjectilePreloads((Map)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetWorldName());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetWorldType());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).Initialize((BattleParticipant)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).InitializeFromData((BattleEntry)GCHandledObjects.GCHandleToObject(*args), (BattleRecord)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).LoadMapData((MapLoadedDelegate)GCHandledObjects.GCHandleToObject(*args), (MapLoadFailDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).OnReplayLoaded((GetReplayResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ReplayMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).SetReplayResponseData((GetReplayResponse)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

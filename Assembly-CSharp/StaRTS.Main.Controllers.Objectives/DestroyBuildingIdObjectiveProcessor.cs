@@ -5,7 +5,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Objectives
 {
@@ -21,13 +20,16 @@ namespace StaRTS.Main.Controllers.Objectives
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id == EventId.EntityKilled && base.IsEventValidForBattleObjective())
+			if (id == EventId.EntityKilled)
 			{
-				Entity entity = (Entity)cookie;
-				BuildingComponent buildingComponent = entity.Get<BuildingComponent>();
-				if (buildingComponent != null && buildingComponent.BuildingType.BuildingID == this.buildingID)
+				if (base.IsEventValidForBattleObjective())
 				{
-					this.parent.Progress(this, 1);
+					Entity entity = (Entity)cookie;
+					BuildingComponent buildingComponent = entity.Get<BuildingComponent>();
+					if (buildingComponent != null && buildingComponent.BuildingType.BuildingID == this.buildingID)
+					{
+						this.parent.Progress(this, 1);
+					}
 				}
 			}
 			return EatResponse.NotEaten;
@@ -37,21 +39,6 @@ namespace StaRTS.Main.Controllers.Objectives
 		{
 			Service.Get<EventManager>().UnregisterObserver(this, EventId.EntityKilled);
 			base.Destroy();
-		}
-
-		protected internal DestroyBuildingIdObjectiveProcessor(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DestroyBuildingIdObjectiveProcessor)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DestroyBuildingIdObjectiveProcessor)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

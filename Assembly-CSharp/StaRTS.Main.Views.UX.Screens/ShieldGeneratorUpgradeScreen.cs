@@ -9,9 +9,5 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			this.useUpgradeGroup = true;
 		}
-
-		protected internal ShieldGeneratorUpgradeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

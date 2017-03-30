@@ -15,8 +15,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -268,12 +266,10 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private SquadMemberSortType curSortType;
 
-		private bool allowSameFaction;
+		private bool allowSameFaction = GameConstants.SAME_FACTION_MATCHMAKING_DEFAULT;
 
-		public SquadScreenMembersView(SquadSlidingScreen screen)
+		public SquadScreenMembersView(SquadSlidingScreen screen) : base(screen)
 		{
-			this.allowSameFaction = GameConstants.SAME_FACTION_MATCHMAKING_DEFAULT;
-			base..ctor(screen);
 		}
 
 		public override void OnScreenLoaded()
@@ -378,30 +374,34 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		public override void RefreshView()
 		{
 			this.UpdateMembers();
-			if (!Service.Get<SquadController>().WarManager.MatchMakingPrepMode)
+			if (Service.Get<SquadController>().WarManager.MatchMakingPrepMode)
+			{
+				this.groupStartWarBtns.Visible = true;
+				this.memberPanel.SetPanelUnifiedAnchorBottomOffset(120);
+				SquadController squadController = Service.Get<SquadController>();
+				SquadWarManager warManager = squadController.WarManager;
+				int warPartyCount = warManager.GetWarPartyCount();
+				this.labelStartWarSelected.Text = this.lang.Get("WAR_MEMBERS_SELECTED", new object[]
+				{
+					warPartyCount,
+					GameConstants.WAR_PARTICIPANT_COUNT
+				});
+				if (warPartyCount < GameConstants.WAR_PARTICIPANT_COUNT)
+				{
+					this.btnStartWarConfirm.Enabled = false;
+					this.btnStartWarConfirm.VisuallyDisableButton();
+				}
+				else
+				{
+					this.btnStartWarConfirm.Enabled = true;
+					this.btnStartWarConfirm.VisuallyEnableButton();
+				}
+			}
+			else
 			{
 				this.groupStartWarBtns.Visible = false;
 				this.memberPanel.SetPanelUnifiedAnchorBottomOffset(15);
-				return;
 			}
-			this.groupStartWarBtns.Visible = true;
-			this.memberPanel.SetPanelUnifiedAnchorBottomOffset(120);
-			SquadController squadController = Service.Get<SquadController>();
-			SquadWarManager warManager = squadController.WarManager;
-			int warPartyCount = warManager.GetWarPartyCount();
-			this.labelStartWarSelected.Text = this.lang.Get("WAR_MEMBERS_SELECTED", new object[]
-			{
-				warPartyCount,
-				GameConstants.WAR_PARTICIPANT_COUNT
-			});
-			if (warPartyCount < GameConstants.WAR_PARTICIPANT_COUNT)
-			{
-				this.btnStartWarConfirm.Enabled = false;
-				this.btnStartWarConfirm.VisuallyDisableButton();
-				return;
-			}
-			this.btnStartWarConfirm.Enabled = true;
-			this.btnStartWarConfirm.VisuallyEnableButton();
 		}
 
 		private void OnTabButtonSelected(UXCheckbox button, bool selected)
@@ -426,7 +426,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (selected)
 			{
 				btn.Selected = false;
-				this.curSortType = (SquadMemberSortType)btn.Tag;
+				this.curSortType = (SquadMemberSortType)((int)btn.Tag);
 				this.HandleMemberSortOptionClicked();
 				this.squadMemberGrid.RepositionItems();
 				this.UpdateMembers();
@@ -441,29 +441,27 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			case SquadMemberSortType.Medals:
 				this.memberSortLabel.Text = this.lang.Get("s_Medals", new object[0]);
 				this.squadMemberGrid.SetSortComparisonCallback(new Comparison<UXElement>(this.SortByMedals));
-				return;
+				break;
 			case SquadMemberSortType.Attacks:
 				this.memberSortLabel.Text = this.lang.Get("s_AttacksWon", new object[0]);
 				this.squadMemberGrid.SetSortComparisonCallback(new Comparison<UXElement>(this.SortByAttacks));
-				return;
+				break;
 			case SquadMemberSortType.Defenses:
 				this.memberSortLabel.Text = this.lang.Get("s_DefensesWon", new object[0]);
 				this.squadMemberGrid.SetSortComparisonCallback(new Comparison<UXElement>(this.SortByDefenses));
-				return;
+				break;
 			case SquadMemberSortType.Donated:
 				this.memberSortLabel.Text = this.lang.Get("s_Donated", new object[0]);
 				this.squadMemberGrid.SetSortComparisonCallback(new Comparison<UXElement>(this.SortByDonated));
-				return;
+				break;
 			case SquadMemberSortType.Received:
 				this.memberSortLabel.Text = this.lang.Get("s_Received", new object[0]);
 				this.squadMemberGrid.SetSortComparisonCallback(new Comparison<UXElement>(this.SortByReceived));
-				return;
+				break;
 			case SquadMemberSortType.Active:
 				this.memberSortLabel.Text = this.lang.Get("s_LastActive", new object[0]);
 				this.squadMemberGrid.SetSortComparisonCallback(new Comparison<UXElement>(this.SortByActive));
-				return;
-			default:
-				return;
+				break;
 			}
 		}
 
@@ -675,16 +673,16 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			{
 				if (warManager.IsCurrentSquadMatchmaking())
 				{
-					UXLabel expr_20A = squadMemberElements.MemberRoleLabel;
-					expr_20A.Text += this.lang.Get("WAR_IN_MATCHMAKING", new object[0]);
+					UXLabel expr_222 = squadMemberElements.MemberRoleLabel;
+					expr_222.Text += this.lang.Get("WAR_IN_MATCHMAKING", new object[0]);
 				}
 				else if (warManager.WarExists())
 				{
-					UXLabel expr_241 = squadMemberElements.MemberRoleLabel;
-					expr_241.Text += this.lang.Get("WAR_IN_WAR", new object[0]);
+					UXLabel expr_25F = squadMemberElements.MemberRoleLabel;
+					expr_25F.Text += this.lang.Get("WAR_IN_WAR", new object[0]);
 				}
 			}
-			squadMemberElements.MemberScoreLabel.Text = ((squadMember.MemberID == Service.Get<CurrentPlayer>().PlayerId) ? this.lang.ThousandsSeparated(Service.Get<CurrentPlayer>().PlayerMedals) : this.lang.ThousandsSeparated(squadMember.Score));
+			squadMemberElements.MemberScoreLabel.Text = ((!(squadMember.MemberID == Service.Get<CurrentPlayer>().PlayerId)) ? this.lang.ThousandsSeparated(squadMember.Score) : this.lang.ThousandsSeparated(Service.Get<CurrentPlayer>().PlayerMedals));
 			squadMemberElements.TroopsDonatedLabel.Text = this.lang.Get("TROOPS_DONATED", new object[]
 			{
 				this.lang.ThousandsSeparated(squadMember.TroopsDonated + num)
@@ -725,30 +723,27 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				squadMemberElements.TournamentScoreLabel3.Visible = false;
 				squadMemberElements.TournamentScoreSprite3.Visible = false;
 				int num3 = 0;
-				using (Dictionary<string, int>.Enumerator enumerator = squadMember.TournamentScore.GetEnumerator())
+				foreach (KeyValuePair<string, int> current in squadMember.TournamentScore)
 				{
-					while (enumerator.MoveNext())
+					if (num3 == 0)
 					{
-						KeyValuePair<string, int> current = enumerator.Current;
-						if (num3 == 0)
-						{
-							this.UpdateTournamentScore(current, squadMemberElements.TournamentScoreLabel1, squadMemberElements.TournamentScoreSprite1);
-						}
-						else if (num3 == 1)
-						{
-							this.UpdateTournamentScore(current, squadMemberElements.TournamentScoreLabel2, squadMemberElements.TournamentScoreSprite2);
-						}
-						else if (num3 == 2)
-						{
-							this.UpdateTournamentScore(current, squadMemberElements.TournamentScoreLabel3, squadMemberElements.TournamentScoreSprite3);
-						}
-						num3++;
+						this.UpdateTournamentScore(current, squadMemberElements.TournamentScoreLabel1, squadMemberElements.TournamentScoreSprite1);
 					}
-					goto IL_543;
+					else if (num3 == 1)
+					{
+						this.UpdateTournamentScore(current, squadMemberElements.TournamentScoreLabel2, squadMemberElements.TournamentScoreSprite2);
+					}
+					else if (num3 == 2)
+					{
+						this.UpdateTournamentScore(current, squadMemberElements.TournamentScoreLabel3, squadMemberElements.TournamentScoreSprite3);
+					}
+					num3++;
 				}
 			}
-			squadMemberElements.ConflictMedalsGroup.Visible = false;
-			IL_543:
+			else
+			{
+				squadMemberElements.ConflictMedalsGroup.Visible = false;
+			}
 			PlanetVO planetVO = null;
 			if (!string.IsNullOrEmpty(squadMember.Planet))
 			{
@@ -794,28 +789,31 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (member != null && (currentPlayer.PlayerId == member.MemberID || member.Role == SquadRole.Owner))
 			{
 				btn.Enabled = false;
-				return;
 			}
-			SquadStateManager stateManager = Service.Get<SquadController>().StateManager;
-			if (stateManager.Role == SquadRole.Owner)
+			else
 			{
-				btn.Enabled = true;
-				return;
+				SquadStateManager stateManager = Service.Get<SquadController>().StateManager;
+				if (stateManager.Role == SquadRole.Owner)
+				{
+					btn.Enabled = true;
+				}
+				else if (!ownerOnly && stateManager.Role == SquadRole.Officer && member.Role == SquadRole.Member)
+				{
+					btn.Enabled = true;
+				}
+				else
+				{
+					btn.Enabled = false;
+				}
 			}
-			if (!ownerOnly && stateManager.Role == SquadRole.Officer && member.Role == SquadRole.Member)
-			{
-				btn.Enabled = true;
-				return;
-			}
-			btn.Enabled = false;
 		}
 
 		private void UpdateTournamentScore(KeyValuePair<string, int> pair, UXLabel scoreLabel, UXSprite iconSprite)
 		{
 			scoreLabel.Visible = true;
 			iconSprite.Visible = true;
-			scoreLabel.Text = this.lang.ThousandsSeparated(pair.get_Value());
-			iconSprite.SpriteName = GameUtils.GetTournamentPointIconName(pair.get_Key());
+			scoreLabel.Text = this.lang.ThousandsSeparated(pair.Value);
+			iconSprite.SpriteName = GameUtils.GetTournamentPointIconName(pair.Key);
 		}
 
 		public static void SquadMemberElementsSetup(UXGrid grid, SquadMemberElements elements, string id)
@@ -896,10 +894,12 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 					AlertScreen.ShowModal(false, null, message, null, null, true);
 				}
 				this.screen.RefreshViews();
-				return;
 			}
-			squadMemberElements.ButtonContainer.Visible = true;
-			squadMemberElements.ButtonContainer.PlayTween(true);
+			else
+			{
+				squadMemberElements.ButtonContainer.Visible = true;
+				squadMemberElements.ButtonContainer.PlayTween(true);
+			}
 		}
 
 		private void OnPromoteClicked(UXButton button)
@@ -972,13 +972,15 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (squadController.WarManager.IsMemberInWarParty(squadMember.MemberID) || squadController.WarManager.IsSquadMemberInWarOrMatchmaking(squadMember))
 			{
 				AlertScreen.ShowModal(false, null, this.lang.Get("CANT_REMOVE_MEMBER_IN_WAR", new object[0]), null, null, true);
-				return;
 			}
-			string message = this.lang.Get("REMOVE_SQUAD_MEMBER_ALERT", new object[]
+			else
 			{
-				squadMember.MemberName
-			});
-			AlertScreen.ShowModal(false, null, message, new OnScreenModalResult(this.OnAlertMemberRemoveResult), squadMember, true);
+				string message = this.lang.Get("REMOVE_SQUAD_MEMBER_ALERT", new object[]
+				{
+					squadMember.MemberName
+				});
+				AlertScreen.ShowModal(false, null, message, new OnScreenModalResult(this.OnAlertMemberRemoveResult), squadMember, true);
+			}
 		}
 
 		private void OnAlertMemberRemoveResult(object result, object cookie)
@@ -1015,7 +1017,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				if (highestLevelScreen != null)
 				{
 					highestLevelScreen.CloseSquadWarScreen(null);
-					return;
 				}
 			}
 			else
@@ -1080,257 +1081,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		public override bool IsVisible()
 		{
 			return this.memberContainer.Visible;
-		}
-
-		protected internal SquadScreenMembersView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).CheckAndCreateMemberEntry((SquadMember)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).CreateSquadMemberElement((SquadMember)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).GetSquadMemberElement((SquadMember)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).HandleMemberSortOptionClicked();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).HideView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).InitMemberList();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).IsVisible());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).MemberItemClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnAlertDemoteMemberResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnAlertMemberRemoveResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnAlertPromoteMemberResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnCancelStartWar((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnDemoteClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnMemberChangeComplete(*(sbyte*)args != 0, GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnMemberSortOpenClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnMemberSortOptionClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnPromoteClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnRemoveClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnSameFaction((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnSameFactionInfo((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnStartWarConfirm((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnTabButtonSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OnViewClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).OpenCloseMemberSortList();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).RepositionFinished();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).SetPromoteDemoteOnButton((SquadMember)GCHandledObjects.GCHandleToObject(*args), (UXButton)GCHandledObjects.GCHandleToObject(args[1]), (UXLabel)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).SetupButtonBasedOnRole((UXButton)GCHandledObjects.GCHandleToObject(*args), (SquadMember)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).SetupMemberSortButton((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), (SquadMemberSortType)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).ShowView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).SortByActive((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).SortByAttacks((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).SortByDefenses((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).SortByDonated((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).SortByMedals((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).SortByReceived((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			SquadScreenMembersView.SquadMemberElementsSetup((UXGrid)GCHandledObjects.GCHandleToObject(*args), (SquadMemberElements)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).UpdateMembers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadMember((SquadMember)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((SquadScreenMembersView)GCHandledObjects.GCHandleToObject(instance)).UpdateTournamentScore((KeyValuePair<string, int>)GCHandledObjects.GCHandleToObject(*args), (UXLabel)GCHandledObjects.GCHandleToObject(args[1]), (UXSprite)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
 		}
 	}
 }

@@ -20,8 +20,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -130,9 +128,9 @@ namespace StaRTS.Main.Utils
 					bool flag = false;
 					foreach (KeyValuePair<string, InventoryEntry> current in inventoryStorage.GetInternalStorage())
 					{
-						if (current.get_Value().Amount > 0)
+						if (current.Value.Amount > 0)
 						{
-							TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(current.get_Key());
+							TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(current.Key);
 							if (troopTypeVO.UpgradeGroup == finalUnitFromPrize.UpgradeGroup)
 							{
 								flag = true;
@@ -198,11 +196,11 @@ namespace StaRTS.Main.Utils
 			}
 			if (text != null)
 			{
-				string text3 = (prizeType == PrizeType.Hero) ? text2 : lang.Get("AMOUNT_AND_NAME", new object[]
+				string text3 = (prizeType != PrizeType.Hero) ? lang.Get("AMOUNT_AND_NAME", new object[]
 				{
 					num,
 					text2
-				});
+				}) : text2;
 				string instructions = lang.Get(text, new object[]
 				{
 					text3
@@ -327,7 +325,7 @@ namespace StaRTS.Main.Utils
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Could not generate geometry for crate supply {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("Could not generate geometry for crate supply {0}", new object[]
 					{
 						optional.Uid
 					});
@@ -337,10 +335,7 @@ namespace StaRTS.Main.Utils
 					int shardQualityNumeric = GameUtils.GetShardQualityNumeric(optional);
 					if (shardQualityNumeric > -1)
 					{
-						dataFragIcon.SpriteName = string.Format("icoDataFragQ{0}", new object[]
-						{
-							shardQualityNumeric
-						});
+						dataFragIcon.SpriteName = string.Format("icoDataFragQ{0}", shardQualityNumeric);
 						dataFragIcon.Visible = true;
 					}
 					else
@@ -369,7 +364,7 @@ namespace StaRTS.Main.Utils
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find crate supply {0} for faction {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find crate supply {0} for faction {1}", new object[]
 				{
 					text,
 					currentPlayer.Faction
@@ -383,7 +378,7 @@ namespace StaRTS.Main.Utils
 			CrateVO crateVO = null;
 			if (crateRewardIds != null)
 			{
-				if (crateRewardIds.Length != 0)
+				if (crateRewardIds.Length > 0)
 				{
 					crateVO = dataController.GetOptional<CrateVO>(rewardGroup.CrateRewardIds[0]);
 				}
@@ -399,12 +394,14 @@ namespace StaRTS.Main.Utils
 			if (crateVO != null)
 			{
 				RewardUtils.SetCrateIcon(crateSprite, crateVO, AnimState.Idle);
-				return;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("Missing crate reward meta data for tournament reward:{0}", new object[]
+			else
 			{
-				rewardGroup.Uid
-			});
+				Service.Get<Logger>().ErrorFormat("Missing crate reward meta data for tournament reward:{0}", new object[]
+				{
+					rewardGroup.Uid
+				});
+			}
 		}
 
 		public static void HandleCrateSupplyRewardClicked(CrateSupplyVO crateSupply)
@@ -448,38 +445,6 @@ namespace StaRTS.Main.Utils
 				EquipmentInfoScreen screen2 = new EquipmentInfoScreen(equipmentVO, null, availableTroopResearchLab, true);
 				Service.Get<ScreenController>().AddScreen(screen2);
 			}
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventPrizeUtils.GetFinalUnitFromPrize((PrizeType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventPrizeUtils.GetTierRewardMap(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			TimedEventPrizeUtils.HandleCrateSupplyRewardClicked((CrateSupplyVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventPrizeUtils.TransferPrizeFromInventory((PrizeType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventPrizeUtils.TrySetupConflictEndedRewardView((List<string>)GCHandledObjects.GCHandleToObject(*args), (UXLabel)GCHandledObjects.GCHandleToObject(args[1]), (UXSprite)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			TimedEventPrizeUtils.TrySetupConflictItemRewardView((TournamentRewardsVO)GCHandledObjects.GCHandleToObject(*args), (UXLabel)GCHandledObjects.GCHandleToObject(args[1]), (UXSprite)GCHandledObjects.GCHandleToObject(args[2]), (UXSprite)GCHandledObjects.GCHandleToObject(args[3]), (UXElement)GCHandledObjects.GCHandleToObject(args[4]), (UXElement)GCHandledObjects.GCHandleToObject(args[5]), (UXElement)GCHandledObjects.GCHandleToObject(args[6]), (UXLabel)GCHandledObjects.GCHandleToObject(args[7]), (UXSprite)GCHandledObjects.GCHandleToObject(args[8]), (UXLabel)GCHandledObjects.GCHandleToObject(args[9]));
-			return -1L;
 		}
 	}
 }

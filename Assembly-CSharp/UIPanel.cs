@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/UI/NGUI Panel"), ExecuteInEditMode]
-public class UIPanel : UIRect, IUnitySerializable
+public class UIPanel : UIRect
 {
 	public enum RenderQueue
 	{
@@ -23,77 +20,77 @@ public class UIPanel : UIRect, IUnitySerializable
 
 	public UIPanel.OnGeometryUpdated onGeometryUpdated;
 
-	public bool showInPanelTool;
+	public bool showInPanelTool = true;
 
 	public bool generateNormals;
 
 	public bool widgetsAreStatic;
 
-	public bool cullWhileDragging;
+	public bool cullWhileDragging = true;
 
 	public bool alwaysOnScreen;
 
 	public bool anchorOffset;
 
-	public bool softBorderPadding;
+	public bool softBorderPadding = true;
 
 	public UIPanel.RenderQueue renderQueue;
 
-	public int startingRenderQueue;
+	public int startingRenderQueue = 3000;
 
-	[System.NonSerialized]
-	public List<UIWidget> widgets;
+	[NonSerialized]
+	public List<UIWidget> widgets = new List<UIWidget>();
 
-	[System.NonSerialized]
-	public List<UIDrawCall> drawCalls;
+	[NonSerialized]
+	public List<UIDrawCall> drawCalls = new List<UIDrawCall>();
 
-	[System.NonSerialized]
-	public Matrix4x4 worldToLocal;
+	[NonSerialized]
+	public Matrix4x4 worldToLocal = Matrix4x4.identity;
 
-	[System.NonSerialized]
-	public Vector4 drawCallClipRange;
+	[NonSerialized]
+	public Vector4 drawCallClipRange = new Vector4(0f, 0f, 1f, 1f);
 
 	public UIPanel.OnClippingMoved onClipMove;
 
 	[HideInInspector, SerializeField]
-	protected internal Texture2D mClipTexture;
+	private Texture2D mClipTexture;
 
 	[HideInInspector, SerializeField]
-	protected internal float mAlpha;
+	private float mAlpha = 1f;
 
 	[HideInInspector, SerializeField]
-	protected internal UIDrawCall.Clipping mClipping;
+	private UIDrawCall.Clipping mClipping;
 
 	[HideInInspector, SerializeField]
-	protected internal Vector4 mClipRange;
+	private Vector4 mClipRange = new Vector4(0f, 0f, 300f, 200f);
 
 	[HideInInspector, SerializeField]
-	protected internal Vector2 mClipSoftness;
+	private Vector2 mClipSoftness = new Vector2(4f, 4f);
 
 	[HideInInspector, SerializeField]
-	protected internal int mDepth;
+	private int mDepth;
 
 	[HideInInspector, SerializeField]
-	protected internal int mSortingOrder;
+	private int mSortingOrder;
 
 	private bool mRebuild;
 
 	private bool mResized;
 
 	[SerializeField]
-	protected internal Vector2 mClipOffset;
+	private Vector2 mClipOffset = Vector2.zero;
 
-	private int mMatrixFrame;
+	private int mMatrixFrame = -1;
 
 	private int mAlphaFrameID;
 
-	private int mLayer;
+	private int mLayer = -1;
 
 	private static float[] mTemp = new float[4];
 
-	private Vector2 mMin;
+	private Vector2 mMin = Vector2.zero;
 
-	private Vector2 mMax;
+	private Vector2 mMax = Vector2.zero;
 
 	private bool mHalfPixelOffset;
 
@@ -123,11 +120,7 @@ public class UIPanel : UIRect, IUnitySerializable
 				num = Mathf.Max(num, UIPanel.list[i].depth);
 				i++;
 			}
-			if (num != -2147483648)
-			{
-				return num + 1;
-			}
-			return 0;
+			return (num != -2147483648) ? (num + 1) : 0;
 		}
 	}
 
@@ -135,7 +128,7 @@ public class UIPanel : UIRect, IUnitySerializable
 	{
 		get
 		{
-			return this.mClipping > UIDrawCall.Clipping.None;
+			return this.mClipping != UIDrawCall.Clipping.None;
 		}
 	}
 
@@ -229,7 +222,7 @@ public class UIPanel : UIRect, IUnitySerializable
 			if (base.anchorCamera != null && this.mCam.orthographic)
 			{
 				Vector2 windowSize = this.GetWindowSize();
-				float num = (base.root != null) ? base.root.pixelSizeAdjustment : 1f;
+				float num = (!(base.root != null)) ? 1f : base.root.pixelSizeAdjustment;
 				float num2 = num / windowSize.y / this.mCam.orthographicSize;
 				bool flag = this.mHalfPixelOffset;
 				bool flag2 = this.mHalfPixelOffset;
@@ -241,7 +234,7 @@ public class UIPanel : UIRect, IUnitySerializable
 				{
 					flag2 = !flag2;
 				}
-				return new Vector3(flag ? (-num2) : 0f, flag2 ? num2 : 0f);
+				return new Vector3((!flag) ? 0f : (-num2), (!flag2) ? 0f : num2);
 			}
 			return Vector3.zero;
 		}
@@ -501,11 +494,7 @@ public class UIPanel : UIRect, IUnitySerializable
 		{
 			return 1;
 		}
-		if (a.GetInstanceID() >= b.GetInstanceID())
-		{
-			return 1;
-		}
-		return -1;
+		return (a.GetInstanceID() >= b.GetInstanceID()) ? 1 : -1;
 	}
 
 	private void InvalidateClipping()
@@ -581,7 +570,7 @@ public class UIPanel : UIRect, IUnitySerializable
 		{
 			this.mAlphaFrameID = frameID;
 			UIRect parent = base.parent;
-			this.finalAlpha = ((base.parent != null) ? (parent.CalculateFinalAlpha(frameID) * this.mAlpha) : this.mAlpha);
+			this.finalAlpha = ((!(base.parent != null)) ? this.mAlpha : (parent.CalculateFinalAlpha(frameID) * this.mAlpha));
 		}
 		return this.finalAlpha;
 	}
@@ -748,7 +737,7 @@ public class UIPanel : UIRect, IUnitySerializable
 	private void FindParent()
 	{
 		Transform parent = base.cachedTransform.parent;
-		this.mParentPanel = ((parent != null) ? NGUITools.FindInParents<UIPanel>(parent.gameObject) : null);
+		this.mParentPanel = ((!(parent != null)) ? null : NGUITools.FindInParents<UIPanel>(parent.gameObject));
 	}
 
 	public override void ParentHasChanged()
@@ -782,7 +771,7 @@ public class UIPanel : UIRect, IUnitySerializable
 		this.FindParent();
 		if (base.GetComponent<Rigidbody>() == null && this.mParentPanel == null)
 		{
-			UICamera uICamera = (base.anchorCamera != null) ? this.mCam.GetComponent<UICamera>() : null;
+			UICamera uICamera = (!(base.anchorCamera != null)) ? null : this.mCam.GetComponent<UICamera>();
 			if (uICamera != null && (uICamera.eventType == UICamera.EventType.UI_3D || uICamera.eventType == UICamera.EventType.World_3D))
 			{
 				Rigidbody rigidbody = base.gameObject.AddComponent<Rigidbody>();
@@ -1269,7 +1258,7 @@ public class UIPanel : UIRect, IUnitySerializable
 			cachedTransform2.position = vector;
 			cachedTransform2.rotation = rotation;
 			cachedTransform2.localScale = lossyScale;
-			uIDrawCall.renderQueue = ((this.renderQueue == UIPanel.RenderQueue.Explicit) ? this.startingRenderQueue : (this.startingRenderQueue + i));
+			uIDrawCall.renderQueue = ((this.renderQueue != UIPanel.RenderQueue.Explicit) ? (this.startingRenderQueue + i) : this.startingRenderQueue);
 			uIDrawCall.alwaysOnScreen = (this.alwaysOnScreen && (this.mClipping == UIDrawCall.Clipping.None || this.mClipping == UIDrawCall.Clipping.ConstrainButDontClip));
 			uIDrawCall.sortingOrder = this.mSortingOrder;
 			uIDrawCall.clipTexture = this.mClipTexture;
@@ -1327,7 +1316,7 @@ public class UIPanel : UIRect, IUnitySerializable
 		while (j < count)
 		{
 			UIWidget uIWidget = this.widgets[j];
-			if (uIWidget != null && uIWidget.panel == this && uIWidget.enabled)
+			if (uIWidget.panel == this && uIWidget.enabled)
 			{
 				if (uIWidget.UpdateTransform(frameCount) || this.mResized)
 				{
@@ -1367,8 +1356,8 @@ public class UIPanel : UIRect, IUnitySerializable
 		for (int i = 0; i < this.drawCalls.Count; i++)
 		{
 			UIDrawCall uIDrawCall = this.drawCalls[i];
-			int num = (i == 0) ? -2147483648 : (this.drawCalls[i - 1].depthEnd + 1);
-			int num2 = (i + 1 == this.drawCalls.Count) ? 2147483647 : (this.drawCalls[i + 1].depthStart - 1);
+			int num = (i != 0) ? (this.drawCalls[i - 1].depthEnd + 1) : -2147483648;
+			int num2 = (i + 1 != this.drawCalls.Count) ? (this.drawCalls[i + 1].depthStart - 1) : 2147483647;
 			if (num <= depth && num2 >= depth)
 			{
 				if (uIDrawCall.baseMaterial == material && uIDrawCall.mainTexture == mainTexture)
@@ -1537,11 +1526,7 @@ public class UIPanel : UIRect, IUnitySerializable
 		{
 			trans = trans.parent;
 		}
-		if (!createIfMissing)
-		{
-			return null;
-		}
-		return NGUITools.CreateUI(trans, false, layer);
+		return (!createIfMissing) ? null : NGUITools.CreateUI(trans, false, layer);
 	}
 
 	public Vector2 GetWindowSize()
@@ -1562,1034 +1547,5 @@ public class UIPanel : UIRect, IUnitySerializable
 			return new Vector2(this.mClipRange.z, this.mClipRange.w);
 		}
 		return NGUITools.screenSize;
-	}
-
-	public UIPanel()
-	{
-		this.showInPanelTool = true;
-		this.cullWhileDragging = true;
-		this.softBorderPadding = true;
-		this.startingRenderQueue = 3000;
-		this.widgets = new List<UIWidget>();
-		this.drawCalls = new List<UIDrawCall>();
-		this.worldToLocal = Matrix4x4.identity;
-		this.drawCallClipRange = new Vector4(0f, 0f, 1f, 1f);
-		this.mAlpha = 1f;
-		this.mClipRange = new Vector4(0f, 0f, 300f, 200f);
-		this.mClipSoftness = new Vector2(4f, 4f);
-		this.mClipOffset = Vector2.zero;
-		this.mMatrixFrame = -1;
-		this.mLayer = -1;
-		this.mMin = Vector2.zero;
-		this.mMax = Vector2.zero;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			this.leftAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			this.rightAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			this.bottomAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			this.topAnchor.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.WriteInt32((int)this.updateAnchors);
-		SerializedStateWriter.Instance.WriteBoolean(this.showInPanelTool);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.generateNormals);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.widgetsAreStatic);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.cullWhileDragging);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.alwaysOnScreen);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.anchorOffset);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.softBorderPadding);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32((int)this.renderQueue);
-		SerializedStateWriter.Instance.WriteInt32(this.startingRenderQueue);
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mClipTexture);
-		}
-		SerializedStateWriter.Instance.WriteSingle(this.mAlpha);
-		SerializedStateWriter.Instance.WriteInt32((int)this.mClipping);
-		if (depth <= 7)
-		{
-			this.mClipRange.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			this.mClipSoftness.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32(this.mDepth);
-		SerializedStateWriter.Instance.WriteInt32(this.mSortingOrder);
-		if (depth <= 7)
-		{
-			this.mClipOffset.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			this.leftAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			this.rightAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			this.bottomAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			this.topAnchor.Unity_Deserialize(depth + 1);
-		}
-		this.updateAnchors = (UIRect.AnchorUpdate)SerializedStateReader.Instance.ReadInt32();
-		this.showInPanelTool = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.generateNormals = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.widgetsAreStatic = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.cullWhileDragging = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.alwaysOnScreen = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.anchorOffset = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.softBorderPadding = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.renderQueue = (UIPanel.RenderQueue)SerializedStateReader.Instance.ReadInt32();
-		this.startingRenderQueue = SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mClipTexture = (SerializedStateReader.Instance.ReadUnityEngineObject() as Texture2D);
-		}
-		this.mAlpha = SerializedStateReader.Instance.ReadSingle();
-		this.mClipping = (UIDrawCall.Clipping)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mClipRange.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.mClipSoftness.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		this.mDepth = SerializedStateReader.Instance.ReadInt32();
-		this.mSortingOrder = SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mClipOffset.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor != null)
-			{
-				this.leftAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor != null)
-			{
-				this.rightAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor != null)
-			{
-				this.bottomAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor != null)
-			{
-				this.topAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (this.mClipTexture != null)
-		{
-			this.mClipTexture = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mClipTexture) as Texture2D);
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_3F_0 = this.leftAnchor;
-			ISerializedNamedStateWriter arg_37_0 = SerializedNamedStateWriter.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_37_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2296);
-			arg_3F_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_82_0 = this.rightAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2307);
-			arg_82_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_C5_0 = this.bottomAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2319);
-			arg_C5_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_108_0 = this.topAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2332);
-			arg_108_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.updateAnchors, &var_0_cp_0[var_0_cp_1] + 741);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.showInPanelTool, &var_0_cp_0[var_0_cp_1] + 4089);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.generateNormals, &var_0_cp_0[var_0_cp_1] + 4105);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.widgetsAreStatic, &var_0_cp_0[var_0_cp_1] + 4121);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.cullWhileDragging, &var_0_cp_0[var_0_cp_1] + 4138);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.alwaysOnScreen, &var_0_cp_0[var_0_cp_1] + 4156);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.anchorOffset, &var_0_cp_0[var_0_cp_1] + 4171);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.softBorderPadding, &var_0_cp_0[var_0_cp_1] + 4184);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.renderQueue, &var_0_cp_0[var_0_cp_1] + 4202);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.startingRenderQueue, &var_0_cp_0[var_0_cp_1] + 4214);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.mClipTexture, &var_0_cp_0[var_0_cp_1] + 4234);
-		}
-		SerializedNamedStateWriter.Instance.WriteSingle(this.mAlpha, &var_0_cp_0[var_0_cp_1] + 4247);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mClipping, &var_0_cp_0[var_0_cp_1] + 4254);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 4264);
-			this.mClipRange.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 4275);
-			this.mClipSoftness.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mDepth, &var_0_cp_0[var_0_cp_1] + 2356);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mSortingOrder, &var_0_cp_0[var_0_cp_1] + 4289);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 4303);
-			this.mClipOffset.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_3F_0 = this.leftAnchor;
-			ISerializedNamedStateReader arg_37_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_37_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2296);
-			arg_3F_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_82_0 = this.rightAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2307);
-			arg_82_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_C5_0 = this.bottomAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2319);
-			arg_C5_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_108_0 = this.topAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2332);
-			arg_108_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		this.updateAnchors = (UIRect.AnchorUpdate)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 741);
-		this.showInPanelTool = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4089);
-		SerializedNamedStateReader.Instance.Align();
-		this.generateNormals = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4105);
-		SerializedNamedStateReader.Instance.Align();
-		this.widgetsAreStatic = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4121);
-		SerializedNamedStateReader.Instance.Align();
-		this.cullWhileDragging = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4138);
-		SerializedNamedStateReader.Instance.Align();
-		this.alwaysOnScreen = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4156);
-		SerializedNamedStateReader.Instance.Align();
-		this.anchorOffset = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4171);
-		SerializedNamedStateReader.Instance.Align();
-		this.softBorderPadding = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4184);
-		SerializedNamedStateReader.Instance.Align();
-		this.renderQueue = (UIPanel.RenderQueue)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 4202);
-		this.startingRenderQueue = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 4214);
-		if (depth <= 7)
-		{
-			this.mClipTexture = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 4234) as Texture2D);
-		}
-		this.mAlpha = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 4247);
-		this.mClipping = (UIDrawCall.Clipping)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 4254);
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 4264);
-			this.mClipRange.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 4275);
-			this.mClipSoftness.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		this.mDepth = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2356);
-		this.mSortingOrder = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 4289);
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 4303);
-			this.mClipOffset.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-	}
-
-	protected internal UIPanel(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static bool $Get0(object instance)
-	{
-		return ((UIPanel)instance).showInPanelTool;
-	}
-
-	public static void $Set0(object instance, bool value)
-	{
-		((UIPanel)instance).showInPanelTool = value;
-	}
-
-	public static bool $Get1(object instance)
-	{
-		return ((UIPanel)instance).generateNormals;
-	}
-
-	public static void $Set1(object instance, bool value)
-	{
-		((UIPanel)instance).generateNormals = value;
-	}
-
-	public static bool $Get2(object instance)
-	{
-		return ((UIPanel)instance).widgetsAreStatic;
-	}
-
-	public static void $Set2(object instance, bool value)
-	{
-		((UIPanel)instance).widgetsAreStatic = value;
-	}
-
-	public static bool $Get3(object instance)
-	{
-		return ((UIPanel)instance).cullWhileDragging;
-	}
-
-	public static void $Set3(object instance, bool value)
-	{
-		((UIPanel)instance).cullWhileDragging = value;
-	}
-
-	public static bool $Get4(object instance)
-	{
-		return ((UIPanel)instance).alwaysOnScreen;
-	}
-
-	public static void $Set4(object instance, bool value)
-	{
-		((UIPanel)instance).alwaysOnScreen = value;
-	}
-
-	public static bool $Get5(object instance)
-	{
-		return ((UIPanel)instance).anchorOffset;
-	}
-
-	public static void $Set5(object instance, bool value)
-	{
-		((UIPanel)instance).anchorOffset = value;
-	}
-
-	public static bool $Get6(object instance)
-	{
-		return ((UIPanel)instance).softBorderPadding;
-	}
-
-	public static void $Set6(object instance, bool value)
-	{
-		((UIPanel)instance).softBorderPadding = value;
-	}
-
-	public static long $Get7(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)instance).mClipTexture);
-	}
-
-	public static void $Set7(object instance, long value)
-	{
-		((UIPanel)instance).mClipTexture = (Texture2D)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static float $Get8(object instance)
-	{
-		return ((UIPanel)instance).mAlpha;
-	}
-
-	public static void $Set8(object instance, float value)
-	{
-		((UIPanel)instance).mAlpha = value;
-	}
-
-	public static float $Get9(object instance, int index)
-	{
-		UIPanel expr_06_cp_0 = (UIPanel)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.mClipRange.x;
-		case 1:
-			return expr_06_cp_0.mClipRange.y;
-		case 2:
-			return expr_06_cp_0.mClipRange.z;
-		case 3:
-			return expr_06_cp_0.mClipRange.w;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set9(object instance, float value, int index)
-	{
-		UIPanel expr_06_cp_0 = (UIPanel)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.mClipRange.x = value;
-			return;
-		case 1:
-			expr_06_cp_0.mClipRange.y = value;
-			return;
-		case 2:
-			expr_06_cp_0.mClipRange.z = value;
-			return;
-		case 3:
-			expr_06_cp_0.mClipRange.w = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get10(object instance, int index)
-	{
-		UIPanel expr_06_cp_0 = (UIPanel)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.mClipSoftness.x;
-		case 1:
-			return expr_06_cp_0.mClipSoftness.y;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set10(object instance, float value, int index)
-	{
-		UIPanel expr_06_cp_0 = (UIPanel)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.mClipSoftness.x = value;
-			return;
-		case 1:
-			expr_06_cp_0.mClipSoftness.y = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get11(object instance, int index)
-	{
-		UIPanel expr_06_cp_0 = (UIPanel)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.mClipOffset.x;
-		case 1:
-			return expr_06_cp_0.mClipOffset.y;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set11(object instance, float value, int index)
-	{
-		UIPanel expr_06_cp_0 = (UIPanel)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.mClipOffset.x = value;
-			return;
-		case 1:
-			expr_06_cp_0.mClipOffset.y = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).AddWidget((UIWidget)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).Affects((UIWidget)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).Awake();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).CalculateConstrainOffset(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1))));
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).CalculateFinalAlpha(*(int*)args));
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIPanel.CompareFunc((UIPanel)GCHandledObjects.GCHandleToObject(*args), (UIPanel)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).ConstrainTargetToBounds((Transform)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).FillAllDrawCalls();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).FillDrawCall((UIDrawCall)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIPanel.Find((Transform)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIPanel.Find((Transform)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIPanel.Find((Transform)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(int*)(args + 2)));
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).FindDrawCall((UIWidget)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).FindParent();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).alpha);
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).baseClipRegion);
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).canBeAnchored);
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipCount);
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipOffset);
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipping);
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipRange);
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipsChildren);
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipSoftness);
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipTexture);
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).depth);
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).drawCallOffset);
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).finalClipRegion);
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).halfPixelOffset);
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).hasClipping);
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).hasCumulativeClipping);
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).height);
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).localCorners);
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIPanel.nextUnusedDepth);
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).parentPanel);
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).sortingOrder);
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).usedForUI);
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).width);
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).worldCorners);
-	}
-
-	public unsafe static long $Invoke38(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).GetSides((Transform)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke39(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).GetViewSize());
-	}
-
-	public unsafe static long $Invoke40(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).GetWindowSize());
-	}
-
-	public unsafe static long $Invoke41(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).Invalidate(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke42(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).InvalidateClipping();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke43(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).IsVisible((UIWidget)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke44(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).IsVisible(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke45(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIPanel)GCHandledObjects.GCHandleToObject(instance)).IsVisible(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-	}
-
-	public unsafe static long $Invoke46(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).LateUpdate();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke47(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).OnAnchor();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke48(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).OnDisable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke49(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).OnEnable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke50(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).OnInit();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke51(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).OnStart();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke52(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).ParentHasChanged();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke53(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).RebuildAllDrawCalls();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke54(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).Refresh();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke55(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).RemoveWidget((UIWidget)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke56(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).alpha = *(float*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke57(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).baseClipRegion = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke58(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipOffset = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke59(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipping = (UIDrawCall.Clipping)(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke60(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipRange = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke61(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipSoftness = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke62(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).clipTexture = (Texture2D)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke63(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).depth = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke64(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).sortingOrder = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke65(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).SetDirty();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke66(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).SetRect(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke67(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).SortWidgets();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke68(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke69(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke70(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke71(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke72(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke73(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).UpdateDrawCalls();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke74(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).UpdateLayers();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke75(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).UpdateSelf();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke76(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).UpdateTransformMatrix();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke77(long instance, long* args)
-	{
-		((UIPanel)GCHandledObjects.GCHandleToObject(instance)).UpdateWidgets();
-		return -1L;
 	}
 }

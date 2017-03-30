@@ -8,13 +8,5 @@ namespace Net.RichardLord.Ash.Core
 		{
 			return new ComponentMatchingFamily<TNode>();
 		}
-
-		public ComponentMatchingFamilyFactory()
-		{
-		}
-
-		protected internal ComponentMatchingFamilyFactory(UIntPtr dummy)
-		{
-		}
 	}
 }

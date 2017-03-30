@@ -13,11 +13,10 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Animations
 {
-	public class TextCrawlAnimation : UXFactory, IViewFrameTimeObserver, IUserInputObserver, IBackButtonHandler
+	public class TextCrawlAnimation : UXFactory, IBackButtonHandler, IUserInputObserver, IViewFrameTimeObserver
 	{
 		public delegate void TextCrawlAnimationCompleteDelegate();
 
@@ -121,30 +120,32 @@ namespace StaRTS.Main.Views.Animations
 			{
 				this.modifiedCameras = false;
 				this.FinishUp(false);
-				return;
 			}
-			CameraManager cameraManager = Service.Get<CameraManager>();
-			cameraManager.MainCamera.Camera.enabled = false;
-			cameraManager.UXCamera.Camera.enabled = false;
-			Camera camera = this.uxCamera.Camera;
-			this.oldNearClipPlane = camera.nearClipPlane;
-			camera.fieldOfView = 90f;
-			camera.nearClipPlane = 0.01f;
-			camera.orthographic = false;
-			camera.enabled = true;
-			UXElement element = base.GetElement<UXElement>("ContainerBtnSkipIntro");
-			float x = (float)Screen.width * 0.5f;
-			float num = (float)Screen.height * 0.5f;
-			float z = num;
-			element.LocalPosition = new Vector3(x, num, z);
-			this.skipLeft = (float)Screen.width - element.Width;
-			this.skipBottom = (float)Screen.height - element.Height;
-			Service.Get<UserInputManager>().RegisterObserver(this, UserInputLayer.Screen);
-			this.modifiedCameras = true;
-			this.Visible = true;
-			this.animation.Play();
-			Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
-			eventManager.SendEvent(EventId.TextCrawlStarted, null);
+			else
+			{
+				CameraManager cameraManager = Service.Get<CameraManager>();
+				cameraManager.MainCamera.Camera.enabled = false;
+				cameraManager.UXCamera.Camera.enabled = false;
+				Camera camera = this.uxCamera.Camera;
+				this.oldNearClipPlane = camera.nearClipPlane;
+				camera.fieldOfView = 90f;
+				camera.nearClipPlane = 0.01f;
+				camera.orthographic = false;
+				camera.enabled = true;
+				UXElement element = base.GetElement<UXElement>("ContainerBtnSkipIntro");
+				float x = (float)Screen.width * 0.5f;
+				float num = (float)Screen.height * 0.5f;
+				float z = num;
+				element.LocalPosition = new Vector3(x, num, z);
+				this.skipLeft = (float)Screen.width - element.Width;
+				this.skipBottom = (float)Screen.height - element.Height;
+				Service.Get<UserInputManager>().RegisterObserver(this, UserInputLayer.Screen);
+				this.modifiedCameras = true;
+				this.Visible = true;
+				this.animation.Play();
+				Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
+				eventManager.SendEvent(EventId.TextCrawlStarted, null);
+			}
 		}
 
 		public EatResponse OnPress(int id, GameObject target, Vector2 screenPosition, Vector3 groundPosition)
@@ -238,85 +239,22 @@ namespace StaRTS.Main.Views.Animations
 			if (!this.animation.isPlaying)
 			{
 				this.FinishUp(false);
-				return;
 			}
-			CameraManager cameraManager = Service.Get<CameraManager>();
-			if (cameraManager.MainCamera.Camera.enabled)
+			else
 			{
-				cameraManager.MainCamera.Camera.enabled = false;
-				cameraManager.UXCamera.Camera.enabled = false;
-				Camera camera = this.uxCamera.Camera;
-				this.oldNearClipPlane = camera.nearClipPlane;
-				camera.fieldOfView = 90f;
-				camera.nearClipPlane = 0.01f;
-				camera.orthographic = false;
-				camera.enabled = true;
+				CameraManager cameraManager = Service.Get<CameraManager>();
+				if (cameraManager.MainCamera.Camera.enabled)
+				{
+					cameraManager.MainCamera.Camera.enabled = false;
+					cameraManager.UXCamera.Camera.enabled = false;
+					Camera camera = this.uxCamera.Camera;
+					this.oldNearClipPlane = camera.nearClipPlane;
+					camera.fieldOfView = 90f;
+					camera.nearClipPlane = 0.01f;
+					camera.orthographic = false;
+					camera.enabled = true;
+				}
 			}
-		}
-
-		protected internal TextCrawlAnimation(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).FinishUp(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).HandleBackButtonPress());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).Loaded(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).OnWipeComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TextCrawlAnimation)GCHandledObjects.GCHandleToObject(instance)).StopNow();
-			return -1L;
 		}
 	}
 }

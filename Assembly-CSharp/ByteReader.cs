@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.IO;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 public class ByteReader
 {
@@ -33,6 +32,16 @@ public class ByteReader
 
 	public static ByteReader Open(string path)
 	{
+		FileStream fileStream = File.OpenRead(path);
+		if (fileStream != null)
+		{
+			fileStream.Seek(0L, SeekOrigin.End);
+			byte[] array = new byte[fileStream.Position];
+			fileStream.Seek(0L, SeekOrigin.Begin);
+			fileStream.Read(array, 0, array.Length);
+			fileStream.Close();
+			return new ByteReader(array);
+		}
 		return null;
 	}
 
@@ -64,14 +73,14 @@ public class ByteReader
 				int num2 = (int)this.mBuffer[i++];
 				if (num2 == 10 || num2 == 13)
 				{
-					IL_62:
+					IL_87:
 					string result = ByteReader.ReadLine(this.mBuffer, this.mOffset, i - this.mOffset - 1);
 					this.mOffset = i;
 					return result;
 				}
 			}
 			i++;
-			goto IL_62;
+			goto IL_87;
 		}
 		this.mOffset = num;
 		return null;
@@ -80,7 +89,7 @@ public class ByteReader
 	public Dictionary<string, string> ReadDictionary()
 	{
 		Dictionary<string, string> dictionary = new Dictionary<string, string>();
-		char[] array = new char[]
+		char[] separator = new char[]
 		{
 			'='
 		};
@@ -93,11 +102,11 @@ public class ByteReader
 			}
 			if (!text.StartsWith("//"))
 			{
-				string[] array2 = text.Split(array, 2, 1);
-				if (array2.Length == 2)
+				string[] array = text.Split(separator, 2, StringSplitOptions.RemoveEmptyEntries);
+				if (array.Length == 2)
 				{
-					string key = array2[0].Trim();
-					string value = array2[1].Trim().Replace("\\n", "\n");
+					string key = array[0].Trim();
+					string value = array[1].Trim().Replace("\\n", "\n");
 					dictionary[key] = value;
 				}
 			}
@@ -108,7 +117,7 @@ public class ByteReader
 	public BetterList<string> ReadCSV()
 	{
 		ByteReader.mTemp.Clear();
-		string text = "";
+		string text = string.Empty;
 		bool flag = false;
 		int num = 0;
 		while (this.canRead)
@@ -134,10 +143,10 @@ public class ByteReader
 				num = 0;
 			}
 			int i = num;
-			int length = text.get_Length();
+			int length = text.Length;
 			while (i < length)
 			{
-				char c = text.get_Chars(i);
+				char c = text[i];
 				if (c == ',')
 				{
 					if (!flag)
@@ -155,11 +164,11 @@ public class ByteReader
 							ByteReader.mTemp.Add(text.Substring(num, i - num).Replace("\"\"", "\""));
 							return ByteReader.mTemp;
 						}
-						if (text.get_Chars(i + 1) != '"')
+						if (text[i + 1] != '"')
 						{
 							ByteReader.mTemp.Add(text.Substring(num, i - num).Replace("\"\"", "\""));
 							flag = false;
-							if (text.get_Chars(i + 1) == ',')
+							if (text[i + 1] == ',')
 							{
 								i++;
 								num = i + 1;
@@ -178,55 +187,16 @@ public class ByteReader
 				}
 				i++;
 			}
-			if (num < text.get_Length())
+			if (num < text.Length)
 			{
 				if (flag)
 				{
 					continue;
 				}
-				ByteReader.mTemp.Add(text.Substring(num, text.get_Length() - num));
+				ByteReader.mTemp.Add(text.Substring(num, text.Length - num));
 			}
 			return ByteReader.mTemp;
 		}
 		return null;
-	}
-
-	protected internal ByteReader(UIntPtr dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((ByteReader)GCHandledObjects.GCHandleToObject(instance)).canRead);
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(ByteReader.Open(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((ByteReader)GCHandledObjects.GCHandleToObject(instance)).ReadCSV());
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((ByteReader)GCHandledObjects.GCHandleToObject(instance)).ReadDictionary());
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((ByteReader)GCHandledObjects.GCHandleToObject(instance)).ReadLine());
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((ByteReader)GCHandledObjects.GCHandleToObject(instance)).ReadLine(*(sbyte*)args != 0));
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(ByteReader.ReadLine((byte[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), *(int*)(args + 1), *(int*)(args + 2)));
 	}
 }

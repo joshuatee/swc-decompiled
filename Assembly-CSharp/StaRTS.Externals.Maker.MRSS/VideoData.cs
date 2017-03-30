@@ -3,8 +3,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Externals.Maker.MRSS
 {
@@ -50,9 +48,9 @@ namespace StaRTS.Externals.Maker.MRSS
 
 		private const string KEY_YOUTUBE_ID = "youtube_id";
 
-		private string[] ThumbnailURLs;
+		private string[] ThumbnailURLs = new string[6];
 
-		private string[] VideoURLs;
+		private string[] VideoURLs = new string[2];
 
 		public string Guid
 		{
@@ -118,7 +116,7 @@ namespace StaRTS.Externals.Maker.MRSS
 		{
 			get
 			{
-				return DateTime.get_UtcNow() - this.Timestamp;
+				return DateTime.UtcNow - this.Timestamp;
 			}
 		}
 
@@ -155,6 +153,21 @@ namespace StaRTS.Externals.Maker.MRSS
 			}
 		}
 
+		public VideoData()
+		{
+		}
+
+		public VideoData(object json)
+		{
+			this.Parse(json);
+		}
+
+		public VideoData(string guid, object json)
+		{
+			this.Parse(json);
+			this.Guid = guid;
+		}
+
 		public string GetVideoURL(VideoQuality quality)
 		{
 			return this.VideoURLs[(int)quality];
@@ -165,36 +178,12 @@ namespace StaRTS.Externals.Maker.MRSS
 			return this.ThumbnailURLs[(int)size];
 		}
 
-		public VideoData()
-		{
-			this.ThumbnailURLs = new string[6];
-			this.VideoURLs = new string[2];
-			base..ctor();
-		}
-
-		public VideoData(object json)
-		{
-			this.ThumbnailURLs = new string[6];
-			this.VideoURLs = new string[2];
-			base..ctor();
-			this.Parse(json);
-		}
-
-		public VideoData(string guid, object json)
-		{
-			this.ThumbnailURLs = new string[6];
-			this.VideoURLs = new string[2];
-			base..ctor();
-			this.Parse(json);
-			this.Guid = guid;
-		}
-
 		public void Parse(object json)
 		{
 			Dictionary<string, object> dictionary = json as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().Error("JSON Root is not a Dictionary");
+				Service.Get<Logger>().Error("JSON Root is not a Dictionary");
 				return;
 			}
 			this.Guid = this.GetJSONString(dictionary, "internal", false);
@@ -242,25 +231,26 @@ namespace StaRTS.Externals.Maker.MRSS
 			{
 				jSONString = this.GetJSONString(json, "uploaded_at", false);
 			}
+			long millis;
 			if (string.IsNullOrEmpty(jSONString))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Expecting '{0}' or '{1}' in JSON", new object[]
+				Service.Get<Logger>().ErrorFormat("Expecting '{0}' or '{1}' in JSON", new object[]
 				{
 					"original_published_at",
 					"uploaded_at"
 				});
-				return;
 			}
-			long millis;
-			if (!long.TryParse(jSONString, ref millis))
+			else if (!long.TryParse(jSONString, out millis))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Failed to parse timestamp from JSON - '{0}'", new object[]
+				Service.Get<Logger>().ErrorFormat("Failed to parse timestamp from JSON - '{0}'", new object[]
 				{
 					jSONString
 				});
-				return;
 			}
-			this.Timestamp = DateUtils.DateFromMillis(millis);
+			else
+			{
+				this.Timestamp = DateUtils.DateFromMillis(millis);
+			}
 		}
 
 		private string GetJSONString(Dictionary<string, object> data, string key, bool required = true)
@@ -272,7 +262,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			object obj = data[key];
 			if (!(obj is string))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Expecting '{0}' as string in JSON. Found '{1}'", new object[]
+				Service.Get<Logger>().ErrorFormat("Expecting '{0}' as string in JSON. Found '{1}'", new object[]
 				{
 					key,
 					obj.GetType().ToString()
@@ -290,9 +280,9 @@ namespace StaRTS.Externals.Maker.MRSS
 				return 0;
 			}
 			int result;
-			if (!int.TryParse(jSONString, ref result))
+			if (!int.TryParse(jSONString, out result))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Failed to parse int from JSON - '{0}'", new object[]
+				Service.Get<Logger>().ErrorFormat("Failed to parse int from JSON - '{0}'", new object[]
 				{
 					jSONString
 				});
@@ -306,7 +296,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			Dictionary<string, object> dictionary = data as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Expecting 'Dictionary' in JSON. Found '{0}'", new object[]
+				Service.Get<Logger>().ErrorFormat("Expecting 'Dictionary' in JSON. Found '{0}'", new object[]
 				{
 					data.GetType().ToString()
 				});
@@ -324,7 +314,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			Dictionary<string, object> dictionary = data[key] as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Expecting '{0}' as Dictionary in JSON. Found '{1}'", new object[]
+				Service.Get<Logger>().ErrorFormat("Expecting '{0}' as Dictionary in JSON. Found '{1}'", new object[]
 				{
 					key,
 					data.GetType().ToString()
@@ -343,7 +333,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			List<object> list = data[key] as List<object>;
 			if (list == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Expecting '{0}' as List in JSON. Found '{1}'", new object[]
+				Service.Get<Logger>().ErrorFormat("Expecting '{0}' as List in JSON. Found '{1}'", new object[]
 				{
 					key,
 					data.GetType().ToString()
@@ -359,7 +349,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			{
 				if (required)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Expecting '{0}' in JSON", new object[]
+					Service.Get<Logger>().ErrorFormat("Expecting '{0}' in JSON", new object[]
 					{
 						key
 					});
@@ -414,208 +404,7 @@ namespace StaRTS.Externals.Maker.MRSS
 
 		public void AddView()
 		{
-			int viewcount = this.Viewcount;
-			this.Viewcount = viewcount + 1;
-		}
-
-		protected internal VideoData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).AddView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).Age);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).Author);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).Description);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).Guid);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).HasDetails);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).Length);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).ThumbnailURL);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).Timestamp);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).Title);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).VideoURL);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).Viewcount);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).YoutubeId);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).GetJSONDictionary((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).GetJSONInt((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).GetJSONList((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).GetJSONString((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).GetThumbnailURL((ThumbnailSize)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).GetVideoURL((VideoQuality)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).HasJSONKey((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).Merge((VideoData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).Parse(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).ParseThumbnailURLs((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).ParseTimestamp((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).ParseVideoURLs((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).Author = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).Description = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).Guid = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).Length = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).ThumbnailURL = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).Timestamp = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).Title = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).VideoURL = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).Viewcount = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((VideoData)GCHandledObjects.GCHandleToObject(instance)).YoutubeId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideoData)GCHandledObjects.GCHandleToObject(instance)).ToJSONDictionary(GCHandledObjects.GCHandleToObject(*args)));
+			this.Viewcount++;
 		}
 	}
 }

@@ -7,19 +7,18 @@ using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
 	public class ShowLoadingScreenPopupsStartupTask : StartupTask
 	{
+		private const string COUNTRY_CODE_ALL = "ALL";
+
 		private bool checkedDeviceCompatibilty;
 
 		private bool checkedIAPDisclaimer;
 
 		private bool checkedUnderAttack;
-
-		private const string COUNTRY_CODE_ALL = "ALL";
 
 		public ShowLoadingScreenPopupsStartupTask(float startPercentage) : base(startPercentage)
 		{
@@ -40,19 +39,19 @@ namespace StaRTS.Main.Controllers.Startup
 			if (!this.checkedDeviceCompatibilty)
 			{
 				this.CheckDeviceCompatibility();
-				return;
 			}
-			if (!this.checkedIAPDisclaimer)
+			else if (!this.checkedIAPDisclaimer)
 			{
 				this.CheckIAPDisclaimer();
-				return;
 			}
-			if (!this.checkedUnderAttack)
+			else if (!this.checkedUnderAttack)
 			{
 				this.CheckUnderAttack();
-				return;
 			}
-			base.Complete();
+			else
+			{
+				base.Complete();
+			}
 		}
 
 		private void CheckUnderAttack()
@@ -61,10 +60,12 @@ namespace StaRTS.Main.Controllers.Startup
 			if (currentPlayer.CurrentlyDefending && !currentPlayer.CampaignProgress.FueInProgress)
 			{
 				Service.Get<ScreenController>().AddScreen(new UnderAttackScreen(currentPlayer.CurrentlyDefendingExpireTime));
-				return;
 			}
-			this.checkedUnderAttack = true;
-			this.TryComplete();
+			else
+			{
+				this.checkedUnderAttack = true;
+				this.TryComplete();
+			}
 		}
 
 		private void CheckIAPDisclaimer()
@@ -79,10 +80,12 @@ namespace StaRTS.Main.Controllers.Startup
 			if (flag)
 			{
 				Service.Get<ScreenController>().AddScreen(new IAPDisclaimerScreen(new OnScreenModalResult(this.OnIAPDisclaimerViewed)));
-				return;
 			}
-			this.checkedIAPDisclaimer = true;
-			this.TryComplete();
+			else
+			{
+				this.checkedIAPDisclaimer = true;
+				this.TryComplete();
+			}
 		}
 
 		private void OnIAPDisclaimerViewed(object result, object cookie)
@@ -106,10 +109,12 @@ namespace StaRTS.Main.Controllers.Startup
 				Service.Get<CameraManager>().SetCameraOrderForPreloadScreens();
 				Lang lang = Service.Get<Lang>();
 				AlertScreen.ShowModal(false, lang.Get("ALERT", new object[0]), lang.Get("DEVICE_NOT_SUPPORTED", new object[0]), new OnScreenModalResult(this.OnDeviceCompatibilityWarningClosed), null);
-				return;
 			}
-			this.checkedDeviceCompatibilty = true;
-			this.TryComplete();
+			else
+			{
+				this.checkedDeviceCompatibilty = true;
+				this.TryComplete();
+			}
 		}
 
 		private void OnDeviceCompatibilityWarningClosed(object result, object cookie)
@@ -118,52 +123,6 @@ namespace StaRTS.Main.Controllers.Startup
 			Service.Get<UserInputManager>().Enable(false);
 			this.checkedDeviceCompatibilty = true;
 			this.TryComplete();
-		}
-
-		protected internal ShowLoadingScreenPopupsStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShowLoadingScreenPopupsStartupTask)GCHandledObjects.GCHandleToObject(instance)).CheckDeviceCompatibility();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ShowLoadingScreenPopupsStartupTask)GCHandledObjects.GCHandleToObject(instance)).CheckIAPDisclaimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ShowLoadingScreenPopupsStartupTask)GCHandledObjects.GCHandleToObject(instance)).CheckUnderAttack();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ShowLoadingScreenPopupsStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnDeviceCompatibilityWarningClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ShowLoadingScreenPopupsStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnIAPDisclaimerViewed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ShowLoadingScreenPopupsStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ShowLoadingScreenPopupsStartupTask)GCHandledObjects.GCHandleToObject(instance)).TryComplete();
-			return -1L;
 		}
 	}
 }

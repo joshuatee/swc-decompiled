@@ -1,14 +1,10 @@
 using StaRTS.Main.Controllers;
 using StaRTS.Main.Utils.Events;
-using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using UnityEngine;
-using WinRTBridge;
+using System.Diagnostics;
 
 namespace StaRTS.Main.Utils
 {
@@ -48,43 +44,13 @@ namespace StaRTS.Main.Utils
 			}
 		}
 
-		[IteratorStateMachine(typeof(NetworkConnectionTester.<Download>d__7))]
+		[DebuggerHidden]
 		private IEnumerator Download(string url)
 		{
-			WWW wWW = new WWW(url);
-			WWWManager.Add(wWW);
-			yield return wWW;
-			if (!WWWManager.Remove(wWW))
-			{
-				yield break;
-			}
-			if (!string.IsNullOrEmpty(wWW.error) && wWW.error.StartsWith("Could not resolve host"))
-			{
-				Lang lang = Service.Get<Lang>();
-				AlertScreen.ShowModal(true, lang.Get("NO_INTERNET_TITLE", new object[0]), lang.Get("NO_INTERNET", new object[0]), null, null);
-			}
-			wWW.Dispose();
-			yield break;
-		}
-
-		protected internal NetworkConnectionTester(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((NetworkConnectionTester)GCHandledObjects.GCHandleToObject(instance)).CheckNetworkConnectionAvailable(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NetworkConnectionTester)GCHandledObjects.GCHandleToObject(instance)).Download(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NetworkConnectionTester)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
+			NetworkConnectionTester.<Download>c__Iterator19 <Download>c__Iterator = new NetworkConnectionTester.<Download>c__Iterator19();
+			<Download>c__Iterator.url = url;
+			<Download>c__Iterator.<$>url = url;
+			return <Download>c__Iterator;
 		}
 	}
 }

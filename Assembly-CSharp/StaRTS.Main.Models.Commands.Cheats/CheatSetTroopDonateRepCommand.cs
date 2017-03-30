@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetTroopDonateRepCommand(CheatSetTroopDonateRepRequest request) : base("cheats.setTroopDonationRep", request, new CheatSetTroopDonateRepResponse())
 		{
 		}
-
-		protected internal CheatSetTroopDonateRepCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

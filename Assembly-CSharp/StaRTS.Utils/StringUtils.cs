@@ -1,10 +1,8 @@
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -18,25 +16,19 @@ namespace StaRTS.Utils
 
 		public static T ParseEnum<T>(string name)
 		{
-			T result;
 			if (string.IsNullOrEmpty(name))
 			{
-				result = default(T);
-				return result;
+				return default(T);
 			}
 			string text = StringUtils.ToPascalCase(name);
+			T result;
 			try
 			{
 				result = (T)((object)Enum.Parse(typeof(T), text));
 			}
 			catch
 			{
-				Service.Get<StaRTSLogger>().Error(string.Format("Enum value '{0}' not found in {1}. Original Value: {2}", new object[]
-				{
-					text,
-					typeof(T),
-					name
-				}));
+				Service.Get<Logger>().Error(string.Format("Enum value '{0}' not found in {1}. Original Value: {2}", text, typeof(T), name));
 				result = default(T);
 			}
 			return result;
@@ -46,22 +38,22 @@ namespace StaRTS.Utils
 		{
 			StringBuilder stringBuilder = new StringBuilder();
 			int i = 0;
-			int length = s.get_Length();
+			int length = s.Length;
 			while (i < length)
 			{
-				char c = s.get_Chars(i);
+				char c = s[i];
 				bool flag = char.IsUpper(c);
 				bool flag2 = false;
-				if (i < s.get_Length() - 1)
+				if (i < s.Length - 1)
 				{
-					flag2 = char.IsUpper(s.get_Chars(i + 1));
+					flag2 = char.IsUpper(s[i + 1]);
 				}
 				if (flag2 && !flag)
 				{
 					stringBuilder.Append(char.ToLower(c));
 					stringBuilder.Append('_');
 				}
-				else if ((flag & flag2) || (flag && i == s.get_Length() - 1))
+				else if ((flag && flag2) || (flag && i == s.Length - 1))
 				{
 					stringBuilder.Append(c);
 				}
@@ -79,10 +71,10 @@ namespace StaRTS.Utils
 			StringBuilder stringBuilder = new StringBuilder();
 			bool flag = false;
 			int i = 0;
-			int length = s.get_Length();
+			int length = s.Length;
 			while (i < length)
 			{
-				char c = s.get_Chars(i);
+				char c = s[i];
 				bool flag2 = char.IsLetter(c);
 				if (flag2)
 				{
@@ -150,8 +142,8 @@ namespace StaRTS.Utils
 			}
 			if (number >= 10 && number <= 39)
 			{
-				string text2 = new string('X', number / 10);
-				text = text2 + text;
+				string str = new string('X', number / 10);
+				text = str + text;
 			}
 			else if (number >= 40 && number <= 49)
 			{
@@ -237,8 +229,8 @@ namespace StaRTS.Utils
 			int num = 0;
 			while ((long)num < (long)((ulong)length))
 			{
-				int num2 = rand.ViewRangeInt(0, text.get_Length());
-				stringBuilder.Append(text.get_Chars(num2));
+				int index = rand.ViewRangeInt(0, text.Length);
+				stringBuilder.Append(text[index]);
 				num++;
 			}
 			return stringBuilder.ToString();
@@ -251,71 +243,6 @@ namespace StaRTS.Utils
 				StringUtils.guidRegx = new Regex("^(\\{){0,1}[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}(\\}){0,1}$");
 			}
 			return StringUtils.guidRegx.IsMatch(guid);
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.GetIndexOfFirstNumericCharacter(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.GetRomanNumeral(*(int*)args));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.IsBlank(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.IsEmpty(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.IsGuidValid(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.IsNotBlank(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.IsNotEmpty(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.IsNotNull(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.IsNull(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.Substring(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.Substring(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.ToLowerCaseUnderscoreSeperated(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StringUtils.ToPascalCase(Marshal.PtrToStringUni(*(IntPtr*)args)));
 		}
 	}
 }

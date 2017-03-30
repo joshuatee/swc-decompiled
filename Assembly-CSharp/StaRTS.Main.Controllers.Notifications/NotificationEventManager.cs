@@ -18,8 +18,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Notifications
 {
@@ -75,10 +73,6 @@ namespace StaRTS.Main.Controllers.Notifications
 
 		private string notifMessageKeySuffix;
 
-		public NotificationEventManager()
-		{
-		}
-
 		public void Init()
 		{
 			this.notificationController = Service.Get<NotificationController>();
@@ -93,66 +87,46 @@ namespace StaRTS.Main.Controllers.Notifications
 			if (Service.Get<ServerPlayerPrefs>().GetPref(ServerPref.FactionFlipped) == "1")
 			{
 				FactionType faction = Service.Get<CurrentPlayer>().Faction;
-				if (faction == FactionType.Empire)
+				if (faction != FactionType.Empire)
+				{
+					if (faction == FactionType.Rebel)
+					{
+						this.notifMessageKeySuffix = "_rebel";
+					}
+				}
+				else
 				{
 					this.notifMessageKeySuffix = "_empire";
-					return;
 				}
-				if (faction != FactionType.Rebel)
-				{
-					return;
-				}
-				this.notifMessageKeySuffix = "_rebel";
 			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ApplicationQuit)
+			if (id != EventId.ApplicationPauseToggled)
 			{
-				if (id != EventId.ApplicationPauseToggled)
+				if (id != EventId.ApplicationQuit && id != EventId.VisitPlayer)
 				{
-					if (id != EventId.ApplicationQuit)
+					if (id == EventId.WorldLoadComplete)
 					{
+						IState currentState = Service.Get<GameStateMachine>().CurrentState;
+						if (currentState is ApplicationLoadState)
+						{
+							this.RescheduleAllLocalNotifications();
+						}
 						return EatResponse.NotEaten;
 					}
-				}
-				else
-				{
-					if (!(bool)cookie)
-					{
-						return EatResponse.NotEaten;
-					}
-					IState currentState = Service.Get<GameStateMachine>().CurrentState;
-					if (!(currentState is ApplicationLoadState))
-					{
-						this.RescheduleAllLocalNotifications();
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
-			}
-			else if (id != EventId.VisitPlayer)
-			{
-				if (id != EventId.WorldLoadComplete)
-				{
 					if (id != EventId.BattleLoadStart)
 					{
 						return EatResponse.NotEaten;
 					}
 				}
-				else
-				{
-					IState currentState2 = Service.Get<GameStateMachine>().CurrentState;
-					if (currentState2 is ApplicationLoadState)
-					{
-						this.RescheduleAllLocalNotifications();
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
-				}
+				this.RescheduleAllLocalNotifications();
 			}
-			this.RescheduleAllLocalNotifications();
+			else if ((bool)cookie)
+			{
+				this.RescheduleAllLocalNotifications();
+			}
 			return EatResponse.NotEaten;
 		}
 
@@ -161,7 +135,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			NotificationTypeVO notificationTypeVO = Service.Get<IDataController>().Get<NotificationTypeVO>(notifTypeKey);
 			if (remainingTime >= notificationTypeVO.MinCompletionTime)
 			{
-				string id = (this.notifMessageKeySuffix != null) ? ("notif_" + notifTypeKey + this.notifMessageKeySuffix) : ("notif_" + notifTypeKey);
+				string id = (this.notifMessageKeySuffix == null) ? ("notif_" + notifTypeKey) : ("notif_" + notifTypeKey + this.notifMessageKeySuffix);
 				string message = this.lang.Get(id, new object[]
 				{
 					displayName,
@@ -172,7 +146,7 @@ namespace StaRTS.Main.Controllers.Notifications
 					displayName,
 					level
 				});
-				DateTime time = DateTime.get_Now().AddSeconds((double)remainingTime + 2.0);
+				DateTime time = DateTime.Now.AddSeconds((double)remainingTime + 2.0);
 				return new NotificationObject(notifTypeKey, inProgressMessage, message, notificationTypeVO.SoundName, time, buildingKey, productUid);
 			}
 			return null;
@@ -212,7 +186,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			string id = "notif_" + text;
 			string message = this.lang.Get(id, new object[0]);
 			string inProgressMessage = this.lang.Get("notif_" + text + "_progress", new object[0]);
-			DateTime time2 = DateTime.get_Now().AddSeconds((double)num);
+			DateTime time2 = DateTime.Now.AddSeconds((double)num);
 			if (!this.CheckValidNotificationTime(notificationTypeVO, time2))
 			{
 				return null;
@@ -255,7 +229,8 @@ namespace StaRTS.Main.Controllers.Notifications
 		private NotificationObject CreateReengagementNotification(string notifTypeKey, DateTime time, bool tryMessageSuffix)
 		{
 			NotificationTypeVO notificationTypeVO = Service.Get<IDataController>().Get<NotificationTypeVO>(notifTypeKey);
-			string id = (tryMessageSuffix && this.notifMessageKeySuffix != null) ? ("notif_" + notifTypeKey + this.notifMessageKeySuffix) : ("notif_" + notifTypeKey);
+			bool flag = tryMessageSuffix && this.notifMessageKeySuffix != null;
+			string id = (!flag) ? ("notif_" + notifTypeKey) : ("notif_" + notifTypeKey + this.notifMessageKeySuffix);
 			string message = this.lang.Get(id, new object[0]);
 			string inProgressMessage = this.lang.Get("notif_" + notifTypeKey + "_progress", new object[0]);
 			return new NotificationObject(notifTypeKey, inProgressMessage, message, notificationTypeVO.SoundName, time, notifTypeKey, notifTypeKey);
@@ -343,7 +318,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			}
 			if (num >= notificationTypeVO.MinCompletionTime)
 			{
-				DateTime time = DateTime.get_Now().AddSeconds((double)num + 2.0);
+				DateTime time = DateTime.Now.AddSeconds((double)num + 2.0);
 				return this.CreateReengagementNotification("notif2", time, true);
 			}
 			return null;
@@ -377,7 +352,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			}
 			if (num > 0u && (ulong)num >= (ulong)((long)notificationTypeVO.MinCompletionTime))
 			{
-				DateTime time2 = DateTime.get_Now().AddSeconds(num);
+				DateTime time2 = DateTime.Now.AddSeconds(num);
 				return this.CreateReengagementNotification("perk_all_slots_empty", time2, false);
 			}
 			return null;
@@ -398,7 +373,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			NotificationTypeVO notificationTypeVO = Service.Get<IDataController>().Get<NotificationTypeVO>("notif6");
 			if (num > notificationTypeVO.MinCompletionTime)
 			{
-				DateTime time = DateTime.get_Now().AddSeconds((double)num + 2.0);
+				DateTime time = DateTime.Now.AddSeconds((double)num + 2.0);
 				return this.CreateReengagementNotification("notif6", time, true);
 			}
 			return null;
@@ -419,9 +394,9 @@ namespace StaRTS.Main.Controllers.Notifications
 				return null;
 			}
 			List<NotificationObject> list = new List<NotificationObject>();
-			DateTime time = DateTime.get_Now().AddHours((double)notificationTypeVO.RepeatTime);
+			DateTime time = DateTime.Now.AddHours((double)notificationTypeVO.RepeatTime);
 			this.EnsureValidNotificationTime(notificationTypeVO, time);
-			string id = (this.notifMessageKeySuffix != null) ? ("notif_" + text + this.notifMessageKeySuffix) : ("notif_" + text);
+			string id = (this.notifMessageKeySuffix == null) ? ("notif_" + text) : ("notif_" + text + this.notifMessageKeySuffix);
 			string message = this.lang.Get(id, new object[0]);
 			string inProgressMessage = this.lang.Get("notif_" + text + "_progress", new object[0]);
 			int i = 0;
@@ -441,14 +416,14 @@ namespace StaRTS.Main.Controllers.Notifications
 			NotificationTypeVO notificationTypeVO = Service.Get<IDataController>().Get<NotificationTypeVO>(text);
 			if (notificationTypeVO.RepeatTime < 1)
 			{
-				Service.Get<StaRTSLogger>().Error("LongTermNotification has 0 repeat time");
+				Service.Get<Logger>().Error("LongTermNotification has 0 repeat time");
 				return null;
 			}
 			List<NotificationObject> list = new List<NotificationObject>();
-			string id = (this.notifMessageKeySuffix != null) ? ("notif_" + text + this.notifMessageKeySuffix) : ("notif_" + text);
+			string id = (this.notifMessageKeySuffix == null) ? ("notif_" + text) : ("notif_" + text + this.notifMessageKeySuffix);
 			string message = this.lang.Get(id, new object[0]);
 			string inProgressMessage = this.lang.Get("notif_" + text + "_progress", new object[0]);
-			DateTime time = DateTime.get_Now().AddHours((double)notificationTypeVO.RepeatTime);
+			DateTime time = DateTime.Now.AddHours((double)notificationTypeVO.RepeatTime);
 			this.EnsureValidNotificationTime(notificationTypeVO, time);
 			int i = 0;
 			while (i <= 4383)
@@ -472,7 +447,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			uint secondsTillNextRaid = raidDefenseController.GetSecondsTillNextRaid();
 			if (secondsTillNextRaid == 0u)
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to schedule raid notif due to invalid start time: " + currentPlayer.CurrentRaid.Uid);
+				Service.Get<Logger>().Error("Failed to schedule raid notif due to invalid start time: " + currentPlayer.CurrentRaid.Uid);
 				return null;
 			}
 			string text = "raid_start_next";
@@ -480,7 +455,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			string id = "notif_" + text;
 			string message = this.lang.Get(id, new object[0]);
 			string inProgressMessage = this.lang.Get("notif_" + text + "_progress", new object[0]);
-			DateTime time = DateTime.get_Now().AddSeconds(secondsTillNextRaid);
+			DateTime time = DateTime.Now.AddSeconds(secondsTillNextRaid);
 			if (!this.CheckValidNotificationTime(notificationTypeVO, time))
 			{
 				return null;
@@ -519,7 +494,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			string id = "notif_" + text;
 			string message = this.lang.Get(id, new object[0]);
 			string inProgressMessage = this.lang.Get("notif_" + text + "_progress", new object[0]);
-			DateTime time2 = DateTime.get_Now().AddSeconds(num2);
+			DateTime time2 = DateTime.Now.AddSeconds(num2);
 			if (!this.CheckValidNotificationTime(notificationTypeVO, time2))
 			{
 				return null;
@@ -541,7 +516,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			uint nextDailyCrateTime = currentPlayer.Prizes.Crates.NextDailyCrateTime;
 			if (nextDailyCrateTime == 0u)
 			{
-				Service.Get<StaRTSLogger>().Error("Did not schedule next daily crate notif due to invalid scheduled time");
+				Service.Get<Logger>().Error("Did not schedule next daily crate notif due to invalid scheduled time");
 				return null;
 			}
 			uint time = ServerTime.Time;
@@ -553,7 +528,7 @@ namespace StaRTS.Main.Controllers.Notifications
 			}
 			string text = "daily_crate_next";
 			NotificationTypeVO notificationTypeVO = Service.Get<IDataController>().Get<NotificationTypeVO>(text);
-			DateTime time2 = DateTime.get_Now().AddSeconds(num2);
+			DateTime time2 = DateTime.Now.AddSeconds(num2);
 			if (!this.CheckValidNotificationTime(notificationTypeVO, time2))
 			{
 				return null;
@@ -631,13 +606,13 @@ namespace StaRTS.Main.Controllers.Notifications
 			int earliestValidTime = notifType.EarliestValidTime;
 			int latestValidTime = notifType.LatestValidTime;
 			int num = 0;
-			if (time.get_Hour() < earliestValidTime)
+			if (time.Hour < earliestValidTime)
 			{
-				num = earliestValidTime - time.get_Hour();
+				num = earliestValidTime - time.Hour;
 			}
-			else if (time.get_Hour() > latestValidTime)
+			else if (time.Hour > latestValidTime)
 			{
-				num = 24 - time.get_Hour() + earliestValidTime;
+				num = 24 - time.Hour + earliestValidTime;
 			}
 			time = time.AddHours((double)num);
 		}
@@ -647,117 +622,15 @@ namespace StaRTS.Main.Controllers.Notifications
 			bool result = true;
 			int earliestValidTime = notifType.EarliestValidTime;
 			int latestValidTime = notifType.LatestValidTime;
-			if (time.get_Hour() < earliestValidTime)
+			if (time.Hour < earliestValidTime)
 			{
 				result = false;
 			}
-			else if (time.get_Hour() > latestValidTime)
+			else if (time.Hour > latestValidTime)
 			{
 				result = false;
 			}
 			return result;
-		}
-
-		protected internal NotificationEventManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).CheckValidNotificationTime((NotificationTypeVO)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).CreateBuildingNotification(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).CreateReengagementNotification(Marshal.PtrToStringUni(*(IntPtr*)args), *(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).CreateResearchNotification(Marshal.PtrToStringUni(*(IntPtr*)args), (DeliveryType)(*(int*)(args + 1)), *(int*)(args + 2), Marshal.PtrToStringUni(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).CreateSupportNotification(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), *(int*)(args + 5)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).EnsureValidNotificationTime((NotificationTypeVO)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetBuildingNotifications());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetGeneratorNotification());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetInventoryCrateExpirationNotification());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetLastPerkExpiredNotification());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetLongReengagementNotifs());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetNextDailyCrateNotification());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetNextRaidNotification());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetShortReengagementNotifs());
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetSquadWarUseTurnNotification());
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).GetUnitsCompleteNotification());
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).Init();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((NotificationEventManager)GCHandledObjects.GCHandleToObject(instance)).RescheduleAllLocalNotifications();
-			return -1L;
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Deployable
 		public DeployableBuyoutContractCommand(DeployableContractRequest request) : base("player.deployable.buyout", request, new DefaultResponse())
 		{
 		}
-
-		protected internal DeployableBuyoutContractCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -1,5 +1,4 @@
 using StaRTS.Externals.EnvironmentManager;
-using StaRTS.Externals.Kochava;
 using StaRTS.Externals.Manimal;
 using StaRTS.Externals.Manimal.TransferObjects.Request;
 using StaRTS.Main.Controllers.Notifications;
@@ -10,7 +9,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -35,7 +33,7 @@ namespace StaRTS.Main.Controllers.Startup
 
 		private void OnLoginComplete(LoginResponse response, object cookie)
 		{
-			Service.Get<StaRTSLogger>().Debug("Player Logged In Successfully.");
+			Service.Get<Logger>().Debug("Player Logged In Successfully.");
 			Service.Get<EventManager>().SendEvent(EventId.PlayerLoginSuccess, null);
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			Service.Get<ServerAPI>().StartSession(currentPlayer.LoginTime);
@@ -45,7 +43,7 @@ namespace StaRTS.Main.Controllers.Startup
 			}
 			if (Service.Get<CurrentPlayer>().SessionCountToday == 1)
 			{
-				KochavaPlugin.FireEvent("dayPlayed", "1");
+				Kochava.FireEvent("dayPlayed", "1");
 			}
 			currentPlayer.Prizes.Crates.UpdateBadgingBasedOnAvailableCrates();
 			base.Complete();
@@ -55,28 +53,6 @@ namespace StaRTS.Main.Controllers.Startup
 		private void OnUpdateExternalAccountInfoResponseReceived()
 		{
 			Service.Get<ISocialDataController>().PopulateFacebookData();
-		}
-
-		protected internal PlayerLoginStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlayerLoginStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnLoginComplete((LoginResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlayerLoginStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnUpdateExternalAccountInfoResponseReceived();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlayerLoginStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

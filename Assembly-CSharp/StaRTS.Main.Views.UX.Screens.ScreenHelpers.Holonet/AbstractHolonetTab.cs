@@ -10,8 +10,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 {
@@ -144,36 +142,38 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			{
 				return;
 			}
-			string text = (btnIndex == 1) ? vo.Btn1 : vo.Btn2;
+			string text = (btnIndex != 1) ? vo.Btn2 : vo.Btn1;
 			if (string.IsNullOrEmpty(text))
 			{
 				button.Visible = false;
-				return;
-			}
-			button.Visible = true;
-			if (btnIndex == 1)
-			{
-				button.OnClicked = new UXButtonClickedDelegate(this.FeaturedButton1Clicked);
 			}
 			else
 			{
-				button.OnClicked = new UXButtonClickedDelegate(this.FeaturedButton2Clicked);
-			}
-			button.Tag = vo;
-			btnLabel.Text = this.lang.Get(text, new object[0]);
-			if (this.IsButtonRewardAction(vo, btnIndex))
-			{
-				IDataController dataController = Service.Get<IDataController>();
-				LimitedTimeRewardVO vo2;
+				button.Visible = true;
 				if (btnIndex == 1)
 				{
-					vo2 = dataController.Get<LimitedTimeRewardVO>(vo.Btn1Data);
+					button.OnClicked = new UXButtonClickedDelegate(this.FeaturedButton1Clicked);
 				}
 				else
 				{
-					vo2 = dataController.Get<LimitedTimeRewardVO>(vo.Btn2Data);
+					button.OnClicked = new UXButtonClickedDelegate(this.FeaturedButton2Clicked);
 				}
-				this.SetupRewardButton(ref button, ref btnLabel, vo2);
+				button.Tag = vo;
+				btnLabel.Text = this.lang.Get(text, new object[0]);
+				if (this.IsButtonRewardAction(vo, btnIndex))
+				{
+					IDataController dataController = Service.Get<IDataController>();
+					LimitedTimeRewardVO vo2;
+					if (btnIndex == 1)
+					{
+						vo2 = dataController.Get<LimitedTimeRewardVO>(vo.Btn1Data);
+					}
+					else
+					{
+						vo2 = dataController.Get<LimitedTimeRewardVO>(vo.Btn2Data);
+					}
+					this.SetupRewardButton(ref button, ref btnLabel, vo2);
+				}
 			}
 		}
 
@@ -222,115 +222,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		public virtual string GetBITabName()
 		{
 			return string.Empty;
-		}
-
-		protected internal AbstractHolonetTab(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).AddSelectionButtonToNavTable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).DeferTexture((UXTexture)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).DisableTabButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).EnableTabButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).FeaturedButton1Clicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).FeaturedButton2Clicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).GetBITabName());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HasRewardButton1BeenClaimed((LimitedTimeRewardVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).InitializeTab(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).IsButtonRewardAction((ICallToAction)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).LoadDeferredTextures();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnDestroyTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnTabClose();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnTabOpen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).PrepareButton((ICallToAction)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), (UXButton)GCHandledObjects.GCHandleToObject(args[2]), (UXLabel)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SendCallToActionBI(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (EventId)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetBadgeCount(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetVisibleByTabButton((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
 		}
 	}
 }

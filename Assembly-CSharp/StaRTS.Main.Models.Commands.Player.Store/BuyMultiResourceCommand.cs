@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Store
 		public BuyMultiResourceCommand(BuyMultiResourceRequest request) : base("player.store.multibuy", request, new DefaultResponse())
 		{
 		}
-
-		protected internal BuyMultiResourceCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

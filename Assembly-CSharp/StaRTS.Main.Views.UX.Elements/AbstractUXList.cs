@@ -4,9 +4,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Elements
 {
@@ -97,7 +95,7 @@ namespace StaRTS.Main.Views.UX.Elements
 				{
 					if (!this.DupeOrdersAllowed && order == num2)
 					{
-						Service.Get<StaRTSLogger>().WarnFormat("Item {0} matches order of {1}", new object[]
+						Service.Get<Logger>().WarnFormat("Item {0} matches order of {1}", new object[]
 						{
 							item.Root.name,
 							this.addedItems[i].Root.name
@@ -119,13 +117,9 @@ namespace StaRTS.Main.Views.UX.Elements
 			item.Parent = this;
 			if (order < 0 || order >= 100000000)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid grid / table item order: " + order);
+				Service.Get<Logger>().Warn("Invalid grid / table item order: " + order);
 			}
-			string newName = string.Format("{0:D8}_{1}", new object[]
-			{
-				order,
-				item.Root.name
-			});
+			string newName = string.Format("{0:D8}_{1}", order, item.Root.name);
 			this.uxFactory.RenameElement(item.Root, newName);
 			if (!this.BypassLocalPositionOnAdd)
 			{
@@ -147,7 +141,7 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			if (this.templateItem == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Must SetTemplateItem() before cloning");
+				Service.Get<Logger>().Error("Must SetTemplateItem() before cloning");
 				return null;
 			}
 			return this.CloneItem(itemUid, this.templateItem);
@@ -157,7 +151,7 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			if (itemToClone == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Must send a valid item to clone");
+				Service.Get<Logger>().Error("Must send a valid item to clone");
 				return null;
 			}
 			UXElement uXElement = this.uxFactory.CloneElement<UXElement>(itemToClone, itemUid, base.Root);
@@ -195,11 +189,7 @@ namespace StaRTS.Main.Views.UX.Elements
 
 		public UXElement GetItem(int i)
 		{
-			if (i >= 0 && i < this.addedItems.Count)
-			{
-				return this.addedItems[i];
-			}
-			return null;
+			return (i >= 0 && i < this.addedItems.Count) ? this.addedItems[i] : null;
 		}
 
 		public virtual void ClearWithoutDestroy()
@@ -224,7 +214,7 @@ namespace StaRTS.Main.Views.UX.Elements
 
 		public void ChangeScrollDirection(bool goingDown)
 		{
-			base.GetUIWidget.pivot = (goingDown ? UIWidget.Pivot.TopLeft : UIWidget.Pivot.BottomLeft);
+			base.GetUIWidget.pivot = ((!goingDown) ? UIWidget.Pivot.BottomLeft : UIWidget.Pivot.TopLeft);
 		}
 
 		public void RepositionItemsFrameDelayed()
@@ -262,7 +252,7 @@ namespace StaRTS.Main.Views.UX.Elements
 			}
 			catch
 			{
-				Service.Get<StaRTSLogger>().Error("NGUI grid crashed, have artist fix: " + base.Root.name);
+				Service.Get<Logger>().Error("NGUI grid crashed, have artist fix: " + base.Root.name);
 			}
 		}
 
@@ -281,17 +271,15 @@ namespace StaRTS.Main.Views.UX.Elements
 
 		public void OnViewFrameTime(float dt)
 		{
-			int num = this.repositionWaitFrames - 1;
-			this.repositionWaitFrames = num;
-			if (num == 0)
+			if (--this.repositionWaitFrames == 0)
 			{
 				if (Service.IsSet<ViewTimeEngine>())
 				{
 					Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
 				}
-				else if (Service.IsSet<StaRTSLogger>())
+				else if (Service.IsSet<Logger>())
 				{
-					Service.Get<StaRTSLogger>().Error("AbstractUXList.OnViewFrameTime: For some reason ViewTimeEngine is null.");
+					Service.Get<Logger>().Error("AbstractUXList.OnViewFrameTime: For some reason ViewTimeEngine is null.");
 				}
 				this.RepositionItems();
 				if (this.repositionCallback != null)
@@ -306,151 +294,6 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
 			base.OnDestroyElement();
-		}
-
-		protected internal AbstractUXList(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).AddItem((UXElement)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).ChangeScrollDirection(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).Clear();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).ClearWithoutDestroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).CloneItem(Marshal.PtrToStringUni(*(IntPtr*)args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).CloneTemplateItem(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).ClipRegion);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).Count);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).OnDrag);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).GetElementList());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).GetItem(*(int*)args));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).InternalDestroyComponent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).InternalOnDrag();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).RemoveItem((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).RepositionItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).RepositionItems(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).RepositionItemsFrameDelayed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).RepositionItemsFrameDelayed((UXDragDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).RepositionItemsFrameDelayed((UXDragDelegate)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).Scroll(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).ClipRegion = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).OnDrag = (UXDragDelegate)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractUXList)GCHandledObjects.GCHandleToObject(instance)).SetTemplateItem(Marshal.PtrToStringUni(*(IntPtr*)args)));
 		}
 	}
 }

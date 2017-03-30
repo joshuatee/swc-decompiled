@@ -3,9 +3,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Battle.Replay
 {
@@ -79,7 +76,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 
 		public string BattleScript;
 
-		public RandSimSeed SimSeed;
+		public RandSimSeed SimSeed = default(RandSimSeed);
 
 		public string RecordId
 		{
@@ -303,14 +300,14 @@ namespace StaRTS.Main.Models.Battle.Replay
 			{
 				this.BattleType = BattleType.Pvp;
 			}
-			this.BattleLength = Convert.ToInt32(dictionary["battleLength"], CultureInfo.InvariantCulture);
+			this.BattleLength = Convert.ToInt32(dictionary["battleLength"]);
 			if (dictionary.ContainsKey("lowFPS"))
 			{
-				this.LowestFPS = (float)Convert.ToInt32(dictionary["lowFPS"], CultureInfo.InvariantCulture);
+				this.LowestFPS = (float)Convert.ToInt32(dictionary["lowFPS"]);
 			}
 			if (dictionary.ContainsKey("lowFPSTime"))
 			{
-				this.LowestFPSTime = (uint)Convert.ToInt32(dictionary["lowFPSTime"], CultureInfo.InvariantCulture);
+				this.LowestFPSTime = (uint)Convert.ToInt32(dictionary["lowFPSTime"]);
 			}
 			if (dictionary.ContainsKey("missionId"))
 			{
@@ -334,11 +331,11 @@ namespace StaRTS.Main.Models.Battle.Replay
 				this.BattleAttributes = new BattleAttributes();
 				this.BattleAttributes.FromObject(dictionary["battleAttributes"]);
 			}
-			this.LootCreditsAvailable = Convert.ToInt32(dictionary["lootCreditsAvailable"], CultureInfo.InvariantCulture);
-			this.LootMaterialsAvailable = Convert.ToInt32(dictionary["lootMaterialsAvailable"], CultureInfo.InvariantCulture);
+			this.LootCreditsAvailable = Convert.ToInt32(dictionary["lootCreditsAvailable"]);
+			this.LootMaterialsAvailable = Convert.ToInt32(dictionary["lootMaterialsAvailable"]);
 			if (dictionary.ContainsKey("lootContrabandAvailable"))
 			{
-				this.LootContrabandAvailable = Convert.ToInt32(dictionary["lootContrabandAvailable"], CultureInfo.InvariantCulture);
+				this.LootContrabandAvailable = Convert.ToInt32(dictionary["lootContrabandAvailable"]);
 			}
 			this.BuildingLootCreditsMap = new Dictionary<string, int>();
 			if (dictionary.ContainsKey("lootBuildingCreditsMap"))
@@ -348,7 +345,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 				{
 					foreach (KeyValuePair<string, object> current2 in dictionary3)
 					{
-						this.BuildingLootCreditsMap.Add(current2.get_Key(), Convert.ToInt32(current2.get_Value(), CultureInfo.InvariantCulture));
+						this.BuildingLootCreditsMap.Add(current2.Key, Convert.ToInt32(current2.Value));
 					}
 				}
 			}
@@ -360,7 +357,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 				{
 					foreach (KeyValuePair<string, object> current3 in dictionary4)
 					{
-						this.BuildingLootMaterialsMap.Add(current3.get_Key(), Convert.ToInt32(current3.get_Value(), CultureInfo.InvariantCulture));
+						this.BuildingLootMaterialsMap.Add(current3.Key, Convert.ToInt32(current3.Value));
 					}
 				}
 			}
@@ -372,7 +369,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 				{
 					foreach (KeyValuePair<string, object> current4 in dictionary5)
 					{
-						this.BuildingLootContrabandMap.Add(current4.get_Key(), Convert.ToInt32(current4.get_Value(), CultureInfo.InvariantCulture));
+						this.BuildingLootContrabandMap.Add(current4.Key, Convert.ToInt32(current4.Value));
 					}
 				}
 			}
@@ -394,7 +391,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 				{
 					foreach (KeyValuePair<string, object> current5 in dictionary6)
 					{
-						this.DefenderGuildTroops.Add(current5.get_Key(), Convert.ToInt32(current5.get_Value(), CultureInfo.InvariantCulture));
+						this.DefenderGuildTroops.Add(current5.Key, Convert.ToInt32(current5.Value));
 					}
 				}
 			}
@@ -406,7 +403,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 				{
 					foreach (KeyValuePair<string, object> current6 in dictionary7)
 					{
-						this.AttackerGuildTroops.Add(current6.get_Key(), Convert.ToInt32(current6.get_Value(), CultureInfo.InvariantCulture));
+						this.AttackerGuildTroops.Add(current6.Key, Convert.ToInt32(current6.Value));
 					}
 				}
 			}
@@ -418,7 +415,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 				{
 					foreach (KeyValuePair<string, object> current7 in dictionary8)
 					{
-						this.DefenderChampions.Add(current7.get_Key(), Convert.ToInt32(current7.get_Value(), CultureInfo.InvariantCulture));
+						this.DefenderChampions.Add(current7.Key, Convert.ToInt32(current7.Value));
 					}
 				}
 			}
@@ -449,7 +446,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 			}
 			if (dictionary.ContainsKey("viewTimePreBattle"))
 			{
-				this.ViewTimePassedPreBattle = float.Parse(dictionary["viewTimePreBattle"] as string, CultureInfo.InvariantCulture);
+				this.ViewTimePassedPreBattle = float.Parse(dictionary["viewTimePreBattle"] as string);
 			}
 			this.AttackerWarBuffs = this.ParseStringList(dictionary, "attackerWarBuffs");
 			this.DefenderWarBuffs = this.ParseStringList(dictionary, "defenderWarBuffs");
@@ -471,7 +468,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 					int count = list2.Count;
 					while (i < count)
 					{
-						list.Add(Convert.ToString(list2[i], CultureInfo.InvariantCulture));
+						list.Add(Convert.ToString(list2[i]));
 						i++;
 					}
 				}
@@ -482,61 +479,29 @@ namespace StaRTS.Main.Models.Battle.Replay
 		private static IBattleAction CreateBattleAction(string actionId, object action)
 		{
 			IBattleAction result = null;
-			uint num = <PrivateImplementationDetails>.ComputeStringHash(actionId);
-			if (num <= 1033960932u)
+			switch (actionId)
 			{
-				if (num != 255476488u)
-				{
-					if (num != 619276938u)
-					{
-						if (num == 1033960932u)
-						{
-							if (actionId == "HeroAbilityActivated")
-							{
-								result = (new HeroAbilityAction().FromObject(action) as HeroAbilityAction);
-							}
-						}
-					}
-					else if (actionId == "TroopPlaced")
-					{
-						result = (new TroopPlacedAction().FromObject(action) as TroopPlacedAction);
-					}
-				}
-				else if (actionId == "BattleCanceled")
-				{
-					result = (new BattleCanceledAction().FromObject(action) as BattleCanceledAction);
-				}
-			}
-			else if (num <= 2120365278u)
-			{
-				if (num != 1186883982u)
-				{
-					if (num == 2120365278u)
-					{
-						if (actionId == "SpecialAttackDeployed")
-						{
-							result = (new SpecialAttackDeployedAction().FromObject(action) as SpecialAttackDeployedAction);
-						}
-					}
-				}
-				else if (actionId == "SquadTroopPlaced")
-				{
-					result = (new SquadTroopPlacedAction().FromObject(action) as SquadTroopPlacedAction);
-				}
-			}
-			else if (num != 3440613923u)
-			{
-				if (num == 3805918252u)
-				{
-					if (actionId == "ChampionDeployed")
-					{
-						result = (new ChampionDeployedAction().FromObject(action) as ChampionDeployedAction);
-					}
-				}
-			}
-			else if (actionId == "HeroDeployed")
-			{
+			case "TroopPlaced":
+				result = (new TroopPlacedAction().FromObject(action) as TroopPlacedAction);
+				break;
+			case "SpecialAttackDeployed":
+				result = (new SpecialAttackDeployedAction().FromObject(action) as SpecialAttackDeployedAction);
+				break;
+			case "HeroDeployed":
 				result = (new HeroDeployedAction().FromObject(action) as HeroDeployedAction);
+				break;
+			case "HeroAbilityActivated":
+				result = (new HeroAbilityAction().FromObject(action) as HeroAbilityAction);
+				break;
+			case "ChampionDeployed":
+				result = (new ChampionDeployedAction().FromObject(action) as ChampionDeployedAction);
+				break;
+			case "SquadTroopPlaced":
+				result = (new SquadTroopPlacedAction().FromObject(action) as SquadTroopPlacedAction);
+				break;
+			case "BattleCanceled":
+				result = (new BattleCanceledAction().FromObject(action) as BattleCanceledAction);
+				break;
 			}
 			return result;
 		}
@@ -620,338 +585,6 @@ namespace StaRTS.Main.Models.Battle.Replay
 				serializer.AddArrayOfPrimitives<string>("defenderEquipment", this.DefenderEquipment);
 			}
 			return serializer.End().ToString();
-		}
-
-		protected internal BattleRecord(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).Add((IBattleAction)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BattleRecord.CreateBattleAction(Marshal.PtrToStringUni(*(IntPtr*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).AttackerDeploymentData);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).AttackerEquipment);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).AttackerGuildTroops);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).AttackerWarBuffs);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BattleActions);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BattleAttributes);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BattleLength);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BattleType);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BattleVersion);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BuildingLootContrabandMap);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BuildingLootCreditsMap);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BuildingLootMaterialsMap);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).CmsVersion);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).CombatEncounter);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderChampions);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderDeploymentData);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderEquipment);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderGuildTroops);
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderWarBuffs);
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DisabledBuildings);
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).LootContrabandAvailable);
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).LootCreditsAvailable);
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).LootMaterialsAvailable);
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).LowestFPS);
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).MissionId);
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).PlanetId);
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).RecordId);
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).ViewTimePassedPreBattle);
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).ParseStringList((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).AttackerDeploymentData = (BattleDeploymentData)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).AttackerEquipment = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).AttackerGuildTroops = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).AttackerWarBuffs = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BattleAttributes = (BattleAttributes)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BattleLength = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BattleType = (BattleType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BattleVersion = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BuildingLootContrabandMap = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BuildingLootCreditsMap = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).BuildingLootMaterialsMap = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).CmsVersion = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).CombatEncounter = (CombatEncounter)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderChampions = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderDeploymentData = (BattleDeploymentData)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderEquipment = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderGuildTroops = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DefenderWarBuffs = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).DisabledBuildings = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).LootContrabandAvailable = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).LootCreditsAvailable = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).LootMaterialsAvailable = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).LowestFPS = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).MissionId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).PlanetId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).RecordId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).ViewTimePassedPreBattle = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecord)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/UI/NGUI Label"), ExecuteInEditMode]
-public class UILabel : UIWidget, IUnitySerializable
+public class UILabel : UIWidget
 {
 	public enum Effect
 	{
@@ -32,124 +28,124 @@ public class UILabel : UIWidget, IUnitySerializable
 		Always
 	}
 
-	public UILabel.Crispness keepCrispWhenShrunk;
+	public UILabel.Crispness keepCrispWhenShrunk = UILabel.Crispness.OnDesktop;
 
 	[HideInInspector, SerializeField]
-	protected internal Font mTrueTypeFont;
+	private Font mTrueTypeFont;
 
 	[HideInInspector, SerializeField]
-	protected internal UIFont mFont;
+	private UIFont mFont;
 
 	[HideInInspector, Multiline(6), SerializeField]
-	protected internal string mText;
+	private string mText = string.Empty;
 
 	[HideInInspector, SerializeField]
-	protected internal int mFontSize;
+	private int mFontSize = 16;
 
 	[HideInInspector, SerializeField]
-	protected internal FontStyle mFontStyle;
+	private FontStyle mFontStyle;
 
 	[HideInInspector, SerializeField]
-	protected internal NGUIText.Alignment mAlignment;
+	private NGUIText.Alignment mAlignment;
 
 	[HideInInspector, SerializeField]
-	protected internal bool mEncoding;
+	private bool mEncoding = true;
 
 	[HideInInspector, SerializeField]
-	protected internal int mMaxLineCount;
+	private int mMaxLineCount;
 
 	[HideInInspector, SerializeField]
-	protected internal UILabel.Effect mEffectStyle;
+	private UILabel.Effect mEffectStyle;
 
 	[HideInInspector, SerializeField]
-	protected internal Color mEffectColor;
+	private Color mEffectColor = Color.black;
 
 	[HideInInspector, SerializeField]
-	protected internal NGUIText.SymbolStyle mSymbols;
+	private NGUIText.SymbolStyle mSymbols = NGUIText.SymbolStyle.Normal;
 
 	[HideInInspector, SerializeField]
-	protected internal Vector2 mEffectDistance;
+	private Vector2 mEffectDistance = Vector2.one;
 
 	[HideInInspector, SerializeField]
-	protected internal UILabel.Overflow mOverflow;
+	private UILabel.Overflow mOverflow;
 
 	[HideInInspector, SerializeField]
-	protected internal Material mMaterial;
+	private Material mMaterial;
 
 	[HideInInspector, SerializeField]
-	protected internal bool mApplyGradient;
+	private bool mApplyGradient;
 
 	[HideInInspector, SerializeField]
-	protected internal Color mGradientTop;
+	private Color mGradientTop = Color.white;
 
 	[HideInInspector, SerializeField]
-	protected internal Color mGradientBottom;
+	private Color mGradientBottom = new Color(0.7f, 0.7f, 0.7f);
 
 	[HideInInspector, SerializeField]
-	protected internal int mSpacingX;
+	private int mSpacingX;
 
 	[HideInInspector, SerializeField]
-	protected internal int mSpacingY;
+	private int mSpacingY;
 
 	[HideInInspector, SerializeField]
-	protected internal bool mUseFloatSpacing;
+	private bool mUseFloatSpacing;
 
 	[HideInInspector, SerializeField]
-	protected internal float mFloatSpacingX;
+	private float mFloatSpacingX;
 
 	[HideInInspector, SerializeField]
-	protected internal float mFloatSpacingY;
+	private float mFloatSpacingY;
 
 	[HideInInspector, SerializeField]
-	protected internal bool mOverflowEllipsis;
+	private bool mOverflowEllipsis;
 
 	[HideInInspector, SerializeField]
-	protected internal bool mShrinkToFit;
+	private bool mShrinkToFit;
 
 	[HideInInspector, SerializeField]
-	protected internal int mMaxLineWidth;
+	private int mMaxLineWidth;
 
 	[HideInInspector, SerializeField]
-	protected internal int mMaxLineHeight;
+	private int mMaxLineHeight;
 
 	[HideInInspector, SerializeField]
-	protected internal float mLineWidth;
+	private float mLineWidth;
 
 	[HideInInspector, SerializeField]
-	protected internal bool mMultiline;
+	private bool mMultiline = true;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private Font mActiveTTF;
 
-	[System.NonSerialized]
-	private float mDensity;
+	[NonSerialized]
+	private float mDensity = 1f;
 
-	[System.NonSerialized]
-	private bool mShouldBeProcessed;
+	[NonSerialized]
+	private bool mShouldBeProcessed = true;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private string mProcessedText;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mPremultiply;
 
-	[System.NonSerialized]
-	private Vector2 mCalculatedSize;
+	[NonSerialized]
+	private Vector2 mCalculatedSize = Vector2.zero;
 
-	[System.NonSerialized]
-	private float mScale;
+	[NonSerialized]
+	private float mScale = 1f;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private int mFinalFontSize;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private int mLastWidth;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private int mLastHeight;
 
-	[System.NonSerialized]
-	public bool UseFontSharpening;
+	[NonSerialized]
+	public bool UseFontSharpening = true;
 
 	private static BetterList<UILabel> mList = new BetterList<UILabel>();
 
@@ -187,9 +183,11 @@ public class UILabel : UIWidget, IUnitySerializable
 			{
 				this.mChanged = true;
 				this.mShouldBeProcessed = true;
-				return;
 			}
-			this.mShouldBeProcessed = false;
+			else
+			{
+				this.mShouldBeProcessed = false;
+			}
 		}
 	}
 
@@ -277,11 +275,7 @@ public class UILabel : UIWidget, IUnitySerializable
 			{
 				return this.mTrueTypeFont;
 			}
-			if (!(this.mFont != null))
-			{
-				return null;
-			}
-			return this.mFont.dynamicFont;
+			return (!(this.mFont != null)) ? null : this.mFont.dynamicFont;
 		}
 		set
 		{
@@ -314,9 +308,11 @@ public class UILabel : UIWidget, IUnitySerializable
 			if (uIFont != null)
 			{
 				this.bitmapFont = uIFont;
-				return;
 			}
-			this.trueTypeFont = (value as Font);
+			else
+			{
+				this.trueTypeFont = (value as Font);
+			}
 		}
 	}
 
@@ -336,7 +332,7 @@ public class UILabel : UIWidget, IUnitySerializable
 			{
 				if (!string.IsNullOrEmpty(this.mText))
 				{
-					this.mText = "";
+					this.mText = string.Empty;
 					this.MarkAsChanged();
 					this.ProcessAndRequest();
 				}
@@ -358,15 +354,7 @@ public class UILabel : UIWidget, IUnitySerializable
 	{
 		get
 		{
-			if (this.trueTypeFont != null)
-			{
-				return this.mFontSize;
-			}
-			if (!(this.mFont != null))
-			{
-				return 16;
-			}
-			return this.mFont.defaultSize;
+			return (!(this.trueTypeFont != null)) ? ((!(this.mFont != null)) ? 16 : this.mFont.defaultSize) : this.mFontSize;
 		}
 	}
 
@@ -560,11 +548,7 @@ public class UILabel : UIWidget, IUnitySerializable
 	{
 		get
 		{
-			if (!this.mUseFloatSpacing)
-			{
-				return (float)this.mSpacingY;
-			}
-			return this.mFloatSpacingY;
+			return (!this.mUseFloatSpacing) ? ((float)this.mSpacingY) : this.mFloatSpacingY;
 		}
 	}
 
@@ -572,11 +556,7 @@ public class UILabel : UIWidget, IUnitySerializable
 	{
 		get
 		{
-			if (!this.mUseFloatSpacing)
-			{
-				return (float)this.mSpacingX;
-			}
-			return this.mFloatSpacingX;
+			return (!this.mUseFloatSpacing) ? ((float)this.mSpacingX) : this.mFloatSpacingX;
 		}
 	}
 
@@ -600,7 +580,7 @@ public class UILabel : UIWidget, IUnitySerializable
 	{
 		get
 		{
-			return this.trueTypeFont != null && this.keepCrispWhenShrunk != UILabel.Crispness.Never;
+			return this.trueTypeFont != null && this.keepCrispWhenShrunk != UILabel.Crispness.Never && this.keepCrispWhenShrunk == UILabel.Crispness.Always;
 		}
 	}
 
@@ -688,7 +668,7 @@ public class UILabel : UIWidget, IUnitySerializable
 		{
 			if (this.mMaxLineCount != 1 != value)
 			{
-				this.mMaxLineCount = (value ? 0 : 1);
+				this.mMaxLineCount = ((!value) ? 1 : 0);
 				this.shouldBeProcessed = true;
 			}
 		}
@@ -963,7 +943,7 @@ public class UILabel : UIWidget, IUnitySerializable
 		if (this.mMaxLineWidth != 0)
 		{
 			base.width = this.mMaxLineWidth;
-			this.overflowMethod = ((this.mMaxLineCount > 0) ? UILabel.Overflow.ResizeHeight : UILabel.Overflow.ShrinkContent);
+			this.overflowMethod = ((this.mMaxLineCount <= 0) ? UILabel.Overflow.ShrinkContent : UILabel.Overflow.ResizeHeight);
 		}
 		else
 		{
@@ -1060,15 +1040,15 @@ public class UILabel : UIWidget, IUnitySerializable
 		this.shouldBeProcessed = false;
 		float num = this.mDrawRegion.z - this.mDrawRegion.x;
 		float num2 = this.mDrawRegion.w - this.mDrawRegion.y;
-		NGUIText.rectWidth = (legacyMode ? ((this.mMaxLineWidth != 0) ? this.mMaxLineWidth : 1000000) : base.width);
-		NGUIText.rectHeight = (legacyMode ? ((this.mMaxLineHeight != 0) ? this.mMaxLineHeight : 1000000) : base.height);
-		NGUIText.regionWidth = ((num != 1f) ? Mathf.RoundToInt((float)NGUIText.rectWidth * num) : NGUIText.rectWidth);
-		NGUIText.regionHeight = ((num2 != 1f) ? Mathf.RoundToInt((float)NGUIText.rectHeight * num2) : NGUIText.rectHeight);
-		this.mFinalFontSize = Mathf.Abs(legacyMode ? Mathf.RoundToInt(base.cachedTransform.localScale.x) : this.defaultFontSize);
+		NGUIText.rectWidth = ((!legacyMode) ? base.width : ((this.mMaxLineWidth == 0) ? 1000000 : this.mMaxLineWidth));
+		NGUIText.rectHeight = ((!legacyMode) ? base.height : ((this.mMaxLineHeight == 0) ? 1000000 : this.mMaxLineHeight));
+		NGUIText.regionWidth = ((num == 1f) ? NGUIText.rectWidth : Mathf.RoundToInt((float)NGUIText.rectWidth * num));
+		NGUIText.regionHeight = ((num2 == 1f) ? NGUIText.rectHeight : Mathf.RoundToInt((float)NGUIText.rectHeight * num2));
+		this.mFinalFontSize = Mathf.Abs((!legacyMode) ? this.defaultFontSize : Mathf.RoundToInt(base.cachedTransform.localScale.x));
 		this.mScale = 1f;
 		if (NGUIText.regionWidth < 1 || NGUIText.regionHeight < 0)
 		{
-			this.mProcessedText = "";
+			this.mProcessedText = string.Empty;
 			return;
 		}
 		bool flag = this.trueTypeFont != null;
@@ -1077,7 +1057,7 @@ public class UILabel : UIWidget, IUnitySerializable
 			UIRoot root = base.root;
 			if (root != null)
 			{
-				this.mDensity = ((root != null) ? root.pixelSizeAdjustment : 1f);
+				this.mDensity = ((!(root != null)) ? 1f : root.pixelSizeAdjustment);
 			}
 		}
 		else
@@ -1101,8 +1081,7 @@ public class UILabel : UIWidget, IUnitySerializable
 		if (this.mFinalFontSize > 0)
 		{
 			bool keepCrisp = this.keepCrisp;
-			int i = this.mFinalFontSize;
-			while (i > 0)
+			for (int i = this.mFinalFontSize; i > 0; i--)
 			{
 				if (keepCrisp)
 				{
@@ -1112,7 +1091,7 @@ public class UILabel : UIWidget, IUnitySerializable
 				else
 				{
 					this.mScale = (float)i / (float)this.mFinalFontSize;
-					NGUIText.fontScale = (flag ? this.mScale : ((float)this.mFontSize / (float)this.mFont.defaultSize * this.mScale));
+					NGUIText.fontScale = ((!flag) ? ((float)this.mFontSize / (float)this.mFont.defaultSize * this.mScale) : this.mScale);
 				}
 				NGUIText.Update(false, this.UseFontSharpening);
 				bool flag2 = NGUIText.WrapText(this.mText, out this.mProcessedText, true, false, this.mOverflowEllipsis && this.mOverflow == UILabel.Overflow.ClampContent);
@@ -1121,15 +1100,7 @@ public class UILabel : UIWidget, IUnitySerializable
 					this.ProcessText(legacyMode, full);
 					return;
 				}
-				if (this.mOverflow == UILabel.Overflow.ShrinkContent && !flag2)
-				{
-					if (--i <= 1)
-					{
-						break;
-					}
-					i--;
-				}
-				else
+				if (this.mOverflow != UILabel.Overflow.ShrinkContent || flag2)
 				{
 					if (this.mOverflow == UILabel.Overflow.ResizeFreely)
 					{
@@ -1175,8 +1146,11 @@ public class UILabel : UIWidget, IUnitySerializable
 						base.width = Mathf.RoundToInt(this.mCalculatedSize.x);
 						base.height = Mathf.RoundToInt(this.mCalculatedSize.y);
 						base.cachedTransform.localScale = Vector3.one;
-						break;
 					}
+					break;
+				}
+				if (--i <= 1)
+				{
 					break;
 				}
 			}
@@ -1184,7 +1158,7 @@ public class UILabel : UIWidget, IUnitySerializable
 		else
 		{
 			base.cachedTransform.localScale = Vector3.one;
-			this.mProcessedText = "";
+			this.mProcessedText = string.Empty;
 			this.mScale = 1f;
 		}
 		if (full)
@@ -1196,48 +1170,52 @@ public class UILabel : UIWidget, IUnitySerializable
 
 	public override void MakePixelPerfect()
 	{
-		if (!(this.ambigiousFont != null))
+		if (this.ambigiousFont != null)
+		{
+			Vector3 localPosition = base.cachedTransform.localPosition;
+			localPosition.x = (float)Mathf.RoundToInt(localPosition.x);
+			localPosition.y = (float)Mathf.RoundToInt(localPosition.y);
+			localPosition.z = (float)Mathf.RoundToInt(localPosition.z);
+			base.cachedTransform.localPosition = localPosition;
+			base.cachedTransform.localScale = Vector3.one;
+			if (this.mOverflow == UILabel.Overflow.ResizeFreely)
+			{
+				this.AssumeNaturalSize();
+			}
+			else
+			{
+				int width = base.width;
+				int height = base.height;
+				UILabel.Overflow overflow = this.mOverflow;
+				if (overflow != UILabel.Overflow.ResizeHeight)
+				{
+					this.mWidth = 100000;
+				}
+				this.mHeight = 100000;
+				this.mOverflow = UILabel.Overflow.ShrinkContent;
+				this.ProcessText(false, true);
+				this.mOverflow = overflow;
+				int num = Mathf.RoundToInt(this.mCalculatedSize.x);
+				int num2 = Mathf.RoundToInt(this.mCalculatedSize.y);
+				num = Mathf.Max(num, base.minWidth);
+				num2 = Mathf.Max(num2, base.minHeight);
+				if ((num & 1) == 1)
+				{
+					num++;
+				}
+				if ((num2 & 1) == 1)
+				{
+					num2++;
+				}
+				this.mWidth = Mathf.Max(width, num);
+				this.mHeight = Mathf.Max(height, num2);
+				this.MarkAsChanged();
+			}
+		}
+		else
 		{
 			base.MakePixelPerfect();
-			return;
 		}
-		Vector3 localPosition = base.cachedTransform.localPosition;
-		localPosition.x = (float)Mathf.RoundToInt(localPosition.x);
-		localPosition.y = (float)Mathf.RoundToInt(localPosition.y);
-		localPosition.z = (float)Mathf.RoundToInt(localPosition.z);
-		base.cachedTransform.localPosition = localPosition;
-		base.cachedTransform.localScale = Vector3.one;
-		if (this.mOverflow == UILabel.Overflow.ResizeFreely)
-		{
-			this.AssumeNaturalSize();
-			return;
-		}
-		int width = base.width;
-		int height = base.height;
-		UILabel.Overflow overflow = this.mOverflow;
-		if (overflow != UILabel.Overflow.ResizeHeight)
-		{
-			this.mWidth = 100000;
-		}
-		this.mHeight = 100000;
-		this.mOverflow = UILabel.Overflow.ShrinkContent;
-		this.ProcessText(false, true);
-		this.mOverflow = overflow;
-		int num = Mathf.RoundToInt(this.mCalculatedSize.x);
-		int num2 = Mathf.RoundToInt(this.mCalculatedSize.y);
-		num = Mathf.Max(num, base.minWidth);
-		num2 = Mathf.Max(num2, base.minHeight);
-		if ((num & 1) == 1)
-		{
-			num++;
-		}
-		if ((num2 & 1) == 1)
-		{
-			num2++;
-		}
-		this.mWidth = Mathf.Max(width, num);
-		this.mHeight = Mathf.Max(height, num2);
-		this.MarkAsChanged();
 	}
 
 	public void AssumeNaturalSize()
@@ -1300,7 +1278,7 @@ public class UILabel : UIWidget, IUnitySerializable
 			if (UILabel.mTempVerts.size > 0)
 			{
 				this.ApplyOffset(UILabel.mTempVerts, 0);
-				int result = precise ? NGUIText.GetExactCharacterIndex(UILabel.mTempVerts, UILabel.mTempIndices, localPos) : NGUIText.GetApproximateCharacterIndex(UILabel.mTempVerts, UILabel.mTempIndices, localPos);
+				int result = (!precise) ? NGUIText.GetApproximateCharacterIndex(UILabel.mTempVerts, UILabel.mTempIndices, localPos) : NGUIText.GetExactCharacterIndex(UILabel.mTempVerts, UILabel.mTempIndices, localPos);
 				UILabel.mTempVerts.Clear();
 				UILabel.mTempIndices.Clear();
 				NGUIText.bitmapFont = null;
@@ -1327,7 +1305,7 @@ public class UILabel : UIWidget, IUnitySerializable
 
 	public string GetWordAtCharacterIndex(int characterIndex)
 	{
-		if (characterIndex != -1 && characterIndex < this.mText.get_Length())
+		if (characterIndex != -1 && characterIndex < this.mText.Length)
 		{
 			int num = this.mText.LastIndexOfAny(new char[]
 			{
@@ -1343,7 +1321,7 @@ public class UILabel : UIWidget, IUnitySerializable
 			}, characterIndex);
 			if (num2 == -1)
 			{
-				num2 = this.mText.get_Length();
+				num2 = this.mText.Length;
 			}
 			if (num != num2)
 			{
@@ -1370,10 +1348,10 @@ public class UILabel : UIWidget, IUnitySerializable
 
 	public string GetUrlAtCharacterIndex(int characterIndex)
 	{
-		if (characterIndex != -1 && characterIndex < this.mText.get_Length() - 6)
+		if (characterIndex != -1 && characterIndex < this.mText.Length - 6)
 		{
 			int num;
-			if (this.mText.get_Chars(characterIndex) == '[' && this.mText.get_Chars(characterIndex + 1) == 'u' && this.mText.get_Chars(characterIndex + 2) == 'r' && this.mText.get_Chars(characterIndex + 3) == 'l' && this.mText.get_Chars(characterIndex + 4) == '=')
+			if (this.mText[characterIndex] == '[' && this.mText[characterIndex + 1] == 'u' && this.mText[characterIndex + 2] == 'r' && this.mText[characterIndex + 3] == 'l' && this.mText[characterIndex + 4] == '=')
 			{
 				num = characterIndex;
 			}
@@ -1438,13 +1416,13 @@ public class UILabel : UIWidget, IUnitySerializable
 							pos.x += 1000f;
 						}
 						int approximateCharacterIndex = NGUIText.GetApproximateCharacterIndex(UILabel.mTempVerts, UILabel.mTempIndices, pos);
-						if (approximateCharacterIndex != currentIndex)
+						if (approximateCharacterIndex == currentIndex)
 						{
-							UILabel.mTempVerts.Clear();
-							UILabel.mTempIndices.Clear();
-							return approximateCharacterIndex;
+							break;
 						}
-						break;
+						UILabel.mTempVerts.Clear();
+						UILabel.mTempIndices.Clear();
+						return approximateCharacterIndex;
 					}
 					else
 					{
@@ -1462,7 +1440,7 @@ public class UILabel : UIWidget, IUnitySerializable
 			}
 			if (key == KeyCode.DownArrow || key == KeyCode.End)
 			{
-				return processedText.get_Length();
+				return processedText.Length;
 			}
 		}
 		return currentIndex;
@@ -1598,12 +1576,12 @@ public class UILabel : UIWidget, IUnitySerializable
 		num2 = Mathf.Round(num2);
 		for (int i = start; i < verts.size; i++)
 		{
-			Vector3[] expr_7F_cp_0_cp_0 = verts.buffer;
-			int expr_7F_cp_0_cp_1 = i;
-			expr_7F_cp_0_cp_0[expr_7F_cp_0_cp_1].x = expr_7F_cp_0_cp_0[expr_7F_cp_0_cp_1].x + num;
-			Vector3[] expr_95_cp_0_cp_0 = verts.buffer;
-			int expr_95_cp_0_cp_1 = i;
-			expr_95_cp_0_cp_0[expr_95_cp_0_cp_1].y = expr_95_cp_0_cp_0[expr_95_cp_0_cp_1].y + num2;
+			Vector3[] expr_80_cp_0 = verts.buffer;
+			int expr_80_cp_1 = i;
+			expr_80_cp_0[expr_80_cp_1].x = expr_80_cp_0[expr_80_cp_1].x + num;
+			Vector3[] expr_99_cp_0 = verts.buffer;
+			int expr_99_cp_1 = i;
+			expr_99_cp_0[expr_99_cp_1].y = expr_99_cp_0[expr_99_cp_1].y + num2;
 		}
 		return new Vector2(num, num2);
 	}
@@ -1612,7 +1590,7 @@ public class UILabel : UIWidget, IUnitySerializable
 	{
 		Color color = this.mEffectColor;
 		color.a *= this.finalAlpha;
-		Color32 color2 = (this.bitmapFont != null && this.bitmapFont.premultipliedAlphaShader) ? NGUITools.ApplyPMA(color) : color;
+		Color32 color2 = (!(this.bitmapFont != null) || !this.bitmapFont.premultipliedAlphaShader) ? color : NGUITools.ApplyPMA(color);
 		for (int i = start; i < end; i++)
 		{
 			verts.Add(verts.buffer[i]);
@@ -1631,7 +1609,7 @@ public class UILabel : UIWidget, IUnitySerializable
 			{
 				Color color4 = color;
 				color4.a = (float)color3.a / 255f * color.a;
-				cols.buffer[i] = ((this.bitmapFont != null && this.bitmapFont.premultipliedAlphaShader) ? NGUITools.ApplyPMA(color4) : color4);
+				cols.buffer[i] = ((!(this.bitmapFont != null) || !this.bitmapFont.premultipliedAlphaShader) ? color4 : NGUITools.ApplyPMA(color4));
 			}
 		}
 	}
@@ -1667,7 +1645,7 @@ public class UILabel : UIWidget, IUnitySerializable
 	{
 		if (UIPopupList.current != null)
 		{
-			this.text = (UIPopupList.current.isLocalized ? Localization.Get(UIPopupList.current.value) : UIPopupList.current.value);
+			this.text = ((!UIPopupList.current.isLocalized) ? UIPopupList.current.value : Localization.Get(UIPopupList.current.value));
 		}
 	}
 
@@ -1706,7 +1684,7 @@ public class UILabel : UIWidget, IUnitySerializable
 		NGUIText.maxLines = this.mMaxLineCount;
 		NGUIText.spacingX = this.effectiveSpacingX;
 		NGUIText.spacingY = this.effectiveSpacingY;
-		NGUIText.fontScale = (flag ? this.mScale : ((float)this.mFontSize / (float)this.mFont.defaultSize * this.mScale));
+		NGUIText.fontScale = ((!flag) ? ((float)this.mFontSize / (float)this.mFont.defaultSize * this.mScale) : this.mScale);
 		if (this.mFont != null)
 		{
 			NGUIText.bitmapFont = this.mFont;
@@ -1739,7 +1717,7 @@ public class UILabel : UIWidget, IUnitySerializable
 			UIRoot root = base.root;
 			if (root != null)
 			{
-				NGUIText.pixelDensity = ((root != null) ? root.pixelSizeAdjustment : 1f);
+				NGUIText.pixelDensity = ((!(root != null)) ? 1f : root.pixelSizeAdjustment);
 			}
 		}
 		else
@@ -1783,1485 +1761,5 @@ public class UILabel : UIWidget, IUnitySerializable
 		{
 			this.Invalidate(false);
 		}
-	}
-
-	public UILabel()
-	{
-		this.keepCrispWhenShrunk = UILabel.Crispness.OnDesktop;
-		this.mText = "";
-		this.mFontSize = 16;
-		this.mEncoding = true;
-		this.mEffectColor = Color.black;
-		this.mSymbols = NGUIText.SymbolStyle.Normal;
-		this.mEffectDistance = Vector2.one;
-		this.mGradientTop = Color.white;
-		this.mGradientBottom = new Color(0.7f, 0.7f, 0.7f);
-		this.mMultiline = true;
-		this.mDensity = 1f;
-		this.mShouldBeProcessed = true;
-		this.mCalculatedSize = Vector2.zero;
-		this.mScale = 1f;
-		this.UseFontSharpening = true;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			this.leftAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			this.rightAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			this.bottomAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			this.topAnchor.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.WriteInt32((int)this.updateAnchors);
-		if (depth <= 7)
-		{
-			this.mColor.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32((int)this.mPivot);
-		SerializedStateWriter.Instance.WriteInt32(this.mWidth);
-		SerializedStateWriter.Instance.WriteInt32(this.mHeight);
-		SerializedStateWriter.Instance.WriteInt32(this.mDepth);
-		SerializedStateWriter.Instance.WriteBoolean(this.autoResizeBoxCollider);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.hideIfOffScreen);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.skipBoundsCalculations);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32((int)this.keepAspectRatio);
-		SerializedStateWriter.Instance.WriteSingle(this.aspectRatio);
-		SerializedStateWriter.Instance.WriteInt32((int)this.keepCrispWhenShrunk);
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mTrueTypeFont);
-		}
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mFont);
-		}
-		SerializedStateWriter.Instance.WriteString(this.mText);
-		SerializedStateWriter.Instance.WriteInt32(this.mFontSize);
-		SerializedStateWriter.Instance.WriteInt32((int)this.mFontStyle);
-		SerializedStateWriter.Instance.WriteInt32((int)this.mAlignment);
-		SerializedStateWriter.Instance.WriteBoolean(this.mEncoding);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32(this.mMaxLineCount);
-		SerializedStateWriter.Instance.WriteInt32((int)this.mEffectStyle);
-		if (depth <= 7)
-		{
-			this.mEffectColor.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32((int)this.mSymbols);
-		if (depth <= 7)
-		{
-			this.mEffectDistance.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32((int)this.mOverflow);
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mMaterial);
-		}
-		SerializedStateWriter.Instance.WriteBoolean(this.mApplyGradient);
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			this.mGradientTop.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			this.mGradientBottom.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32(this.mSpacingX);
-		SerializedStateWriter.Instance.WriteInt32(this.mSpacingY);
-		SerializedStateWriter.Instance.WriteBoolean(this.mUseFloatSpacing);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteSingle(this.mFloatSpacingX);
-		SerializedStateWriter.Instance.WriteSingle(this.mFloatSpacingY);
-		SerializedStateWriter.Instance.WriteBoolean(this.mOverflowEllipsis);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.mShrinkToFit);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32(this.mMaxLineWidth);
-		SerializedStateWriter.Instance.WriteInt32(this.mMaxLineHeight);
-		SerializedStateWriter.Instance.WriteSingle(this.mLineWidth);
-		SerializedStateWriter.Instance.WriteBoolean(this.mMultiline);
-		SerializedStateWriter.Instance.Align();
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			this.leftAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			this.rightAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			this.bottomAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			this.topAnchor.Unity_Deserialize(depth + 1);
-		}
-		this.updateAnchors = (UIRect.AnchorUpdate)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mColor.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		this.mPivot = (UIWidget.Pivot)SerializedStateReader.Instance.ReadInt32();
-		this.mWidth = SerializedStateReader.Instance.ReadInt32();
-		this.mHeight = SerializedStateReader.Instance.ReadInt32();
-		this.mDepth = SerializedStateReader.Instance.ReadInt32();
-		this.autoResizeBoxCollider = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.hideIfOffScreen = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.skipBoundsCalculations = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.keepAspectRatio = (UIWidget.AspectRatioSource)SerializedStateReader.Instance.ReadInt32();
-		this.aspectRatio = SerializedStateReader.Instance.ReadSingle();
-		this.keepCrispWhenShrunk = (UILabel.Crispness)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mTrueTypeFont = (SerializedStateReader.Instance.ReadUnityEngineObject() as Font);
-		}
-		if (depth <= 7)
-		{
-			this.mFont = (SerializedStateReader.Instance.ReadUnityEngineObject() as UIFont);
-		}
-		this.mText = (SerializedStateReader.Instance.ReadString() as string);
-		this.mFontSize = SerializedStateReader.Instance.ReadInt32();
-		this.mFontStyle = (FontStyle)SerializedStateReader.Instance.ReadInt32();
-		this.mAlignment = (NGUIText.Alignment)SerializedStateReader.Instance.ReadInt32();
-		this.mEncoding = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.mMaxLineCount = SerializedStateReader.Instance.ReadInt32();
-		this.mEffectStyle = (UILabel.Effect)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mEffectColor.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		this.mSymbols = (NGUIText.SymbolStyle)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mEffectDistance.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		this.mOverflow = (UILabel.Overflow)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mMaterial = (SerializedStateReader.Instance.ReadUnityEngineObject() as Material);
-		}
-		this.mApplyGradient = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.mGradientTop.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.mGradientBottom.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		this.mSpacingX = SerializedStateReader.Instance.ReadInt32();
-		this.mSpacingY = SerializedStateReader.Instance.ReadInt32();
-		this.mUseFloatSpacing = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.mFloatSpacingX = SerializedStateReader.Instance.ReadSingle();
-		this.mFloatSpacingY = SerializedStateReader.Instance.ReadSingle();
-		this.mOverflowEllipsis = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.mShrinkToFit = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.mMaxLineWidth = SerializedStateReader.Instance.ReadInt32();
-		this.mMaxLineHeight = SerializedStateReader.Instance.ReadInt32();
-		this.mLineWidth = SerializedStateReader.Instance.ReadSingle();
-		this.mMultiline = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor != null)
-			{
-				this.leftAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor != null)
-			{
-				this.rightAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor != null)
-			{
-				this.bottomAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor != null)
-			{
-				this.topAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (this.mTrueTypeFont != null)
-		{
-			this.mTrueTypeFont = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mTrueTypeFont) as Font);
-		}
-		if (this.mFont != null)
-		{
-			this.mFont = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mFont) as UIFont);
-		}
-		if (this.mMaterial != null)
-		{
-			this.mMaterial = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mMaterial) as Material);
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_3F_0 = this.leftAnchor;
-			ISerializedNamedStateWriter arg_37_0 = SerializedNamedStateWriter.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_37_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2296);
-			arg_3F_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_82_0 = this.rightAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2307);
-			arg_82_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_C5_0 = this.bottomAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2319);
-			arg_C5_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_108_0 = this.topAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2332);
-			arg_108_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.updateAnchors, &var_0_cp_0[var_0_cp_1] + 741);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2342);
-			this.mColor.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mPivot, &var_0_cp_0[var_0_cp_1] + 2349);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mWidth, &var_0_cp_0[var_0_cp_1] + 2098);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mHeight, &var_0_cp_0[var_0_cp_1] + 2105);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mDepth, &var_0_cp_0[var_0_cp_1] + 2356);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.autoResizeBoxCollider, &var_0_cp_0[var_0_cp_1] + 2363);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.hideIfOffScreen, &var_0_cp_0[var_0_cp_1] + 2385);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.skipBoundsCalculations, &var_0_cp_0[var_0_cp_1] + 2401);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.keepAspectRatio, &var_0_cp_0[var_0_cp_1] + 2424);
-		SerializedNamedStateWriter.Instance.WriteSingle(this.aspectRatio, &var_0_cp_0[var_0_cp_1] + 2440);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.keepCrispWhenShrunk, &var_0_cp_0[var_0_cp_1] + 3734);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.mTrueTypeFont, &var_0_cp_0[var_0_cp_1] + 3754);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.mFont, &var_0_cp_0[var_0_cp_1] + 3525);
-		}
-		SerializedNamedStateWriter.Instance.WriteString(this.mText, &var_0_cp_0[var_0_cp_1] + 3768);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mFontSize, &var_0_cp_0[var_0_cp_1] + 3774);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mFontStyle, &var_0_cp_0[var_0_cp_1] + 3784);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mAlignment, &var_0_cp_0[var_0_cp_1] + 3795);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.mEncoding, &var_0_cp_0[var_0_cp_1] + 3806);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mMaxLineCount, &var_0_cp_0[var_0_cp_1] + 3816);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mEffectStyle, &var_0_cp_0[var_0_cp_1] + 3830);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3843);
-			this.mEffectColor.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mSymbols, &var_0_cp_0[var_0_cp_1] + 3538);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3856);
-			this.mEffectDistance.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mOverflow, &var_0_cp_0[var_0_cp_1] + 3872);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.mMaterial, &var_0_cp_0[var_0_cp_1] + 3882);
-		}
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.mApplyGradient, &var_0_cp_0[var_0_cp_1] + 3892);
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3907);
-			this.mGradientTop.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3920);
-			this.mGradientBottom.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mSpacingX, &var_0_cp_0[var_0_cp_1] + 3936);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mSpacingY, &var_0_cp_0[var_0_cp_1] + 3946);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.mUseFloatSpacing, &var_0_cp_0[var_0_cp_1] + 3956);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteSingle(this.mFloatSpacingX, &var_0_cp_0[var_0_cp_1] + 3973);
-		SerializedNamedStateWriter.Instance.WriteSingle(this.mFloatSpacingY, &var_0_cp_0[var_0_cp_1] + 3988);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.mOverflowEllipsis, &var_0_cp_0[var_0_cp_1] + 4003);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.mShrinkToFit, &var_0_cp_0[var_0_cp_1] + 4021);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mMaxLineWidth, &var_0_cp_0[var_0_cp_1] + 4034);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mMaxLineHeight, &var_0_cp_0[var_0_cp_1] + 4048);
-		SerializedNamedStateWriter.Instance.WriteSingle(this.mLineWidth, &var_0_cp_0[var_0_cp_1] + 4063);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.mMultiline, &var_0_cp_0[var_0_cp_1] + 4074);
-		SerializedNamedStateWriter.Instance.Align();
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_3F_0 = this.leftAnchor;
-			ISerializedNamedStateReader arg_37_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_37_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2296);
-			arg_3F_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_82_0 = this.rightAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2307);
-			arg_82_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_C5_0 = this.bottomAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2319);
-			arg_C5_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_108_0 = this.topAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2332);
-			arg_108_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		this.updateAnchors = (UIRect.AnchorUpdate)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 741);
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2342);
-			this.mColor.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		this.mPivot = (UIWidget.Pivot)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2349);
-		this.mWidth = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2098);
-		this.mHeight = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2105);
-		this.mDepth = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2356);
-		this.autoResizeBoxCollider = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 2363);
-		SerializedNamedStateReader.Instance.Align();
-		this.hideIfOffScreen = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 2385);
-		SerializedNamedStateReader.Instance.Align();
-		this.skipBoundsCalculations = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 2401);
-		SerializedNamedStateReader.Instance.Align();
-		this.keepAspectRatio = (UIWidget.AspectRatioSource)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2424);
-		this.aspectRatio = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 2440);
-		this.keepCrispWhenShrunk = (UILabel.Crispness)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3734);
-		if (depth <= 7)
-		{
-			this.mTrueTypeFont = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 3754) as Font);
-		}
-		if (depth <= 7)
-		{
-			this.mFont = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 3525) as UIFont);
-		}
-		this.mText = (SerializedNamedStateReader.Instance.ReadString(&var_0_cp_0[var_0_cp_1] + 3768) as string);
-		this.mFontSize = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3774);
-		this.mFontStyle = (FontStyle)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3784);
-		this.mAlignment = (NGUIText.Alignment)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3795);
-		this.mEncoding = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 3806);
-		SerializedNamedStateReader.Instance.Align();
-		this.mMaxLineCount = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3816);
-		this.mEffectStyle = (UILabel.Effect)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3830);
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3843);
-			this.mEffectColor.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		this.mSymbols = (NGUIText.SymbolStyle)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3538);
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3856);
-			this.mEffectDistance.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		this.mOverflow = (UILabel.Overflow)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3872);
-		if (depth <= 7)
-		{
-			this.mMaterial = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 3882) as Material);
-		}
-		this.mApplyGradient = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 3892);
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3907);
-			this.mGradientTop.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 3920);
-			this.mGradientBottom.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		this.mSpacingX = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3936);
-		this.mSpacingY = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 3946);
-		this.mUseFloatSpacing = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 3956);
-		SerializedNamedStateReader.Instance.Align();
-		this.mFloatSpacingX = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 3973);
-		this.mFloatSpacingY = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 3988);
-		this.mOverflowEllipsis = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4003);
-		SerializedNamedStateReader.Instance.Align();
-		this.mShrinkToFit = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4021);
-		SerializedNamedStateReader.Instance.Align();
-		this.mMaxLineWidth = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 4034);
-		this.mMaxLineHeight = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 4048);
-		this.mLineWidth = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 4063);
-		this.mMultiline = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4074);
-		SerializedNamedStateReader.Instance.Align();
-	}
-
-	protected internal UILabel(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static long $Get0(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)instance).mTrueTypeFont);
-	}
-
-	public static void $Set0(object instance, long value)
-	{
-		((UILabel)instance).mTrueTypeFont = (Font)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static long $Get1(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)instance).mFont);
-	}
-
-	public static void $Set1(object instance, long value)
-	{
-		((UILabel)instance).mFont = (UIFont)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static bool $Get2(object instance)
-	{
-		return ((UILabel)instance).mEncoding;
-	}
-
-	public static void $Set2(object instance, bool value)
-	{
-		((UILabel)instance).mEncoding = value;
-	}
-
-	public static float $Get3(object instance, int index)
-	{
-		UILabel expr_06_cp_0 = (UILabel)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.mEffectColor.r;
-		case 1:
-			return expr_06_cp_0.mEffectColor.g;
-		case 2:
-			return expr_06_cp_0.mEffectColor.b;
-		case 3:
-			return expr_06_cp_0.mEffectColor.a;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set3(object instance, float value, int index)
-	{
-		UILabel expr_06_cp_0 = (UILabel)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.mEffectColor.r = value;
-			return;
-		case 1:
-			expr_06_cp_0.mEffectColor.g = value;
-			return;
-		case 2:
-			expr_06_cp_0.mEffectColor.b = value;
-			return;
-		case 3:
-			expr_06_cp_0.mEffectColor.a = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get4(object instance, int index)
-	{
-		UILabel expr_06_cp_0 = (UILabel)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.mEffectDistance.x;
-		case 1:
-			return expr_06_cp_0.mEffectDistance.y;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set4(object instance, float value, int index)
-	{
-		UILabel expr_06_cp_0 = (UILabel)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.mEffectDistance.x = value;
-			return;
-		case 1:
-			expr_06_cp_0.mEffectDistance.y = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static long $Get5(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)instance).mMaterial);
-	}
-
-	public static void $Set5(object instance, long value)
-	{
-		((UILabel)instance).mMaterial = (Material)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static bool $Get6(object instance)
-	{
-		return ((UILabel)instance).mApplyGradient;
-	}
-
-	public static void $Set6(object instance, bool value)
-	{
-		((UILabel)instance).mApplyGradient = value;
-	}
-
-	public static float $Get7(object instance, int index)
-	{
-		UILabel expr_06_cp_0 = (UILabel)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.mGradientTop.r;
-		case 1:
-			return expr_06_cp_0.mGradientTop.g;
-		case 2:
-			return expr_06_cp_0.mGradientTop.b;
-		case 3:
-			return expr_06_cp_0.mGradientTop.a;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set7(object instance, float value, int index)
-	{
-		UILabel expr_06_cp_0 = (UILabel)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.mGradientTop.r = value;
-			return;
-		case 1:
-			expr_06_cp_0.mGradientTop.g = value;
-			return;
-		case 2:
-			expr_06_cp_0.mGradientTop.b = value;
-			return;
-		case 3:
-			expr_06_cp_0.mGradientTop.a = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get8(object instance, int index)
-	{
-		UILabel expr_06_cp_0 = (UILabel)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.mGradientBottom.r;
-		case 1:
-			return expr_06_cp_0.mGradientBottom.g;
-		case 2:
-			return expr_06_cp_0.mGradientBottom.b;
-		case 3:
-			return expr_06_cp_0.mGradientBottom.a;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set8(object instance, float value, int index)
-	{
-		UILabel expr_06_cp_0 = (UILabel)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.mGradientBottom.r = value;
-			return;
-		case 1:
-			expr_06_cp_0.mGradientBottom.g = value;
-			return;
-		case 2:
-			expr_06_cp_0.mGradientBottom.b = value;
-			return;
-		case 3:
-			expr_06_cp_0.mGradientBottom.a = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static bool $Get9(object instance)
-	{
-		return ((UILabel)instance).mUseFloatSpacing;
-	}
-
-	public static void $Set9(object instance, bool value)
-	{
-		((UILabel)instance).mUseFloatSpacing = value;
-	}
-
-	public static float $Get10(object instance)
-	{
-		return ((UILabel)instance).mFloatSpacingX;
-	}
-
-	public static void $Set10(object instance, float value)
-	{
-		((UILabel)instance).mFloatSpacingX = value;
-	}
-
-	public static float $Get11(object instance)
-	{
-		return ((UILabel)instance).mFloatSpacingY;
-	}
-
-	public static void $Set11(object instance, float value)
-	{
-		((UILabel)instance).mFloatSpacingY = value;
-	}
-
-	public static bool $Get12(object instance)
-	{
-		return ((UILabel)instance).mOverflowEllipsis;
-	}
-
-	public static void $Set12(object instance, bool value)
-	{
-		((UILabel)instance).mOverflowEllipsis = value;
-	}
-
-	public static bool $Get13(object instance)
-	{
-		return ((UILabel)instance).mShrinkToFit;
-	}
-
-	public static void $Set13(object instance, bool value)
-	{
-		((UILabel)instance).mShrinkToFit = value;
-	}
-
-	public static float $Get14(object instance)
-	{
-		return ((UILabel)instance).mLineWidth;
-	}
-
-	public static void $Set14(object instance, float value)
-	{
-		((UILabel)instance).mLineWidth = value;
-	}
-
-	public static bool $Get15(object instance)
-	{
-		return ((UILabel)instance).mMultiline;
-	}
-
-	public static void $Set15(object instance, bool value)
-	{
-		((UILabel)instance).mMultiline = value;
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).ApplyOffset((BetterList<Vector3>)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).ApplyShadow((BetterList<Vector3>)GCHandledObjects.GCHandleToObject(*args), (BetterList<Vector2>)GCHandledObjects.GCHandleToObject(args[1]), (BetterList<Color32>)GCHandledObjects.GCHandleToObject(args[2]), *(int*)(args + 3), *(int*)(args + 4), *(float*)(args + 5), *(float*)(args + 6));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).AssumeNaturalSize();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).CalculateOffsetToFit(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).alignment);
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).ambigiousFont);
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).applyGradient);
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).bitmapFont);
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).defaultFontSize);
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).drawingDimensions);
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).effectColor);
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).effectDistance);
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).effectiveSpacingX);
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).effectiveSpacingY);
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).effectStyle);
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).finalFontSize);
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).floatSpacingX);
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).floatSpacingY);
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).font);
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).fontSize);
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).fontStyle);
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).gradientBottom);
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).gradientTop);
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).isAnchoredHorizontally);
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).isAnchoredVertically);
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).isValid);
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).keepCrisp);
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).lineHeight);
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).lineWidth);
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).localCorners);
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).localSize);
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).material);
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).maxLineCount);
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).multiLine);
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).overflowEllipsis);
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).overflowMethod);
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).printedSize);
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).processedText);
-	}
-
-	public unsafe static long $Invoke38(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).shouldBeProcessed);
-	}
-
-	public unsafe static long $Invoke39(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).shrinkToFit);
-	}
-
-	public unsafe static long $Invoke40(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).spacingX);
-	}
-
-	public unsafe static long $Invoke41(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).spacingY);
-	}
-
-	public unsafe static long $Invoke42(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).supportEncoding);
-	}
-
-	public unsafe static long $Invoke43(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).symbolStyle);
-	}
-
-	public unsafe static long $Invoke44(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).text);
-	}
-
-	public unsafe static long $Invoke45(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).trueTypeFont);
-	}
-
-	public unsafe static long $Invoke46(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).useFloatSpacing);
-	}
-
-	public unsafe static long $Invoke47(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).worldCorners);
-	}
-
-	public unsafe static long $Invoke48(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetCharacterIndex(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke49(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetCharacterIndex(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke50(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetCharacterIndex(*(int*)args, (KeyCode)(*(int*)(args + 1))));
-	}
-
-	public unsafe static long $Invoke51(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetCharacterIndexAtPosition(*(*(IntPtr*)args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke52(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetCharacterIndexAtPosition(*(*(IntPtr*)args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke53(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetSides((Transform)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke54(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetUrlAtCharacterIndex(*(int*)args));
-	}
-
-	public unsafe static long $Invoke55(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetUrlAtPosition(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke56(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetUrlAtPosition(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke57(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetWordAtCharacterIndex(*(int*)args));
-	}
-
-	public unsafe static long $Invoke58(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetWordAtPosition(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke59(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UILabel)GCHandledObjects.GCHandleToObject(instance)).GetWordAtPosition(*(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke60(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).MakePixelPerfect();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke61(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).MarkAsChanged();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke62(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).OnAnchor();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke63(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).OnApplicationPause(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke64(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).OnDisable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke65(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).OnEnable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke66(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).OnFill((BetterList<Vector3>)GCHandledObjects.GCHandleToObject(*args), (BetterList<Vector2>)GCHandledObjects.GCHandleToObject(args[1]), (BetterList<Color32>)GCHandledObjects.GCHandleToObject(args[2]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke67(long instance, long* args)
-	{
-		UILabel.OnFontChanged((Font)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke68(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).OnInit();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke69(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).OnStart();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke70(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).PrintOverlay(*(int*)args, *(int*)(args + 1), (UIGeometry)GCHandledObjects.GCHandleToObject(args[2]), (UIGeometry)GCHandledObjects.GCHandleToObject(args[3]), *(*(IntPtr*)(args + 4)), *(*(IntPtr*)(args + 5)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke71(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).ProcessAndRequest();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke72(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).ProcessText();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke73(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).ProcessText(*(sbyte*)args != 0, *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke74(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).alignment = (NGUIText.Alignment)(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke75(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).ambigiousFont = (UnityEngine.Object)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke76(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).applyGradient = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke77(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).bitmapFont = (UIFont)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke78(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).effectColor = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke79(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).effectDistance = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke80(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).effectStyle = (UILabel.Effect)(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke81(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).floatSpacingX = *(float*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke82(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).floatSpacingY = *(float*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke83(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).font = (UIFont)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke84(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).fontSize = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke85(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).fontStyle = (FontStyle)(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke86(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).gradientBottom = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke87(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).gradientTop = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke88(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).lineHeight = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke89(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).lineWidth = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke90(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).material = (Material)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke91(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).maxLineCount = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke92(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).multiLine = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke93(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).overflowEllipsis = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke94(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).overflowMethod = (UILabel.Overflow)(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke95(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).shouldBeProcessed = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke96(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).shrinkToFit = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke97(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).spacingX = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke98(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).spacingY = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke99(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).supportEncoding = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke100(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).symbolStyle = (NGUIText.SymbolStyle)(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke101(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).text = Marshal.PtrToStringUni(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke102(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).trueTypeFont = (Font)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke103(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).useFloatSpacing = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke104(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).SetActiveFont((Font)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke105(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).SetCurrentPercent();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke106(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).SetCurrentProgress();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke107(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).SetCurrentSelection();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke108(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke109(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke110(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke111(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke112(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke113(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).UpdateNGUIText();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke114(long instance, long* args)
-	{
-		((UILabel)GCHandledObjects.GCHandleToObject(instance)).UpgradeFrom265();
-		return -1L;
 	}
 }

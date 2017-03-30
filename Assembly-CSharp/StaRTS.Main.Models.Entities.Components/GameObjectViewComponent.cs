@@ -4,9 +4,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Entities.Components
 {
@@ -35,7 +33,7 @@ namespace StaRTS.Main.Models.Entities.Components
 			set
 			{
 				this.mainGameObject = value;
-				this.MainTransform = ((this.mainGameObject == null) ? null : this.mainGameObject.transform);
+				this.MainTransform = ((!(this.mainGameObject == null)) ? this.mainGameObject.transform : null);
 			}
 		}
 
@@ -72,7 +70,7 @@ namespace StaRTS.Main.Models.Entities.Components
 			set
 			{
 				this.centerOfMass = value;
-				this.centerOfMassTransform = ((this.centerOfMass == null) ? null : this.centerOfMass.transform);
+				this.centerOfMassTransform = ((!(this.centerOfMass == null)) ? this.centerOfMass.transform : null);
 			}
 		}
 
@@ -210,7 +208,7 @@ namespace StaRTS.Main.Models.Entities.Components
 
 		public void Rotate(float rads)
 		{
-			float angle = -rads * 57.2957764f;
+			float angle = -rads * 57.29578f;
 			this.MainTransform.rotation = Quaternion.AngleAxis(angle, Vector3.up);
 		}
 
@@ -229,14 +227,15 @@ namespace StaRTS.Main.Models.Entities.Components
 			{
 				this.SecondaryGameObjects = new Dictionary<string, GameObject>();
 				this.SecondaryGameObjects.Add(key, obj);
-				return;
 			}
-			if (!this.SecondaryGameObjects.ContainsKey(key))
+			else if (!this.SecondaryGameObjects.ContainsKey(key))
 			{
 				this.SecondaryGameObjects.Add(key, obj);
-				return;
 			}
-			this.SecondaryGameObjects[key] = obj;
+			else
+			{
+				this.SecondaryGameObjects[key] = obj;
+			}
 		}
 
 		public GameObject GetSO(string key)
@@ -310,231 +309,11 @@ namespace StaRTS.Main.Models.Entities.Components
 			if (toAlt && this.altGunLocators != null && this.altGunLocators.Count > 0)
 			{
 				this.GunLocators = this.altGunLocators;
-				return;
 			}
-			this.GunLocators = this.primaryGunLocators;
-		}
-
-		protected internal GameObjectViewComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).AddSO(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).AttachGameObject(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).DetachGameObject(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).CenterOfMass);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).EffectGameObjects);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).EffectLocators);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).GameObjectHeight);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).GunLocators);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).HitLocators);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).IsFlashing);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).MainGameObject);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).MainTransform);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).NeedsCollider);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).TooltipHeightOffset);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).VehicleLocator);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).GetAttachedGameObject(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).GetSO(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).HasAttachment(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).OnRemove();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).PurgeAllAttachments();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).Rotate(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).CenterOfMass = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).EffectGameObjects = (List<GameObject>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).EffectLocators = (List<GameObject>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).GameObjectHeight = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).GunLocators = (List<List<GameObject>>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).HitLocators = (List<GameObject>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).IsFlashing = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).MainGameObject = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).MainTransform = (Transform)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).NeedsCollider = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).TooltipHeightOffset = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).VehicleLocator = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).SetOffset(Marshal.PtrToStringUni(*(IntPtr*)args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).SetupAlternateGunLocators());
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).SetXYZ(*(float*)args, *(float*)(args + 1), *(float*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).SwitchGunLocators(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).UpdateAllAttachments();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(instance)).UpdateAttachment(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
+			else
+			{
+				this.GunLocators = this.primaryGunLocators;
+			}
 		}
 	}
 }

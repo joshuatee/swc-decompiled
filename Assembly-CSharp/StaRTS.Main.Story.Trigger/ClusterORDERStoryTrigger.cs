@@ -2,7 +2,6 @@ using StaRTS.Main.Controllers;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Trigger
 {
@@ -41,9 +40,11 @@ namespace StaRTS.Main.Story.Trigger
 				StoryTriggerVO vo = this.sdc.Get<StoryTriggerVO>(this.uids[this.childIndex]);
 				this.currentTrigger = StoryTriggerFactory.GenerateStoryTrigger(vo, this);
 				this.currentTrigger.Activate();
-				return;
 			}
-			this.parent.SatisfyTrigger(this);
+			else
+			{
+				this.parent.SatisfyTrigger(this);
+			}
 		}
 
 		public void SatisfyTrigger(IStoryTrigger trigger)
@@ -60,34 +61,6 @@ namespace StaRTS.Main.Story.Trigger
 			}
 			this.uids = null;
 			base.Destroy();
-		}
-
-		protected internal ClusterORDERStoryTrigger(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ClusterORDERStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Activate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ClusterORDERStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).ActivateNextChild();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ClusterORDERStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ClusterORDERStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).SatisfyTrigger((IStoryTrigger)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

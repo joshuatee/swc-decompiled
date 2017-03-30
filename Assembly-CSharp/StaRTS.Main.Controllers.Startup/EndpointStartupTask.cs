@@ -5,7 +5,6 @@ using StaRTS.Main.Models.Commands;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -27,7 +26,7 @@ namespace StaRTS.Main.Controllers.Startup
 		{
 			if (!string.IsNullOrEmpty(response.BILogging))
 			{
-				Service.Get<StaRTSLogger>().DebugFormat("Updating BI endpoint to {0}", new object[]
+				Service.Get<Logger>().DebugFormat("Updating BI endpoint to {0}", new object[]
 				{
 					response.BILogging
 				});
@@ -39,22 +38,6 @@ namespace StaRTS.Main.Controllers.Startup
 		private void OnCommandFailure(uint status, object cookie)
 		{
 			base.Complete();
-		}
-
-		protected internal EndpointStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EndpointStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnCommandComplete((GetEndpointsResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EndpointStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

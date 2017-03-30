@@ -10,7 +10,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views
 {
@@ -53,14 +52,13 @@ namespace StaRTS.Main.Views
 			Animator component = this.starAnimator.Root.GetComponent<Animator>();
 			if (component == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Unable to play star anim #{0}", new object[]
+				Service.Get<Logger>().WarnFormat("Unable to play star anim #{0}", new object[]
 				{
 					this.starNumber
 				});
 				if (onComplete != null)
 				{
 					onComplete(this.starNumber);
-					return;
 				}
 			}
 			else
@@ -92,22 +90,6 @@ namespace StaRTS.Main.Views
 			{
 				this.onComplete(this.starNumber);
 			}
-		}
-
-		protected internal VictoryStarAnimation(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((VictoryStarAnimation)GCHandledObjects.GCHandleToObject(instance)).OnTweenFinished((Anim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((VictoryStarAnimation)GCHandledObjects.GCHandleToObject(instance)).Start((StarAnimationCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

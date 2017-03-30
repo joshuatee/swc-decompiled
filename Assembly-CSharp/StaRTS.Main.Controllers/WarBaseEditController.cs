@@ -13,7 +13,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -44,7 +43,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (this.mapData == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("No war base data found, not adding new buildings");
+				Service.Get<Logger>().Warn("No war base data found, not adding new buildings");
 				return;
 			}
 			List<Building> buildings = Service.Get<CurrentPlayer>().Map.Buildings;
@@ -68,14 +67,17 @@ namespace StaRTS.Main.Controllers
 				if (!dictionary.ContainsKey(key))
 				{
 					BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(buildings[j].Uid);
-					if (buildingTypeVO.Type != BuildingType.Clearable && !ContractUtils.IsBuildingConstructing(key))
+					if (buildingTypeVO.Type != BuildingType.Clearable)
 					{
-						Building building = buildings[j].Clone();
-						this.mapData.Buildings.Add(building);
-						Entity entity = Service.Get<EntityFactory>().CreateBuildingEntity(building, false, true, false);
-						Service.Get<WorldController>().AddEntityToWorld(entity);
-						Service.Get<BaseLayoutToolController>().StashBuilding(entity, false);
-						flag = true;
+						if (!ContractUtils.IsBuildingConstructing(key))
+						{
+							Building building = buildings[j].Clone();
+							this.mapData.Buildings.Add(building);
+							Entity entity = Service.Get<EntityFactory>().CreateBuildingEntity(building, false, true, false);
+							Service.Get<WorldController>().AddEntityToWorld(entity);
+							Service.Get<BaseLayoutToolController>().StashBuilding(entity, false);
+							flag = true;
+						}
 					}
 				}
 				j++;
@@ -94,34 +96,6 @@ namespace StaRTS.Main.Controllers
 				PositionMap = diffMap
 			});
 			Service.Get<ServerAPI>().Enqueue(command);
-		}
-
-		protected internal WarBaseEditController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((WarBaseEditController)GCHandledObjects.GCHandleToObject(instance)).CheckForNewBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((WarBaseEditController)GCHandledObjects.GCHandleToObject(instance)).EnterWarBaseEditing((Map)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((WarBaseEditController)GCHandledObjects.GCHandleToObject(instance)).ExitWarBaseEditing();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((WarBaseEditController)GCHandledObjects.GCHandleToObject(instance)).SaveWarBaseMap((PositionMap)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -15,9 +15,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 {
@@ -358,7 +356,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		private void OnGenericCTA(UXButton btn)
 		{
 			this.CloseTransmission();
-			string cookie = (this.currentTransmission.Btn1Action.ToLower() == "reward") ? this.currentTransmission.Uid : this.currentTransmission.TransData;
+			string cookie = (!(this.currentTransmission.Btn1Action.ToLower() == "reward")) ? this.currentTransmission.TransData : this.currentTransmission.Uid;
 			Service.Get<HolonetController>().HandleCallToActionButton(this.currentTransmission.Btn1Action.ToLower(), this.currentTransmission.Btn1Data, cookie);
 			string cookie2 = this.currentTransmission.Btn1Action + "|" + this.GetBiUid() + "|cta_button";
 			this.eventManager.SendEvent(EventId.HolonetIncomingTransmission, cookie2);
@@ -445,7 +443,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			TournamentController tournamentController = Service.Get<TournamentController>();
 			bool flag = false;
 			int count = transmission.AttackerData.Count;
-			string planetId = "";
+			string planetId = string.Empty;
 			int num = 0;
 			this.battleTransmissionBattlesGrid.SetTemplateItem("ItemBattleResult");
 			for (int i = 0; i < count; i++)
@@ -513,7 +511,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		{
 			this.genericTransmissionButtonTable.Clear();
 			string btnID = transmission.Uid + "_DISMISS";
-			string displayText;
+			string displayText = string.Empty;
 			UXButtonClickedDelegate onClicked;
 			if (this.currentIndex >= this.maxIndex)
 			{
@@ -548,7 +546,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 
 		private string GetCTAButtonText(TransmissionVO vo)
 		{
-			string result;
+			string result = string.Empty;
 			switch (vo.Type)
 			{
 			case TransmissionType.Conflict:
@@ -576,10 +574,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			{
 				this.battleTransmissionDismissLabel.Text = this.lang.Get("s_Dismiss", new object[0]);
 				this.battleTransmissionDismiss.OnClicked = new UXButtonClickedDelegate(this.OnDismissTransmissionClicked);
-				return;
 			}
-			this.battleTransmissionDismissLabel.Text = this.lang.Get("s_Next", new object[0]);
-			this.battleTransmissionDismiss.OnClicked = new UXButtonClickedDelegate(this.OnNextTransmission);
+			else
+			{
+				this.battleTransmissionDismissLabel.Text = this.lang.Get("s_Next", new object[0]);
+				this.battleTransmissionDismiss.OnClicked = new UXButtonClickedDelegate(this.OnNextTransmission);
+			}
 		}
 
 		private void SetupConflictTransmission(TransmissionVO transmission)
@@ -601,7 +601,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			Tournament tournament = currentPlayer.TournamentProgress.GetTournament(this.conflictEndVO.Uid);
 			if (tournament == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Tournament doesn't exist for player. tournament {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Tournament doesn't exist for player. tournament {0}", new object[]
 				{
 					this.conflictEndVO.Uid
 				});
@@ -635,7 +635,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("There is no reward given to player for tournament {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("There is no reward given to player for tournament {0}", new object[]
 				{
 					this.conflictEndVO.Uid
 				});
@@ -770,14 +770,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			{
 				this.previousTransmission.Visible = false;
 				this.nextTransmission.Visible = false;
-				return;
 			}
-			if (this.currentIndex <= 1)
+			else if (this.currentIndex <= 1)
 			{
 				this.previousTransmission.Visible = false;
-				return;
 			}
-			if (this.currentIndex >= this.maxIndex)
+			else if (this.currentIndex >= this.maxIndex)
 			{
 				this.nextTransmission.Visible = false;
 			}
@@ -827,7 +825,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				this.SetupDailyCrateRewardTransmission(transmission);
 				return;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("Unkown Transmission Type {0}", new object[]
+			Service.Get<Logger>().ErrorFormat("Unkown Transmission Type {0}", new object[]
 			{
 				transmission.Type
 			});
@@ -850,199 +848,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				result = this.currentTransmission.Type.ToString().ToLower();
 			}
 			return result;
-		}
-
-		protected internal TransmissionsHolonetPopupView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).CleanUp();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).CloseTransmission();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).CreateGenericTableButton(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (UXButtonClickedDelegate)GCHandledObjects.GCHandleToObject(args[3]), *(int*)(args + 4));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).DisableNextPrevButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).DismissTransmission();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).EnableNextPrevButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).GetBITabName());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).GetBiUid());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).GetCTAButtonText((TransmissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).IncrementMaxTransmissionsIndex();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).InitView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).OnBattleLog((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).OnDismissTransmissionClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).OnGenericCTA((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).OnNextTransmission((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).OnPreviousTransmission((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).RefreshView((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).ReturnToHolonet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetMaxTransmissionIndex(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupBattleTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupConflictTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupDailyCrateRewardTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupGenericTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupNextOrDismissBattleButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupSquadLevelUpTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupSquadWarEndedTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupSquadWarPreparedTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupSquadWarStartedTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).SetupTransmissionButtons((TransmissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).ShowGenericTransmissionGroup(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).ShowHoloCharacter(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((TransmissionsHolonetPopupView)GCHandledObjects.GCHandleToObject(instance)).UpdateNextPrevTransmissionButtonsVisibility();
-			return -1L;
 		}
 	}
 }

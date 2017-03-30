@@ -1,5 +1,4 @@
 using System;
-using WinRTBridge;
 
 namespace StaRTS.GameBoard.Components
 {
@@ -132,7 +131,7 @@ namespace StaRTS.GameBoard.Components
 			{
 				if (++num5 > 1000)
 				{
-					return;
+					break;
 				}
 				this.PaintCellWithFlag(num2, num3, strokeFlag);
 				for (int i = num - 1; i < num - 1 + array.Length; i++)
@@ -252,32 +251,6 @@ namespace StaRTS.GameBoard.Components
 			int num = cellX - this.X;
 			int num2 = cellZ - this.Z;
 			return this.FlagsMatrix[num, num2];
-		}
-
-		protected internal FlagStamp(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((FlagStamp)GCHandledObjects.GCHandleToObject(instance)).CenterTo(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((FlagStamp)GCHandledObjects.GCHandleToObject(instance)).Clear();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FlagStamp)GCHandledObjects.GCHandleToObject(instance)).Bottom);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FlagStamp)GCHandledObjects.GCHandleToObject(instance)).Right);
 		}
 	}
 }

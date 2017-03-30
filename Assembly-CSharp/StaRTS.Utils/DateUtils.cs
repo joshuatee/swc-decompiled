@@ -2,9 +2,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -22,13 +20,13 @@ namespace StaRTS.Utils
 
 		private const double HOUR_TO_MILLISECOND = 3600000.0;
 
-		private static readonly DateTime UnixStart = new DateTime(1970, 1, 1, 0, 0, 0, 0, 1);
+		private static readonly DateTime UnixStart = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
 		public static int GetSecondsFromString(string dateString, int defaultValue)
 		{
 			if (string.IsNullOrEmpty(dateString))
 			{
-				Service.Get<StaRTSLogger>().Warn("Missing Date Info!");
+				Service.Get<Logger>().Warn("Missing Date Info!");
 				return defaultValue;
 			}
 			DateTime date = DateTime.ParseExact(dateString, "HH:mm,dd-MM-yyyy", CultureInfo.InvariantCulture);
@@ -37,7 +35,7 @@ namespace StaRTS.Utils
 
 		public static TimeSpan GetTimeSpanSinceStartOfDate(DateTime date)
 		{
-			return TimeSpan.FromMilliseconds((double)date.get_Millisecond() + (double)date.get_Second() * 1000.0 + (double)date.get_Minute() * 60000.0 + (double)date.get_Hour() * 3600000.0);
+			return TimeSpan.FromMilliseconds((double)date.Millisecond + (double)date.Second * 1000.0 + (double)date.Minute * 60000.0 + (double)date.Hour * 3600000.0);
 		}
 
 		public static DateTime GetDefaultDate()
@@ -52,7 +50,7 @@ namespace StaRTS.Utils
 
 		public static DateTime DateFromMillis(long millis)
 		{
-			return new DateTime(DateUtils.UnixStart.get_Ticks() + millis * 10000L);
+			return new DateTime(DateUtils.UnixStart.Ticks + millis * 10000L);
 		}
 
 		public static DateTime DateFromSeconds(uint seconds)
@@ -72,67 +70,22 @@ namespace StaRTS.Utils
 
 		public static int GetMillisFromEpoch(DateTime date)
 		{
-			return (int)(date - DateUtils.UnixStart).get_TotalMilliseconds();
+			return (int)(date - DateUtils.UnixStart).TotalMilliseconds;
 		}
 
 		public static int GetSecondsFromEpoch(DateTime date)
 		{
-			return (int)(date - DateUtils.UnixStart).get_TotalSeconds();
+			return (int)(date - DateUtils.UnixStart).TotalSeconds;
 		}
 
 		public static double GetNowSecondsPrecise()
 		{
-			return (DateTime.get_UtcNow() - DateUtils.UnixStart).get_TotalSeconds();
+			return (DateTime.UtcNow - DateUtils.UnixStart).TotalSeconds;
 		}
 
 		public static uint GetNowSeconds()
 		{
-			return (uint)DateUtils.GetSecondsFromEpoch(DateTime.get_UtcNow());
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DateUtils.DateFromMillis(*args));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DateUtils.DateFromSeconds(*(int*)args));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DateUtils.GetDefaultDate());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DateUtils.GetMillisFromEpoch(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DateUtils.GetRealTimeSinceStartUpInMilliseconds());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DateUtils.GetSecondsFromEpoch(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DateUtils.GetSecondsFromString(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DateUtils.GetTimeSpanSinceStartOfDate(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(DateUtils.IsDefaultDate(*(*(IntPtr*)args)));
+			return (uint)DateUtils.GetSecondsFromEpoch(DateTime.UtcNow);
 		}
 	}
 }

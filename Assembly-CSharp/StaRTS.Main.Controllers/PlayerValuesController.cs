@@ -12,7 +12,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -38,25 +37,25 @@ namespace StaRTS.Main.Controllers
 			{
 			case EventId.TroopLevelUpgraded:
 				this.RecalculateXP();
-				break;
+				return EatResponse.NotEaten;
 			case EventId.StarshipLevelUpgraded:
 			case EventId.BuildingSwapped:
-				break;
+				IL_2A:
+				if (id != EventId.WorldLoadComplete)
+				{
+					return EatResponse.NotEaten;
+				}
+				if (currentState is ApplicationLoadState || currentState is HomeState || currentState is NeighborVisitState)
+				{
+					this.RecalculateAll();
+				}
+				return EatResponse.NotEaten;
 			case EventId.BuildingLevelUpgraded:
 			case EventId.BuildingConstructed:
 				this.RecalculateAll();
-				break;
-			default:
-				if (id == EventId.WorldLoadComplete)
-				{
-					if (currentState is ApplicationLoadState || currentState is HomeState || currentState is NeighborVisitState)
-					{
-						this.RecalculateAll();
-					}
-				}
-				break;
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			goto IL_2A;
 		}
 
 		public void RecalculateAll()
@@ -228,16 +227,34 @@ namespace StaRTS.Main.Controllers
 			}
 			foreach (TroopTypeVO current in dataController.GetAll<TroopTypeVO>())
 			{
-				if (current.PlayerFacing && worldOwner.UnlockedLevels.Troops.GetLevel(current.UpgradeGroup) == current.Lvl && worldOwner.Faction == current.Faction && this.unlockController.IsTroopUnlocked(worldOwner, current))
+				if (current.PlayerFacing)
 				{
-					num += current.Xp;
+					if (worldOwner.UnlockedLevels.Troops.GetLevel(current.UpgradeGroup) == current.Lvl)
+					{
+						if (worldOwner.Faction == current.Faction)
+						{
+							if (this.unlockController.IsTroopUnlocked(worldOwner, current))
+							{
+								num += current.Xp;
+							}
+						}
+					}
 				}
 			}
 			foreach (SpecialAttackTypeVO current2 in dataController.GetAll<SpecialAttackTypeVO>())
 			{
-				if (current2.PlayerFacing && worldOwner.UnlockedLevels.Starships.GetLevel(current2.UpgradeGroup) == current2.Lvl && worldOwner.Faction == current2.Faction && this.unlockController.IsSpecialAttackUnlocked(worldOwner, current2))
+				if (current2.PlayerFacing)
 				{
-					num += current2.Xp;
+					if (worldOwner.UnlockedLevels.Starships.GetLevel(current2.UpgradeGroup) == current2.Lvl)
+					{
+						if (worldOwner.Faction == current2.Faction)
+						{
+							if (this.unlockController.IsSpecialAttackUnlocked(worldOwner, current2))
+							{
+								num += current2.Xp;
+							}
+						}
+					}
 				}
 			}
 			inventory.ModifyXP(num);
@@ -257,63 +274,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			currentPlayer.ActiveArmory.SetMaxEquipmentCapacity(num);
-		}
-
-		protected internal PlayerValuesController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerValuesController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlayerValuesController)GCHandledObjects.GCHandleToObject(instance)).RecalcuateTroopHousingCapacity();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlayerValuesController)GCHandledObjects.GCHandleToObject(instance)).RecalculateAll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlayerValuesController)GCHandledObjects.GCHandleToObject(instance)).RecalculateChampionHousingCapacity();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlayerValuesController)GCHandledObjects.GCHandleToObject(instance)).RecalculateCurrencyCapacities();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlayerValuesController)GCHandledObjects.GCHandleToObject(instance)).RecalculateHeroHousingCapacity();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlayerValuesController)GCHandledObjects.GCHandleToObject(instance)).RecalculateMaxEquipmentCapacity();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PlayerValuesController)GCHandledObjects.GCHandleToObject(instance)).RecalculateStarshipHousingCapacity();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PlayerValuesController)GCHandledObjects.GCHandleToObject(instance)).RecalculateXP();
-			return -1L;
 		}
 	}
 }

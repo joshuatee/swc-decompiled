@@ -43,16 +43,12 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX
 {
-	public class HUD : UXFactory, IEventObserver, IPerformanceObserver, IViewClockTimeObserver, IViewFrameTimeObserver
+	public class HUD : UXFactory, IPerformanceObserver, IEventObserver, IViewClockTimeObserver, IViewFrameTimeObserver
 	{
 		public const string CURRENCY_GROUP = "Currency";
 
@@ -478,10 +474,6 @@ namespace StaRTS.Main.Views.UX
 
 		private const int MAX_TIMER_LABEL_WIDTH = 108;
 
-		private string FACTION_FLIP_ALERT_TITLE;
-
-		private string FACTION_FLIP_ALERT_DESC;
-
 		private const string RAID_ICON_DEFEND = "icoDefend";
 
 		private const string RAID_DEFEND_BG = "BtnTroopBg_Gold";
@@ -504,7 +496,17 @@ namespace StaRTS.Main.Views.UX
 
 		private const string ACTION_TYPE_BUYOUT_BUILDING_FUE = "FUE_speed_up_building";
 
-		private readonly string[] ANIMATION_TRANSITION_WHITE_LIST;
+		private string FACTION_FLIP_ALERT_TITLE = "FACTION_ICON_FACTION_FLIP_ALERT_TITLE";
+
+		private string FACTION_FLIP_ALERT_DESC = "FACTION_ICON_FACTION_FLIP_ALERT_DESC";
+
+		private readonly string[] ANIMATION_TRANSITION_WHITE_LIST = new string[]
+		{
+			"PlayerBottomLeft",
+			"PlayerBottomRight",
+			"PlayerInfo",
+			"Currency"
+		};
 
 		private UXElement currencyGroup;
 
@@ -891,38 +893,40 @@ namespace StaRTS.Main.Views.UX
 					eventManager.RegisterObserver(this, EventId.TargetedBundleContentPrepared);
 					eventManager.RegisterObserver(this, EventId.TargetedBundleRewardRedeemed);
 					this.BaseLayoutToolView.RegisterObservers();
-					return;
 				}
-				eventManager.UnregisterObserver(this, EventId.TroopDeployed);
-				eventManager.UnregisterObserver(this, EventId.SpecialAttackDeployed);
-				eventManager.UnregisterObserver(this, EventId.HeroDeployed);
-				eventManager.UnregisterObserver(this, EventId.ChampionDeployed);
-				eventManager.UnregisterObserver(this, EventId.SquadTroopsDeployedByPlayer);
-				eventManager.UnregisterObserver(this, EventId.GameStateChanged);
-				eventManager.UnregisterObserver(this, EventId.InventoryResourceUpdated);
-				eventManager.UnregisterObserver(this, EventId.LootEarnedUpdated);
-				eventManager.UnregisterObserver(this, EventId.TroopLevelUpgraded);
-				eventManager.UnregisterObserver(this, EventId.StarshipLevelUpgraded);
-				eventManager.UnregisterObserver(this, EventId.EquipmentUpgraded);
-				eventManager.UnregisterObserver(this, EventId.ChampionRepaired);
-				eventManager.UnregisterObserver(this, EventId.ContractStarted);
-				eventManager.UnregisterObserver(this, EventId.BuildingConstructed);
-				eventManager.UnregisterObserver(this, EventId.BuildingReplaced);
-				eventManager.UnregisterObserver(this, EventId.BuildingLevelUpgraded);
-				eventManager.UnregisterObserver(this, EventId.InventoryUnlockUpdated);
-				eventManager.UnregisterObserver(this, EventId.PlayerNameChanged);
-				eventManager.UnregisterObserver(this, EventId.PvpRatingChanged);
-				eventManager.UnregisterObserver(this, EventId.ScreenClosing);
-				eventManager.UnregisterObserver(this, EventId.SquadTroopsRequestedByCurrentPlayer);
-				eventManager.UnregisterObserver(this, EventId.SquadTroopsReceivedFromDonor);
-				eventManager.UnregisterObserver(this, EventId.SquadJoinApplicationAccepted);
-				eventManager.UnregisterObserver(this, EventId.SquadLeft);
-				eventManager.UnregisterObserver(this, EventId.WarAttackPlayerStarted);
-				eventManager.UnregisterObserver(this, EventId.WarAttackPlayerCompleted);
-				eventManager.UnregisterObserver(this, EventId.WarAttackBuffBaseStarted);
-				eventManager.UnregisterObserver(this, EventId.WarAttackBuffBaseCompleted);
-				eventManager.UnregisterObserver(this, EventId.TargetedBundleContentPrepared);
-				eventManager.UnregisterObserver(this, EventId.TargetedBundleRewardRedeemed);
+				else
+				{
+					eventManager.UnregisterObserver(this, EventId.TroopDeployed);
+					eventManager.UnregisterObserver(this, EventId.SpecialAttackDeployed);
+					eventManager.UnregisterObserver(this, EventId.HeroDeployed);
+					eventManager.UnregisterObserver(this, EventId.ChampionDeployed);
+					eventManager.UnregisterObserver(this, EventId.SquadTroopsDeployedByPlayer);
+					eventManager.UnregisterObserver(this, EventId.GameStateChanged);
+					eventManager.UnregisterObserver(this, EventId.InventoryResourceUpdated);
+					eventManager.UnregisterObserver(this, EventId.LootEarnedUpdated);
+					eventManager.UnregisterObserver(this, EventId.TroopLevelUpgraded);
+					eventManager.UnregisterObserver(this, EventId.StarshipLevelUpgraded);
+					eventManager.UnregisterObserver(this, EventId.EquipmentUpgraded);
+					eventManager.UnregisterObserver(this, EventId.ChampionRepaired);
+					eventManager.UnregisterObserver(this, EventId.ContractStarted);
+					eventManager.UnregisterObserver(this, EventId.BuildingConstructed);
+					eventManager.UnregisterObserver(this, EventId.BuildingReplaced);
+					eventManager.UnregisterObserver(this, EventId.BuildingLevelUpgraded);
+					eventManager.UnregisterObserver(this, EventId.InventoryUnlockUpdated);
+					eventManager.UnregisterObserver(this, EventId.PlayerNameChanged);
+					eventManager.UnregisterObserver(this, EventId.PvpRatingChanged);
+					eventManager.UnregisterObserver(this, EventId.ScreenClosing);
+					eventManager.UnregisterObserver(this, EventId.SquadTroopsRequestedByCurrentPlayer);
+					eventManager.UnregisterObserver(this, EventId.SquadTroopsReceivedFromDonor);
+					eventManager.UnregisterObserver(this, EventId.SquadJoinApplicationAccepted);
+					eventManager.UnregisterObserver(this, EventId.SquadLeft);
+					eventManager.UnregisterObserver(this, EventId.WarAttackPlayerStarted);
+					eventManager.UnregisterObserver(this, EventId.WarAttackPlayerCompleted);
+					eventManager.UnregisterObserver(this, EventId.WarAttackBuffBaseStarted);
+					eventManager.UnregisterObserver(this, EventId.WarAttackBuffBaseCompleted);
+					eventManager.UnregisterObserver(this, EventId.TargetedBundleContentPrepared);
+					eventManager.UnregisterObserver(this, EventId.TargetedBundleRewardRedeemed);
+				}
 			}
 		}
 
@@ -937,18 +941,8 @@ namespace StaRTS.Main.Views.UX
 			}
 		}
 
-		public HUD()
+		public HUD() : base(Service.Get<CameraManager>().UXCamera)
 		{
-			this.FACTION_FLIP_ALERT_TITLE = "FACTION_ICON_FACTION_FLIP_ALERT_TITLE";
-			this.FACTION_FLIP_ALERT_DESC = "FACTION_ICON_FACTION_FLIP_ALERT_DESC";
-			this.ANIMATION_TRANSITION_WHITE_LIST = new string[]
-			{
-				"PlayerBottomLeft",
-				"PlayerBottomRight",
-				"PlayerInfo",
-				"Currency"
-			};
-			base..ctor(Service.Get<CameraManager>().UXCamera);
 			this.ReadyToToggleVisiblity = false;
 			this.lang = Service.Get<Lang>();
 			this.player = Service.Get<CurrentPlayer>();
@@ -1009,10 +1003,6 @@ namespace StaRTS.Main.Views.UX
 			this.InitNeighborGroup();
 			this.InitTournamentRatingGroup();
 			this.BaseLayoutToolView.Initialize();
-			if (Service.Get<CameraManager>() != null)
-			{
-				Service.Get<CameraManager>().CalculateScale((float)Screen.width, (float)Screen.height);
-			}
 			this.creditsView = new HUDResourceView("credits", base.GetElement<UXSlider>("PBarCurrency"), base.GetElement<UXLabel>("LabelCurrencyValueHome"), base.GetElement<UXElement>("Credits"));
 			this.materialsView = new HUDResourceView("materials", base.GetElement<UXSlider>("PBarMaterial"), base.GetElement<UXLabel>("LabelMaterialValueHome"), base.GetElement<UXElement>("Materials"));
 			this.contrabandView = new HUDResourceView("contraband", base.GetElement<UXSlider>("PBarContraband"), base.GetElement<UXLabel>("LabelContrabandValueHome"), base.GetElement<UXElement>("Contraband"));
@@ -1128,7 +1118,7 @@ namespace StaRTS.Main.Views.UX
 			this.timeLeftLabel = base.GetElement<UXLabel>("LabelTimeLeft");
 			this.baseNameLabel = base.GetElement<UXLabel>("LabelBaseNameOpponent");
 			this.contextDescLabel = base.GetElement<UXLabel>("LabelContextDescription");
-			this.contextDescLabel.Text = "";
+			this.contextDescLabel.Text = string.Empty;
 			this.playerRankLabel = base.GetElement<UXLabel>("LabelTrophies");
 			this.playerMedalLabel = base.GetElement<UXLabel>("LabelMedals");
 			this.opponentRankLabel = base.GetElement<UXLabel>("LabelTrophiesOpponent");
@@ -1208,7 +1198,7 @@ namespace StaRTS.Main.Views.UX
 			this.preCombatGroup = base.GetElement<UXElement>("PrecombatCountdown");
 			this.preCombatTimeLabel = base.GetElement<UXLabel>("LabelCount");
 			this.preCombatCountdownFill = base.GetElement<UXSprite>("CountdownFill");
-			this.preCombatTimeLabel.Text = Convert.ToInt32(GameConstants.PVP_MATCH_COUNTDOWN, CultureInfo.InvariantCulture).ToString();
+			this.preCombatTimeLabel.Text = Convert.ToInt32(GameConstants.PVP_MATCH_COUNTDOWN).ToString();
 			UXLabel element = base.GetElement<UXLabel>("LabelBattleBegins");
 			element.Text = this.lang.Get("PRECOMBAT_BATTLE_BEGINS_IN", new object[0]);
 			this.preCombatGroup.Visible = false;
@@ -1252,60 +1242,60 @@ namespace StaRTS.Main.Views.UX
 					this.fpeakLabel.Pivot = UIWidget.Pivot.BottomRight;
 					this.fpeakLabel.LocalPosition = Vector3.right * d + Vector3.up * num;
 					performanceMonitor.RegisterFPSObserver(this);
-					return;
 				}
-				performanceMonitor.UnregisterFPSObserver(this);
-				miscElementsManager.DestroyMiscElement(this.fpeakLabel);
-				this.fpeakLabel = null;
-				miscElementsManager.DestroyMiscElement(this.fpsLabel);
-				this.fpsLabel = null;
-				miscElementsManager.DestroyMiscElement(this.frameTimeLabel);
-				this.frameTimeLabel = null;
-				this.performanceFPSAnchor = null;
-				return;
+				else
+				{
+					performanceMonitor.UnregisterFPSObserver(this);
+					miscElementsManager.DestroyMiscElement(this.fpeakLabel);
+					this.fpeakLabel = null;
+					miscElementsManager.DestroyMiscElement(this.fpsLabel);
+					this.fpsLabel = null;
+					miscElementsManager.DestroyMiscElement(this.frameTimeLabel);
+					this.frameTimeLabel = null;
+					this.performanceFPSAnchor = null;
+				}
+			}
+			else if (this.performanceMemAnchor == null)
+			{
+				this.performanceMemAnchor = uXController.PerformanceAnchor;
+				float d2 = 0f;
+				float num2 = (float)Screen.height / 2f + 56f;
+				this.deviceMemUsedLabel = miscElementsManager.CreateGameBoardLabel("DeviceMem", this.performanceMemAnchor);
+				this.deviceMemUsedLabel.TextColor = Color.red;
+				this.deviceMemUsedLabel.Pivot = UIWidget.Pivot.BottomRight;
+				this.deviceMemUsedLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
+				num2 += this.deviceMemUsedLabel.LineHeight;
+				this.memRsvdLabel = miscElementsManager.CreateGameBoardLabel("Rsvd", this.performanceMemAnchor);
+				this.memRsvdLabel.Pivot = UIWidget.Pivot.BottomRight;
+				this.memRsvdLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
+				num2 += this.memRsvdLabel.LineHeight;
+				this.memUsedLabel = miscElementsManager.CreateGameBoardLabel("Used", this.performanceMemAnchor);
+				this.memUsedLabel.Pivot = UIWidget.Pivot.BottomRight;
+				this.memUsedLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
+				num2 += this.memUsedLabel.LineHeight;
+				this.memTextureLabel = miscElementsManager.CreateGameBoardLabel("Texture", this.performanceMemAnchor);
+				this.memTextureLabel.Pivot = UIWidget.Pivot.BottomRight;
+				this.memTextureLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
+				num2 += this.memTextureLabel.LineHeight;
+				this.memMeshLabel = miscElementsManager.CreateGameBoardLabel("Mesh", this.performanceMemAnchor);
+				this.memMeshLabel.Pivot = UIWidget.Pivot.BottomRight;
+				this.memMeshLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
+				num2 += this.memMeshLabel.LineHeight;
+				this.memAudioLabel = miscElementsManager.CreateGameBoardLabel("Audio", this.performanceMemAnchor);
+				this.memAudioLabel.Pivot = UIWidget.Pivot.BottomRight;
+				this.memAudioLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
+				num2 += this.memAudioLabel.LineHeight;
+				this.memAnimationLabel = miscElementsManager.CreateGameBoardLabel("Animation", this.performanceMemAnchor);
+				this.memAnimationLabel.Pivot = UIWidget.Pivot.BottomRight;
+				this.memAnimationLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
+				num2 += this.memAnimationLabel.LineHeight;
+				this.memMaterialsLabel = miscElementsManager.CreateGameBoardLabel("Material", this.performanceMemAnchor);
+				this.memMaterialsLabel.Pivot = UIWidget.Pivot.BottomRight;
+				this.memMaterialsLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
+				performanceMonitor.RegisterMemObserver(this);
 			}
 			else
 			{
-				if (this.performanceMemAnchor == null)
-				{
-					this.performanceMemAnchor = uXController.PerformanceAnchor;
-					float d2 = 0f;
-					float num2 = (float)Screen.height / 2f + 56f;
-					this.deviceMemUsedLabel = miscElementsManager.CreateGameBoardLabel("DeviceMem", this.performanceMemAnchor);
-					this.deviceMemUsedLabel.TextColor = Color.red;
-					this.deviceMemUsedLabel.Pivot = UIWidget.Pivot.BottomRight;
-					this.deviceMemUsedLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
-					num2 += this.deviceMemUsedLabel.LineHeight;
-					this.memRsvdLabel = miscElementsManager.CreateGameBoardLabel("Rsvd", this.performanceMemAnchor);
-					this.memRsvdLabel.Pivot = UIWidget.Pivot.BottomRight;
-					this.memRsvdLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
-					num2 += this.memRsvdLabel.LineHeight;
-					this.memUsedLabel = miscElementsManager.CreateGameBoardLabel("Used", this.performanceMemAnchor);
-					this.memUsedLabel.Pivot = UIWidget.Pivot.BottomRight;
-					this.memUsedLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
-					num2 += this.memUsedLabel.LineHeight;
-					this.memTextureLabel = miscElementsManager.CreateGameBoardLabel("Texture", this.performanceMemAnchor);
-					this.memTextureLabel.Pivot = UIWidget.Pivot.BottomRight;
-					this.memTextureLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
-					num2 += this.memTextureLabel.LineHeight;
-					this.memMeshLabel = miscElementsManager.CreateGameBoardLabel("Mesh", this.performanceMemAnchor);
-					this.memMeshLabel.Pivot = UIWidget.Pivot.BottomRight;
-					this.memMeshLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
-					num2 += this.memMeshLabel.LineHeight;
-					this.memAudioLabel = miscElementsManager.CreateGameBoardLabel("Audio", this.performanceMemAnchor);
-					this.memAudioLabel.Pivot = UIWidget.Pivot.BottomRight;
-					this.memAudioLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
-					num2 += this.memAudioLabel.LineHeight;
-					this.memAnimationLabel = miscElementsManager.CreateGameBoardLabel("Animation", this.performanceMemAnchor);
-					this.memAnimationLabel.Pivot = UIWidget.Pivot.BottomRight;
-					this.memAnimationLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
-					num2 += this.memAnimationLabel.LineHeight;
-					this.memMaterialsLabel = miscElementsManager.CreateGameBoardLabel("Material", this.performanceMemAnchor);
-					this.memMaterialsLabel.Pivot = UIWidget.Pivot.BottomRight;
-					this.memMaterialsLabel.LocalPosition = Vector3.right * d2 + Vector3.up * num2;
-					performanceMonitor.RegisterMemObserver(this);
-					return;
-				}
 				performanceMonitor.UnregisterMemObserver(this);
 				miscElementsManager.DestroyMiscElement(this.memRsvdLabel);
 				this.memRsvdLabel = null;
@@ -1324,92 +1314,58 @@ namespace StaRTS.Main.Views.UX
 				miscElementsManager.DestroyMiscElement(this.deviceMemUsedLabel);
 				this.deviceMemUsedLabel = null;
 				this.performanceMemAnchor = null;
-				return;
 			}
 		}
 
 		public void OnPerformanceFPS(float fps)
 		{
-			this.fpsLabel.Text = string.Format("{0:F2} FPS ", new object[]
-			{
-				fps
-			});
-			this.frameTimeLabel.Text = string.Format("{0:F2} ms", new object[]
-			{
-				1000.0 / (double)fps
-			});
+			this.fpsLabel.Text = string.Format("{0:F2} FPS ", fps);
+			this.frameTimeLabel.Text = string.Format("{0:F2} ms", 1000.0 / (double)fps);
 		}
 
 		public void OnPerformanceFPeak(uint fpeak)
 		{
-			this.fpeakLabel.Text = string.Format("{0} FPeak ", new object[]
-			{
-				fpeak
-			});
+			this.fpeakLabel.Text = string.Format("{0} FPeak ", fpeak);
 		}
 
 		public void OnPerformanceMemRsvd(uint memRsvd)
 		{
-			this.memRsvdLabel.Text = string.Format("{0} Rsvd", new object[]
-			{
-				memRsvd / 1000000u
-			});
+			this.memRsvdLabel.Text = string.Format("{0} Rsvd", memRsvd / 1000000u);
 		}
 
 		public void OnPerformanceMemUsed(uint memUsd)
 		{
-			this.memUsedLabel.Text = string.Format("{0} Used", new object[]
-			{
-				memUsd / 1000000u
-			});
+			this.memUsedLabel.Text = string.Format("{0} Used", memUsd / 1000000u);
 		}
 
 		public void OnPerformanceMemTexture(uint mem)
 		{
-			this.memTextureLabel.Text = string.Format("{0} Texture", new object[]
-			{
-				mem / 1000000u
-			});
+			this.memTextureLabel.Text = string.Format("{0} Texture", mem / 1000000u);
 		}
 
 		public void OnPerformanceMemMesh(uint mem)
 		{
-			this.memMeshLabel.Text = string.Format("{0} Mesh", new object[]
-			{
-				mem / 1000000u
-			});
+			this.memMeshLabel.Text = string.Format("{0} Mesh", mem / 1000000u);
 		}
 
 		public void OnPerformanceMemAudio(uint mem)
 		{
-			this.memAudioLabel.Text = string.Format("{0} Audio", new object[]
-			{
-				mem / 1000000u
-			});
+			this.memAudioLabel.Text = string.Format("{0} Audio", mem / 1000000u);
 		}
 
 		public void OnPerformanceMemAnimation(uint mem)
 		{
-			this.memAnimationLabel.Text = string.Format("{0:F1} Animation", new object[]
-			{
-				mem / 1000000u
-			});
+			this.memAnimationLabel.Text = string.Format("{0:F1} Animation", mem / 1000000u);
 		}
 
 		public void OnPerformanceMemMaterials(uint mem)
 		{
-			this.memMaterialsLabel.Text = string.Format("{0:F1} Material", new object[]
-			{
-				mem / 1000000u
-			});
+			this.memMaterialsLabel.Text = string.Format("{0:F1} Material", mem / 1000000u);
 		}
 
 		public void OnPerformanceDeviceMemUsage(long memory)
 		{
-			this.deviceMemUsedLabel.Text = string.Format("{0:F2} MB", new object[]
-			{
-				memory / 1048576L
-			});
+			this.deviceMemUsedLabel.Text = string.Format("{0:F2} MB", memory / 1048576L);
 		}
 
 		private void SetupDeployableTroops()
@@ -1484,25 +1440,24 @@ namespace StaRTS.Main.Views.UX
 			bool flag3 = onSelected == new UXCheckboxSelectedDelegate(this.OnChampionCheckboxSelected);
 			foreach (KeyValuePair<string, int> current in deployables)
 			{
-				string key = current.get_Key();
-				int value = current.get_Value();
+				string key = current.Key;
+				int value = current.Value;
 				if (value > 0)
 				{
-					IDeployableVO arg_A9_0;
-					if (!flag)
+					IDeployableVO arg_B0_0;
+					if (flag)
 					{
-						IDeployableVO optional = dataController.GetOptional<TroopTypeVO>(key);
-						arg_A9_0 = optional;
+						IDeployableVO optional = dataController.GetOptional<SpecialAttackTypeVO>(key);
+						arg_B0_0 = optional;
 					}
 					else
 					{
-						IDeployableVO optional = dataController.GetOptional<SpecialAttackTypeVO>(key);
-						arg_A9_0 = optional;
+						arg_B0_0 = dataController.GetOptional<TroopTypeVO>(key);
 					}
-					IDeployableVO deployableVO = arg_A9_0;
+					IDeployableVO deployableVO = arg_B0_0;
 					if (deployableVO != null)
 					{
-						bool flag4 = seededDeployables != null && seededDeployables.ContainsKey(current.get_Key());
+						bool flag4 = seededDeployables != null && seededDeployables.ContainsKey(current.Key);
 						string text = key;
 						UXElement uXElement = this.troopGrid.CloneTemplateItem(text);
 						UXCheckbox subElement = this.troopGrid.GetSubElement<UXCheckbox>(text, "CheckboxTroop");
@@ -1559,11 +1514,11 @@ namespace StaRTS.Main.Views.UX
 							subElement8.SpriteName = "troop_bkg";
 						}
 						subElement7.Visible = false;
-						UXLabel uXLabel = flag4 ? this.troopGrid.GetSubElement<UXLabel>(text, "LabelProvidedQuantity") : this.troopGrid.GetSubElement<UXLabel>(text, "LabelQuantity");
+						UXLabel uXLabel = (!flag4) ? this.troopGrid.GetSubElement<UXLabel>(text, "LabelQuantity") : this.troopGrid.GetSubElement<UXLabel>(text, "LabelProvidedQuantity");
 						uXLabel.Tag = key;
 						uXLabel.Text = value.ToString();
 						uXLabel.TextColor = UXUtils.GetCostColor(uXLabel, value != 0, false);
-						UXLabel uXLabel2 = flag4 ? this.troopGrid.GetSubElement<UXLabel>(text, "LabelProvidedTroopLevel") : this.troopGrid.GetSubElement<UXLabel>(text, "LabelTroopLevel");
+						UXLabel uXLabel2 = (!flag4) ? this.troopGrid.GetSubElement<UXLabel>(text, "LabelTroopLevel") : this.troopGrid.GetSubElement<UXLabel>(text, "LabelProvidedTroopLevel");
 						uXLabel2.Text = LangUtils.GetLevelText(deployableVO.Lvl);
 						string text2 = null;
 						if (deployableVO is TroopTypeVO)
@@ -1679,12 +1634,12 @@ namespace StaRTS.Main.Views.UX
 			}
 			else
 			{
-				this.playerClanLabel.Text = "";
-				this.neighborSquadLabel.Text = "";
+				this.playerClanLabel.Text = string.Empty;
+				this.neighborSquadLabel.Text = string.Empty;
 			}
+			string factionUpgradeIcon = string.Empty;
 			int rating = GameUtils.CalculatePlayerVictoryRating(worldOwner);
 			FactionType faction = worldOwner.Faction;
-			string factionUpgradeIcon;
 			if (faction != FactionType.Empire)
 			{
 				if (faction != FactionType.Rebel)
@@ -1711,22 +1666,26 @@ namespace StaRTS.Main.Views.UX
 			this.neighborFactionBackground.Visible = !flag2;
 			this.factionBackgroundUpgradeRebel.Visible = (flag2 && !flag);
 			this.neighborFactionBackgroundUpgradeRebel.Visible = (flag2 && !flag);
-			this.factionBackgroundUpgradeEmpire.Visible = (flag2 & flag);
-			this.neighborFactionBackgroundUpgradeEmpire.Visible = (flag2 & flag);
-			if (!flag2)
+			this.factionBackgroundUpgradeEmpire.Visible = (flag2 && flag);
+			this.neighborFactionBackgroundUpgradeEmpire.Visible = (flag2 && flag);
+			if (flag2)
+			{
+				if (!flag)
+				{
+					this.neighborFactionBackgroundUpgradeRebel.SpriteName = factionUpgradeIcon;
+					this.factionBackgroundUpgradeRebel.SpriteName = factionUpgradeIcon;
+				}
+				else
+				{
+					this.factionBackgroundUpgradeEmpire.SpriteName = factionUpgradeIcon;
+					this.neighborFactionBackgroundUpgradeEmpire.SpriteName = factionUpgradeIcon;
+				}
+			}
+			else
 			{
 				this.neighborFactionBackground.SpriteName = factionUpgradeIcon;
 				this.factionBackground.SpriteName = factionUpgradeIcon;
-				return;
 			}
-			if (!flag)
-			{
-				this.neighborFactionBackgroundUpgradeRebel.SpriteName = factionUpgradeIcon;
-				this.factionBackgroundUpgradeRebel.SpriteName = factionUpgradeIcon;
-				return;
-			}
-			this.factionBackgroundUpgradeEmpire.SpriteName = factionUpgradeIcon;
-			this.neighborFactionBackgroundUpgradeEmpire.SpriteName = factionUpgradeIcon;
 		}
 
 		private void RefreshAllResourceViews(bool animate)
@@ -1809,10 +1768,10 @@ namespace StaRTS.Main.Views.UX
 			this.baseNameLabel.Text = worldTransitioner.GetCurrentWorldName();
 			if (!worldTransitioner.IsCurrentWorldHome())
 			{
+				string spriteName = string.Empty;
 				bool flag = false;
 				PvpTarget currentPvpTarget = Service.Get<PvpManager>().CurrentPvpTarget;
 				bool flag2 = true;
-				string spriteName;
 				if (currentPvpTarget != null)
 				{
 					this.SetOpponentLevelVisibility(true);
@@ -1831,16 +1790,17 @@ namespace StaRTS.Main.Views.UX
 				}
 				this.opponentSymbol.Visible = !flag;
 				this.opponentSymbolUpgradeRebel.Visible = (flag && !flag2);
-				this.opponentSymbolUpgradeEmpire.Visible = (flag & flag2);
+				this.opponentSymbolUpgradeEmpire.Visible = (flag && flag2);
 				if (flag)
 				{
 					if (!flag2)
 					{
 						this.opponentSymbolUpgradeRebel.SpriteName = spriteName;
-						return;
 					}
-					this.opponentSymbolUpgradeEmpire.SpriteName = spriteName;
-					return;
+					else
+					{
+						this.opponentSymbolUpgradeEmpire.SpriteName = spriteName;
+					}
 				}
 				else
 				{
@@ -1892,9 +1852,9 @@ namespace StaRTS.Main.Views.UX
 
 		public void UpdateDamageStars(int numEarnedStars)
 		{
-			this.damageStar1.Color = ((numEarnedStars > 0) ? Color.white : Color.black);
-			this.damageStar2.Color = ((numEarnedStars > 1) ? Color.white : Color.black);
-			this.damageStar3.Color = ((numEarnedStars > 2) ? Color.white : Color.black);
+			this.damageStar1.Color = ((numEarnedStars <= 0) ? Color.black : Color.white);
+			this.damageStar2.Color = ((numEarnedStars <= 1) ? Color.black : Color.white);
+			this.damageStar3.Color = ((numEarnedStars <= 2) ? Color.black : Color.white);
 		}
 
 		public void ResetDamageStars()
@@ -1903,9 +1863,11 @@ namespace StaRTS.Main.Views.UX
 			if (currentBattle != null && currentBattle.Type == BattleType.PveDefend)
 			{
 				this.UpdateDamageStars(3);
-				return;
 			}
-			this.UpdateDamageStars(0);
+			else
+			{
+				this.UpdateDamageStars(0);
+			}
 		}
 
 		public void ShowContextButtons(Entity selectedBuilding)
@@ -1923,8 +1885,8 @@ namespace StaRTS.Main.Views.UX
 				i++;
 			}
 			this.curAnims.Clear();
-			this.contextDescLabel.Text = "";
-			this.BaseLayoutToolView.SelectedBuildingLabel.Text = "";
+			this.contextDescLabel.Text = string.Empty;
+			this.BaseLayoutToolView.SelectedBuildingLabel.Text = string.Empty;
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
 			bool flag = currentState is HomeState;
 			bool flag2 = GameUtils.IsVisitingBase();
@@ -1939,7 +1901,7 @@ namespace StaRTS.Main.Views.UX
 			}
 			if (selectedBuilding == null || buildingController.IsPurchasing || (!flag && !flag2 && !flag4 && !flag5 && !flag3) || this.isAnimating)
 			{
-				selectedBuildingLabel.Text = "";
+				selectedBuildingLabel.Text = string.Empty;
 				return;
 			}
 			bool isLifted = buildingController.IsLifted(selectedBuilding);
@@ -1985,9 +1947,9 @@ namespace StaRTS.Main.Views.UX
 				}
 				Vector3 localPosition = this.contextButtonParentTemplate.LocalPosition;
 				localPosition.x = (float)j * colliderWidth + num;
-				Vector3 vector = localPosition;
-				vector.y = -vector.y;
-				uXElement2.LocalPosition = vector;
+				Vector3 localPosition2 = localPosition;
+				localPosition2.y = -localPosition2.y;
+				uXElement2.LocalPosition = localPosition2;
 				if (flag5)
 				{
 					UXElement element2 = base.GetElement<UXElement>("StashContextLocator");
@@ -2027,9 +1989,11 @@ namespace StaRTS.Main.Views.UX
 					if (ContractUtils.IsBuildingClearing(selectedBuilding))
 					{
 						this.AddContextButton("Cancel", 0, 0, 0, 0);
-						return;
 					}
-					this.AddContextButton("Clear", buildingInfo.Credits, buildingInfo.Materials, buildingInfo.Contraband, 0);
+					else
+					{
+						this.AddContextButton("Clear", buildingInfo.Credits, buildingInfo.Materials, buildingInfo.Contraband, 0);
+					}
 				}
 				return;
 			}
@@ -2072,166 +2036,151 @@ namespace StaRTS.Main.Views.UX
 					{
 						int crystals = GameUtils.DroidCrystalCost(this.player.CurrentDroidsAmount);
 						this.AddContextButton("Buy_Droid", 0, 0, 0, crystals);
-						return;
 					}
 				}
-				else
+				else if (!isBaseLayoutToolMode && ContractUtils.IsBuildingConstructing(selectedBuilding))
 				{
-					if (!isBaseLayoutToolMode && ContractUtils.IsBuildingConstructing(selectedBuilding))
+					this.AddFinishContextButton(selectedBuilding);
+				}
+				else if (!isBaseLayoutToolMode && (ContractUtils.IsBuildingUpgrading(selectedBuilding) || ContractUtils.IsBuildingSwapping(selectedBuilding) || ContractUtils.IsChampionRepairing(selectedBuilding)))
+				{
+					this.AddContextButton("Cancel", 0, 0, 0, 0);
+					this.AddFinishContextButton(selectedBuilding);
+					BuildingType type = buildingInfo.Type;
+					if (type != BuildingType.HQ)
 					{
-						this.AddFinishContextButton(selectedBuilding);
-						return;
-					}
-					if (!isBaseLayoutToolMode && (ContractUtils.IsBuildingUpgrading(selectedBuilding) || ContractUtils.IsBuildingSwapping(selectedBuilding) || ContractUtils.IsChampionRepairing(selectedBuilding)))
-					{
-						this.AddContextButton("Cancel", 0, 0, 0, 0);
-						this.AddFinishContextButton(selectedBuilding);
-						BuildingType type = buildingInfo.Type;
-						if (type == BuildingType.HQ)
+						if (type == BuildingType.NavigationCenter)
 						{
-							this.AddHQInventoryContextButtonIfProper();
-							return;
-						}
-						if (type == BuildingType.NavigationCenter && inHomeMode)
-						{
-							this.AddContextButton("Navigate", 0, 0, 0, 0, "context_Galaxy");
-							return;
+							if (inHomeMode)
+							{
+								this.AddContextButton("Navigate", 0, 0, 0, 0, "context_Galaxy");
+							}
 						}
 					}
 					else
 					{
-						bool flag2 = buildingInfo.Type == BuildingType.ChampionPlatform && !Service.Get<ChampionController>().IsChampionAvailable((SmartEntity)selectedBuilding);
-						if (GameUtils.IsBuildingUpgradable(buildingInfo) && !flag2 && !isBaseLayoutToolMode)
+						this.AddHQInventoryContextButtonIfProper();
+					}
+				}
+				else
+				{
+					bool flag2 = buildingInfo.Type == BuildingType.ChampionPlatform && !Service.Get<ChampionController>().IsChampionAvailable((SmartEntity)selectedBuilding);
+					if (GameUtils.IsBuildingUpgradable(buildingInfo) && !flag2 && !isBaseLayoutToolMode)
+					{
+						BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
+						if (Service.Get<ISupportController>().FindBuildingContract(buildingComponent.BuildingTO.Key) == null)
 						{
-							BuildingComponent buildingComponent = selectedBuilding.Get<BuildingComponent>();
-							if (Service.Get<ISupportController>().FindBuildingContract(buildingComponent.BuildingTO.Key) == null)
-							{
-								BuildingTypeVO nextLevel = Service.Get<BuildingUpgradeCatalog>().GetNextLevel(buildingInfo);
-								this.AddContextButton("Upgrade", nextLevel.UpgradeCredits, nextLevel.UpgradeMaterials, nextLevel.UpgradeContraband, 0);
-							}
+							BuildingTypeVO nextLevel = Service.Get<BuildingUpgradeCatalog>().GetNextLevel(buildingInfo);
+							this.AddContextButton("Upgrade", nextLevel.UpgradeCredits, nextLevel.UpgradeMaterials, nextLevel.UpgradeContraband, 0);
 						}
-						if (buildingInfo.Type == BuildingType.Trap && !isBaseLayoutToolMode)
+					}
+					if (buildingInfo.Type == BuildingType.Trap && !isBaseLayoutToolMode)
+					{
+						if (selectedBuilding.Get<TrapComponent>().CurrentState == TrapState.Spent)
 						{
-							if (selectedBuilding.Get<TrapComponent>().CurrentState == TrapState.Spent)
-							{
-								TrapTypeVO trapTypeVO = Service.Get<IDataController>().Get<TrapTypeVO>(buildingInfo.TrapUid);
-								this.AddContextButton("Trap_Rearm", trapTypeVO.RearmCreditsCost, trapTypeVO.RearmMaterialsCost, trapTypeVO.RearmContrabandCost, 0);
-							}
-							List<Entity> rearmableTraps = TrapUtils.GetRearmableTraps();
-							if (rearmableTraps.Count > 1 || rearmableTraps.Count == 0 || rearmableTraps[0] != selectedBuilding)
-							{
-								int credits;
-								int materials;
-								int contraband;
-								TrapUtils.GetRearmAllTrapsCost(out credits, out materials, out contraband);
-								this.AddContextButton("Trap_RearmAll", credits, materials, contraband, 0);
-							}
+							TrapTypeVO trapTypeVO = Service.Get<IDataController>().Get<TrapTypeVO>(buildingInfo.TrapUid);
+							this.AddContextButton("Trap_Rearm", trapTypeVO.RearmCreditsCost, trapTypeVO.RearmMaterialsCost, trapTypeVO.RearmContrabandCost, 0);
 						}
-						if (inHomeMode)
+						List<Entity> rearmableTraps = TrapUtils.GetRearmableTraps();
+						if (rearmableTraps.Count > 1 || rearmableTraps.Count == 0 || rearmableTraps[0] != selectedBuilding)
 						{
-							switch (buildingInfo.Type)
+							int credits;
+							int materials;
+							int contraband;
+							TrapUtils.GetRearmAllTrapsCost(out credits, out materials, out contraband);
+							this.AddContextButton("Trap_RearmAll", credits, materials, contraband, 0);
+						}
+					}
+					if (inHomeMode)
+					{
+						switch (buildingInfo.Type)
+						{
+						case BuildingType.HQ:
+							this.AddHQInventoryContextButtonIfProper();
+							break;
+						case BuildingType.Barracks:
+							this.AddContextButton("Train", 0, 0, 0, 0);
+							break;
+						case BuildingType.Factory:
+							this.AddContextButton("Build", 0, 0, 0, 0);
+							break;
+						case BuildingType.FleetCommand:
+							this.AddContextButton("Commission", 0, 0, 0, 0);
+							break;
+						case BuildingType.HeroMobilizer:
+							this.AddContextButton("Mobilize", 0, 0, 0, 0);
+							break;
+						case BuildingType.ChampionPlatform:
+							if (flag2)
 							{
-							case BuildingType.HQ:
-								this.AddHQInventoryContextButtonIfProper();
-								return;
-							case BuildingType.Barracks:
-								this.AddContextButton("Train", 0, 0, 0, 0);
-								return;
-							case BuildingType.Factory:
-								this.AddContextButton("Build", 0, 0, 0, 0);
-								return;
-							case BuildingType.FleetCommand:
-								this.AddContextButton("Commission", 0, 0, 0, 0);
-								return;
-							case BuildingType.HeroMobilizer:
-								this.AddContextButton("Mobilize", 0, 0, 0, 0);
-								return;
-							case BuildingType.ChampionPlatform:
-								if (flag2)
-								{
-									this.AddContextButton("Repair", 0, 0, 0, 0);
-									return;
-								}
-								break;
-							case BuildingType.Housing:
-							case BuildingType.Squad:
-							case BuildingType.Starport:
-							case BuildingType.DroidHut:
-							case BuildingType.Wall:
-							case BuildingType.Storage:
-							case BuildingType.ShieldGenerator:
-							case BuildingType.Rubble:
-							case BuildingType.Clearable:
-							case BuildingType.Blocker:
-							case BuildingType.Trap:
-								break;
-							case BuildingType.Turret:
-								if (Service.Get<BuildingLookupController>().IsTurretSwappingUnlocked())
-								{
-									this.AddContextButton("Swap", 0, 0, 0, 0);
-									return;
-								}
-								break;
-							case BuildingType.TroopResearch:
-								if (ContractUtils.IsArmyUpgrading(selectedBuilding))
-								{
-									if (ContractUtils.CanCancelDeployableContract(selectedBuilding))
-									{
-										this.AddContextButton("Cancel", 0, 0, 0, 0);
-									}
-									this.AddFinishContextButton(selectedBuilding);
-								}
-								else if (ContractUtils.IsEquipmentUpgrading(selectedBuilding))
-								{
-									this.AddFinishContextButton(selectedBuilding);
-								}
-								this.AddContextButton("Upgrade_Troops", 0, 0, 0, 0);
-								return;
-							case BuildingType.DefenseResearch:
-								this.AddContextButton("Upgrade_Defense", 0, 0, 0, 0);
-								return;
-							case BuildingType.Resource:
-							{
-								string contextId = null;
-								switch (buildingInfo.Currency)
-								{
-								case CurrencyType.Credits:
-									contextId = "Credits";
-									break;
-								case CurrencyType.Materials:
-									contextId = "Materials";
-									break;
-								case CurrencyType.Contraband:
-									contextId = "Contraband";
-									break;
-								}
-								this.AddContextButton(contextId, 0, 0, 0, 0);
-								return;
+								this.AddContextButton("Repair", 0, 0, 0, 0);
 							}
-							case BuildingType.Cantina:
-								this.AddContextButton("Hire", 0, 0, 0, 0);
-								return;
-							case BuildingType.NavigationCenter:
-								if (!isLifted)
+							break;
+						case BuildingType.Turret:
+							if (Service.Get<BuildingLookupController>().IsTurretSwappingUnlocked())
+							{
+								this.AddContextButton("Swap", 0, 0, 0, 0);
+							}
+							break;
+						case BuildingType.TroopResearch:
+							if (ContractUtils.IsArmyUpgrading(selectedBuilding))
+							{
+								if (ContractUtils.CanCancelDeployableContract(selectedBuilding))
 								{
-									this.AddContextButton("Navigate", 0, 0, 0, 0, "context_Galaxy");
+									this.AddContextButton("Cancel", 0, 0, 0, 0);
 								}
+								this.AddFinishContextButton(selectedBuilding);
+							}
+							else if (ContractUtils.IsEquipmentUpgrading(selectedBuilding))
+							{
+								this.AddFinishContextButton(selectedBuilding);
+							}
+							this.AddContextButton("Upgrade_Troops", 0, 0, 0, 0);
+							break;
+						case BuildingType.DefenseResearch:
+							this.AddContextButton("Upgrade_Defense", 0, 0, 0, 0);
+							break;
+						case BuildingType.Resource:
+						{
+							string contextId = null;
+							switch (buildingInfo.Currency)
+							{
+							case CurrencyType.Credits:
+								contextId = "Credits";
 								break;
-							case BuildingType.ScoutTower:
-								if (!Service.Get<RaidDefenseController>().IsRaidAvailable())
-								{
-									this.AddContextButtonWithTimer("NextRaid", 0, 0, 0, 0, "context_NightRaid", new GetTimerSecondsDelegate(@object.GetRaidTimeSeconds));
-									return;
-								}
+							case CurrencyType.Materials:
+								contextId = "Materials";
+								break;
+							case CurrencyType.Contraband:
+								contextId = "Contraband";
+								break;
+							}
+							this.AddContextButton(contextId, 0, 0, 0, 0);
+							break;
+						}
+						case BuildingType.Cantina:
+							this.AddContextButton("Hire", 0, 0, 0, 0);
+							break;
+						case BuildingType.NavigationCenter:
+							if (!isLifted)
+							{
+								this.AddContextButton("Navigate", 0, 0, 0, 0, "context_Galaxy");
+							}
+							break;
+						case BuildingType.ScoutTower:
+							if (!Service.Get<RaidDefenseController>().IsRaidAvailable())
+							{
+								this.AddContextButtonWithTimer("NextRaid", 0, 0, 0, 0, "context_NightRaid", new GetTimerSecondsDelegate(@object.GetRaidTimeSeconds));
+							}
+							else
+							{
 								this.AddContextButton("RaidBriefing", 0, 0, 0, 0, "context_NightRaid");
 								this.AddContextButton("RaidDefend", 0, 0, 0, 0, "icoDefend", "BtnTroopBg_Gold");
-								return;
-							case BuildingType.Armory:
-								this.AddContextButton("Armory", 0, 0, 0, 0);
-								return;
-							default:
-								return;
 							}
+							break;
+						case BuildingType.Armory:
+							this.AddContextButton("Armory", 0, 0, 0, 0);
+							break;
 						}
 					}
 				}
@@ -2263,11 +2212,12 @@ namespace StaRTS.Main.Views.UX
 					if (SquadUtils.CanSendFreeTroopRequest(serverTime, troopRequestDate))
 					{
 						this.AddContextButton("RequestTroops", 0, 0, 0, 0);
-						return;
 					}
-					int troopRequestCrystalCost = SquadUtils.GetTroopRequestCrystalCost(serverTime, troopRequestDate);
-					this.AddContextButton("RequestTroopsPaid", 0, 0, 0, troopRequestCrystalCost, "context_Finish_Now");
-					return;
+					else
+					{
+						int troopRequestCrystalCost = SquadUtils.GetTroopRequestCrystalCost(serverTime, troopRequestDate);
+						this.AddContextButton("RequestTroopsPaid", 0, 0, 0, troopRequestCrystalCost, "context_Finish_Now");
+					}
 				}
 			}
 			else if (inHomeMode)
@@ -2325,11 +2275,7 @@ namespace StaRTS.Main.Views.UX
 
 		private ContextButtonTag AddContextButton(string contextId, int credits, int materials, int contraband, int crystals, int badgeCount, string spriteName, string bgSpriteName)
 		{
-			string text = string.Format("{0}_{1}", new object[]
-			{
-				this.contextButtonParentTemplate.Root.name,
-				contextId
-			});
+			string text = string.Format("{0}_{1}", this.contextButtonParentTemplate.Root.name, contextId);
 			UXElement contextButtonFromPool = this.GetContextButtonFromPool(this.contextButtonParentTemplate, text, this.contextButtonParentTemplate.Root.transform.parent.gameObject);
 			ContextButtonTag contextButtonTag = new ContextButtonTag();
 			contextButtonFromPool.Tag = contextButtonTag;
@@ -2359,7 +2305,7 @@ namespace StaRTS.Main.Views.UX
 			contextButtonTag.ContextLabel = base.GetElement<UXLabel>(UXUtils.FormatAppendedName("LabelContext", text));
 			contextButtonTag.ContextLabel.Text = LangUtils.GetContextButtonText(contextButtonTag.ContextId);
 			contextButtonTag.HardCostLabel = base.GetElement<UXLabel>(UXUtils.FormatAppendedName("LabelHardCost", text));
-			contextButtonTag.HardCostLabel.Text = ((crystals == 0) ? "" : this.lang.ThousandsSeparated(crystals));
+			contextButtonTag.HardCostLabel.Text = ((crystals != 0) ? this.lang.ThousandsSeparated(crystals) : string.Empty);
 			contextButtonTag.HardCostLabel.TextColor = UXUtils.GetCostColor(contextButtonTag.HardCostLabel, GameUtils.CanAffordCrystals(crystals), false);
 			UXElement element = base.GetElement<UXElement>(UXUtils.FormatAppendedName("ContainerJewelContext", text));
 			if (badgeCount > 0)
@@ -2451,25 +2397,21 @@ namespace StaRTS.Main.Views.UX
 				GameObject gameObject = animation.gameObject;
 				if (this.IsAnimationWhiteListed(gameObject))
 				{
-					using (IEnumerator enumerator = animation.gameObject.GetComponent<Animation>().GetEnumerator())
+					foreach (AnimationState animationState in animation.gameObject.GetComponent<Animation>())
 					{
-						while (enumerator.MoveNext())
+						if (bringIn)
 						{
-							AnimationState animationState = (AnimationState)enumerator.get_Current();
-							if (bringIn)
-							{
-								animationState.speed = speed;
-								animationState.time = 0f;
-							}
-							else
-							{
-								animationState.speed = -speed;
-								animationState.time = animationState.length;
-							}
-							if (animationState.length > num & bringIn)
-							{
-								num = animationState.length;
-							}
+							animationState.speed = speed;
+							animationState.time = 0f;
+						}
+						else
+						{
+							animationState.speed = -speed;
+							animationState.time = animationState.length;
+						}
+						if (animationState.length > num && bringIn)
+						{
+							num = animationState.length;
 						}
 					}
 					this.animations[i].Play();
@@ -2595,7 +2537,7 @@ namespace StaRTS.Main.Views.UX
 				bool isContrabandUnlocked = this.player.IsContrabandUnlocked;
 				this.contrabandView.Visible = isContrabandUnlocked;
 				Vector3 a = base.GetElement<UXElement>("Materials").LocalPosition - base.GetElement<UXElement>("Credits").LocalPosition;
-				this.crystalsDroidsGroup.LocalPosition = (isContrabandUnlocked ? (a * 3f) : (a * 2f));
+				this.crystalsDroidsGroup.LocalPosition = ((!isContrabandUnlocked) ? (a * 2f) : (a * 3f));
 			}
 			if (this.exitEditButton.Visible && this.exitEditAnimation != null)
 			{
@@ -2648,7 +2590,7 @@ namespace StaRTS.Main.Views.UX
 			{
 				this.nextBattleButton.Enabled = false;
 				int pvpMatchCost = Service.Get<PvpManager>().GetPvpMatchCost();
-				UXUtils.SetupSingleCostElement(this, "CostNextBattle", pvpMatchCost, 0, 0, 0, 0, false, "");
+				UXUtils.SetupSingleCostElement(this, "CostNextBattle", pvpMatchCost, 0, 0, 0, 0, false, string.Empty);
 			}
 			if (config.Has("ButtonBattle") && !this.player.CampaignProgress.FueInProgress)
 			{
@@ -2806,10 +2748,12 @@ namespace StaRTS.Main.Views.UX
 				if (squadWarScoutState != SquadWarScoutState.AttackAvailable)
 				{
 					this.DisableWarAttacksUI();
-					return;
 				}
-				this.warAttackButton.VisuallyEnableButton();
-				this.warAttackLabel.TextColor = UXUtils.COLOR_ENABLED;
+				else
+				{
+					this.warAttackButton.VisuallyEnableButton();
+					this.warAttackLabel.TextColor = UXUtils.COLOR_ENABLED;
+				}
 			}
 		}
 
@@ -2819,14 +2763,14 @@ namespace StaRTS.Main.Views.UX
 			SquadWarParticipantState currentOpponentState = warManager.GetCurrentOpponentState();
 			if (currentOpponentState == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Could not find opponent's squad war data");
+				Service.Get<Logger>().Warn("Could not find opponent's squad war data");
 				return;
 			}
 			int wAR_VICTORY_POINTS = GameConstants.WAR_VICTORY_POINTS;
 			int victoryPointsLeft = currentOpponentState.VictoryPointsLeft;
 			if (victoryPointsLeft > wAR_VICTORY_POINTS || victoryPointsLeft < 0)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid number of uplinks available");
+				Service.Get<Logger>().Warn("Invalid number of uplinks available");
 			}
 			int num = wAR_VICTORY_POINTS - victoryPointsLeft;
 			for (int i = 1; i <= wAR_VICTORY_POINTS; i++)
@@ -2877,7 +2821,7 @@ namespace StaRTS.Main.Views.UX
 
 		private void OnWarAttackClicked(UXButton button)
 		{
-			SquadWarScoutState squadWarScoutState = (SquadWarScoutState)button.Tag;
+			SquadWarScoutState squadWarScoutState = (SquadWarScoutState)((int)button.Tag);
 			CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
 			if (squadWarScoutState == SquadWarScoutState.AttackAvailable)
 			{
@@ -2887,12 +2831,10 @@ namespace StaRTS.Main.Views.UX
 				if (currentBattle.Type == BattleType.PvpAttackSquadWar)
 				{
 					Service.Get<SquadController>().WarManager.StartAttackOnScoutedWarMember();
-					return;
 				}
-				if (currentBattle.Type == BattleType.PveBuffBase)
+				else if (currentBattle.Type == BattleType.PveBuffBase)
 				{
 					Service.Get<SquadController>().WarManager.StartAttackOnScoutedBuffBase();
-					return;
 				}
 			}
 			else
@@ -2905,7 +2847,7 @@ namespace StaRTS.Main.Views.UX
 		{
 			if (state == SquadWarScoutState.Invalid)
 			{
-				Service.Get<StaRTSLogger>().Error("Attempting to start squad war battle when in invalid scouting state. Only happens if data is bad/nonexistent");
+				Service.Get<Logger>().Error("Attempting to start squad war battle when in invalid scouting state. Only happens if data is bad/nonexistent");
 			}
 			bool flag = battle.Type == BattleType.PvpAttackSquadWar;
 			if (!flag && state == SquadWarScoutState.DestinationUnavailable)
@@ -2986,10 +2928,12 @@ namespace StaRTS.Main.Views.UX
 				if (flag)
 				{
 					this.persistentSquadScreen.AnimateClosed(true, null);
-					return;
 				}
-				this.persistentSquadScreen.Close(null);
-				this.persistentSquadScreen = null;
+				else
+				{
+					this.persistentSquadScreen.Close(null);
+					this.persistentSquadScreen = null;
+				}
 			}
 		}
 
@@ -3042,9 +2986,11 @@ namespace StaRTS.Main.Views.UX
 				if (visible)
 				{
 					this.genericConfigElements.Add(this.holonetButton);
-					return;
 				}
-				this.genericConfigElements.Remove(this.holonetButton);
+				else
+				{
+					this.genericConfigElements.Remove(this.holonetButton);
+				}
 			}
 		}
 
@@ -3064,7 +3010,6 @@ namespace StaRTS.Main.Views.UX
 					if (!targetedBundleController.FetchingNewOffer)
 					{
 						targetedBundleController.GetNewOffer();
-						return;
 					}
 				}
 				else
@@ -3100,7 +3045,7 @@ namespace StaRTS.Main.Views.UX
 					}
 					else
 					{
-						Service.Get<StaRTSLogger>().Error("HUD::UpdateTargetedBundleButtonVisibility Could Not find texture vo for " + iconImage + " in offer " + currentTargetedOffer.Uid);
+						Service.Get<Logger>().Error("HUD::UpdateTargetedBundleButtonVisibility Could Not find texture vo for " + iconImage + " in offer " + currentTargetedOffer.Uid);
 					}
 					this.targetedBundleButtonGlowAnim.SetTrigger("ClearEffect");
 					if (GameConstants.PROMO_BUTTON_RESHOW_GLOW || !this.targetedBundleGlowShown)
@@ -3148,411 +3093,349 @@ namespace StaRTS.Main.Views.UX
 			{
 				return EatResponse.NotEaten;
 			}
-			if (id <= EventId.InventoryResourceUpdated)
+			switch (id)
 			{
-				if (id <= EventId.SquadTroopsDeployedByPlayer)
+			case EventId.SquadTroopsRequestedByCurrentPlayer:
+			{
+				SmartEntity smartEntity = (SmartEntity)Service.Get<BuildingController>().SelectedBuilding;
+				if (smartEntity != null && smartEntity.SquadBuildingComp != null)
 				{
-					if (id <= EventId.TroopDeployed)
-					{
-						if (id == EventId.BuildingPurchaseSuccess)
-						{
-							this.RefreshAllResourceViews(true);
-							goto IL_72C;
-						}
-						if (id != EventId.TroopDeployed)
-						{
-							goto IL_72C;
-						}
-						this.OnTroopPlaced(cookie as SmartEntity);
-						goto IL_72C;
-					}
-					else
-					{
-						if (id == EventId.ChampionRepaired)
-						{
-							goto IL_518;
-						}
-						if (id == EventId.SquadTroopsReceived)
-						{
-							goto IL_5D5;
-						}
-						if (id != EventId.SquadTroopsDeployedByPlayer)
-						{
-							goto IL_72C;
-						}
-						this.OnSquadTroopsDeployed();
-						goto IL_72C;
-					}
+					this.ShowContextButtons(smartEntity);
 				}
-				else if (id <= EventId.WorldLoadComplete)
+				goto IL_74A;
+			}
+			case EventId.SquadWarTroopsRequestStartedByCurrentPlayer:
+			case EventId.SquadWarTroopsRequestedByCurrentPlayer:
+			case EventId.SquadTroopsDonatedByCurrentPlayer:
+			case EventId.SquadReplaySharedByCurrentPlayer:
+			case EventId.CurrentPlayerMemberDataUpdated:
+			case EventId.SquadJoinInviteRemoved:
+			case EventId.SquadServerMessage:
+			case EventId.WarBuffBaseCaptured:
+			case EventId.WarVictoryPointsUpdated:
+			case EventId.WarRewardClaimed:
+				IL_71:
+				switch (id)
 				{
+				case EventId.InventoryUnlockUpdated:
+					goto IL_394;
+				case EventId.InventoryPrizeUpdated:
+				case EventId.LootCollected:
+				case EventId.ScreenLoaded:
+				case EventId.ScreenRefreshed:
+				case EventId.HUDVisibilityChanging:
+				{
+					IL_A6:
 					switch (id)
 					{
 					case EventId.TroopLevelUpgraded:
 					case EventId.StarshipLevelUpgraded:
-						goto IL_518;
+						goto IL_50E;
 					case EventId.BuildingLevelUpgraded:
 					case EventId.BuildingReplaced:
-						break;
+						goto IL_394;
 					case EventId.BuildingSwapped:
 					case EventId.SpecialAttackSpawned:
-						goto IL_72C;
+						IL_D0:
+						switch (id)
+						{
+						case EventId.MissionActionButtonClicked:
+							if (cookie != null)
+							{
+								CampaignMissionVO campaignMissionVO = (CampaignMissionVO)cookie;
+								if (campaignMissionVO.MissionType == MissionType.Defend || campaignMissionVO.MissionType == MissionType.RaidDefend)
+								{
+									this.DestroySquadScreen();
+								}
+							}
+							goto IL_74A;
+						case EventId.PlayerNameChanged:
+							this.RefreshPlayerSocialInformation();
+							goto IL_74A;
+						case EventId.PlayerFactionChanged:
+							IL_ED:
+							switch (id)
+							{
+							case EventId.HolonetContentPrepareStarted:
+								Service.Get<EventManager>().RegisterObserver(this, EventId.AllHolonetContentPrepared);
+								this.UpdateHolonetButtonVisibility(false);
+								goto IL_74A;
+							case EventId.AllHolonetContentPrepared:
+								this.UpdateHolonetButtonVisibility(true);
+								Service.Get<EventManager>().UnregisterObserver(this, EventId.AllHolonetContentPrepared);
+								goto IL_74A;
+							case EventId.HolonetContentPrepared:
+								this.UpdateHolonetJewel();
+								goto IL_74A;
+							case EventId.TargetedBundleContentPrepared:
+								break;
+							default:
+							{
+								if (id != EventId.SquadTroopsReceived)
+								{
+									if (id == EventId.SquadTroopsDeployedByPlayer)
+									{
+										this.OnSquadTroopsDeployed();
+										goto IL_74A;
+									}
+									if (id != EventId.SquadUpdated)
+									{
+										if (id == EventId.SquadLeft)
+										{
+											this.joinSquadButton.Visible = true;
+											goto IL_74A;
+										}
+										if (id == EventId.BuildingPurchaseSuccess)
+										{
+											this.RefreshAllResourceViews(true);
+											goto IL_74A;
+										}
+										if (id == EventId.TroopDeployed)
+										{
+											this.OnTroopPlaced(cookie as SmartEntity);
+											goto IL_74A;
+										}
+										if (id == EventId.ChampionRepaired)
+										{
+											goto IL_50E;
+										}
+										if (id == EventId.WorldLoadComplete)
+										{
+											Service.Get<EventManager>().UnregisterObserver(this, EventId.HolonetContentPrepared);
+											this.storeButton.Enabled = true;
+											if (this.CurrentHudConfig != null)
+											{
+												this.ConfigureControls(this.CurrentHudConfig);
+											}
+											this.UpdateStoreJewel();
+											this.UpdateLogJewel();
+											goto IL_74A;
+										}
+										if (id == EventId.GameStateChanged)
+										{
+											IState currentState = Service.Get<GameStateMachine>().CurrentState;
+											if (currentState is HomeState)
+											{
+												HomeState homeState = currentState as HomeState;
+												if (homeState.ForceReloadMap)
+												{
+													this.storeButton.Enabled = false;
+												}
+												this.UpdateHolonetJewel();
+												this.UpdateStoreJewel();
+												this.UpdateLogJewel();
+												Service.Get<UXController>().MiscElementsManager.SetEventTickerViewVisible(this.Visible);
+											}
+											else if (currentState is WarBaseEditorState)
+											{
+												Service.Get<UXController>().MiscElementsManager.SetEventTickerViewVisible(this.Visible);
+											}
+											else if (this.ShouldDestroyOrHideHomeStateUI(currentState))
+											{
+												Service.Get<UXController>().MiscElementsManager.SetEventTickerViewVisible(false);
+												this.DestroySquadScreen();
+											}
+											goto IL_74A;
+										}
+										if (id == EventId.ContractStarted)
+										{
+											ContractEventData contractEventData = (ContractEventData)cookie;
+											if (contractEventData.Contract.DeliveryType == DeliveryType.Building)
+											{
+												this.UpdateStoreJewel();
+											}
+											goto IL_74A;
+										}
+										if (id == EventId.InventoryResourceUpdated)
+										{
+											this.RefreshResourceView((string)cookie, !Service.Get<BattleController>().BattleInProgress);
+											this.RefreshCurrentPlayerLevel();
+											goto IL_74A;
+										}
+										if (id == EventId.HeroDeployed)
+										{
+											this.OnHeroDeployed(cookie as SmartEntity);
+											goto IL_74A;
+										}
+										if (id == EventId.ChampionDeployed)
+										{
+											this.OnChampionDeployed(cookie as SmartEntity);
+											goto IL_74A;
+										}
+										if (id == EventId.TargetedBundleRewardRedeemed)
+										{
+											break;
+										}
+										if (id != EventId.EquipmentUpgraded)
+										{
+											goto IL_74A;
+										}
+										goto IL_50E;
+									}
+								}
+								IState currentState2 = Service.Get<GameStateMachine>().CurrentState;
+								if (!(currentState2 is HomeState) && !(currentState2 is EditBaseState))
+								{
+									goto IL_74A;
+								}
+								this.RefreshView();
+								SmartEntity smartEntity2 = (SmartEntity)Service.Get<BuildingController>().SelectedBuilding;
+								if (smartEntity2 != null && smartEntity2.SquadBuildingComp != null)
+								{
+									this.ShowContextButtons(smartEntity2);
+								}
+								BuildingLookupController buildingLookupController = Service.Get<BuildingLookupController>();
+								SmartEntity smartEntity3 = (SmartEntity)buildingLookupController.GetCurrentSquadBuilding();
+								if (smartEntity3 != null)
+								{
+									Service.Get<BuildingTooltipController>().EnsureBuildingTooltip(smartEntity3);
+								}
+								goto IL_74A;
+							}
+							}
+							this.UpdateTargetedBundleButtonVisibility();
+							goto IL_74A;
+						case EventId.PvpRatingChanged:
+							this.RefreshPlayerMedals();
+							goto IL_74A;
+						}
+						goto IL_ED;
 					case EventId.BuildingConstructed:
 					{
 						Entity selectedBuilding = Service.Get<BuildingController>().SelectedBuilding;
-						ContractEventData contractEventData = (ContractEventData)cookie;
-						if (contractEventData.BuildingVO.Currency == CurrencyType.Contraband)
+						ContractEventData contractEventData2 = (ContractEventData)cookie;
+						if (contractEventData2.BuildingVO.Currency == CurrencyType.Contraband)
 						{
 							this.RefreshView();
 						}
-						if (selectedBuilding != null && selectedBuilding == contractEventData.Entity)
+						if (selectedBuilding != null && selectedBuilding == contractEventData2.Entity)
 						{
 							this.ShowContextButtons(selectedBuilding);
 						}
 						this.UpdateStoreJewel();
-						goto IL_72C;
+						goto IL_74A;
 					}
 					case EventId.SpecialAttackDeployed:
 						this.OnSpecialAttackDeployed((SpecialAttack)cookie);
-						goto IL_72C;
-					default:
-						if (id != EventId.WorldLoadComplete)
-						{
-							goto IL_72C;
-						}
-						Service.Get<EventManager>().UnregisterObserver(this, EventId.HolonetContentPrepared);
-						this.storeButton.Enabled = true;
-						if (this.CurrentHudConfig != null)
-						{
-							this.ConfigureControls(this.CurrentHudConfig);
-						}
-						this.UpdateStoreJewel();
-						this.UpdateLogJewel();
-						goto IL_72C;
+						goto IL_74A;
 					}
+					goto IL_D0;
+					IL_50E:
+					Entity selectedBuilding2 = Service.Get<BuildingController>().SelectedBuilding;
+					if (selectedBuilding2 != null && selectedBuilding2 == ((ContractEventData)cookie).Entity)
+					{
+						this.ShowContextButtons(selectedBuilding2);
+					}
+					goto IL_74A;
 				}
-				else if (id != EventId.GameStateChanged)
+				case EventId.NumInventoryItemsNotViewedUpdated:
 				{
-					if (id != EventId.ContractStarted)
+					Entity selectedBuilding3 = Service.Get<BuildingController>().SelectedBuilding;
+					if (selectedBuilding3 != null)
 					{
-						if (id != EventId.InventoryResourceUpdated)
-						{
-							goto IL_72C;
-						}
-						this.RefreshResourceView((string)cookie, !Service.Get<BattleController>().BattleInProgress);
-						this.RefreshCurrentPlayerLevel();
-						goto IL_72C;
+						this.ShowContextButtons(selectedBuilding3);
 					}
-					else
+					goto IL_74A;
+				}
+				case EventId.LootEarnedUpdated:
+					this.RefreshLoot();
+					goto IL_74A;
+				case EventId.ScreenClosing:
+					if (cookie is StoreScreen)
 					{
-						ContractEventData contractEventData2 = (ContractEventData)cookie;
-						if (contractEventData2.Contract.DeliveryType == DeliveryType.Building)
+						if (!this.player.CampaignProgress.FueInProgress)
 						{
 							this.UpdateStoreJewel();
-							goto IL_72C;
 						}
-						goto IL_72C;
 					}
-				}
-				else
-				{
-					IState currentState = Service.Get<GameStateMachine>().CurrentState;
-					if (currentState is HomeState)
+					else if (cookie is HolonetScreen)
 					{
-						HomeState homeState = currentState as HomeState;
-						if (homeState.ForceReloadMap)
-						{
-							this.storeButton.Enabled = false;
-						}
 						this.UpdateHolonetJewel();
-						this.UpdateStoreJewel();
-						this.UpdateLogJewel();
-						Service.Get<UXController>().MiscElementsManager.SetEventTickerViewVisible(this.Visible);
-						goto IL_72C;
 					}
-					if (currentState is WarBaseEditorState)
+					goto IL_74A;
+				case EventId.HUDVisibilityChanged:
+				{
+					bool flag = false;
+					if (Service.IsSet<TargetedBundleController>())
 					{
-						Service.Get<UXController>().MiscElementsManager.SetEventTickerViewVisible(this.Visible);
-						goto IL_72C;
+						flag = (Service.Get<TargetedBundleController>().CurrentTargetedOffer != null);
 					}
-					if (this.ShouldDestroyOrHideHomeStateUI(currentState))
+					if (flag && this.Visible && UXUtils.IsVisibleInHierarchy(this.targetedBundleButton))
 					{
-						Service.Get<UXController>().MiscElementsManager.SetEventTickerViewVisible(false);
-						this.DestroySquadScreen();
-						goto IL_72C;
+						this.targetedBundleButtonGlowAnim.SetTrigger("ClearEffect");
+						if (GameConstants.PROMO_BUTTON_RESHOW_GLOW || !this.targetedBundleGlowShown)
+						{
+							this.ShowPromoButtonGlowEffect();
+						}
+						Service.Get<TargetedBundleController>().LogTargetedBundleBI("icon_display");
 					}
-					goto IL_72C;
+					else if (UXUtils.IsVisibleInHierarchy(this.targetedBundleButton) && this.targetedBundleGlowShown)
+					{
+						this.StopPromoButtonGlowEffect(0u, null);
+					}
+					goto IL_74A;
 				}
-			}
-			else
+				}
+				goto IL_A6;
+				IL_394:
+				this.UpdateStoreJewel();
+				this.UpdateLogJewel();
+				goto IL_74A;
+			case EventId.SquadJoinApplicationAccepted:
 			{
-				if (id > EventId.PvpRatingChanged)
+				if (ScreenUtils.IsAnySquadScreenOpen())
 				{
-					if (id <= EventId.WarAttackBuffBaseCompleted)
-					{
-						switch (id)
-						{
-						case EventId.HolonetContentPrepareStarted:
-							Service.Get<EventManager>().RegisterObserver(this, EventId.AllHolonetContentPrepared);
-							this.UpdateHolonetButtonVisibility(false);
-							goto IL_72C;
-						case EventId.AllHolonetContentPrepared:
-							this.UpdateHolonetButtonVisibility(true);
-							Service.Get<EventManager>().UnregisterObserver(this, EventId.AllHolonetContentPrepared);
-							goto IL_72C;
-						case EventId.HolonetContentPrepared:
-							this.UpdateHolonetJewel();
-							goto IL_72C;
-						case EventId.TargetedBundleContentPrepared:
-							break;
-						default:
-							switch (id)
-							{
-							case EventId.SquadUpdated:
-								goto IL_5D5;
-							case EventId.SquadLeft:
-								this.joinSquadButton.Visible = true;
-								goto IL_72C;
-							case EventId.SquadChatFilterUpdated:
-							case EventId.SquadJoinedByCurrentPlayer:
-							case EventId.SquadJoinApplicationAcceptedByCurrentPlayer:
-							case EventId.SquadJoinInviteAcceptedByCurrentPlayer:
-							case EventId.SquadWarTroopsRequestStartedByCurrentPlayer:
-							case EventId.SquadWarTroopsRequestedByCurrentPlayer:
-							case EventId.SquadTroopsDonatedByCurrentPlayer:
-							case EventId.SquadReplaySharedByCurrentPlayer:
-							case EventId.CurrentPlayerMemberDataUpdated:
-							case EventId.SquadJoinInviteRemoved:
-							case EventId.SquadServerMessage:
-								goto IL_72C;
-							case EventId.SquadTroopsRequestedByCurrentPlayer:
-							{
-								SmartEntity smartEntity = (SmartEntity)Service.Get<BuildingController>().SelectedBuilding;
-								if (smartEntity != null && smartEntity.SquadBuildingComp != null)
-								{
-									this.ShowContextButtons(smartEntity);
-									goto IL_72C;
-								}
-								goto IL_72C;
-							}
-							case EventId.SquadJoinApplicationAccepted:
-							{
-								if (ScreenUtils.IsAnySquadScreenOpen())
-								{
-									Service.Get<ScreenController>().CloseAll();
-								}
-								string text = (string)cookie;
-								if (!string.IsNullOrEmpty(text))
-								{
-									string instructions = Service.Get<Lang>().Get("SQUAD_ACCEPTED_MESSAGE", new object[]
-									{
-										text
-									});
-									Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(instructions);
-									goto IL_72C;
-								}
-								goto IL_72C;
-							}
-							case EventId.SquadTroopsReceivedFromDonor:
-							{
-								string text2 = (string)cookie;
-								if (!string.IsNullOrEmpty(text2))
-								{
-									string instructions2 = Service.Get<Lang>().Get("TROOPS_RECEIVED_FROM", new object[]
-									{
-										text2
-									});
-									Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(instructions2);
-									goto IL_72C;
-								}
-								goto IL_72C;
-							}
-							case EventId.SquadJoinInviteReceived:
-							case EventId.SquadJoinInvitesReceived:
-								this.UpdateSquadJewelCount();
-								goto IL_72C;
-							case EventId.WarPhaseChanged:
-								this.UpdateWarButton();
-								goto IL_72C;
-							case EventId.WarAttackPlayerStarted:
-							case EventId.WarAttackPlayerCompleted:
-							case EventId.WarAttackBuffBaseStarted:
-							case EventId.WarAttackBuffBaseCompleted:
-								this.UpdateWarAttackState();
-								goto IL_72C;
-							default:
-								goto IL_72C;
-							}
-							break;
-						}
-					}
-					else
-					{
-						if (id == EventId.WarAttackCommandFailed)
-						{
-							if (this.warAttackButton != null)
-							{
-								this.warAttackButton.Enabled = true;
-								this.warDoneButton.Enabled = true;
-								this.DisableWarAttacksUI();
-							}
-							Service.Get<EventManager>().UnregisterObserver(this, EventId.WarAttackCommandFailed);
-							goto IL_72C;
-						}
-						if (id != EventId.TargetedBundleRewardRedeemed)
-						{
-							if (id != EventId.EquipmentUpgraded)
-							{
-								goto IL_72C;
-							}
-							goto IL_518;
-						}
-					}
-					this.UpdateTargetedBundleButtonVisibility();
-					goto IL_72C;
+					Service.Get<ScreenController>().CloseAll();
 				}
-				if (id <= EventId.HUDVisibilityChanged)
+				string text = (string)cookie;
+				if (!string.IsNullOrEmpty(text))
 				{
-					switch (id)
+					string instructions = Service.Get<Lang>().Get("SQUAD_ACCEPTED_MESSAGE", new object[]
 					{
-					case EventId.InventoryUnlockUpdated:
-						break;
-					case EventId.InventoryPrizeUpdated:
-					case EventId.LootCollected:
-						goto IL_72C;
-					case EventId.NumInventoryItemsNotViewedUpdated:
-					{
-						Entity selectedBuilding2 = Service.Get<BuildingController>().SelectedBuilding;
-						if (selectedBuilding2 != null)
-						{
-							this.ShowContextButtons(selectedBuilding2);
-							goto IL_72C;
-						}
-						goto IL_72C;
-					}
-					case EventId.LootEarnedUpdated:
-						this.RefreshLoot();
-						goto IL_72C;
-					case EventId.ScreenClosing:
-						if (cookie is StoreScreen)
-						{
-							if (!this.player.CampaignProgress.FueInProgress)
-							{
-								this.UpdateStoreJewel();
-								goto IL_72C;
-							}
-							goto IL_72C;
-						}
-						else
-						{
-							if (cookie is HolonetScreen)
-							{
-								this.UpdateHolonetJewel();
-								goto IL_72C;
-							}
-							goto IL_72C;
-						}
-						break;
-					default:
-					{
-						if (id != EventId.HUDVisibilityChanged)
-						{
-							goto IL_72C;
-						}
-						bool flag = false;
-						if (Service.IsSet<TargetedBundleController>())
-						{
-							flag = (Service.Get<TargetedBundleController>().CurrentTargetedOffer != null);
-						}
-						if (flag && this.Visible && UXUtils.IsVisibleInHierarchy(this.targetedBundleButton))
-						{
-							this.targetedBundleButtonGlowAnim.SetTrigger("ClearEffect");
-							if (GameConstants.PROMO_BUTTON_RESHOW_GLOW || !this.targetedBundleGlowShown)
-							{
-								this.ShowPromoButtonGlowEffect();
-							}
-							Service.Get<TargetedBundleController>().LogTargetedBundleBI("icon_display");
-							goto IL_72C;
-						}
-						if (UXUtils.IsVisibleInHierarchy(this.targetedBundleButton) && this.targetedBundleGlowShown)
-						{
-							this.StopPromoButtonGlowEffect(0u, null);
-							goto IL_72C;
-						}
-						goto IL_72C;
-					}
-					}
+						text
+					});
+					Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(instructions);
 				}
-				else
-				{
-					if (id == EventId.HeroDeployed)
-					{
-						this.OnHeroDeployed(cookie as SmartEntity);
-						goto IL_72C;
-					}
-					if (id == EventId.ChampionDeployed)
-					{
-						this.OnChampionDeployed(cookie as SmartEntity);
-						goto IL_72C;
-					}
-					switch (id)
-					{
-					case EventId.MissionActionButtonClicked:
-					{
-						if (cookie == null)
-						{
-							goto IL_72C;
-						}
-						CampaignMissionVO campaignMissionVO = (CampaignMissionVO)cookie;
-						if (campaignMissionVO.MissionType == MissionType.Defend || campaignMissionVO.MissionType == MissionType.RaidDefend)
-						{
-							this.DestroySquadScreen();
-							goto IL_72C;
-						}
-						goto IL_72C;
-					}
-					case EventId.PlayerNameChanged:
-						this.RefreshPlayerSocialInformation();
-						goto IL_72C;
-					case EventId.PlayerFactionChanged:
-						goto IL_72C;
-					case EventId.PvpRatingChanged:
-						this.RefreshPlayerMedals();
-						goto IL_72C;
-					default:
-						goto IL_72C;
-					}
-				}
+				goto IL_74A;
 			}
-			this.UpdateStoreJewel();
-			this.UpdateLogJewel();
-			goto IL_72C;
-			IL_518:
-			Entity selectedBuilding3 = Service.Get<BuildingController>().SelectedBuilding;
-			if (selectedBuilding3 != null && selectedBuilding3 == ((ContractEventData)cookie).Entity)
+			case EventId.SquadTroopsReceivedFromDonor:
 			{
-				this.ShowContextButtons(selectedBuilding3);
-				goto IL_72C;
-			}
-			goto IL_72C;
-			IL_5D5:
-			IState currentState2 = Service.Get<GameStateMachine>().CurrentState;
-			if (currentState2 is HomeState || currentState2 is EditBaseState)
-			{
-				this.RefreshView();
-				SmartEntity smartEntity2 = (SmartEntity)Service.Get<BuildingController>().SelectedBuilding;
-				if (smartEntity2 != null && smartEntity2.SquadBuildingComp != null)
+				string text2 = (string)cookie;
+				if (!string.IsNullOrEmpty(text2))
 				{
-					this.ShowContextButtons(smartEntity2);
+					string instructions2 = Service.Get<Lang>().Get("TROOPS_RECEIVED_FROM", new object[]
+					{
+						text2
+					});
+					Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(instructions2);
 				}
-				BuildingLookupController buildingLookupController = Service.Get<BuildingLookupController>();
-				SmartEntity smartEntity3 = (SmartEntity)buildingLookupController.GetCurrentSquadBuilding();
-				if (smartEntity3 != null)
-				{
-					Service.Get<BuildingTooltipController>().EnsureBuildingTooltip(smartEntity3);
-				}
+				goto IL_74A;
 			}
-			IL_72C:
+			case EventId.SquadJoinInviteReceived:
+			case EventId.SquadJoinInvitesReceived:
+				this.UpdateSquadJewelCount();
+				goto IL_74A;
+			case EventId.WarPhaseChanged:
+				this.UpdateWarButton();
+				goto IL_74A;
+			case EventId.WarAttackPlayerStarted:
+			case EventId.WarAttackPlayerCompleted:
+			case EventId.WarAttackBuffBaseStarted:
+			case EventId.WarAttackBuffBaseCompleted:
+				this.UpdateWarAttackState();
+				goto IL_74A;
+			case EventId.WarAttackCommandFailed:
+				if (this.warAttackButton != null)
+				{
+					this.warAttackButton.Enabled = true;
+					this.warDoneButton.Enabled = true;
+					this.DisableWarAttacksUI();
+				}
+				Service.Get<EventManager>().UnregisterObserver(this, EventId.WarAttackCommandFailed);
+				goto IL_74A;
+			}
+			goto IL_71;
+			IL_74A:
 			return base.OnEvent(id, cookie);
 		}
 
@@ -3571,7 +3454,7 @@ namespace StaRTS.Main.Views.UX
 			}
 			foreach (KeyValuePair<string, DeployableTroopControl> current in this.deployableTroops)
 			{
-				DeployableTroopControl value = current.get_Value();
+				DeployableTroopControl value = current.Value;
 				value.Disable(hideTroopCounts);
 				value.TroopCheckbox.Enabled = false;
 			}
@@ -3585,7 +3468,7 @@ namespace StaRTS.Main.Views.UX
 			}
 			foreach (KeyValuePair<string, DeployableTroopControl> current in this.deployableTroops)
 			{
-				DeployableTroopControl value = current.get_Value();
+				DeployableTroopControl value = current.Value;
 				value.TroopCheckbox.Enabled = true;
 				value.Enable();
 			}
@@ -3630,10 +3513,10 @@ namespace StaRTS.Main.Views.UX
 			{
 				foreach (KeyValuePair<string, DeployableTroopControl> current in this.deployableTroops)
 				{
-					DeployableTroopControl value = current.get_Value();
+					DeployableTroopControl value = current.Value;
 					if (value.IsHero)
 					{
-						if (current.get_Key() == uid && abilityVO != null && !abilityVO.Auto)
+						if (current.Key == uid && abilityVO != null && !abilityVO.Auto)
 						{
 							value.PrepareHeroAbility();
 						}
@@ -3762,9 +3645,11 @@ namespace StaRTS.Main.Views.UX
 					Service.Get<EventManager>().SendEvent(EventId.PvpBattleSkipped, null);
 					Service.Get<CombatTriggerManager>().UnregisterAllTriggers();
 					pvpManager.PurchaseNextBattle();
-					return;
 				}
-				pvpManager.HandleNotEnoughCreditsForNextBattle();
+				else
+				{
+					pvpManager.HandleNotEnoughCreditsForNextBattle();
+				}
 			}
 		}
 
@@ -3920,9 +3805,11 @@ namespace StaRTS.Main.Views.UX
 			if (protectedUntil <= serverTime)
 			{
 				this.protectionLabel.Text = Service.Get<Lang>().Get("PROTECTION_NONE", new object[0]);
-				return;
 			}
-			this.protectionLabel.Text = GameUtils.GetTimeLabelFromSeconds(Convert.ToInt32(protectedUntil - serverTime, CultureInfo.InvariantCulture));
+			else
+			{
+				this.protectionLabel.Text = GameUtils.GetTimeLabelFromSeconds(Convert.ToInt32(protectedUntil - serverTime));
+			}
 		}
 
 		private void OnHomeButtonClicked(UXButton button)
@@ -3932,29 +3819,31 @@ namespace StaRTS.Main.Views.UX
 			if (currentState is BattlePlaybackState)
 			{
 				Service.Get<BattleController>().EndBattleRightAway();
-				return;
 			}
-			if (currentState is BattleStartState)
+			else
 			{
-				Service.Get<CombatTriggerManager>().UnregisterAllTriggers();
-				BattleType type = Service.Get<BattleController>().GetCurrentBattle().Type;
-				Service.Get<EventManager>().SendEvent(EventId.BattleLeftBeforeStarting, null);
-				if (type == BattleType.Pvp)
+				if (currentState is BattleStartState)
 				{
-					Service.Get<PvpManager>().ReleasePvpTarget();
+					Service.Get<CombatTriggerManager>().UnregisterAllTriggers();
+					BattleType type = Service.Get<BattleController>().GetCurrentBattle().Type;
+					Service.Get<EventManager>().SendEvent(EventId.BattleLeftBeforeStarting, null);
+					if (type == BattleType.Pvp)
+					{
+						Service.Get<PvpManager>().ReleasePvpTarget();
+					}
+					else if (type == BattleType.PveBuffBase)
+					{
+						Service.Get<SquadController>().WarManager.ReleaseCurrentlyScoutedBuffBase();
+					}
+					Service.Get<ShieldController>().StopAllEffects();
+					if (type == BattleType.PvpAttackSquadWar || type == BattleType.PveBuffBase)
+					{
+						Service.Get<SquadController>().WarManager.StartTranstionFromWarBaseToWarBoard();
+						return;
+					}
 				}
-				else if (type == BattleType.PveBuffBase)
-				{
-					Service.Get<SquadController>().WarManager.ReleaseCurrentlyScoutedBuffBase();
-				}
-				Service.Get<ShieldController>().StopAllEffects();
-				if (type == BattleType.PvpAttackSquadWar || type == BattleType.PveBuffBase)
-				{
-					Service.Get<SquadController>().WarManager.StartTranstionFromWarBaseToWarBoard();
-					return;
-				}
+				HomeState.GoToHomeState(null, false);
 			}
-			HomeState.GoToHomeState(null, false);
 		}
 
 		private void OnEditButtonClicked(UXButton button)
@@ -3971,38 +3860,40 @@ namespace StaRTS.Main.Views.UX
 
 		private BuildingType GetBuildingType(BuildingTypeVO building, bool simpleInfoScreen)
 		{
-			BuildingType result = building.Type;
+			BuildingType buildingType = building.Type;
 			if (simpleInfoScreen)
 			{
-				switch (result)
+				BuildingType buildingType2 = buildingType;
+				switch (buildingType2)
 				{
 				case BuildingType.Barracks:
 				case BuildingType.Factory:
 				case BuildingType.FleetCommand:
 				case BuildingType.Squad:
 				case BuildingType.Starport:
-					break;
+					goto IL_55;
 				case BuildingType.HeroMobilizer:
 				case BuildingType.ChampionPlatform:
 				case BuildingType.Housing:
-					return result;
-				default:
-					switch (result)
+					IL_37:
+					switch (buildingType2)
 					{
 					case BuildingType.Cantina:
 					case BuildingType.NavigationCenter:
 					case BuildingType.Armory:
-						break;
+						goto IL_55;
 					case BuildingType.ScoutTower:
-						return result;
+						return buildingType;
 					default:
-						return result;
+						return buildingType;
 					}
 					break;
 				}
-				result = BuildingType.Invalid;
+				goto IL_37;
+				IL_55:
+				buildingType = BuildingType.Invalid;
 			}
-			return result;
+			return buildingType;
 		}
 
 		private void OnDisabledContextButtonClicked(UXButton button)
@@ -4024,7 +3915,7 @@ namespace StaRTS.Main.Views.UX
 				{
 					text = buttonHighlight.Visible.ToString();
 				}
-				Service.Get<StaRTSLogger>().ErrorFormat("HUD.OnContextButtonClicked: SelectedBuilding is null. button.Tag is {0}. MiscElementManager.buttonHighlight visiblity is {1}.", new object[]
+				Service.Get<Logger>().ErrorFormat("HUD.OnContextButtonClicked: SelectedBuilding is null. button.Tag is {0}. MiscElementManager.buttonHighlight visiblity is {1}.", new object[]
 				{
 					button.Tag,
 					text
@@ -4037,537 +3928,225 @@ namespace StaRTS.Main.Views.UX
 			BuildingType buildingType2 = this.GetBuildingType(buildingType, simpleInfoScreen);
 			ScreenBase screenBase = null;
 			string text2 = button.Tag as string;
-			uint num = <PrivateImplementationDetails>.ComputeStringHash(text2);
-			if (num <= 2210818019u)
+			string text3 = text2;
+			switch (text3)
 			{
-				if (num <= 805458841u)
+			case "Info":
+				switch (buildingType2)
 				{
-					if (num <= 261807733u)
-					{
-						if (num <= 127659816u)
-						{
-							if (num != 77955010u)
-							{
-								if (num != 127659816u)
-								{
-									goto IL_B27;
-								}
-								if (!(text2 == "NextRaid"))
-								{
-									goto IL_B27;
-								}
-							}
-							else
-							{
-								if (!(text2 == "Clear"))
-								{
-									goto IL_B27;
-								}
-								Service.Get<BuildingController>().StartClearingSelectedBuilding();
-								goto IL_B27;
-							}
-						}
-						else if (num != 222444311u)
-						{
-							if (num != 261807733u)
-							{
-								goto IL_B27;
-							}
-							if (!(text2 == "Credits"))
-							{
-								goto IL_B27;
-							}
-							goto IL_949;
-						}
-						else
-						{
-							if (!(text2 == "Upgrade"))
-							{
-								goto IL_B27;
-							}
-							switch (buildingType.Type)
-							{
-							case BuildingType.HQ:
-								screenBase = new HQUpgradeScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Barracks:
-							case BuildingType.Factory:
-							case BuildingType.FleetCommand:
-							case BuildingType.HeroMobilizer:
-							case BuildingType.Cantina:
-								screenBase = new TrainingUpgradeScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.ChampionPlatform:
-								screenBase = new ChampionInfoScreen(selectedBuilding, Service.Get<ChampionController>().FindChampionTypeIfPlatform(buildingType), true);
-								goto IL_B27;
-							case BuildingType.Squad:
-								screenBase = new SquadUpgradeScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Starport:
-								screenBase = new StarportUpgradeScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Wall:
-								screenBase = new WallUpgradeScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Turret:
-								screenBase = new TurretUpgradeScreen(selectedBuilding, false);
-								goto IL_B27;
-							case BuildingType.Resource:
-								screenBase = new GeneratorUpgradeScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Storage:
-								screenBase = new StorageUpgradeScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.ShieldGenerator:
-								screenBase = new ShieldGeneratorUpgradeScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Trap:
-								screenBase = new TrapInfoScreen(selectedBuilding, true);
-								goto IL_B27;
-							case BuildingType.NavigationCenter:
-								screenBase = new NavigationCenterUpgradeScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Armory:
-								screenBase = new ArmoryUpgradeScreen(selectedBuilding, true);
-								goto IL_B27;
-							}
-							screenBase = new BuildingInfoScreen(selectedBuilding, true);
-							goto IL_B27;
-						}
-					}
-					else if (num <= 504525065u)
-					{
-						if (num != 449344883u)
-						{
-							if (num != 504525065u)
-							{
-								goto IL_B27;
-							}
-							if (!(text2 == "Train"))
-							{
-								goto IL_B27;
-							}
-							goto IL_78D;
-						}
-						else
-						{
-							if (!(text2 == "Contraband"))
-							{
-								goto IL_B27;
-							}
-							goto IL_949;
-						}
-					}
-					else if (num != 686057250u)
-					{
-						if (num != 805458841u)
-						{
-							goto IL_B27;
-						}
-						if (!(text2 == "Join"))
-						{
-							goto IL_B27;
-						}
-						this.OpenJoinSquadPanel();
-						goto IL_B27;
-					}
-					else
-					{
-						if (!(text2 == "Stash"))
-						{
-							goto IL_B27;
-						}
-						BuildingController buildingController = Service.Get<BuildingController>();
-						Service.Get<BuildingController>().EnsureLoweredLiftedBuilding();
-						List<string> list = new List<string>();
-						if (buildingController.NumSelectedBuildings > 1)
-						{
-							List<Entity> additionalSelectedBuildings = buildingController.GetAdditionalSelectedBuildings();
-							int i = 0;
-							int count = additionalSelectedBuildings.Count;
-							while (i < count)
-							{
-								Entity entity = additionalSelectedBuildings[i];
-								string uid = entity.Get<BuildingComponent>().BuildingType.Uid;
-								if (!list.Contains(uid))
-								{
-									list.Add(uid);
-								}
-								Service.Get<BaseLayoutToolController>().StashBuilding(additionalSelectedBuildings[i]);
-								i++;
-							}
-						}
-						Service.Get<BaseLayoutToolController>().StashBuilding(selectedBuilding);
-						string uid2 = selectedBuilding.Get<BuildingComponent>().BuildingTO.Uid;
-						if (!list.Contains(uid2))
-						{
-							list.Add(uid2);
-						}
-						int j = 0;
-						int count2 = list.Count;
-						while (j < count2)
-						{
-							this.BaseLayoutToolView.RefreshStashedBuildingCount(list[j]);
-							j++;
-						}
-						Service.Get<BuildingController>().EnsureDeselectSelectedBuilding();
-						goto IL_B27;
-					}
+				case BuildingType.Barracks:
+				case BuildingType.Factory:
+				case BuildingType.Cantina:
+					screenBase = new TrainingInfoScreen(selectedBuilding);
+					goto IL_44A;
+				case BuildingType.FleetCommand:
+					screenBase = new StarshipInfoScreen(selectedBuilding);
+					goto IL_44A;
+				case BuildingType.ChampionPlatform:
+					screenBase = new ChampionInfoScreen(selectedBuilding, Service.Get<ChampionController>().FindChampionTypeIfPlatform(buildingType), false);
+					goto IL_44A;
+				case BuildingType.Squad:
+					this.OpenSquadBuildingInfoScreen(selectedBuilding);
+					goto IL_44A;
+				case BuildingType.Starport:
+					screenBase = new StarportInfoScreen(selectedBuilding);
+					goto IL_44A;
+				case BuildingType.Turret:
+					screenBase = new TurretInfoScreen(selectedBuilding);
+					goto IL_44A;
+				case BuildingType.Resource:
+					screenBase = new GeneratorInfoScreen(selectedBuilding);
+					goto IL_44A;
+				case BuildingType.Storage:
+					screenBase = new StorageInfoScreen(selectedBuilding);
+					goto IL_44A;
+				case BuildingType.ShieldGenerator:
+					screenBase = new ShieldGeneratorInfoScreen(selectedBuilding);
+					goto IL_44A;
+				case BuildingType.Trap:
+					screenBase = new TrapInfoScreen(selectedBuilding, false);
+					goto IL_44A;
+				case BuildingType.NavigationCenter:
+					screenBase = new NavigationCenterInfoScreen(selectedBuilding);
+					goto IL_44A;
+				case BuildingType.Armory:
+					screenBase = new ArmoryUpgradeScreen(selectedBuilding, false);
+					goto IL_44A;
 				}
-				else if (num <= 1444466900u)
-				{
-					if (num <= 1254971714u)
-					{
-						if (num != 900713019u)
-						{
-							if (num != 1254971714u)
-							{
-								goto IL_B27;
-							}
-							if (!(text2 == "RotateWall"))
-							{
-								goto IL_B27;
-							}
-							this.RotateCurrentSelection(selectedBuilding);
-							goto IL_B27;
-						}
-						else
-						{
-							if (!(text2 == "Cancel"))
-							{
-								goto IL_B27;
-							}
-							this.CancelContractOnBuilding(selectedBuilding);
-							goto IL_B27;
-						}
-					}
-					else if (num != 1389223987u)
-					{
-						if (num != 1444466900u)
-						{
-							goto IL_B27;
-						}
-						if (!(text2 == "Repair"))
-						{
-							goto IL_B27;
-						}
-						Service.Get<ChampionController>().StartChampionRepair((SmartEntity)selectedBuilding);
-						goto IL_B27;
-					}
-					else
-					{
-						if (!(text2 == "Trap_RearmAll"))
-						{
-							goto IL_B27;
-						}
-						TrapUtils.RearmAllTraps();
-						goto IL_B27;
-					}
-				}
-				else if (num <= 2045844646u)
-				{
-					if (num != 1759713184u)
-					{
-						if (num != 2045844646u)
-						{
-							goto IL_B27;
-						}
-						if (!(text2 == "Navigate"))
-						{
-							goto IL_B27;
-						}
-						Service.Get<GalaxyViewController>().GoToGalaxyView();
-						Service.Get<EventManager>().SendEvent(EventId.GalaxyOpenByContextButton, null);
-						goto IL_B27;
-					}
-					else
-					{
-						if (!(text2 == "Trap_Rearm"))
-						{
-							goto IL_B27;
-						}
-						TrapUtils.RearmSingleTrap(selectedBuilding);
-						goto IL_B27;
-					}
-				}
-				else if (num != 2078673637u)
-				{
-					if (num != 2133600820u)
-					{
-						if (num != 2210818019u)
-						{
-							goto IL_B27;
-						}
-						if (!(text2 == "SelectRow"))
-						{
-							goto IL_B27;
-						}
-						this.SelectWallGroup(selectedBuilding);
-						goto IL_B27;
-					}
-					else
-					{
-						if (!(text2 == "Move"))
-						{
-							goto IL_B27;
-						}
-						Service.Get<EventManager>().SendEvent(EventId.UserWantedEditBaseState, false);
-						goto IL_B27;
-					}
-				}
-				else if (!(text2 == "RaidBriefing"))
-				{
-					goto IL_B27;
-				}
-				Service.Get<BILoggingController>().TrackGameAction("UI_raid_briefing", "open", "context", "", 1);
-				Service.Get<RaidDefenseController>().ShowRaidInfo();
-				goto IL_B27;
-			}
-			if (num <= 3094495885u)
-			{
-				if (num <= 2627229077u)
-				{
-					if (num <= 2464763265u)
-					{
-						if (num != 2413946405u)
-						{
-							if (num != 2464763265u)
-							{
-								goto IL_B27;
-							}
-							if (!(text2 == "Upgrade_Troops"))
-							{
-								goto IL_B27;
-							}
-							screenBase = new TroopUpgradeScreen(selectedBuilding);
-							goto IL_B27;
-						}
-						else
-						{
-							if (!(text2 == "Info"))
-							{
-								goto IL_B27;
-							}
-							switch (buildingType2)
-							{
-							case BuildingType.Barracks:
-							case BuildingType.Factory:
-							case BuildingType.Cantina:
-								screenBase = new TrainingInfoScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.FleetCommand:
-								screenBase = new StarshipInfoScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.ChampionPlatform:
-								screenBase = new ChampionInfoScreen(selectedBuilding, Service.Get<ChampionController>().FindChampionTypeIfPlatform(buildingType), false);
-								goto IL_B27;
-							case BuildingType.Squad:
-								this.OpenSquadBuildingInfoScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Starport:
-								screenBase = new StarportInfoScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Turret:
-								screenBase = new TurretInfoScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Resource:
-								screenBase = new GeneratorInfoScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Storage:
-								screenBase = new StorageInfoScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.ShieldGenerator:
-								screenBase = new ShieldGeneratorInfoScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Trap:
-								screenBase = new TrapInfoScreen(selectedBuilding, false);
-								goto IL_B27;
-							case BuildingType.NavigationCenter:
-								screenBase = new NavigationCenterInfoScreen(selectedBuilding);
-								goto IL_B27;
-							case BuildingType.Armory:
-								screenBase = new ArmoryUpgradeScreen(selectedBuilding, false);
-								goto IL_B27;
-							}
-							screenBase = new BuildingInfoScreen(selectedBuilding);
-							goto IL_B27;
-						}
-					}
-					else if (num != 2509665603u)
-					{
-						if (num != 2627229077u)
-						{
-							goto IL_B27;
-						}
-						if (!(text2 == "RequestTroopsPaid"))
-						{
-							goto IL_B27;
-						}
-					}
-					else
-					{
-						if (!(text2 == "Build"))
-						{
-							goto IL_B27;
-						}
-						goto IL_78D;
-					}
-				}
-				else if (num <= 2919601252u)
-				{
-					if (num != 2877021875u)
-					{
-						if (num != 2919601252u)
-						{
-							goto IL_B27;
-						}
-						if (!(text2 == "Upgrade_Defense"))
-						{
-							goto IL_B27;
-						}
-						goto IL_B27;
-					}
-					else if (!(text2 == "RequestTroops"))
-					{
-						goto IL_B27;
-					}
-				}
-				else if (num != 2922987018u)
-				{
-					if (num != 3094495885u)
-					{
-						goto IL_B27;
-					}
-					if (!(text2 == "RaidDefend"))
-					{
-						goto IL_B27;
-					}
-					Service.Get<BILoggingController>().TrackGameAction("UI_raid", "start", "context", "", 1);
-					Service.Get<RaidDefenseController>().StartCurrentRaidDefense();
-					goto IL_B27;
-				}
-				else
-				{
-					if (!(text2 == "Mobilize"))
-					{
-						goto IL_B27;
-					}
-					screenBase = new TroopTrainingScreen(selectedBuilding);
-					goto IL_B27;
-				}
-				Service.Get<SquadController>().ShowTroopRequestScreen(null, false);
-				goto IL_B27;
-			}
-			if (num <= 3553418121u)
-			{
-				if (num <= 3249042673u)
-				{
-					if (num != 3170576990u)
-					{
-						if (num != 3249042673u)
-						{
-							goto IL_B27;
-						}
-						if (!(text2 == "Finish_Now"))
-						{
-							goto IL_B27;
-						}
-						this.MaybeShowFinishContractScreen(selectedBuilding);
-						goto IL_B27;
-					}
-					else
-					{
-						if (!(text2 == "Buy_Droid"))
-						{
-							goto IL_B27;
-						}
-						this.ShowDroidPurchaseScreen();
-						goto IL_B27;
-					}
-				}
-				else if (num != 3369262303u)
-				{
-					if (num != 3553418121u)
-					{
-						goto IL_B27;
-					}
-					if (!(text2 == "Materials"))
-					{
-						goto IL_B27;
-					}
-					goto IL_949;
-				}
-				else
-				{
-					if (!(text2 == "Inventory"))
-					{
-						goto IL_B27;
-					}
-					screenBase = this.CreatePrizeInventoryScreen();
-					goto IL_B27;
-				}
-			}
-			else if (num <= 3730279344u)
-			{
-				if (num != 3705035655u)
-				{
-					if (num != 3730279344u)
-					{
-						goto IL_B27;
-					}
-					if (!(text2 == "Commission"))
-					{
-						goto IL_B27;
-					}
-					screenBase = new TroopTrainingScreen(selectedBuilding);
-					goto IL_B27;
-				}
-				else if (!(text2 == "Hire"))
-				{
-					goto IL_B27;
-				}
-			}
-			else if (num != 3843674990u)
-			{
-				if (num != 4212025207u)
-				{
-					if (num != 4219141457u)
-					{
-						goto IL_B27;
-					}
-					if (!(text2 == "Squad"))
-					{
-						goto IL_B27;
-					}
-					this.SlideSquadScreenOpen();
-					goto IL_B27;
-				}
-				else
-				{
-					if (!(text2 == "Armory"))
-					{
-						goto IL_B27;
-					}
-					screenBase = new ArmoryScreen(selectedBuilding);
-					goto IL_B27;
-				}
-			}
-			else
-			{
-				if (!(text2 == "Swap"))
-				{
-					goto IL_B27;
-				}
+				screenBase = new BuildingInfoScreen(selectedBuilding);
+				IL_44A:
+				break;
+			case "Inventory":
+				screenBase = this.CreatePrizeInventoryScreen();
+				break;
+			case "Swap":
 				screenBase = new TurretUpgradeScreen(selectedBuilding, true);
-				Service.Get<BILoggingController>().TrackGameAction("UI_base", "turret_swap", buildingType.Uid + "|" + this.player.PlanetId, "", 1);
-				goto IL_B27;
+				Service.Get<BILoggingController>().TrackGameAction("UI_base", "turret_swap", buildingType.Uid + "|" + this.player.PlanetId, string.Empty, 1);
+				break;
+			case "Move":
+				Service.Get<EventManager>().SendEvent(EventId.UserWantedEditBaseState, false);
+				break;
+			case "Train":
+			case "Build":
+			case "Hire":
+				screenBase = new TroopTrainingScreen(selectedBuilding);
+				break;
+			case "Armory":
+				screenBase = new ArmoryScreen(selectedBuilding);
+				break;
+			case "Commission":
+				screenBase = new TroopTrainingScreen(selectedBuilding);
+				break;
+			case "Mobilize":
+				screenBase = new TroopTrainingScreen(selectedBuilding);
+				break;
+			case "Repair":
+				Service.Get<ChampionController>().StartChampionRepair((SmartEntity)selectedBuilding);
+				break;
+			case "Trap_RearmAll":
+				TrapUtils.RearmAllTraps();
+				break;
+			case "Trap_Rearm":
+				TrapUtils.RearmSingleTrap(selectedBuilding);
+				break;
+			case "Upgrade":
+				switch (buildingType.Type)
+				{
+				case BuildingType.HQ:
+					screenBase = new HQUpgradeScreen(selectedBuilding);
+					goto IL_65A;
+				case BuildingType.Barracks:
+				case BuildingType.Factory:
+				case BuildingType.FleetCommand:
+				case BuildingType.HeroMobilizer:
+				case BuildingType.Cantina:
+					screenBase = new TrainingUpgradeScreen(selectedBuilding);
+					goto IL_65A;
+				case BuildingType.ChampionPlatform:
+					screenBase = new ChampionInfoScreen(selectedBuilding, Service.Get<ChampionController>().FindChampionTypeIfPlatform(buildingType), true);
+					goto IL_65A;
+				case BuildingType.Squad:
+					screenBase = new SquadUpgradeScreen(selectedBuilding);
+					goto IL_65A;
+				case BuildingType.Starport:
+					screenBase = new StarportUpgradeScreen(selectedBuilding);
+					goto IL_65A;
+				case BuildingType.Wall:
+					screenBase = new WallUpgradeScreen(selectedBuilding);
+					goto IL_65A;
+				case BuildingType.Turret:
+					screenBase = new TurretUpgradeScreen(selectedBuilding, false);
+					goto IL_65A;
+				case BuildingType.Resource:
+					screenBase = new GeneratorUpgradeScreen(selectedBuilding);
+					goto IL_65A;
+				case BuildingType.Storage:
+					screenBase = new StorageUpgradeScreen(selectedBuilding);
+					goto IL_65A;
+				case BuildingType.ShieldGenerator:
+					screenBase = new ShieldGeneratorUpgradeScreen(selectedBuilding);
+					goto IL_65A;
+				case BuildingType.Trap:
+					screenBase = new TrapInfoScreen(selectedBuilding, true);
+					goto IL_65A;
+				case BuildingType.NavigationCenter:
+					screenBase = new NavigationCenterUpgradeScreen(selectedBuilding);
+					goto IL_65A;
+				case BuildingType.Armory:
+					screenBase = new ArmoryUpgradeScreen(selectedBuilding, true);
+					goto IL_65A;
+				}
+				screenBase = new BuildingInfoScreen(selectedBuilding, true);
+				IL_65A:
+				break;
+			case "Upgrade_Troops":
+				screenBase = new TroopUpgradeScreen(selectedBuilding);
+				break;
+			case "RequestTroops":
+			case "RequestTroopsPaid":
+				Service.Get<SquadController>().ShowTroopRequestScreen(null, false);
+				break;
+			case "Credits":
+			case "Materials":
+			case "Contraband":
+				Service.Get<ICurrencyController>().CollectCurrency(selectedBuilding);
+				break;
+			case "Cancel":
+				this.CancelContractOnBuilding(selectedBuilding);
+				break;
+			case "Buy_Droid":
+				this.ShowDroidPurchaseScreen();
+				break;
+			case "Finish_Now":
+				this.MaybeShowFinishContractScreen(selectedBuilding);
+				break;
+			case "Clear":
+				Service.Get<BuildingController>().StartClearingSelectedBuilding();
+				break;
+			case "Squad":
+				this.SlideSquadScreenOpen();
+				break;
+			case "Join":
+				this.OpenJoinSquadPanel();
+				break;
+			case "SelectRow":
+				this.SelectWallGroup(selectedBuilding);
+				break;
+			case "RotateWall":
+				this.RotateCurrentSelection(selectedBuilding);
+				break;
+			case "RaidDefend":
+				Service.Get<BILoggingController>().TrackGameAction("UI_raid", "start", "context", string.Empty, 1);
+				Service.Get<RaidDefenseController>().StartCurrentRaidDefense();
+				break;
+			case "NextRaid":
+			case "RaidBriefing":
+				Service.Get<BILoggingController>().TrackGameAction("UI_raid_briefing", "open", "context", string.Empty, 1);
+				Service.Get<RaidDefenseController>().ShowRaidInfo();
+				break;
+			case "Navigate":
+				Service.Get<GalaxyViewController>().GoToGalaxyView();
+				Service.Get<EventManager>().SendEvent(EventId.GalaxyOpenByContextButton, null);
+				break;
+			case "Stash":
+			{
+				BuildingController buildingController = Service.Get<BuildingController>();
+				Service.Get<BuildingController>().EnsureLoweredLiftedBuilding();
+				List<string> list = new List<string>();
+				if (buildingController.NumSelectedBuildings > 1)
+				{
+					List<Entity> additionalSelectedBuildings = buildingController.GetAdditionalSelectedBuildings();
+					int i = 0;
+					int count = additionalSelectedBuildings.Count;
+					while (i < count)
+					{
+						Entity entity = additionalSelectedBuildings[i];
+						string uid = entity.Get<BuildingComponent>().BuildingType.Uid;
+						if (!list.Contains(uid))
+						{
+							list.Add(uid);
+						}
+						Service.Get<BaseLayoutToolController>().StashBuilding(additionalSelectedBuildings[i]);
+						i++;
+					}
+				}
+				Service.Get<BaseLayoutToolController>().StashBuilding(selectedBuilding);
+				string uid2 = selectedBuilding.Get<BuildingComponent>().BuildingTO.Uid;
+				if (!list.Contains(uid2))
+				{
+					list.Add(uid2);
+				}
+				int j = 0;
+				int count2 = list.Count;
+				while (j < count2)
+				{
+					this.BaseLayoutToolView.RefreshStashedBuildingCount(list[j]);
+					j++;
+				}
+				Service.Get<BuildingController>().EnsureDeselectSelectedBuilding();
+				break;
 			}
-			IL_78D:
-			screenBase = new TroopTrainingScreen(selectedBuilding);
-			goto IL_B27;
-			IL_949:
-			Service.Get<ICurrencyController>().CollectCurrency(selectedBuilding);
-			IL_B27:
+			}
 			Service.Get<EventManager>().SendEvent(EventId.ContextButtonClicked, button.Tag);
 			if (screenBase != null)
 			{
@@ -4646,7 +4225,7 @@ namespace StaRTS.Main.Views.UX
 			YesNoScreen.ShowModal(LangUtils.GetBuildingVerb(BuildingType.DroidHut), this.lang.Get("PURCHASE_DROID", new object[]
 			{
 				GameUtils.DroidCrystalCost(this.player.CurrentDroidsAmount)
-			}), true, true, false, new OnScreenModalResult(this.OnBuyDroid), null, false);
+			}), true, true, false, new OnScreenModalResult(this.OnBuyDroid), null);
 		}
 
 		private void OnBuyDroid(object result, object cookie)
@@ -4684,9 +4263,11 @@ namespace StaRTS.Main.Views.UX
 			if (crystalCostToFinishContract >= GameConstants.CRYSTAL_SPEND_WARNING_MINIMUM)
 			{
 				FinishNowScreen.ShowModal(selectedBuilding, new OnScreenModalResult(this.FinishContractOnBuilding), null);
-				return;
 			}
-			this.FinishContractOnBuilding(selectedBuilding, null);
+			else
+			{
+				this.FinishContractOnBuilding(selectedBuilding, null);
+			}
 		}
 
 		private void FinishContractOnBuilding(object result, object cookie)
@@ -4725,12 +4306,12 @@ namespace StaRTS.Main.Views.UX
 				if (buildingType != null)
 				{
 					int currencyAmount = -crystalCostToFinishContract;
+					string itemType = string.Empty;
+					string itemId = string.Empty;
 					int itemCount = 1;
-					string context = "";
+					string type = string.Empty;
+					string context = string.Empty;
 					IDataController dataController = Service.Get<IDataController>();
-					string type;
-					string itemType;
-					string itemId;
 					switch (contract.DeliveryType)
 					{
 					case DeliveryType.UpgradeTroop:
@@ -4763,7 +4344,7 @@ namespace StaRTS.Main.Views.UX
 					default:
 						itemType = StringUtils.ToLowerCaseUnderscoreSeperated(buildingType.Type.ToString());
 						itemId = buildingType.BuildingID;
-						type = (this.player.CampaignProgress.FueInProgress ? "FUE_speed_up_building" : "speed_up_building");
+						type = ((!this.player.CampaignProgress.FueInProgress) ? "speed_up_building" : "FUE_speed_up_building");
 						break;
 					}
 					string subType = "consumable";
@@ -4780,7 +4361,7 @@ namespace StaRTS.Main.Views.UX
 		private bool AttemptToShowFactionFlipInfo()
 		{
 			bool result = false;
-			if (GameUtils.HasUserFactionFlipped(Service.Get<CurrentPlayer>()) && Service.Get<CurrentPlayer>().NumIdentities > 1)
+			if (GameUtils.HasUserFactionFlipped(Service.Get<CurrentPlayer>()))
 			{
 				ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
 				if (serverPlayerPrefs.GetPref(ServerPref.FactionFlippingViewed) == "1")
@@ -4803,17 +4384,15 @@ namespace StaRTS.Main.Views.UX
 				if (!this.AttemptToShowFactionFlipInfo())
 				{
 					Service.Get<UXController>().MiscElementsManager.ShowHudFactionIconTooltip(button);
-					return;
 				}
 			}
-			else if (GameUtils.HasUserFactionFlipped(Service.Get<CurrentPlayer>()) && Service.Get<CurrentPlayer>().NumIdentities > 1)
+			else if (GameUtils.HasUserFactionFlipped(Service.Get<CurrentPlayer>()))
 			{
 				IState currentState = Service.Get<GameStateMachine>().CurrentState;
 				if (currentState is HomeState || currentState is EditBaseState)
 				{
 					Service.Get<ScreenController>().AddScreen(new FactionFlipScreen());
 					Service.Get<EventManager>().SendEvent(EventId.UIFactionFlipOpened, "hud");
-					return;
 				}
 			}
 			else
@@ -4944,7 +4523,7 @@ namespace StaRTS.Main.Views.UX
 			ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
 			string pref = serverPlayerPrefs.GetPref(ServerPref.SquadIntroViewed);
 			bool flag = pref == "1";
-			Service.Get<ScreenController>().AddScreen((Service.Get<SquadController>().StateManager.GetCurrentSquad() != null | flag) ? new SquadBuildingScreen(building) : new SquadIntroScreen());
+			Service.Get<ScreenController>().AddScreen((Service.Get<SquadController>().StateManager.GetCurrentSquad() == null && !flag) ? new SquadIntroScreen() : new SquadBuildingScreen(building));
 			if (!flag)
 			{
 				serverPlayerPrefs.SetPref(ServerPref.SquadIntroViewed, "1");
@@ -4959,7 +4538,7 @@ namespace StaRTS.Main.Views.UX
 			if (GameConstants.SQUAD_INVITES_ENABLED && currentSquad == null && this.clansJewel != null)
 			{
 				List<SquadInvite> squadInvites = Service.Get<SquadController>().StateManager.SquadInvites;
-				this.clansJewel.Value = ((squadInvites != null) ? squadInvites.Count : 0);
+				this.clansJewel.Value = ((squadInvites == null) ? 0 : squadInvites.Count);
 			}
 		}
 
@@ -4987,18 +4566,12 @@ namespace StaRTS.Main.Views.UX
 
 		private void UpdateStoreJewel()
 		{
-			if (this.leiJewel != null)
-			{
-				this.leiJewel.Value = 0;
-			}
+			this.leiJewel.Value = 0;
 			LimitedEditionItemController limitedEditionItemController = Service.Get<LimitedEditionItemController>();
 			if (limitedEditionItemController.ValidLEIs.Count > 0)
 			{
 				this.HideStoreJewel();
-				if (this.leiJewel != null)
-				{
-					this.leiJewel.Text = this.lang.Get("LIMITED_EDITION_JEWEL", new object[0]);
-				}
+				this.leiJewel.Text = this.lang.Get("LIMITED_EDITION_JEWEL", new object[0]);
 				return;
 			}
 			if (this.storeJewel != null)
@@ -5045,7 +4618,7 @@ namespace StaRTS.Main.Views.UX
 					flag = (Service.Get<BuildingLookupController>().GetHighestLevelHQ() >= GameConstants.WAR_PARTICIPANT_MIN_LEVEL);
 				}
 				int pref = Service.Get<SharedPlayerPrefs>().GetPref<int>("WarTut");
-				element4.Visible = (pref < 1 & flag);
+				element4.Visible = (pref < 1 && flag);
 				this.warButton.Enabled = true;
 				element.Visible = false;
 				element2.Visible = false;
@@ -5082,7 +4655,7 @@ namespace StaRTS.Main.Views.UX
 					id = "WAR_BUTTON_PREP_PHASE";
 					break;
 				case SquadWarStatusType.PhaseAction:
-					this.warJewel.Value = ((currentParticipantState != null) ? currentParticipantState.TurnsLeft : 0);
+					this.warJewel.Value = ((currentParticipantState == null) ? 0 : currentParticipantState.TurnsLeft);
 					element.Visible = true;
 					id = "WAR_BUTTON_ACTION_PHASE";
 					break;
@@ -5091,7 +4664,7 @@ namespace StaRTS.Main.Views.UX
 					id = "WAR_BUTTON_ACTION_PHASE";
 					break;
 				case SquadWarStatusType.PhaseCooldown:
-					this.warPrepJewel.Text = ((warManager.GetCurrentPlayerCurrentWarReward() != null) ? this.lang.Get("WAR_EXCLAMATION", new object[0]) : "");
+					this.warPrepJewel.Text = ((warManager.GetCurrentPlayerCurrentWarReward() == null) ? string.Empty : this.lang.Get("WAR_EXCLAMATION", new object[0]));
 					element3.Visible = true;
 					id = "WAR_BUTTON_COOLDOWN_PHASE";
 					break;
@@ -5125,9 +4698,11 @@ namespace StaRTS.Main.Views.UX
 				{
 					this.SelectCheckbox(deployableTroopControl);
 					Service.Get<DeployerController>().EnterTroopPlacementMode(troopType);
-					return;
 				}
-				this.OnDisabledDeployableControlSelected(deployableTroopControl, "TROOP_INVALID");
+				else
+				{
+					this.OnDisabledDeployableControlSelected(deployableTroopControl, "TROOP_INVALID");
+				}
 			}
 		}
 
@@ -5146,14 +4721,15 @@ namespace StaRTS.Main.Views.UX
 				{
 					this.SelectCheckbox(deployableTroopControl);
 					Service.Get<DeployerController>().EnterSpecialAttackPlacementMode(specialAttackType);
-					return;
 				}
-				if (deployableTroopControl.DisableDueToBuildingDestruction)
+				else if (deployableTroopControl.DisableDueToBuildingDestruction)
 				{
 					this.OnDisabledDeployableControlSelected(deployableTroopControl, "STARSHIP_TRAINER_DESTROYED");
-					return;
 				}
-				this.OnDisabledDeployableControlSelected(deployableTroopControl, "TROOP_INVALID");
+				else
+				{
+					this.OnDisabledDeployableControlSelected(deployableTroopControl, "TROOP_INVALID");
+				}
 			}
 		}
 
@@ -5174,11 +4750,12 @@ namespace StaRTS.Main.Views.UX
 					{
 						deployableTroopControl.UseHeroAbility();
 						Service.Get<TroopAbilityController>().UserActivateAbility(deployableTroopControl.HeroEntityID);
-						return;
 					}
-					this.SelectCheckbox(deployableTroopControl);
-					Service.Get<DeployerController>().EnterHeroDeployMode(troopTypeVO);
-					return;
+					else
+					{
+						this.SelectCheckbox(deployableTroopControl);
+						Service.Get<DeployerController>().EnterHeroDeployMode(troopTypeVO);
+					}
 				}
 				else
 				{
@@ -5228,14 +4805,15 @@ namespace StaRTS.Main.Views.UX
 				{
 					this.SelectCheckbox(deployableTroopControl);
 					Service.Get<DeployerController>().EnterChampionDeployMode(troopType);
-					return;
 				}
-				if (deployableTroopControl.DisableDueToBuildingDestruction)
+				else if (deployableTroopControl.DisableDueToBuildingDestruction)
 				{
 					this.OnDisabledDeployableControlSelected(deployableTroopControl, "SQUAD_CENTER_DESTROYED");
-					return;
 				}
-				this.OnDisabledDeployableControlSelected(deployableTroopControl, "TROOP_INVALID");
+				else
+				{
+					this.OnDisabledDeployableControlSelected(deployableTroopControl, "TROOP_INVALID");
+				}
 			}
 		}
 
@@ -5252,9 +4830,11 @@ namespace StaRTS.Main.Views.UX
 				{
 					this.SelectCheckbox(deployableTroopControl);
 					Service.Get<DeployerController>().EnterSquadTroopPlacementMode();
-					return;
 				}
-				this.OnDisabledDeployableControlSelected(deployableTroopControl, "TROOP_INVALID");
+				else
+				{
+					this.OnDisabledDeployableControlSelected(deployableTroopControl, "TROOP_INVALID");
+				}
 			}
 		}
 
@@ -5352,1069 +4932,6 @@ namespace StaRTS.Main.Views.UX
 		public bool AreBattleStarsVisible()
 		{
 			return this.damageStarGroup.Visible;
-		}
-
-		protected internal HUD(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AddContextButton(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AddContextButton(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AddContextButton(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), Marshal.PtrToStringUni(*(IntPtr*)(args + 6)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).AddContextButton(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), Marshal.PtrToStringUni(*(IntPtr*)(args + 6)), Marshal.PtrToStringUni(*(IntPtr*)(args + 7))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AddContextButtons((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0, *(sbyte*)(args + 5) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AddContextButtonWithTimer(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), (GetTimerSecondsDelegate)GCHandledObjects.GCHandleToObject(args[6]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AddCustomContextButton(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AddFinishContextButton((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AddHQInventoryContextButtonIfProper();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AddSquadContextButtons((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).AnimateControls(*(sbyte*)args != 0, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).AreBattleStarsVisible());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).AttemptToShowFactionFlipInfo());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).CancelContractOnBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).CleanupDeployableTroops();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ConfigureControls((HudConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).CreateDeployableControls((Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]), (UXCheckboxSelectedDelegate)GCHandledObjects.GCHandleToObject(args[2]), (CurrentBattle)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).CreatePrizeInventoryScreen());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).CreateSquadDeployableControl();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).CreateSquadScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).DeselectAllDeployableControlers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).DestroySquadScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).DisableHeroDeploys();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).DisableSpecialAttacks();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).DisableSquadDeploy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).DisableWarAttacksUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).EnableNextBattleButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).FinishContractOnBuilding(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).FullyDisableDeployableControls(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).FullyEnableDeployablControls();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).BaseLayoutToolView);
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).HiddenInQueue);
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).ReadyToToggleVisiblity);
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).Visible);
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).GetBadgeCount());
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).GetBuildingType((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).GetContextButtonFromPool((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (GameObject)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).GetDamageStarAnchor());
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).GetDamageStarAnimator());
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).GetDamageStarLabel());
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).HideLogJewel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).HideLootElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).HideStoreJewel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitCountdownGroup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitDamageGroup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitGrids();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitialNavigationCenterPlanetSelect((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitLoot();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitNeighborGroup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitReplayControls();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitSliders();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).InitTournamentRatingGroup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).IsAnimationWhiteListed((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).IsElementProvidedTroop((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).IsSquadScreenOpenAndCloseable());
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).IsSquadScreenOpenOrOpeningAndCloseable());
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).LoadFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).LoadSuccess(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).MaybeShowFinishContractScreen((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnBaseScoreButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnBattleButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnBuyDroid(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnCancelModalResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnChampionCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnChampionDeployed((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnContextButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnCrystalButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnDisabledContextButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnDisabledDeployableControlSelected((DeployableTroopControl)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnDroidButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnEditButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnEndBattleButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnHeroCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnHeroDeployed((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnHolonetButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnHomeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnLeaderboardButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnLogButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnNextBattleButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnOpponentBuffsButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnPerformanceDeviceMemUsage(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnPerformanceFPS(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnReplaySpeedChangeButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke87(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnSettingsButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke88(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnShieldButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke89(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnSpecialAttackCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke90(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnSpecialAttackDeployed((SpecialAttack)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke91(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnSpecialPromotionButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke92(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnSquadsButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke93(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnSquadTroopsCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke94(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnSquadTroopsDeployed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke95(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnSquadWarAttackResultCallback(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke96(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnStoreButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke97(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnTooltipButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke98(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnTroopCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke99(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnTroopPlaced((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke100(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke101(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke102(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnWarAttackClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke103(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnWarButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke104(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OnYourBuffsButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke105(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenBattleLog();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke106(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenConflictLeaderBoardWithPlanet(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke107(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenJoinSquadPanel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke108(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenJoinSquadPanelAfterDelay();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke109(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenLeaderBoard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke110(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenPlanetViewScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke111(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenPlanetViewScreen((CampaignScreenSection)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke112(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenSquadAdvancementScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke113(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenSquadBuildingInfoScreen((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke114(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).OpenSquadMessageScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke115(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).PrepForSquadScreenCreate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke116(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshAllResourceViews(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke117(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshBaseName();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke118(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshCurrentPlayerLevel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke119(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshFactionIconVisibility(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (GamePlayer)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke120(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshLoot();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke121(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshPlayerMedals();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke122(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshPlayerSocialInformation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke123(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshReplayTimerView(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke124(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshResourceView(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke125(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshTimerView(*(int*)args, *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke126(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke127(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ResetDamageStars();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke128(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).RotateCurrentSelection((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke129(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SelectCheckbox((DeployableTroopControl)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke130(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SelectWallGroup((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke131(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).BaseLayoutToolView = (HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke132(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).HiddenInQueue = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke133(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ReadyToToggleVisiblity = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke134(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).Visible = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke135(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SetCountdownTime(*(float*)args, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke136(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SetOpponentLevelVisibility(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke137(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SetSquadScreenAlwaysOnTop(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke138(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SetSquadScreenVisibility(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke139(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SetupDeployableTroops();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke140(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).ShouldDestroyOrHideHomeStateUI((IState)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke141(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUD)GCHandledObjects.GCHandleToObject(instance)).ShouldDisableContextButton(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4)));
-		}
-
-		public unsafe static long $Invoke142(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ShowContextButtons((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke143(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ShowCountdown(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke144(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ShowDroidPurchaseScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke145(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ShowLootElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke146(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ShowPromoButtonGlowEffect();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke147(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ShowReplayTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke148(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ShowScoutAttackFailureMessage((SquadWarScoutState)(*(int*)args), (CurrentBattle)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke149(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ShowScoutingUplinksAvailable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke150(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SlideSquadScreenClosed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke151(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SlideSquadScreenClosedInstantly();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke152(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).SlideSquadScreenOpen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke153(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ToggleContextButton((UXElement)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke154(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ToggleContextButton(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke155(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).ToggleExitEditModeButton(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke156(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).TogglePerformanceDisplay(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke157(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateChampionCount(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke158(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateContextTimerLabel((ContextButtonTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke159(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentReplaySpeedUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke160(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateDamageStars(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke161(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateDamageValue(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke162(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateDeployableCount(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke163(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateDeployInstructionLabel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke164(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateDroidCount();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke165(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateHeroCount(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke166(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateHolonetButtonVisibility(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke167(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateHolonetJewel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke168(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateLogJewel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke169(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateMedalsAvailable(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke170(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateProtectionTimeLabel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke171(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateSpecialAttackCount(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke172(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadJewelCount();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke173(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateStoreJewel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke174(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateTargetedBundleButtonVisibility();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke175(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateTargetedBundleViewTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke176(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateTournamentRatingBattleDelta(*(int*)args, *(int*)(args + 1), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke177(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateTroopCount(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke178(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateWarAttackState();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke179(long instance, long* args)
-		{
-			((HUD)GCHandledObjects.GCHandleToObject(instance)).UpdateWarButton();
-			return -1L;
 		}
 	}
 }

@@ -6,10 +6,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player.Misc
 {
@@ -86,11 +83,11 @@ namespace StaRTS.Main.Models.Player.Misc
 				{
 					if (dictionary2.ContainsKey("attackRating"))
 					{
-						attackRating = Convert.ToInt32(dictionary2["attackRating"], CultureInfo.InvariantCulture);
+						attackRating = Convert.ToInt32(dictionary2["attackRating"]);
 					}
 					if (dictionary2.ContainsKey("defenseRating"))
 					{
-						defenseRating = Convert.ToInt32(dictionary2["defenseRating"], CultureInfo.InvariantCulture);
+						defenseRating = Convert.ToInt32(dictionary2["defenseRating"]);
 					}
 				}
 				this.Medals = GameUtils.CalcuateMedals(attackRating, defenseRating);
@@ -146,107 +143,12 @@ namespace StaRTS.Main.Models.Player.Misc
 						Dictionary<string, object> dictionary7 = dictionary3["identitySwitchTimes"] as Dictionary<string, object>;
 						if (dictionary7 != null && dictionary7.ContainsKey(this.PlayerId))
 						{
-							this.ActiveIdentity = (Convert.ToInt32(dictionary7[this.PlayerId], CultureInfo.InvariantCulture) == 0);
+							this.ActiveIdentity = (Convert.ToInt32(dictionary7[this.PlayerId]) == 0);
 						}
 					}
 				}
 			}
 			return this;
-		}
-
-		public PlayerIdentityInfo()
-		{
-		}
-
-		protected internal PlayerIdentityInfo(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).ActiveIdentity);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).Faction);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).HQLevel);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).Medals);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).PlayerId);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).PlayerName);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).SquadName);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).ActiveIdentity = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).Faction = (FactionType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).HQLevel = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).Medals = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).PlayerId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).PlayerName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).SquadName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

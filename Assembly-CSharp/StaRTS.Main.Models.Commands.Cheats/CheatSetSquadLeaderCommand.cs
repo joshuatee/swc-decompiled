@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetSquadLeaderCommand(PlayerIdRequest request) : base("cheats.guild.setLeader", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSetSquadLeaderCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Crates
 		public CheateAddCrateCommand(CheatAddCrateRequest request) : base("cheats.crate.add", request, new CheatAddCrateResponse())
 		{
 		}
-
-		protected internal CheateAddCrateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

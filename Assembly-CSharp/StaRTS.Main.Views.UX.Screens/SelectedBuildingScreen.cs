@@ -7,7 +7,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -90,7 +89,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		protected virtual void SetSelectedBuilding(Entity newSelectedBuilding)
 		{
 			this.selectedBuilding = newSelectedBuilding;
-			this.buildingInfo = ((this.selectedBuilding == null) ? null : this.selectedBuilding.Get<BuildingComponent>().BuildingType);
+			this.buildingInfo = ((this.selectedBuilding != null) ? this.selectedBuilding.Get<BuildingComponent>().BuildingType : null);
 		}
 
 		public override EatResponse OnEvent(EventId id, object cookie)
@@ -109,63 +108,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				base.CloseNoTransition(null);
 			}
 			return base.OnEvent(id, cookie);
-		}
-
-		protected internal SelectedBuildingScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SelectedBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SelectedBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SelectedBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SelectedBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnPerksButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SelectedBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SelectedBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).SetSelectedBuilding((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SelectedBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).SetupFragmentSprite(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SelectedBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).SetupPerksButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SelectedBuildingScreen)GCHandledObjects.GCHandleToObject(instance)).UnregisterEvents();
-			return -1L;
 		}
 	}
 }

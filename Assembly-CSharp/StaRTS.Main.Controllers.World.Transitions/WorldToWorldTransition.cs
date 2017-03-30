@@ -9,9 +9,5 @@ namespace StaRTS.Main.Controllers.World.Transitions
 		public WorldToWorldTransition(IState transitionToState, IMapDataLoader mapDataLoader, TransitionCompleteDelegate onTransitionComplete, bool skipTransitions, bool zoomOut) : base(transitionToState, mapDataLoader, onTransitionComplete, skipTransitions, zoomOut, WipeTransition.FromStoryToLoadingScreen, WipeTransition.FromLoadingScreenToBase)
 		{
 		}
-
-		protected internal WorldToWorldTransition(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

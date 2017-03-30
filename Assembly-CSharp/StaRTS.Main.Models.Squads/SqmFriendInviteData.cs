@@ -13,13 +13,5 @@ namespace StaRTS.Main.Models.Squads
 		public string SenderId;
 
 		public string SenderName;
-
-		public SqmFriendInviteData()
-		{
-		}
-
-		protected internal SqmFriendInviteData(UIntPtr dummy)
-		{
-		}
 	}
 }

@@ -15,8 +15,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -50,15 +48,16 @@ namespace StaRTS.FX
 			{
 				this.effectsByEntityId = new Dictionary<uint, BuildingHoloEffect>();
 			}
-			BuildingHoloEffect buildingHoloEffect;
 			if (!this.effectsByEntityId.ContainsKey(building.ID))
 			{
-				buildingHoloEffect = new BuildingHoloEffect(building, unitUid, isStarship, isNavCenter);
+				BuildingHoloEffect buildingHoloEffect = new BuildingHoloEffect(building, unitUid, isStarship, isNavCenter);
 				this.effectsByEntityId.Add(building.ID, buildingHoloEffect);
-				return;
 			}
-			buildingHoloEffect = this.effectsByEntityId[building.ID];
-			buildingHoloEffect.CreateMobilizationHolo(unitUid, isStarship, isNavCenter);
+			else
+			{
+				BuildingHoloEffect buildingHoloEffect = this.effectsByEntityId[building.ID];
+				buildingHoloEffect.CreateMobilizationHolo(unitUid, isStarship, isNavCenter);
+			}
 		}
 
 		private void RemoveEffectByEntityId(uint entityId)
@@ -92,9 +91,11 @@ namespace StaRTS.FX
 			if (building != null && building.Has<GameObjectViewComponent>())
 			{
 				this.CreateEffect(building, "GalacticNavHologram", false, true);
-				return;
 			}
-			Service.Get<EventManager>().RegisterObserver(this, EventId.BuildingViewReady, EventPriority.Default);
+			else
+			{
+				Service.Get<EventManager>().RegisterObserver(this, EventId.BuildingViewReady, EventPriority.Default);
+			}
 		}
 
 		private void AddNavigationCenterHolo()
@@ -104,8 +105,7 @@ namespace StaRTS.FX
 			for (NavigationCenterNode navigationCenterNode = navigationCenterNodeList.Head; navigationCenterNode != null; navigationCenterNode = navigationCenterNode.Next)
 			{
 				bool flag = ContractUtils.IsBuildingUpgrading(navigationCenterNode.Entity);
-				bool flag2 = ContractUtils.IsBuildingConstructing(navigationCenterNode.Entity);
-				if (!(flag2 | flag))
+				if (!ContractUtils.IsBuildingConstructing(navigationCenterNode.Entity) && !flag)
 				{
 					this.CreateEffect(navigationCenterNode.BuildingComp.Entity, "GalacticNavHologram", false, true);
 				}
@@ -118,9 +118,8 @@ namespace StaRTS.FX
 			if (mobilizedUnit != null)
 			{
 				this.CreateEffect(buildingComp.Entity, mobilizedUnit, isStarship, false);
-				return;
 			}
-			if (checkContracts && Service.Get<ISupportController>().HasTroopContractForBuilding(buildingComp.BuildingTO.Key))
+			else if (checkContracts && Service.Get<ISupportController>().HasTroopContractForBuilding(buildingComp.BuildingTO.Key))
 			{
 				this.CreateEffect(buildingComp.Entity, null, isStarship, false);
 			}
@@ -165,9 +164,8 @@ namespace StaRTS.FX
 			if (deliveryType == DeliveryType.Hero || deliveryType == DeliveryType.Starship)
 			{
 				this.CreateEffect(data.Entity, null, false, false);
-				return;
 			}
-			if (deliveryType == DeliveryType.UpgradeBuilding && data.BuildingVO.Type == BuildingType.NavigationCenter)
+			else if (deliveryType == DeliveryType.UpgradeBuilding && data.BuildingVO.Type == BuildingType.NavigationCenter)
 			{
 				this.RemoveEffectByEntityId(data.Entity.ID);
 			}
@@ -210,19 +208,15 @@ namespace StaRTS.FX
 			{
 				List<TroopTypeVO> list = null;
 				IEnumerable<KeyValuePair<string, InventoryEntry>> allHeroes = Service.Get<CurrentPlayer>().GetAllHeroes();
-				using (IEnumerator<KeyValuePair<string, InventoryEntry>> enumerator = allHeroes.GetEnumerator())
+				foreach (KeyValuePair<string, InventoryEntry> current in allHeroes)
 				{
-					while (enumerator.MoveNext())
+					if (current.Value.Amount > 0)
 					{
-						KeyValuePair<string, InventoryEntry> current = enumerator.get_Current();
-						if (current.get_Value().Amount > 0)
+						if (list == null)
 						{
-							if (list == null)
-							{
-								list = new List<TroopTypeVO>();
-							}
-							list.Add(dataController.Get<TroopTypeVO>(current.get_Key()));
+							list = new List<TroopTypeVO>();
 						}
+						list.Add(dataController.Get<TroopTypeVO>(current.Key));
 					}
 				}
 				if (list != null)
@@ -235,19 +229,15 @@ namespace StaRTS.FX
 			{
 				List<SpecialAttackTypeVO> list2 = null;
 				IEnumerable<KeyValuePair<string, InventoryEntry>> allSpecialAttacks = Service.Get<CurrentPlayer>().GetAllSpecialAttacks();
-				using (IEnumerator<KeyValuePair<string, InventoryEntry>> enumerator2 = allSpecialAttacks.GetEnumerator())
+				foreach (KeyValuePair<string, InventoryEntry> current2 in allSpecialAttacks)
 				{
-					while (enumerator2.MoveNext())
+					if (current2.Value.Amount > 0)
 					{
-						KeyValuePair<string, InventoryEntry> current2 = enumerator2.get_Current();
-						if (current2.get_Value().Amount > 0)
+						if (list2 == null)
 						{
-							if (list2 == null)
-							{
-								list2 = new List<SpecialAttackTypeVO>();
-							}
-							list2.Add(dataController.Get<SpecialAttackTypeVO>(current2.get_Key()));
+							list2 = new List<SpecialAttackTypeVO>();
 						}
+						list2.Add(dataController.Get<SpecialAttackTypeVO>(current2.Key));
 					}
 				}
 				if (list2 != null)
@@ -271,18 +261,43 @@ namespace StaRTS.FX
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.BuildingReplaced)
+			switch (id)
 			{
-				if (id <= EventId.BuildingCancelled)
+			case EventId.StarshipMobilized:
+			case EventId.HeroMobilized:
+				this.OnUnitMobilized((ContractEventData)cookie);
+				break;
+			case EventId.StarshipMobilizedFromPrize:
+			{
+				Entity entity = Service.Get<BuildingLookupController>().FleetCommandNodeList.Head.Entity;
+				this.CreateEffect(entity, (string)cookie, true, false);
+				break;
+			}
+			case EventId.HeroMobilizedFromPrize:
+			{
+				Entity entity2 = Service.Get<BuildingLookupController>().TacticalCommandNodeList.Head.Entity;
+				this.CreateEffect(entity2, (string)cookie, false, false);
+				break;
+			}
+			default:
+				switch (id)
 				{
-					if (id != EventId.BuildingViewReady)
+				case EventId.WorldLoadComplete:
+				{
+					IState currentState = Service.Get<GameStateMachine>().CurrentState;
+					if (currentState is ApplicationLoadState || currentState is HomeState || currentState is WarBoardState)
 					{
-						if (id != EventId.BuildingCancelled)
-						{
-							return EatResponse.NotEaten;
-						}
+						this.AddAllEffects(false);
 					}
-					else
+					return EatResponse.NotEaten;
+				}
+				case EventId.WorldInTransitionComplete:
+				case EventId.WorldOutTransitionComplete:
+				{
+					IL_37:
+					switch (id)
+					{
+					case EventId.BuildingViewReady:
 					{
 						EntityViewParams entityViewParams = (EntityViewParams)cookie;
 						if (this.effectsByEntityId != null && this.effectsByEntityId.ContainsKey(entityViewParams.Entity.ID))
@@ -296,175 +311,54 @@ namespace StaRTS.FX
 						if (this.effectsByEntityId != null && entityViewParams.Entity.Has<NavigationCenterComponent>())
 						{
 							this.AddNavigationCenterHolo(entityViewParams.Entity);
-							return EatResponse.NotEaten;
 						}
 						return EatResponse.NotEaten;
 					}
-				}
-				else
-				{
-					switch (id)
-					{
-					case EventId.StarshipMobilized:
-					case EventId.HeroMobilized:
-						this.OnUnitMobilized((ContractEventData)cookie);
-						return EatResponse.NotEaten;
-					case EventId.StarshipMobilizedFromPrize:
-					{
-						Entity entity = Service.Get<BuildingLookupController>().FleetCommandNodeList.Head.Entity;
-						this.CreateEffect(entity, (string)cookie, true, false);
-						return EatResponse.NotEaten;
-					}
-					case EventId.HeroMobilizedFromPrize:
-					{
-						Entity entity2 = Service.Get<BuildingLookupController>().TacticalCommandNodeList.Head.Entity;
-						this.CreateEffect(entity2, (string)cookie, false, false);
-						return EatResponse.NotEaten;
-					}
-					default:
-						if (id != EventId.BuildingConstructed)
+					case EventId.BuildingViewFailed:
+						IL_4C:
+						if (id == EventId.BuildingConstructed)
 						{
-							if (id != EventId.BuildingReplaced)
-							{
-								return EatResponse.NotEaten;
-							}
+							goto IL_10C;
+						}
+						if (id == EventId.BuildingReplaced)
+						{
 							Entity entity3 = cookie as Entity;
 							if (entity3.Has<NavigationCenterComponent>())
 							{
 								this.AddNavigationCenterHolo(entity3);
-								return EatResponse.NotEaten;
 							}
 							return EatResponse.NotEaten;
 						}
-						break;
+						if (id == EventId.ContractStarted || id == EventId.ContractContinued)
+						{
+							this.OnContractStarted((ContractEventData)cookie);
+							return EatResponse.NotEaten;
+						}
+						if (id != EventId.ContractCanceled)
+						{
+							return EatResponse.NotEaten;
+						}
+						this.OnContractCanceled((ContractEventData)cookie);
+						return EatResponse.NotEaten;
+					case EventId.BuildingCancelled:
+						goto IL_10C;
 					}
-				}
-				ContractEventData contractEventData = (ContractEventData)cookie;
-				if (contractEventData.BuildingVO.Type == BuildingType.NavigationCenter)
-				{
-					this.AddNavigationCenterHolo();
-				}
-			}
-			else if (id <= EventId.WorldReset)
-			{
-				if (id != EventId.WorldLoadComplete)
-				{
-					if (id == EventId.WorldReset)
+					goto IL_4C;
+					IL_10C:
+					ContractEventData contractEventData = (ContractEventData)cookie;
+					if (contractEventData.BuildingVO.Type == BuildingType.NavigationCenter)
 					{
-						this.RemoveAllEffects();
+						this.AddNavigationCenterHolo();
 					}
+					return EatResponse.NotEaten;
 				}
-				else
-				{
-					IState currentState = Service.Get<GameStateMachine>().CurrentState;
-					if (currentState is ApplicationLoadState || currentState is HomeState || currentState is WarBoardState)
-					{
-						this.AddAllEffects(false);
-					}
+				case EventId.WorldReset:
+					this.RemoveAllEffects();
+					return EatResponse.NotEaten;
 				}
-			}
-			else if (id != EventId.ContractStarted && id != EventId.ContractContinued)
-			{
-				if (id == EventId.ContractCanceled)
-				{
-					this.OnContractCanceled((ContractEventData)cookie);
-				}
-			}
-			else
-			{
-				this.OnContractStarted((ContractEventData)cookie);
+				goto IL_37;
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal MobilizationEffectsManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).AddAllEffects(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).AddNavigationCenterHolo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).AddNavigationCenterHolo((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).CompareStarships((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args), (SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).CompareTroops((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (TroopTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).CreateEffect((Entity)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).GetMobilizedUnit(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).OnContractCanceled((ContractEventData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).OnContractStarted((ContractEventData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).OnUnitMobilized((ContractEventData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).RemoveAllEffects();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).TransferEffects((Entity)GCHandledObjects.GCHandleToObject(*args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).UpdataAllEffects();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((MobilizationEffectsManager)GCHandledObjects.GCHandleToObject(instance)).UpdateEffectsForBuilding((BuildingComponent)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
 		}
 	}
 }

@@ -7,7 +7,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -87,7 +86,7 @@ namespace StaRTS.Main.Views.World
 				if (particlesToSet == null)
 				{
 					this.ready = false;
-					Service.Get<StaRTSLogger>().Error("The incorrect assetbundle has been loaded for 'fx_radius_ring'");
+					Service.Get<Logger>().Error("The incorrect assetbundle has been loaded for 'fx_radius_ring'");
 				}
 			}
 		}
@@ -101,7 +100,7 @@ namespace StaRTS.Main.Views.World
 			}
 			if (entity == null)
 			{
-				Service.Get<StaRTSLogger>().Error("RadiusView.ShowHighlight: Entity = null");
+				Service.Get<Logger>().Error("RadiusView.ShowHighlight: Entity = null");
 				return;
 			}
 			this.govc = entity.Get<GameObjectViewComponent>();
@@ -111,16 +110,18 @@ namespace StaRTS.Main.Views.World
 			}
 			if (this.radiusGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Error("RadiusView.ShowHighlight: radiusGameObject = null");
+				Service.Get<Logger>().Error("RadiusView.ShowHighlight: radiusGameObject = null");
 				return;
 			}
 			this.radiusGameObject.SetActive(true);
 			if (!this.SetupParticlesOnShow(entity))
 			{
 				this.radiusGameObject.SetActive(false);
-				return;
 			}
-			this.govc.AttachGameObject("radius", this.radiusGameObject, new Vector3(0f, 0.06f, 0f), true, false);
+			else
+			{
+				this.govc.AttachGameObject("radius", this.radiusGameObject, new Vector3(0f, 0.06f, 0f), true, false);
+			}
 		}
 
 		protected virtual bool SetupParticlesOnShow(Entity entity)
@@ -157,9 +158,8 @@ namespace StaRTS.Main.Views.World
 					particles.startSize = num;
 					particles.Simulate(prewarm);
 					particles.Play();
-					return;
 				}
-				if (particles.gameObject.activeSelf)
+				else if (particles.gameObject.activeSelf)
 				{
 					particles.gameObject.SetActive(false);
 				}
@@ -184,45 +184,6 @@ namespace StaRTS.Main.Views.World
 				Service.Get<AssetManager>().Unload(this.handle);
 				this.handle = AssetHandle.Invalid;
 			}
-		}
-
-		protected internal RadiusView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RadiusView)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((RadiusView)GCHandledObjects.GCHandleToObject(instance)).HideHighlight();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((RadiusView)GCHandledObjects.GCHandleToObject(instance)).OnRingLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((RadiusView)GCHandledObjects.GCHandleToObject(instance)).SetupAssetOnLoad();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RadiusView)GCHandledObjects.GCHandleToObject(instance)).SetupParticlesOnShow((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((RadiusView)GCHandledObjects.GCHandleToObject(instance)).ShowHighlight((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

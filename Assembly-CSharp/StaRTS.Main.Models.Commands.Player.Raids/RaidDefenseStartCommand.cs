@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Player.Raids
 		public RaidDefenseStartCommand(RaidDefenseStartRequest request) : base("player.raids.start", request, new RaidDefenseStartResponse())
 		{
 		}
-
-		protected internal RaidDefenseStartCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

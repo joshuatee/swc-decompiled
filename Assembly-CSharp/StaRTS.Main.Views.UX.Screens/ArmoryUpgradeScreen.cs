@@ -1,6 +1,5 @@
 using Net.RichardLord.Ash.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -23,16 +22,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			base.InitControls(2);
 			this.InitHitpoints(0);
 			base.InitStorage(1, "EQUIPMENT_INFO_CAPACITY");
-		}
-
-		protected internal ArmoryUpgradeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ArmoryUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
 		}
 	}
 }

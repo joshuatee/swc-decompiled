@@ -17,8 +17,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -32,7 +30,7 @@ namespace StaRTS.Main.Controllers
 
 		private EquipmentVO pendingCelebrationEquipment;
 
-		public bool AllowUnlockCelebration;
+		public bool AllowUnlockCelebration = true;
 
 		public bool AllowShowEquipmentTabBadge
 		{
@@ -42,8 +40,6 @@ namespace StaRTS.Main.Controllers
 
 		public ArmoryController()
 		{
-			this.AllowUnlockCelebration = true;
-			base..ctor();
 			Service.Set<ArmoryController>(this);
 			EventManager eventManager = Service.Get<EventManager>();
 			eventManager.RegisterObserver(this, EventId.PlanetConfirmRelocate);
@@ -68,7 +64,7 @@ namespace StaRTS.Main.Controllers
 			EquipmentVO currentEquipmentDataByID = ArmoryUtils.GetCurrentEquipmentDataByID(equipmentId);
 			if (currentEquipmentDataByID == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid EquipmentID: " + equipmentId);
+				Service.Get<Logger>().Warn("Invalid EquipmentID: " + equipmentId);
 				return;
 			}
 			if (currentPlayer.ActiveArmory.Equipment.Contains(currentEquipmentDataByID.Uid))
@@ -156,7 +152,7 @@ namespace StaRTS.Main.Controllers
 			Dictionary<string, int> shards = currentPlayer.Shards;
 			int upgradeShards = equipmentVO.UpgradeShards;
 			string equipmentID = equipmentVO.EquipmentID;
-			int num = shards.ContainsKey(equipmentID) ? shards[equipmentID] : 0;
+			int num = (!shards.ContainsKey(equipmentID)) ? 0 : shards[equipmentID];
 			if (!this.IsEquipmentUnlockableOrUpgradeable(equipmentVO))
 			{
 				return false;
@@ -171,12 +167,12 @@ namespace StaRTS.Main.Controllers
 			string equipmentID = equipmentVO.EquipmentID;
 			if (currentPlayer.UnlockedLevels.Equipment.Levels.ContainsKey(equipmentID))
 			{
-				Service.Get<StaRTSLogger>().Warn("Tried to unlock equipment that is already unlocked.");
+				Service.Get<Logger>().Warn("Tried to unlock equipment that is already unlocked.");
 				return false;
 			}
 			if (!this.ChargeEquipmentUpgradeCost(equipmentVO))
 			{
-				Service.Get<StaRTSLogger>().Debug("Tried to unlock equipment with insufficient shards.");
+				Service.Get<Logger>().Debug("Tried to unlock equipment with insufficient shards.");
 				return false;
 			}
 			currentPlayer.UnlockedLevels.Equipment.Levels.Add(equipmentID, equipmentVO.Lvl);
@@ -188,7 +184,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (equipmentVO == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Equipment is null");
+				Service.Get<Logger>().Warn("Equipment is null");
 				return;
 			}
 			IDataController dataController = Service.Get<IDataController>();
@@ -204,7 +200,7 @@ namespace StaRTS.Main.Controllers
 				{
 					equipment.Remove(text);
 					equipment.Add(equipmentVO.Uid);
-					return;
+					break;
 				}
 				i++;
 			}
@@ -213,15 +209,20 @@ namespace StaRTS.Main.Controllers
 		public bool DoesUserHaveAnyUpgradableEquipment()
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-			using (IEnumerator<string> enumerator = currentPlayer.UnlockedLevels.Equipment.Levels.get_Keys().GetEnumerator())
+			foreach (string current in currentPlayer.UnlockedLevels.Equipment.Levels.Keys)
 			{
-				while (enumerator.MoveNext())
+				EquipmentVO nextEquipmentVOUpgrade = this.GetNextEquipmentVOUpgrade(current);
+				if (nextEquipmentVOUpgrade != null)
 				{
-					string current = enumerator.get_Current();
-					EquipmentVO nextEquipmentVOUpgrade = this.GetNextEquipmentVOUpgrade(current);
-					if (nextEquipmentVOUpgrade != null && nextEquipmentVOUpgrade.PlayerFacing && nextEquipmentVOUpgrade.Faction == currentPlayer.Faction && this.IsEquipmentUnlockableOrUpgradeable(nextEquipmentVOUpgrade))
+					if (nextEquipmentVOUpgrade.PlayerFacing)
 					{
-						return true;
+						if (nextEquipmentVOUpgrade.Faction == currentPlayer.Faction)
+						{
+							if (this.IsEquipmentUnlockableOrUpgradeable(nextEquipmentVOUpgrade))
+							{
+								return true;
+							}
+						}
 					}
 				}
 			}
@@ -233,7 +234,7 @@ namespace StaRTS.Main.Controllers
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			bool flag = ArmoryUtils.CanAffordEquipment(currentPlayer, equipment);
 			bool flag2 = ArmoryUtils.IsBuildingRequirementMet(equipment);
-			return flag & flag2;
+			return flag && flag2;
 		}
 
 		public EquipmentVO GetNextEquipmentVOUpgrade(string equipmentID)
@@ -243,7 +244,7 @@ namespace StaRTS.Main.Controllers
 			int num = 0;
 			if (currentPlayer.UnlockedLevels.Equipment.Levels.ContainsKey(equipmentID))
 			{
-				num = currentPlayer.UnlockedLevels.Equipment.Levels.get_Item(equipmentID);
+				num = currentPlayer.UnlockedLevels.Equipment.Levels[equipmentID];
 			}
 			num++;
 			foreach (EquipmentVO current in dataController.GetAll<EquipmentVO>())
@@ -258,7 +259,7 @@ namespace StaRTS.Main.Controllers
 
 		private void OnActivateEquipmentFailure(uint status, object cookie)
 		{
-			Service.Get<StaRTSLogger>().ErrorFormat("Activate equipmentID '{0}' failed!", new object[]
+			Service.Get<Logger>().ErrorFormat("Activate equipmentID '{0}' failed!", new object[]
 			{
 				cookie as string
 			});
@@ -266,7 +267,7 @@ namespace StaRTS.Main.Controllers
 
 		private void OnDeactivateEquipmentFailure(uint status, object cookie)
 		{
-			Service.Get<StaRTSLogger>().ErrorFormat("Deactivate equipmentID '{0}' failed!", new object[]
+			Service.Get<Logger>().ErrorFormat("Deactivate equipmentID '{0}' failed!", new object[]
 			{
 				cookie as string
 			});
@@ -328,101 +329,84 @@ namespace StaRTS.Main.Controllers
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			bool flag = ArmoryUtils.IsEquipmentOwned(currentPlayer, equipmentVO);
 			bool flag2 = this.IsEquipmentUnlockableOrUpgradeable(nextEquipmentVO);
-			return flag & flag2;
+			return flag && flag2;
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ScreenClosing)
+			switch (id)
 			{
-				if (id != EventId.BattleLoadStart)
-				{
-					switch (id)
-					{
-					case EventId.BattleEndFullyProcessed:
-					case EventId.BattleLeftBeforeStarting:
-					case EventId.BattleReplayEnded:
-						Service.Get<BuffController>().ClearEquipmentBuffs();
-						return EatResponse.NotEaten;
-					case EventId.BattleCancelRequested:
-					case EventId.BattleCanceled:
-					case EventId.BattleNextRequested:
-					case EventId.BattleReplayRequested:
-						return EatResponse.NotEaten;
-					case EventId.BattleReplaySetup:
-					{
-						BattleRecord battleRecord = (BattleRecord)cookie;
-						ArmoryController.AddEquipmentBuffs(battleRecord.AttackerEquipment, battleRecord.DefenderEquipment);
-						return EatResponse.NotEaten;
-					}
-					case EventId.BattleRecordRetrieved:
-					{
-						GetReplayResponse getReplayResponse = (GetReplayResponse)cookie;
-						BattleRecord replayData = getReplayResponse.ReplayData;
-						ArmoryController.AddEquipmentBuffs(replayData.AttackerEquipment, replayData.DefenderEquipment);
-						return EatResponse.NotEaten;
-					}
-					case EventId.BattleLoadedForDefend:
-						break;
-					default:
-						if (id != EventId.ScreenClosing)
-						{
-							return EatResponse.NotEaten;
-						}
-						if (!(cookie is InventoryCrateCollectionScreen))
-						{
-							return EatResponse.NotEaten;
-						}
-						GameUtils.CloseStoreOrInventoryScreen();
-						Service.Get<EventManager>().UnregisterObserver(this, EventId.ScreenClosing);
-						if (this.AllowUnlockCelebration)
-						{
-							this.ShowEquipmentUnlockedCelebration();
-							return EatResponse.NotEaten;
-						}
-						return EatResponse.NotEaten;
-					}
-				}
+			case EventId.BattleLoadStart:
+			case EventId.BattleLoadedForDefend:
+			{
 				CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
 				ArmoryController.AddEquipmentBuffs(currentBattle.AttackerEquipment, currentBattle.DefenderEquipment);
+				return EatResponse.NotEaten;
 			}
-			else if (id != EventId.ScreenLoaded)
-			{
-				if (id != EventId.PlanetConfirmRelocate)
+			case EventId.BattleLoadEnd:
+			case EventId.BattleEndProcessing:
+			case EventId.BattleEndRecorded:
+			case EventId.BattleCancelRequested:
+			case EventId.BattleCanceled:
+			case EventId.BattleNextRequested:
+			case EventId.BattleReplayRequested:
+				IL_48:
+				switch (id)
 				{
-					switch (id)
+				case EventId.EquipmentUnlocked:
+					this.pendingCelebrationEquipment = (cookie as EquipmentVO);
+					this.UpdateLastEquipmentUnlocked(this.pendingCelebrationEquipment.Uid);
+					if (this.AllowUnlockCelebration)
 					{
-					case EventId.EquipmentUnlocked:
-						this.pendingCelebrationEquipment = (cookie as EquipmentVO);
-						this.UpdateLastEquipmentUnlocked(this.pendingCelebrationEquipment.Uid);
-						if (this.AllowUnlockCelebration)
+						if (GameUtils.IsUnlockBlockingScreenOpen())
 						{
-							if (GameUtils.IsUnlockBlockingScreenOpen())
-							{
-								Service.Get<EventManager>().RegisterObserver(this, EventId.ScreenClosing);
-							}
-							else
+							Service.Get<EventManager>().RegisterObserver(this, EventId.ScreenClosing);
+						}
+						else
+						{
+							this.ShowEquipmentUnlockedCelebration();
+						}
+					}
+					return EatResponse.NotEaten;
+				case EventId.EquipmentUpgraded:
+				{
+					ContractEventData contractEventData = cookie as ContractEventData;
+					IDataController dataController = Service.Get<IDataController>();
+					EquipmentVO equipmentVO = dataController.Get<EquipmentVO>(contractEventData.Contract.ProductUid);
+					this.UpdateActiveArmoryLevel(equipmentVO);
+					return EatResponse.NotEaten;
+				}
+				case EventId.EquipmentActivated:
+				case EventId.EquipmentDeactivated:
+					this.UpdateArmoryBuildingTooltip();
+					return EatResponse.NotEaten;
+				default:
+				{
+					if (id == EventId.ScreenClosing)
+					{
+						if (cookie is InventoryCrateCollectionScreen)
+						{
+							GameUtils.CloseStoreOrInventoryScreen();
+							Service.Get<EventManager>().UnregisterObserver(this, EventId.ScreenClosing);
+							if (this.AllowUnlockCelebration)
 							{
 								this.ShowEquipmentUnlockedCelebration();
 							}
 						}
-						break;
-					case EventId.EquipmentUpgraded:
+						return EatResponse.NotEaten;
+					}
+					if (id == EventId.ScreenLoaded)
 					{
-						ContractEventData contractEventData = cookie as ContractEventData;
-						IDataController dataController = Service.Get<IDataController>();
-						EquipmentVO equipmentVO = dataController.Get<EquipmentVO>(contractEventData.Contract.ProductUid);
-						this.UpdateActiveArmoryLevel(equipmentVO);
-						break;
+						if (cookie is ArmoryScreen)
+						{
+							this.UpdateLastEquipmentUnlocked("false");
+						}
+						return EatResponse.NotEaten;
 					}
-					case EventId.EquipmentActivated:
-					case EventId.EquipmentDeactivated:
-						this.UpdateArmoryBuildingTooltip();
-						break;
+					if (id != EventId.PlanetConfirmRelocate)
+					{
+						return EatResponse.NotEaten;
 					}
-				}
-				else
-				{
 					CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 					IDataController dataController2 = Service.Get<IDataController>();
 					for (int i = currentPlayer.ActiveArmory.Equipment.Count - 1; i >= 0; i--)
@@ -433,13 +417,30 @@ namespace StaRTS.Main.Controllers
 							this.DeactivateEquipmentOnClient(currentPlayer, equipment);
 						}
 					}
+					return EatResponse.NotEaten;
 				}
-			}
-			else if (cookie is ArmoryScreen)
+				}
+				break;
+			case EventId.BattleEndFullyProcessed:
+			case EventId.BattleLeftBeforeStarting:
+			case EventId.BattleReplayEnded:
+				Service.Get<BuffController>().ClearEquipmentBuffs();
+				return EatResponse.NotEaten;
+			case EventId.BattleReplaySetup:
 			{
-				this.UpdateLastEquipmentUnlocked("false");
+				BattleRecord battleRecord = (BattleRecord)cookie;
+				ArmoryController.AddEquipmentBuffs(battleRecord.AttackerEquipment, battleRecord.DefenderEquipment);
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			case EventId.BattleRecordRetrieved:
+			{
+				GetReplayResponse getReplayResponse = (GetReplayResponse)cookie;
+				BattleRecord replayData = getReplayResponse.ReplayData;
+				ArmoryController.AddEquipmentBuffs(replayData.AttackerEquipment, replayData.DefenderEquipment);
+				return EatResponse.NotEaten;
+			}
+			}
+			goto IL_48;
 		}
 
 		private void UpdateLastEquipmentUnlocked(string equipmentUid)
@@ -465,110 +466,6 @@ namespace StaRTS.Main.Controllers
 		{
 			Service.Get<ScreenController>().AddScreen(new EquipmentUnlockedCelebrationScreen(this.pendingCelebrationEquipment), QueueScreenBehavior.QueueAndDeferTillClosed);
 			this.pendingCelebrationEquipment = null;
-		}
-
-		protected internal ArmoryController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).ActivateEquipment(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			ArmoryController.AddEquipmentBuffs((List<string>)GCHandledObjects.GCHandleToObject(*args), (List<string>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).ChargeEquipmentUpgradeCost((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).DeactivateEquipment(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).DeactivateEquipmentOnClient((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).DoesUserHaveAnyUpgradableEquipment());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).AllowShowEquipmentTabBadge);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).GetNextEquipmentVOUpgrade(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).HandleEarnedShardReward(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).IsEquipmentUnlockableOrUpgradeable((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).IsEquipmentUpgradeable((EquipmentVO)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).AllowShowEquipmentTabBadge = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).ShowEquipmentUnlockedCelebration();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).TryToUnlockPlayerEquipment((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).UpdateActiveArmoryLevel((EquipmentVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).UpdateArmoryBuildingTooltip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ArmoryController)GCHandledObjects.GCHandleToObject(instance)).UpdateLastEquipmentUnlocked(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
 		}
 	}
 }

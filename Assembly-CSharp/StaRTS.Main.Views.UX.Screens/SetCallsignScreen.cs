@@ -9,9 +9,7 @@ using StaRTS.Main.Utils;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -96,9 +94,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.inputScript.onValidate = new UIInput.OnValidate(LangUtils.OnValidate);
 			this.inputScript.characterLimit = GameConstants.USER_NAME_MAX_CHARACTERS;
 			this.inputScript.label.maxLineCount = 1;
-			EventDelegate item = new EventDelegate(new EventDelegate.Callback(this.OnChange));
+			EventDelegate item = new EventDelegate(new EventDelegate.Callback(this.OnSubmit));
+			this.inputScript.onSubmit.Add(item);
+			item = new EventDelegate(new EventDelegate.Callback(this.OnChange));
 			this.inputScript.onChange.Add(item);
-			this.inputTextField.Text = "";
+			this.inputTextField.Text = string.Empty;
 		}
 
 		private void OnSubmit()
@@ -115,10 +115,12 @@ namespace StaRTS.Main.Views.UX.Screens
 					YesNoScreen.ShowModal(this.lang.Get("CALL_SIGN_CONFIRMATION_TITLE", new object[0]), this.lang.Get("CALL_SIGN_CONFIRMATION_DESCRIPTION", new object[]
 					{
 						this.inputTextField.Text
-					}), false, true, new OnScreenModalResult(this.OnCloseConfrimScreen), null, false);
-					return;
+					}), false, true, new OnScreenModalResult(this.OnCloseConfrimScreen), null);
 				}
-				this.SetNameFinalAndClose();
+				else
+				{
+					this.SetNameFinalAndClose();
+				}
 			}
 		}
 
@@ -127,11 +129,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (result != null)
 			{
 				this.SetNameFinalAndClose();
-				return;
 			}
-			this.inputTextField.Text = "";
-			this.successfullySetUserName = false;
-			this.hasTypedAnything = false;
 		}
 
 		private void SetNameFinalAndClose()
@@ -146,10 +144,12 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.inputScript.isSelected = false;
 				this.OnSuccess(null, null);
 				this.Close(null);
-				return;
 			}
-			this.OnSuccess(null, null);
-			this.Close(null);
+			else
+			{
+				this.OnSuccess(null, null);
+				this.Close(null);
+			}
 		}
 
 		private bool ValidateFinalString(string input)
@@ -171,7 +171,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.OnFailure(1000u, null);
 				return false;
 			}
-			if (input.get_Length() < GameConstants.USER_NAME_MIN_CHARACTERS)
+			if (input.Length < GameConstants.USER_NAME_MIN_CHARACTERS)
 			{
 				this.OnFailure(9999u, null);
 				return false;
@@ -193,9 +193,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.successfullySetUserName)
 			{
 				this.Close(null);
-				return;
 			}
-			if (!this.isAuthenticating)
+			else if (!this.isAuthenticating)
 			{
 				this.OnSubmit();
 			}
@@ -204,7 +203,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void OnFailure(uint status, object cookie)
 		{
 			this.isAuthenticating = false;
-			string text;
+			string text = string.Empty;
 			if (status == 9999u)
 			{
 				text = this.lang.Get("CALL_SIGN_ERROR_TOO_SHORT", new object[]
@@ -215,7 +214,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			else
 			{
 				text = this.lang.Get("CALL_SIGN_ERROR_INVALID", new object[0]);
-				this.inputTextField.Text = "";
+				this.inputTextField.Text = string.Empty;
 			}
 			this.errorLabel.Text = text;
 			this.errorLabel.Visible = true;
@@ -231,62 +230,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			Service.Get<CurrentPlayer>().PlayerName = this.inputTextField.Text;
 			this.inputBackground.Color = Color.green;
 			this.nextButton.Enabled = true;
-		}
-
-		protected internal SetCallsignScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SetCallsignScreen)GCHandledObjects.GCHandleToObject(instance)).AllowGarbageCollection);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SetCallsignScreen)GCHandledObjects.GCHandleToObject(instance)).OnChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SetCallsignScreen)GCHandledObjects.GCHandleToObject(instance)).OnCloseConfrimScreen(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SetCallsignScreen)GCHandledObjects.GCHandleToObject(instance)).OnNextButton((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SetCallsignScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SetCallsignScreen)GCHandledObjects.GCHandleToObject(instance)).OnSubmit();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SetCallsignScreen)GCHandledObjects.GCHandleToObject(instance)).OnSuccess((DefaultResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SetCallsignScreen)GCHandledObjects.GCHandleToObject(instance)).SetNameFinalAndClose();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SetCallsignScreen)GCHandledObjects.GCHandleToObject(instance)).ValidateFinalString(Marshal.PtrToStringUni(*(IntPtr*)args)));
 		}
 	}
 }

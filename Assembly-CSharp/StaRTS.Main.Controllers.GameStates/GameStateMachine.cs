@@ -3,7 +3,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.GameStates
 {
@@ -55,14 +54,14 @@ namespace StaRTS.Main.Controllers.GameStates
 				string text = "NO_CURRENT_STATE";
 				if (base.CurrentState != null)
 				{
-					text = base.CurrentState.GetType().get_Name();
+					text = base.CurrentState.GetType().Name;
 				}
-				Service.Get<StaRTSLogger>().Warn(string.Concat(new string[]
+				Service.Get<Logger>().Warn(string.Concat(new string[]
 				{
 					"While in state: ",
 					text,
 					"Tried to change to ",
-					state.GetType().get_Name(),
+					state.GetType().Name,
 					" while in middle of another state change. This state change has been ignored."
 				}));
 				return false;
@@ -79,15 +78,6 @@ namespace StaRTS.Main.Controllers.GameStates
 				Service.Get<EventManager>().SendEvent(EventId.GameStateChanged, base.PreviousStateType);
 			}
 			return result;
-		}
-
-		protected internal GameStateMachine(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GameStateMachine)GCHandledObjects.GCHandleToObject(instance)).SetState((IState)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

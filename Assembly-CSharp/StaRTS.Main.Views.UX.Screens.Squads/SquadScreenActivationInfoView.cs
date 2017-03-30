@@ -14,24 +14,12 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
 	public class SquadScreenActivationInfoView : SquadScreenBasePerkInfoView, IViewClockTimeObserver
 	{
 		private const string SHOW_ACT = "ShowActivation";
-
-		private static readonly string[] singleCostElementNames = new string[]
-		{
-			"CostModalOnePerks"
-		};
-
-		private static readonly string[] dualCostElementNames = new string[]
-		{
-			"CostModalTwoTopPerks",
-			"CostModalTwoBotPerks"
-		};
 
 		private const string LANG_PERK_ACTIVATE_POPUP_TITLE = "PERK_ACTIVATE_POPUP_TITLE";
 
@@ -46,6 +34,17 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		private const string LANG_PERK_ACTIVATE_POPUP_LVL_REQ = "PERK_UPGRADE_POPUP_LVL_REQ2";
 
 		private const string LANG_PERK_ACTIVATE_POPUP_REP_REQ = "PERK_ACTIVATE_POPUP_REP_REQ";
+
+		private static readonly string[] singleCostElementNames = new string[]
+		{
+			"CostModalOnePerks"
+		};
+
+		private static readonly string[] dualCostElementNames = new string[]
+		{
+			"CostModalTwoTopPerks",
+			"CostModalTwoBotPerks"
+		};
 
 		private UXLabel activationTimerLabel;
 
@@ -120,10 +119,10 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				bool flag3 = count == 2;
 				element5.Visible = !flag3;
 				element6.Visible = flag3;
-				UXButton uXButton = flag3 ? element6 : element5;
+				UXButton uXButton = (!flag3) ? element5 : element6;
 				uXButton.OnClicked = new UXButtonClickedDelegate(this.OnActivateButtonClicked);
 				this.rootInfoView.Visible = true;
-				string[] costElementNames = flag3 ? SquadScreenActivationInfoView.dualCostElementNames : SquadScreenActivationInfoView.singleCostElementNames;
+				string[] costElementNames = (!flag3) ? SquadScreenActivationInfoView.singleCostElementNames : SquadScreenActivationInfoView.dualCostElementNames;
 				UXUtils.SetupMultiCostElements(this.squadScreen, costElementNames, null, this.targetPerkVO.ActivationCost, count);
 				this.rootInfoView.Visible = false;
 			}
@@ -177,7 +176,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				if (flag2)
 				{
 					this.CompletePerkActivation();
-					return;
 				}
 			}
 			else
@@ -249,58 +247,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			{
 				text
 			});
-		}
-
-		protected internal SquadScreenActivationInfoView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadScreenActivationInfoView)GCHandledObjects.GCHandleToObject(instance)).CompletePerkActivation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadScreenActivationInfoView)GCHandledObjects.GCHandleToObject(instance)).HideAndCleanUp();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadScreenActivationInfoView)GCHandledObjects.GCHandleToObject(instance)).InitUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadScreenActivationInfoView)GCHandledObjects.GCHandleToObject(instance)).OnActivateButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadScreenActivationInfoView)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadScreenActivationInfoView)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadScreenActivationInfoView)GCHandledObjects.GCHandleToObject(instance)).Show();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadScreenActivationInfoView)GCHandledObjects.GCHandleToObject(instance)).UpdateActivationTimeRemaining();
-			return -1L;
 		}
 	}
 }

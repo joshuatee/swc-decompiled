@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Utils.Scheduling
 {
@@ -42,11 +41,7 @@ namespace StaRTS.Utils.Scheduling
 		{
 			if (delay > 432000000u)
 			{
-				throw new Exception(string.Format("Timer delay {0} exceeds maximum {1}", new object[]
-				{
-					delay,
-					432000000u
-				}));
+				throw new Exception(string.Format("Timer delay {0} exceeds maximum {1}", delay, 432000000u));
 			}
 			if (delay == 0u)
 			{
@@ -61,10 +56,7 @@ namespace StaRTS.Utils.Scheduling
 			uint num = this.timeNow + delay;
 			if (num == this.lastTimeFire)
 			{
-				List<Timer> arg_95_0 = this.timers.Timers;
-				int index = this.lastIndex + 1;
-				this.lastIndex = index;
-				arg_95_0.Insert(index, timer);
+				this.timers.Timers.Insert(++this.lastIndex, timer);
 			}
 			else
 			{
@@ -88,7 +80,7 @@ namespace StaRTS.Utils.Scheduling
 				if (list[i].Id == id)
 				{
 					this.KillTimerAt(i);
-					return;
+					break;
 				}
 				i++;
 			}
@@ -136,7 +128,7 @@ namespace StaRTS.Utils.Scheduling
 
 		private void SetTimeNext()
 		{
-			this.timeNext = ((this.timers.Timers.Count == 0) ? 4294967295u : this.timers.Timers[0].TimeFire);
+			this.timeNext = ((this.timers.Timers.Count != 0) ? this.timers.Timers[0].TimeFire : 4294967295u);
 		}
 
 		protected void OnDeltaTime(uint dt)
@@ -183,22 +175,6 @@ namespace StaRTS.Utils.Scheduling
 					this.KillTimer(timer.Id);
 				}
 			}
-		}
-
-		protected internal TimerManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TimerManager)GCHandledObjects.GCHandleToObject(instance)).KillTimerAt(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TimerManager)GCHandledObjects.GCHandleToObject(instance)).SetTimeNext();
-			return -1L;
 		}
 	}
 }

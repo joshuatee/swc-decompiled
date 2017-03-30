@@ -32,13 +32,5 @@ namespace StaRTS.GameBoard.Pathfinding
 		public uint SupportRange;
 
 		public uint TargetInRangeModifier;
-
-		public PathTroopParams()
-		{
-		}
-
-		protected internal PathTroopParams(UIntPtr dummy)
-		{
-		}
 	}
 }

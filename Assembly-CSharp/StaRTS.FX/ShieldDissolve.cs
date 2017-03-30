@@ -2,7 +2,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -14,7 +13,7 @@ namespace StaRTS.FX
 
 		private bool turnOn;
 
-		private bool done;
+		private bool done = true;
 
 		private bool delayActive;
 
@@ -34,8 +33,6 @@ namespace StaRTS.FX
 
 		public ShieldDissolve()
 		{
-			this.done = true;
-			base..ctor();
 			this.done = true;
 			this.delayActive = false;
 			this.dissolveTime = 0f;
@@ -123,28 +120,6 @@ namespace StaRTS.FX
 			this.onComplete = null;
 			this.info = null;
 			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
-		}
-
-		protected internal ShieldDissolve(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShieldDissolve)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ShieldDissolve)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ShieldDissolve)GCHandledObjects.GCHandleToObject(instance)).Play((GameObject)GCHandledObjects.GCHandleToObject(*args), (Material)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, (DissolveCompleteDelegate)GCHandledObjects.GCHandleToObject(args[3]), (ShieldBuildingInfo)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
 		}
 	}
 }

@@ -10,8 +10,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -185,7 +183,7 @@ namespace StaRTS.Main.Utils
 			Dictionary<string, InventoryEntry> internalStorage = storage.GetInternalStorage();
 			foreach (KeyValuePair<string, InventoryEntry> current in internalStorage)
 			{
-				ProjectileUtils.AddTroopProjectileAssets(current.get_Key(), assets, dc);
+				ProjectileUtils.AddTroopProjectileAssets(current.Key, assets, dc);
 			}
 		}
 
@@ -195,7 +193,7 @@ namespace StaRTS.Main.Utils
 			{
 				foreach (KeyValuePair<string, int> current in troops)
 				{
-					ProjectileUtils.AddTroopProjectileAssets(current.get_Key(), assets, dc);
+					ProjectileUtils.AddTroopProjectileAssets(current.Key, assets, dc);
 				}
 			}
 		}
@@ -205,7 +203,7 @@ namespace StaRTS.Main.Utils
 			Dictionary<string, InventoryEntry> internalStorage = storage.GetInternalStorage();
 			foreach (KeyValuePair<string, InventoryEntry> current in internalStorage)
 			{
-				ProjectileUtils.AddSpecialAttackProjectileAssets(current.get_Key(), assets, dc);
+				ProjectileUtils.AddSpecialAttackProjectileAssets(current.Key, assets, dc);
 			}
 		}
 
@@ -215,7 +213,7 @@ namespace StaRTS.Main.Utils
 			{
 				foreach (KeyValuePair<string, int> current in specialAttacks)
 				{
-					ProjectileUtils.AddSpecialAttackProjectileAssets(current.get_Key(), assets, dc);
+					ProjectileUtils.AddSpecialAttackProjectileAssets(current.Key, assets, dc);
 				}
 			}
 		}
@@ -395,116 +393,6 @@ namespace StaRTS.Main.Utils
 				}
 			}
 			return true;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			ProjectileUtils.AddBattleProjectileAssets((Map)GCHandledObjects.GCHandleToObject(*args), (BattleTypeVO)GCHandledObjects.GCHandleToObject(args[1]), (BattleDeploymentData)GCHandledObjects.GCHandleToObject(args[2]), (List<string>)GCHandledObjects.GCHandleToObject(args[3]), (List<string>)GCHandledObjects.GCHandleToObject(args[4]), (List<string>)GCHandledObjects.GCHandleToObject(args[5]), (List<string>)GCHandledObjects.GCHandleToObject(args[6]), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[7]), (IDataController)GCHandledObjects.GCHandleToObject(args[8]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			ProjectileUtils.AddBuffProjectileAssetNames((BuffTypeVO)GCHandledObjects.GCHandleToObject(*args), (List<string>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			ProjectileUtils.AddBuffProjectileAssets(Marshal.PtrToStringUni(*(IntPtr*)args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			ProjectileUtils.AddBuffProjectileAssets((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			ProjectileUtils.AddBuildingProjectileAssets((Map)GCHandledObjects.GCHandleToObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			ProjectileUtils.AddEquipmentAssets((List<string>)GCHandledObjects.GCHandleToObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			ProjectileUtils.AddProjectileAssetNames((ProjectileTypeVO)GCHandledObjects.GCHandleToObject(*args), (List<string>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			ProjectileUtils.AddProjectileAssets((ProjectileTypeVO)GCHandledObjects.GCHandleToObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			ProjectileUtils.AddSpecialAttackProjectileAssets((InventoryStorage)GCHandledObjects.GCHandleToObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			ProjectileUtils.AddSpecialAttackProjectileAssets((Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			ProjectileUtils.AddSpecialAttackProjectileAssets(Marshal.PtrToStringUni(*(IntPtr*)args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			ProjectileUtils.AddTroopProjectileAssets(Marshal.PtrToStringUni(*(IntPtr*)args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			ProjectileUtils.AddTroopProjectileAssets((InventoryStorage)GCHandledObjects.GCHandleToObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			ProjectileUtils.AddTroopProjectileAssets((Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			ProjectileUtils.AddWarBuffAssets((List<string>)GCHandledObjects.GCHandleToObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectileUtils.AreAllBulletAssetsLoaded((Bullet)GCHandledObjects.GCHandleToObject(*args), (HashSet<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectileUtils.GetAssetNames((IAssetVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectileUtils.GetBattleProjectileAssets((Map)GCHandledObjects.GCHandleToObject(*args), (BattleTypeVO)GCHandledObjects.GCHandleToObject(args[1]), (BattleDeploymentData)GCHandledObjects.GCHandleToObject(args[2]), (List<string>)GCHandledObjects.GCHandleToObject(args[3]), (List<string>)GCHandledObjects.GCHandleToObject(args[4]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[5]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[6]), (List<string>)GCHandledObjects.GCHandleToObject(args[7]), (List<string>)GCHandledObjects.GCHandleToObject(args[8])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ProjectileUtils.GetBattleRecordProjectileAssets((Map)GCHandledObjects.GCHandleToObject(*args), (BattleRecord)GCHandledObjects.GCHandleToObject(args[1]), (List<string>)GCHandledObjects.GCHandleToObject(args[2]), (List<string>)GCHandledObjects.GCHandleToObject(args[3]), (List<string>)GCHandledObjects.GCHandleToObject(args[4]), (List<string>)GCHandledObjects.GCHandleToObject(args[5])));
 		}
 	}
 }

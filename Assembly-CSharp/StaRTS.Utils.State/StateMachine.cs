@@ -2,7 +2,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Utils.State
 {
@@ -81,7 +80,7 @@ namespace StaRTS.Utils.State
 			bool result = true;
 			if (!this.IsLegalTransition(state))
 			{
-				Service.Get<StaRTSLogger>().DebugFormat("StateMachine should not transition from state {0} to {1}", new object[]
+				Service.Get<Logger>().DebugFormat("StateMachine should not transition from state {0} to {1}", new object[]
 				{
 					this.curState.GetType().ToString(),
 					state.GetType().ToString()
@@ -90,7 +89,7 @@ namespace StaRTS.Utils.State
 			}
 			if (this.changingState)
 			{
-				Service.Get<StaRTSLogger>().Error("Cannot set state while changing state");
+				Service.Get<Logger>().Error("Cannot set state while changing state");
 			}
 			this.changingState = true;
 			try
@@ -99,7 +98,7 @@ namespace StaRTS.Utils.State
 				{
 					this.curState.OnExit(state);
 				}
-				this.prevStateType = ((this.curState == null) ? null : this.curState.GetType());
+				this.prevStateType = ((this.curState != null) ? this.curState.GetType() : null);
 				this.curState = state;
 				this.curState.OnEnter();
 			}
@@ -123,42 +122,6 @@ namespace StaRTS.Utils.State
 			Type type = this.curState.GetType();
 			Type type2 = state.GetType();
 			return this.wildcardStates.Contains(type) || this.wildcardStates.Contains(type2) || (this.legalTransitions.ContainsKey(type) && this.legalTransitions[type].IndexOf(type2) >= 0);
-		}
-
-		protected internal StateMachine(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StateMachine)GCHandledObjects.GCHandleToObject(instance)).CurrentState);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StateMachine)GCHandledObjects.GCHandleToObject(instance)).PreviousStateType);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StateMachine)GCHandledObjects.GCHandleToObject(instance)).IsLegalTransition((IState)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((StateMachine)GCHandledObjects.GCHandleToObject(instance)).SetLegalTransition((Type)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((StateMachine)GCHandledObjects.GCHandleToObject(instance)).SetLegalTransition((Type)GCHandledObjects.GCHandleToObject(*args), (Type)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StateMachine)GCHandledObjects.GCHandleToObject(instance)).SetState((IState)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public SquadWarStartMatchmakingCommand(SquadWarStartMatchmakingRequest request) : base("guild.war.matchmaking.start", request, new DefaultResponse())
 		{
 		}
-
-		protected internal SquadWarStartMatchmakingCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

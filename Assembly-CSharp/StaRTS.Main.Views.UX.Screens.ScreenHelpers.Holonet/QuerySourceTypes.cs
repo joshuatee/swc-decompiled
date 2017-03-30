@@ -3,7 +3,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 {
@@ -80,9 +79,9 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			int count = this.pendingSourceTypes.Count;
 			while (i < count)
 			{
-				List<string> list = null;
-				Service.Get<VideoDataManager>().Tags.TryGetValue(this.pendingSourceTypes[i], out list);
-				if (list == videoGuidList)
+				List<string> objA = null;
+				Service.Get<VideoDataManager>().Tags.TryGetValue(this.pendingSourceTypes[i], out objA);
+				if (object.ReferenceEquals(objA, videoGuidList))
 				{
 					text = this.pendingSourceTypes[i];
 				}
@@ -98,43 +97,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				}
 			}
 			this.QueryNextSourceType();
-		}
-
-		protected internal QuerySourceTypes(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QuerySourceTypes)GCHandledObjects.GCHandleToObject(instance)).Active);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QuerySourceTypes)GCHandledObjects.GCHandleToObject(instance)).IsQueryComplete());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((QuerySourceTypes)GCHandledObjects.GCHandleToObject(instance)).OnSourceTypeQueried((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((QuerySourceTypes)GCHandledObjects.GCHandleToObject(instance)).QueryNextSourceType();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QuerySourceTypes)GCHandledObjects.GCHandleToObject(instance)).QueryStart());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((QuerySourceTypes)GCHandledObjects.GCHandleToObject(instance)).Active = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

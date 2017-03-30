@@ -2,7 +2,6 @@ using Net.RichardLord.Ash.Internal;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using WinRTBridge;
 
 namespace Net.RichardLord.Ash.Core
 {
@@ -28,13 +27,33 @@ namespace Net.RichardLord.Ash.Core
 
 		private List<INodeList> nodeLists;
 
-		[method: CompilerGenerated]
-		[CompilerGenerated]
-		public event Action UpdateSimComplete;
+		public event Action UpdateSimComplete
+		{
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			add
+			{
+				this.UpdateSimComplete = (Action)Delegate.Combine(this.UpdateSimComplete, value);
+			}
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			remove
+			{
+				this.UpdateSimComplete = (Action)Delegate.Remove(this.UpdateSimComplete, value);
+			}
+		}
 
-		[method: CompilerGenerated]
-		[CompilerGenerated]
-		public event Action UpdateViewComplete;
+		public event Action UpdateViewComplete
+		{
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			add
+			{
+				this.UpdateViewComplete = (Action)Delegate.Combine(this.UpdateViewComplete, value);
+			}
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			remove
+			{
+				this.UpdateViewComplete = (Action)Delegate.Remove(this.UpdateViewComplete, value);
+			}
+		}
 
 		public bool Updating
 		{
@@ -260,7 +279,7 @@ namespace Net.RichardLord.Ash.Core
 			this.updatingSim = false;
 			if (this.UpdateSimComplete != null)
 			{
-				this.UpdateSimComplete.Invoke();
+				this.UpdateSimComplete();
 			}
 			this.simThread = (ushort)((int)this.simThread << 1 | 1);
 		}
@@ -279,7 +298,7 @@ namespace Net.RichardLord.Ash.Core
 			this.updatingView = false;
 			if (this.UpdateViewComplete != null)
 			{
-				this.UpdateViewComplete.Invoke();
+				this.UpdateViewComplete();
 			}
 			this.viewThread = (ushort)((int)this.viewThread << 1 | 1);
 		}
@@ -305,132 +324,6 @@ namespace Net.RichardLord.Ash.Core
 				this.nodeLists[j].CleanUp();
 				j++;
 			}
-		}
-
-		protected internal Game(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).UpdateSimComplete += (Action)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).UpdateViewComplete += (Action)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).AddEntity((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).ComponentAdded((Entity)GCHandledObjects.GCHandleToObject(*args), (Type)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).ComponentRemoved((Entity)GCHandledObjects.GCHandleToObject(*args), (Type)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Game)GCHandledObjects.GCHandleToObject(instance)).Updating);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Game)GCHandledObjects.GCHandleToObject(instance)).GetAllEntities());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Game)GCHandledObjects.GCHandleToObject(instance)).GetSimSystem((Type)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Game)GCHandledObjects.GCHandleToObject(instance)).GetViewSystem((Type)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).UpdateSimComplete -= (Action)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).UpdateViewComplete -= (Action)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).RemoveAllEntities();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).RemoveAllSimSystems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).RemoveAllSystems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).RemoveAllViewSystems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).RemoveEntity((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).RemoveSimSystem((SimSystemBase)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).RemoveViewSystem((ViewSystemBase)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).RestartThreading();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).StaticReset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((Game)GCHandledObjects.GCHandleToObject(instance)).UpdateViewSystems(*(float*)args);
-			return -1L;
 		}
 	}
 }

@@ -9,14 +9,11 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 {
 	public class PlanetSelectionDropDown
 	{
-		public UXFactory uxFactory;
-
 		private const int NAVIGATION_RIGHT_BG_SMALL = 120;
 
 		private const int NAVIGATION_RIGHT_BG_LARGE = 242;
@@ -51,6 +48,8 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 
 		private const string ALL_PLANET_BUTTON = "BtnAll";
 
+		public UXFactory uxFactory;
+
 		private PlanetVO selectedPlanet;
 
 		private UXButton currentPlanetBtn;
@@ -69,9 +68,19 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 
 		private Lang lang;
 
-		[method: CompilerGenerated]
-		[CompilerGenerated]
-		public event Action<PlanetVO> PlanetSelectCallBack;
+		public event Action<PlanetVO> PlanetSelectCallBack
+		{
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			add
+			{
+				this.PlanetSelectCallBack = (Action<PlanetVO>)Delegate.Combine(this.PlanetSelectCallBack, value);
+			}
+			[MethodImpl(MethodImplOptions.Synchronized)]
+			remove
+			{
+				this.PlanetSelectCallBack = (Action<PlanetVO>)Delegate.Remove(this.PlanetSelectCallBack, value);
+			}
+		}
 
 		public PlanetSelectionDropDown(UXFactory uxFactory)
 		{
@@ -104,11 +113,13 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 				this.cuttentPlanetBtnTexture.Visible = true;
 				this.cuttentPlanetBtnLabel.Text = LangUtils.GetPlanetDisplayName(this.selectedPlanet);
 				this.cuttentPlanetBtnTexture.LoadTexture(this.selectedPlanet.LeaderboardButtonTexture);
-				return;
 			}
-			this.cuttentPlanetBtnBackground.Visible = true;
-			this.cuttentPlanetBtnTexture.Visible = false;
-			this.cuttentPlanetBtnLabel.Text = this.lang.Get("s_ShowAll", new object[0]);
+			else
+			{
+				this.cuttentPlanetBtnBackground.Visible = true;
+				this.cuttentPlanetBtnTexture.Visible = false;
+				this.cuttentPlanetBtnLabel.Text = this.lang.Get("s_ShowAll", new object[0]);
+			}
 		}
 
 		private void TogglePlanetOptions()
@@ -131,7 +142,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 				this.UpdateCurrentPlanetButton();
 				if (this.PlanetSelectCallBack != null)
 				{
-					this.PlanetSelectCallBack.Invoke(this.selectedPlanet);
+					this.PlanetSelectCallBack(this.selectedPlanet);
 				}
 			}
 		}
@@ -153,21 +164,21 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 			{
 			case SocialTabs.Friends:
 				this.DisablePlanetSelection();
-				goto IL_54;
+				goto IL_6A;
 			case SocialTabs.Squads:
 				this.DisablePlanetSelection();
-				goto IL_54;
+				goto IL_6A;
 			case SocialTabs.Leaders:
 				this.InitPlanetOptionPlayerTab();
 				this.ActivatePlanetSelection();
-				goto IL_54;
+				goto IL_6A;
 			case SocialTabs.Tournament:
 				this.InitPlanetOptionTournamentTab();
 				this.ActivatePlanetSelection();
-				goto IL_54;
+				goto IL_6A;
 			}
 			this.DisablePlanetSelection();
-			IL_54:
+			IL_6A:
 			this.UpdateCurrentPlanetButton();
 		}
 
@@ -287,140 +298,17 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 
 		public string GetSelectedPlanetId()
 		{
-			if (this.selectedPlanet != null)
-			{
-				return this.selectedPlanet.Uid;
-			}
-			return null;
+			return (this.selectedPlanet != null) ? this.selectedPlanet.Uid : null;
 		}
 
 		public string GetSelectedPlanetTabName()
 		{
-			if (this.selectedPlanet != null)
-			{
-				return this.selectedPlanet.PlanetBIName.ToLower();
-			}
-			return "all";
+			return (this.selectedPlanet != null) ? this.selectedPlanet.PlanetBIName.ToLower() : "all";
 		}
 
 		public void DestroyGrid()
 		{
 			this.planetGrid.Clear();
-		}
-
-		protected internal PlanetSelectionDropDown(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).ActivatePlanetSelection();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).PlanetSelectCallBack += (Action<PlanetVO>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).AddAllPlanetButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).AddPlanetButton((PlanetVO)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).CurrentPlanetButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).DestroyGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).DisablePlanetSelection();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).GetSelectedPlanet());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).GetSelectedPlanetId());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).GetSelectedPlanetTabName());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).Init();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).InitPlanetOptionPlayerTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).InitPlanetOptionTournamentTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).NewPlanetOptionClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).PlanetSelectCallBack -= (Action<PlanetVO>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).SelectPlanet((PlanetVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).SetStatePlanetOptions((SocialTabs)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).TogglePlanetOptions();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((PlanetSelectionDropDown)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentPlanetButton();
-			return -1L;
 		}
 	}
 }

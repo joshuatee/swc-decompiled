@@ -7,14 +7,12 @@ using StaRTS.Main.Models;
 using StaRTS.Main.Models.Commands.Player;
 using StaRTS.Main.Models.Player;
 using StaRTS.Main.Models.ValueObjects;
+using StaRTS.Main.Utils;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Globalization;
-using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -65,7 +63,7 @@ namespace StaRTS.Main.Story.Actions
 			{
 				Service.Get<EventManager>().RegisterObserver(this, EventId.MissionCompleteScreenDisplayed, EventPriority.Default);
 			}
-			this.numTimesViewed = Convert.ToInt32(Service.Get<ServerPlayerPrefs>().GetPref(ServerPref.NumRateAppViewed), CultureInfo.InvariantCulture);
+			this.numTimesViewed = Convert.ToInt32(Service.Get<ServerPlayerPrefs>().GetPref(ServerPref.NumRateAppViewed));
 			this.numTimesViewed++;
 			Service.Get<ServerPlayerPrefs>().SetPref(ServerPref.NumRateAppViewed, this.numTimesViewed.ToString());
 			SetPrefsCommand command = new SetPrefsCommand(false);
@@ -104,44 +102,13 @@ namespace StaRTS.Main.Story.Actions
 				Service.Get<ServerPlayerPrefs>().SetPref(ServerPref.RatedApp, "1");
 				SetPrefsCommand command = new SetPrefsCommand(false);
 				Service.Get<ServerAPI>().Sync(command);
-				string text = "ms-windows-store:PDP?PFN=Disney.StarWarsCommander_6rarf9sa4v8jt";
-				if (!string.IsNullOrEmpty(text))
-				{
-					Application.OpenURL(text);
-				}
+				GameUtils.TryAndOpenAppropriateStorePage();
 			}
 			else
 			{
 				Service.Get<BILoggingController>().TrackGameAction("rateapp", "no", this.numTimesViewed.ToString(), null, 1);
 			}
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal ShowRateAppScreenStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShowRateAppScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShowRateAppScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ShowRateAppScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnNotificationScreenClosed(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ShowRateAppScreenStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

@@ -8,27 +8,24 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
 	public class StarportDecalManager : IEventObserver
 	{
+		public const string FX_STARPORT_DECAL_MESH_NAME = "numberMesh";
+
 		public static readonly float[] FX_STARPORT_DECAL_OFFSET = new float[]
 		{
-			default(float),
+			0f,
 			0.666f,
 			0.333f
 		};
 
-		public const string FX_STARPORT_DECAL_MESH_NAME = "numberMesh";
-
-		private List<Material> decalMaterials;
+		private List<Material> decalMaterials = new List<Material>();
 
 		public StarportDecalManager()
 		{
-			this.decalMaterials = new List<Material>();
-			base..ctor();
 			Service.Get<EventManager>().RegisterObserver(this, EventId.BuildingViewReady, EventPriority.Default);
 			Service.Get<EventManager>().RegisterObserver(this, EventId.WorldReset, EventPriority.Default);
 		}
@@ -85,27 +82,6 @@ namespace StaRTS.FX
 				this.SetStarportDecal(entity);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal StarportDecalManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StarportDecalManager)GCHandledObjects.GCHandleToObject(instance)).DestroyMaterials();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StarportDecalManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((StarportDecalManager)GCHandledObjects.GCHandleToObject(instance)).SetStarportDecal((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

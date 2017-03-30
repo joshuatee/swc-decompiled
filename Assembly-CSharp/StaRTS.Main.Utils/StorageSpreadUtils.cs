@@ -11,7 +11,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -44,7 +43,7 @@ namespace StaRTS.Main.Utils
 				}
 			}
 			list.Sort(new Comparison<StorageNode>(StorageSpreadUtils.CompareStorageNode));
-			int num2 = (targetBuilding == null) ? 0 : targetBuilding.Get<BuildingComponent>().BuildingType.Storage;
+			int num2 = (targetBuilding != null) ? targetBuilding.Get<BuildingComponent>().BuildingType.Storage : 0;
 			int num3 = 0;
 			int num4 = -1;
 			int i = 0;
@@ -67,9 +66,12 @@ namespace StaRTS.Main.Utils
 				{
 					num5 = storage;
 				}
-				if (targetBuilding != null && (num5 < storage || storage == num2))
+				if (targetBuilding != null)
 				{
-					return num5;
+					if (num5 < storage || storage == num2)
+					{
+						return num5;
+					}
 				}
 				num -= num5;
 				i++;
@@ -149,7 +151,7 @@ namespace StaRTS.Main.Utils
 							int num8 = array2[num7];
 							if (num8 > 0)
 							{
-								int num9 = (num6 < num8) ? num6 : num8;
+								int num9 = (num6 >= num8) ? num8 : num6;
 								array2[num7] -= num9;
 								num -= num9;
 								num6 -= num9;
@@ -207,9 +209,11 @@ namespace StaRTS.Main.Utils
 				if (num > 1f)
 				{
 					StorageSpreadUtils.UpdateAllStarportFullnessMeters();
-					return;
 				}
-				StorageSpreadUtils.SetStarportFullnessPercent(starport, num);
+				else
+				{
+					StorageSpreadUtils.SetStarportFullnessPercent(starport, num);
+				}
 			}
 		}
 
@@ -226,21 +230,13 @@ namespace StaRTS.Main.Utils
 		private static float GetStarportFullnessPercent(Entity starport)
 		{
 			MeterShaderComponent meterShaderComponent = starport.Get<MeterShaderComponent>();
-			if (meterShaderComponent != null)
-			{
-				return meterShaderComponent.Percentage;
-			}
-			return 0f;
+			return (meterShaderComponent != null) ? meterShaderComponent.Percentage : 0f;
 		}
 
 		private static int GetStarportFillSize(Entity starport)
 		{
 			MeterShaderComponent meterShaderComponent = starport.Get<MeterShaderComponent>();
-			if (meterShaderComponent != null)
-			{
-				return meterShaderComponent.FillSize;
-			}
-			return 0;
+			return (meterShaderComponent != null) ? meterShaderComponent.FillSize : 0;
 		}
 
 		private static void SetStarportFullnessPercent(Entity starport, float percent)
@@ -291,79 +287,9 @@ namespace StaRTS.Main.Utils
 			int num = a.BuildingType.Storage - b.BuildingType.Storage;
 			if (num == 0)
 			{
-				num = ((a.Entity.ID > b.Entity.ID) ? 1 : -1);
+				num = ((a.Entity.ID <= b.Entity.ID) ? -1 : 1);
 			}
 			return num;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			StorageSpreadUtils.AddTroopToStarportReserve((Entity)GCHandledObjects.GCHandleToObject(*args), (TroopTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			StorageSpreadUtils.AddTroopToStarportVisually((Entity)GCHandledObjects.GCHandleToObject(*args), (TroopTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StorageSpreadUtils.CalculateAssumedCurrencyInStorage((CurrencyType)(*(int*)args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StorageSpreadUtils.CompareEntityStorage((BuildingComponent)GCHandledObjects.GCHandleToObject(*args), (BuildingComponent)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StorageSpreadUtils.CompareStarportNode((StarportNode)GCHandledObjects.GCHandleToObject(*args), (StarportNode)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StorageSpreadUtils.CompareStorageNode((StorageNode)GCHandledObjects.GCHandleToObject(*args), (StorageNode)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StorageSpreadUtils.CompareTroop((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (TroopTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StorageSpreadUtils.FindLeastFullStarport());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StorageSpreadUtils.GetStarportFillSize((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(StorageSpreadUtils.GetStarportFullnessPercent((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			StorageSpreadUtils.SetStarportFillSize((Entity)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			StorageSpreadUtils.SetStarportFullnessPercent((Entity)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			StorageSpreadUtils.UpdateAllStarportFullnessMeters();
-			return -1L;
 		}
 	}
 }

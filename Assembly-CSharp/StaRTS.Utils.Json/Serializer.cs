@@ -1,20 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using WinRTBridge;
 
 namespace StaRTS.Utils.Json
 {
 	public class Serializer
 	{
-		private StringBuilder sb;
-
-		private bool first;
-
 		private const string KEY_VALUE_QUOTED = "\"{0}\":\"{1}\"";
 
 		private const string KEY_VALUE_UNQUOTED = "\"{0}\":{1}";
@@ -30,6 +23,10 @@ namespace StaRTS.Utils.Json
 		private const string ARRAY_END = "]";
 
 		private const string COMMA = ",";
+
+		private StringBuilder sb;
+
+		private bool first;
 
 		private static readonly Dictionary<string, string> ESCAPE_MAPPING = new Dictionary<string, string>
 		{
@@ -73,6 +70,13 @@ namespace StaRTS.Utils.Json
 
 		private static readonly Regex ESCAPE_REGEX = new Regex(string.Join("|", Serializer.ESCAPE_MAPPING.Keys.ToArray<string>()));
 
+		public Serializer()
+		{
+			this.sb = new StringBuilder();
+			this.sb.Append("{");
+			this.first = true;
+		}
+
 		private static string Escape(string s)
 		{
 			if (s != null)
@@ -85,13 +89,6 @@ namespace StaRTS.Utils.Json
 		private static string EscapeMatchEval(Match m)
 		{
 			return Serializer.ESCAPE_MAPPING[m.Value];
-		}
-
-		public Serializer()
-		{
-			this.sb = new StringBuilder();
-			this.sb.Append("{");
-			this.first = true;
 		}
 
 		public static Serializer Start()
@@ -128,11 +125,7 @@ namespace StaRTS.Utils.Json
 		private Serializer AddInternal<T>(string key, T val, string format)
 		{
 			this.AppendComma(this.first);
-			this.sb.AppendFormat(CultureInfo.InvariantCulture, format, new object[]
-			{
-				Serializer.Escape(key),
-				val
-			});
+			this.sb.AppendFormat(format, Serializer.Escape(key), val);
 			this.first = false;
 			return this;
 		}
@@ -145,10 +138,7 @@ namespace StaRTS.Utils.Json
 		public Serializer AddArray<T>(string key, List<T> values) where T : ISerializable
 		{
 			this.AppendComma(this.first);
-			this.sb.AppendFormat(CultureInfo.InvariantCulture, "\"{0}\":", new object[]
-			{
-				Serializer.Escape(key)
-			});
+			this.sb.AppendFormat("\"{0}\":", Serializer.Escape(key));
 			this.sb.Append("[");
 			bool flag = true;
 			foreach (T current in values)
@@ -165,10 +155,7 @@ namespace StaRTS.Utils.Json
 		public Serializer AddDictionary<T>(string key, Dictionary<string, T> values)
 		{
 			this.AppendComma(this.first);
-			this.sb.AppendFormat(CultureInfo.InvariantCulture, "\"{0}\":", new object[]
-			{
-				Serializer.Escape(key)
-			});
+			this.sb.AppendFormat("\"{0}\":", Serializer.Escape(key));
 			this.sb.Append("{");
 			bool flag = typeof(T) == typeof(string);
 			this.first = true;
@@ -176,20 +163,20 @@ namespace StaRTS.Utils.Json
 			{
 				if (flag)
 				{
-					if (current.get_Value() != null)
+					if (current.Value != null)
 					{
-						string arg_9F_1 = current.get_Key();
-						T value = current.get_Value();
-						this.AddString(arg_9F_1, value.ToString());
+						string arg_9A_1 = current.Key;
+						T value = current.Value;
+						this.AddString(arg_9A_1, value.ToString());
 					}
 					else
 					{
-						this.AddString(current.get_Key(), null);
+						this.AddString(current.Key, null);
 					}
 				}
 				else
 				{
-					this.Add<T>(current.get_Key(), current.get_Value());
+					this.Add<T>(current.Key, current.Value);
 				}
 			}
 			this.first = false;
@@ -200,10 +187,7 @@ namespace StaRTS.Utils.Json
 		public Serializer AddArrayOfPrimitives<T>(string key, List<T> values)
 		{
 			this.AppendComma(this.first);
-			this.sb.AppendFormat(CultureInfo.InvariantCulture, "\"{0}\":", new object[]
-			{
-				Serializer.Escape(key)
-			});
+			this.sb.AppendFormat("\"{0}\":", Serializer.Escape(key));
 			this.sb.Append("[");
 			bool flag = true;
 			bool flag2 = typeof(T) == typeof(string);
@@ -248,69 +232,6 @@ namespace StaRTS.Utils.Json
 			{
 				this.sb.Append(",");
 			}
-		}
-
-		protected internal Serializer(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((Serializer)GCHandledObjects.GCHandleToObject(instance)).Add((ISerializable)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((Serializer)GCHandledObjects.GCHandleToObject(instance)).Add(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Serializer)GCHandledObjects.GCHandleToObject(instance)).AddBool(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((Serializer)GCHandledObjects.GCHandleToObject(instance)).AddQuoted(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Serializer)GCHandledObjects.GCHandleToObject(instance)).AddString(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((Serializer)GCHandledObjects.GCHandleToObject(instance)).AppendComma(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Serializer)GCHandledObjects.GCHandleToObject(instance)).End());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Serializer.Escape(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Serializer.EscapeMatchEval((Match)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Serializer.Start());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Serializer)GCHandledObjects.GCHandleToObject(instance)).ToString());
 		}
 	}
 }

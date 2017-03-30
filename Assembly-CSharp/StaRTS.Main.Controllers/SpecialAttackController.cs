@@ -17,11 +17,8 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -192,9 +189,11 @@ namespace StaRTS.Main.Controllers
 			if (specialAttack.ShadowAnimator == null)
 			{
 				specialAttack.ShadowAnimator = new ShadowAnim(gameObject);
-				return;
 			}
-			specialAttack.ShadowAnimator.EnsureShadowAnimSetup(gameObject);
+			else
+			{
+				specialAttack.ShadowAnimator.EnsureShadowAnimSetup(gameObject);
+			}
 		}
 
 		private bool DoesSpecialAttackNeedTakeoffAndLanding(SpecialAttack specialAttack)
@@ -231,14 +230,14 @@ namespace StaRTS.Main.Controllers
 			float angle = (float)(rand.SimRange(-specialAttack.VO.AngleOfRollVariance, specialAttack.VO.AngleOfRollVariance + 1) + specialAttack.VO.AngleOfRoll);
 			AttackFormation attackFormation = specialAttack.VO.AttackFormation;
 			float angle2;
-			if (attackFormation == AttackFormation.Semicircle)
+			if (attackFormation != AttackFormation.Semicircle)
 			{
-				int num = Convert.ToInt32((long)((ulong)specialAttack.AttackerIndex * (ulong)((long)(2 * specialAttack.VO.AngleOfAttackVariance) / (long)((ulong)specialAttack.VO.NumberOfAttackers))), CultureInfo.InvariantCulture);
-				angle2 = (float)(specialAttack.VO.AngleOfAttack - specialAttack.VO.AngleOfAttackVariance + num);
+				angle2 = (float)(rand.SimRange(-specialAttack.VO.AngleOfAttackVariance, specialAttack.VO.AngleOfAttackVariance + 1) + specialAttack.VO.AngleOfAttack);
 			}
 			else
 			{
-				angle2 = (float)(rand.SimRange(-specialAttack.VO.AngleOfAttackVariance, specialAttack.VO.AngleOfAttackVariance + 1) + specialAttack.VO.AngleOfAttack);
+				int num = Convert.ToInt32((long)((ulong)specialAttack.AttackerIndex * (ulong)((long)(2 * specialAttack.VO.AngleOfAttackVariance) / (long)((ulong)specialAttack.VO.NumberOfAttackers))));
+				angle2 = (float)(specialAttack.VO.AngleOfAttack - specialAttack.VO.AngleOfAttackVariance + num);
 			}
 			specialAttack.StarshipGameObject.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward) * Quaternion.AngleAxis(angle2, Vector3.up);
 			specialAttack.StarshipGameObject.transform.position = new Vector3(specialAttack.TargetWorldPos.x, specialAttack.StarshipGameObject.transform.position.y, specialAttack.TargetWorldPos.z);
@@ -249,7 +248,7 @@ namespace StaRTS.Main.Controllers
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("SpecialAttack gun locator game objects are not set in meta: {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("SpecialAttack gun locator game objects are not set in meta: {0}", new object[]
 				{
 					specialAttack.VO.Uid
 				});
@@ -399,13 +398,9 @@ namespace StaRTS.Main.Controllers
 			{
 				return;
 			}
-			using (IEnumerator enumerator = specialAttack.StarshipGameObject.GetComponent<Animation>().GetEnumerator())
+			foreach (AnimationState animationState in specialAttack.StarshipGameObject.GetComponent<Animation>())
 			{
-				while (enumerator.MoveNext())
-				{
-					AnimationState animationState = (AnimationState)enumerator.get_Current();
-					animationState.speed = this.speed;
-				}
+				animationState.speed = this.speed;
 			}
 		}
 
@@ -471,7 +466,7 @@ namespace StaRTS.Main.Controllers
 			SpecialAttack specialAttack = (SpecialAttack)cookie;
 			if (specialAttack.EffectAnimator == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("DropShip SpecialAttack EffectAnimator is null: {0}", new object[]
+				Service.Get<Logger>().WarnFormat("DropShip SpecialAttack EffectAnimator is null: {0}", new object[]
 				{
 					specialAttack.VO.Uid
 				});
@@ -524,24 +519,27 @@ namespace StaRTS.Main.Controllers
 			this.UnloadPreloads();
 			IDataController dataController = Service.Get<IDataController>();
 			Dictionary<string, int> allPlayerDeployableSpecialAttacks = Service.Get<BattleController>().GetAllPlayerDeployableSpecialAttacks();
-			List<string> list = new List<string>();
 			if (allPlayerDeployableSpecialAttacks == null || allPlayerDeployableSpecialAttacks.Count == 0)
 			{
 				return;
 			}
+			HashSet<string> hashSet = new HashSet<string>();
 			foreach (string current in allPlayerDeployableSpecialAttacks.Keys)
 			{
 				SpecialAttackTypeVO specialAttackTypeVO = dataController.Get<SpecialAttackTypeVO>(current);
 				string dropoffAttachedAssetName = specialAttackTypeVO.DropoffAttachedAssetName;
 				if (!string.IsNullOrEmpty(dropoffAttachedAssetName))
 				{
-					list.Add(dropoffAttachedAssetName);
+					hashSet.Add(dropoffAttachedAssetName);
 				}
 			}
-			if (list.Count == 0)
+			if (hashSet.Count == 0)
 			{
 				return;
 			}
+			List<string> list = new List<string>(hashSet);
+			hashSet.Clear();
+			hashSet = null;
 			List<object> list2 = new List<object>();
 			List<AssetHandle> list3 = new List<AssetHandle>();
 			int i = 0;
@@ -557,7 +555,7 @@ namespace StaRTS.Main.Controllers
 			int count2 = list.Count;
 			while (j < count2)
 			{
-				this.preloadedAssets.Add(list[j], list3[j]);
+				this.preloadedAssets[list[j]] = list3[j];
 				j++;
 			}
 		}
@@ -606,29 +604,29 @@ namespace StaRTS.Main.Controllers
 		private void SpawnProjectile(uint id, object cookie)
 		{
 			SpecialAttack specialAttack = (SpecialAttack)cookie;
-			StaRTSLogger staRTSLogger = Service.Get<StaRTSLogger>();
+			Logger logger = Service.Get<Logger>();
 			if (specialAttack == null)
 			{
-				staRTSLogger.Error("SpawnProjectile: specialAttack is null");
+				logger.Error("SpawnProjectile: specialAttack is null");
 				this.SendSpecialAttackFired(null);
 				return;
 			}
 			if (specialAttack.GetGunLocator() == null)
 			{
-				staRTSLogger.Error("SpawnProjectile: specialAttack.GetGunLocator() is null " + specialAttack.VO.Uid);
+				logger.Error("SpawnProjectile: specialAttack.GetGunLocator() is null " + specialAttack.VO.Uid);
 				this.SendSpecialAttackFired(specialAttack.VO);
 				return;
 			}
 			if (specialAttack.GetGunLocator().transform == null)
 			{
-				staRTSLogger.Error("SpawnProjectile: specialAttack.GetGunLocator().transform is null " + specialAttack.VO.Uid);
+				logger.Error("SpawnProjectile: specialAttack.GetGunLocator().transform is null " + specialAttack.VO.Uid);
 				this.SendSpecialAttackFired(specialAttack.VO);
 				return;
 			}
 			Vector3 position = specialAttack.GetGunLocator().transform.position;
 			if (specialAttack.VO == null)
 			{
-				staRTSLogger.Error("SpawnProjectile: specialAttack.VO is null");
+				logger.Error("SpawnProjectile: specialAttack.VO is null");
 				this.SendSpecialAttackFired(specialAttack.VO);
 				return;
 			}
@@ -642,7 +640,7 @@ namespace StaRTS.Main.Controllers
 				Entity shieldBorderEntity = specialAttack.TargetShield.ShieldBorderEntity;
 				if (shieldBorderEntity == null)
 				{
-					staRTSLogger.Error("SpawnProjectile: shieldTarget is null");
+					logger.Error("SpawnProjectile: shieldTarget is null");
 					this.SendSpecialAttackFired(specialAttack.VO);
 					return;
 				}
@@ -695,10 +693,14 @@ namespace StaRTS.Main.Controllers
 			if (!this.projectilesInFlight.ContainsKey(vo))
 			{
 				this.projectilesInFlight.Add(vo, 1);
-				return;
 			}
-			Dictionary<ProjectileTypeVO, int> dictionary = this.projectilesInFlight;
-			dictionary[vo]++;
+			else
+			{
+				Dictionary<ProjectileTypeVO, int> dictionary;
+				Dictionary<ProjectileTypeVO, int> expr_6B = dictionary = this.projectilesInFlight;
+				int num = dictionary[vo];
+				expr_6B[vo] = num + 1;
+			}
 		}
 
 		private void RemoveProjectileInFlight(ProjectileTypeVO vo)
@@ -707,8 +709,10 @@ namespace StaRTS.Main.Controllers
 			{
 				return;
 			}
-			Dictionary<ProjectileTypeVO, int> dictionary = this.projectilesInFlight;
-			dictionary[vo]--;
+			Dictionary<ProjectileTypeVO, int> dictionary;
+			Dictionary<ProjectileTypeVO, int> expr_18 = dictionary = this.projectilesInFlight;
+			int num = dictionary[vo];
+			expr_18[vo] = num - 1;
 			if (this.projectilesInFlight[vo] == 0)
 			{
 				this.projectilesInFlight.Remove(vo);
@@ -734,212 +738,56 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id != EventId.ProjectileImpacted)
+			switch (id)
 			{
-				if (id != EventId.ProjectileViewPathComplete)
-				{
-					if (id == EventId.BattleEndProcessing)
-					{
-						bool flag = (bool)cookie;
-						if (flag)
-						{
-							this.Reset();
-						}
-					}
-				}
-				else
-				{
-					Bullet bullet = (Bullet)cookie;
-					if (bullet.Cookie != null)
-					{
-						SpecialAttack specialAttack = (SpecialAttack)bullet.Cookie;
-						if (specialAttack.StarshipDetachableGameObject != null)
-						{
-							this.OnDetachableGameObjectImpact(specialAttack);
-						}
-					}
-				}
-			}
-			else
+			case EventId.ProjectileImpacted:
 			{
-				Bullet bullet2 = (Bullet)cookie;
-				this.RemoveProjectileInFlight(bullet2.ProjectileType);
-				if (bullet2.Cookie != null)
+				Bullet bullet = (Bullet)cookie;
+				this.RemoveProjectileInFlight(bullet.ProjectileType);
+				if (bullet.Cookie != null)
 				{
-					SpecialAttack specialAttack2 = (SpecialAttack)bullet2.Cookie;
-					if (specialAttack2.VO.HasDropoff)
+					SpecialAttack specialAttack = (SpecialAttack)bullet.Cookie;
+					if (specialAttack.VO.HasDropoff)
 					{
 						this.numHoveringInbound--;
 					}
 				}
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			case EventId.ProjectileViewImpacted:
+			{
+				IL_19:
+				if (id != EventId.BattleEndProcessing)
+				{
+					return EatResponse.NotEaten;
+				}
+				bool flag = (bool)cookie;
+				if (flag)
+				{
+					this.Reset();
+				}
+				return EatResponse.NotEaten;
+			}
+			case EventId.ProjectileViewPathComplete:
+			{
+				Bullet bullet2 = (Bullet)cookie;
+				if (bullet2.Cookie != null)
+				{
+					SpecialAttack specialAttack2 = (SpecialAttack)bullet2.Cookie;
+					if (specialAttack2.StarshipDetachableGameObject != null)
+					{
+						this.OnDetachableGameObjectImpact(specialAttack2);
+					}
+				}
+				return EatResponse.NotEaten;
+			}
+			}
+			goto IL_19;
 		}
 
 		public bool HasUnexpendedSpecialAttacks()
 		{
 			return this.specialAttacksDeployed.Count > 0 || this.numShipsScheduled > 0 || this.numAttackScheduled > 0 || this.numHoveringInbound > 0 || this.thereAreProjectilesInFlight;
-		}
-
-		protected internal SpecialAttackController(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).AddProjectileInFlight((ProjectileTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).AttachGameObject((Transform)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).DeploySpecialAttack((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).Destroy((SpecialAttack)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).DestroyAll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).DoesSpecialAttackNeedTakeoffAndLanding((SpecialAttack)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).EnsureShadowAnimator((SpecialAttack)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).HasUnexpendedSpecialAttacks());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).IntantiateEffect(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).OnAssetSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).OnAttachmentLoadedSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).OnDetachableGameObjectImpact((SpecialAttack)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).OnGameObjectFadeComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).OnLandingFxSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).OnSpecialAttackPreloadsComplete(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).OnTakeOffFxSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).PlayParticle((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).PreloadSpecialAttackMiscAssets();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).RemoveProjectileInFlight((ProjectileTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).ResetTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).SendSpecialAttackFired((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).SetSpeed(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).UnloadPreloads();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).UpdateSpecialAttacks();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((SpecialAttackController)GCHandledObjects.GCHandleToObject(instance)).UpdateSpeed((SpecialAttack)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

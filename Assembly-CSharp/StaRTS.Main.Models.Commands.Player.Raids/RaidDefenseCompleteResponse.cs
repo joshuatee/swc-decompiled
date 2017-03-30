@@ -5,8 +5,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player.Raids
 {
@@ -45,30 +43,6 @@ namespace StaRTS.Main.Models.Commands.Player.Raids
 				}
 			}
 			return this;
-		}
-
-		public RaidDefenseCompleteResponse()
-		{
-		}
-
-		protected internal RaidDefenseCompleteResponse(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseCompleteResponse)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseCompleteResponse)GCHandledObjects.GCHandleToObject(instance)).AwardedCrateUid);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((RaidDefenseCompleteResponse)GCHandledObjects.GCHandleToObject(instance)).AwardedCrateUid = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
 		}
 	}
 }

@@ -1,6 +1,5 @@
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Campaign
 {
@@ -23,15 +22,6 @@ namespace StaRTS.Main.Models.Commands.Campaign
 			startedSerializer.AddString("campaignUid", this.campaignUid);
 			startedSerializer.Add<int>("count", 1);
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal CampaignStoreBuyRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignStoreBuyRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

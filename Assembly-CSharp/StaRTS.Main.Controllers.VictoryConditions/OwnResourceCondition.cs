@@ -4,8 +4,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.VictoryConditions
 {
@@ -24,7 +22,7 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 		public OwnResourceCondition(ConditionVO vo, IConditionParent parent) : base(vo, parent)
 		{
 			this.resourceKey = this.prepareArgs[1];
-			this.threshold = Convert.ToInt32(this.prepareArgs[0], CultureInfo.InvariantCulture);
+			this.threshold = Convert.ToInt32(this.prepareArgs[0]);
 		}
 
 		public override void GetProgress(out int current, out int total)
@@ -34,9 +32,11 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 			if (currentPlayer.Inventory.HasItem(this.resourceKey))
 			{
 				current = currentPlayer.Inventory.GetItemAmount(this.resourceKey);
-				return;
 			}
-			current = 0;
+			else
+			{
+				current = 0;
+			}
 		}
 
 		public override void Start()
@@ -44,10 +44,12 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 			if (this.IsConditionSatisfied())
 			{
 				this.parent.ChildSatisfied(this);
-				return;
 			}
-			this.events.RegisterObserver(this, EventId.InventoryResourceUpdated, EventPriority.Default);
-			this.observingEvents = true;
+			else
+			{
+				this.events.RegisterObserver(this, EventId.InventoryResourceUpdated, EventPriority.Default);
+				this.observingEvents = true;
+			}
 		}
 
 		public override void Destroy()
@@ -73,32 +75,6 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 				this.parent.ChildSatisfied(this);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal OwnResourceCondition(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((OwnResourceCondition)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((OwnResourceCondition)GCHandledObjects.GCHandleToObject(instance)).IsConditionSatisfied());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((OwnResourceCondition)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((OwnResourceCondition)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

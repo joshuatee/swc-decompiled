@@ -8,7 +8,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Squads
 {
@@ -66,31 +65,6 @@ namespace StaRTS.Main.Controllers.Squads
 			uint donationCooldownEndTime = (uint)troopDonationProgress.DonationCooldownEndTime;
 			uint serverTime = Service.Get<ServerAPI>().ServerTime;
 			return (int)(donationCooldownEndTime - serverTime);
-		}
-
-		protected internal TroopDonationTrackController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopDonationTrackController)GCHandledObjects.GCHandleToObject(instance)).GetTimeRemainingUntilNextProgressTrack());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopDonationTrackController)GCHandledObjects.GCHandleToObject(instance)).GetTroopDonationProgressAmount());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopDonationTrackController)GCHandledObjects.GCHandleToObject(instance)).IsTroopDonationProgressComplete());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TroopDonationTrackController)GCHandledObjects.GCHandleToObject(instance)).UpdateTroopDonationProgress((TroopDonateResponse)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

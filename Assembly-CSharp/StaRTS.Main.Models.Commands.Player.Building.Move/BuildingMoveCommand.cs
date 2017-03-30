@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Move
 		public BuildingMoveCommand(BuildingMoveRequest request) : base("player.building.move", request, new DefaultResponse())
 		{
 		}
-
-		protected internal BuildingMoveCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

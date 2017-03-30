@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Deployable.Upgrade.Start
 		public DeployableUpgradeStartCommand(DeployableUpgradeStartRequest request) : base("player.deployable.upgrade.start", request, new DefaultResponse())
 		{
 		}
-
-		protected internal DeployableUpgradeStartCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

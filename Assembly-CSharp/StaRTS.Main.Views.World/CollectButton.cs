@@ -6,7 +6,6 @@ using StaRTS.Main.Utils;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -42,14 +41,13 @@ namespace StaRTS.Main.Views.World
 					if (this.visible && this.assetHandle == AssetHandle.Invalid)
 					{
 						Service.Get<AssetManager>().Load(ref this.assetHandle, this.assetName, new AssetSuccessDelegate(this.OnLoad), null, null);
-						return;
 					}
-					if (this.view3d != null)
+					else if (this.view3d != null)
 					{
 						Animator component = this.view3d.GetComponent<Animator>();
 						if (component != null)
 						{
-							component.SetTrigger(this.visible ? "Show" : "Hide");
+							component.SetTrigger((!this.visible) ? "Hide" : "Show");
 						}
 					}
 				}
@@ -104,33 +102,6 @@ namespace StaRTS.Main.Views.World
 				Service.Get<AssetManager>().Unload(this.assetHandle);
 				this.assetHandle = AssetHandle.Invalid;
 			}
-		}
-
-		protected internal CollectButton(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CollectButton)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CollectButton)GCHandledObjects.GCHandleToObject(instance)).Visible);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CollectButton)GCHandledObjects.GCHandleToObject(instance)).OnLoad(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CollectButton)GCHandledObjects.GCHandleToObject(instance)).Visible = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

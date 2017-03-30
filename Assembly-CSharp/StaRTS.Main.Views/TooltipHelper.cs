@@ -6,7 +6,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views
 {
@@ -115,7 +114,7 @@ namespace StaRTS.Main.Views
 		{
 			MainCamera mainCamera = Service.Get<CameraManager>().MainCamera;
 			Vector3 vector = mainCamera.CurrentCameraPosition - mainCamera.CurrentCameraShakeOffset;
-			Vector3 vector2 = (this.attachmentView.MainTransform == null) ? this.lastViewLocation : this.attachmentView.MainTransform.position;
+			Vector3 vector2 = (!(this.attachmentView.MainTransform == null)) ? this.attachmentView.MainTransform.position : this.lastViewLocation;
 			bool flag = vector != this.lastCameraLocation;
 			bool flag2 = vector2 != this.lastViewLocation;
 			if (extraHeightOffGround == 0f && !flag && !flag2)
@@ -164,8 +163,7 @@ namespace StaRTS.Main.Views
 			{
 				if (onFadeComplete != null)
 				{
-					onFadeComplete.Invoke();
-					return;
+					onFadeComplete();
 				}
 			}
 			else
@@ -177,7 +175,7 @@ namespace StaRTS.Main.Views
 
 		public bool HasFadeTimer()
 		{
-			return this.fadeTimerId > 0u;
+			return this.fadeTimerId != 0u;
 		}
 
 		private void KillFadeTimer()
@@ -197,90 +195,9 @@ namespace StaRTS.Main.Views
 				Action action = (Action)cookie;
 				if (action != null)
 				{
-					action.Invoke();
+					action();
 				}
 			}
-		}
-
-		protected internal TooltipHelper(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).Enabled);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).Slot);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).GoAwayIn(*(float*)args, (Action)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).HasFadeTimer());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).KillFadeTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).ResetLast();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).Enabled = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).Slot = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).SetTooltipElement((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).SetupElements((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1]), *(float*)(args + 2), *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).TeardownElements(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).UpdateLocation(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TooltipHelper)GCHandledObjects.GCHandleToObject(instance)).UpdateLocation(*(float*)args, *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TooltipHelper.WouldOverlapAnotherTooltip((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

@@ -6,7 +6,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Cameras
 {
@@ -151,7 +150,7 @@ namespace StaRTS.Main.Views.Cameras
 		public MainCamera()
 		{
 			this.unityCamera = Camera.main;
-			this.camera = ((this.unityCamera == null) ? null : this.unityCamera.gameObject);
+			this.camera = ((!(this.unityCamera == null)) ? this.unityCamera.gameObject : null);
 			if (this.camera == null)
 			{
 				throw new Exception("Unable to find the Main Camera");
@@ -185,7 +184,7 @@ namespace StaRTS.Main.Views.Cameras
 		public MainCamera(string cameraName)
 		{
 			this.unityCamera = Camera.main;
-			this.camera = ((this.unityCamera == null) ? null : this.unityCamera.gameObject);
+			this.camera = ((!(this.unityCamera == null)) ? this.unityCamera.gameObject : null);
 			if (this.camera == null)
 			{
 				throw new Exception("Unable to find the Main Camera");
@@ -354,7 +353,7 @@ namespace StaRTS.Main.Views.Cameras
 			{
 				return;
 			}
-			Service.Get<StaRTSLogger>().Warn("Camera reached ultra bounds: " + position);
+			Service.Get<Logger>().Warn("Camera reached ultra bounds: " + position);
 			this.PositionCamera(this.defCameraLocation);
 			this.PositionLookat(this.defLookatLocation);
 			this.StopMoving();
@@ -545,285 +544,15 @@ namespace StaRTS.Main.Views.Cameras
 
 		public override bool GetGroundPosition(Vector3 screenPosition, ref Vector3 groundPosition)
 		{
-			Vector3 rayOrigin = (base.GroundOffset == 0f) ? this.physicalCamera.Position : this.unityCamera.transform.position;
+			Vector3 rayOrigin = (base.GroundOffset != 0f) ? this.unityCamera.transform.position : this.physicalCamera.Position;
 			return CameraUtils.GetGroundPositionHelper(this.unityCamera, screenPosition, rayOrigin, this.distanceFromEyeToScreen, base.GroundOffset, ref groundPosition);
 		}
 
 		private float DistanceToOrigin(Vector3 cameraEye)
 		{
-			Vector3 vector = Vector3.Normalize(Vector3.zero - cameraEye);
-			return -cameraEye.y / vector.y;
-		}
-
-		protected internal MainCamera(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).AdjustFocus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).AnchorCamera(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).AnchorLookat(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).CheckBounds();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).DistanceToOrigin(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).ForceCameraMoveFinish();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).CurrentCameraAnchor);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).CurrentCameraPosition);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).CurrentCameraShakeOffset);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).CurrentLookatAnchor);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).CurrentLookatPosition);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).DefCameraLocation);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).DefLookatLocation);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).MainPosCameraHarness);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).MainRotCameraHarness);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).RotateAboutPoint);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).RotationSpring);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).IsStillMoving());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).IsStillRotating());
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).KeepFocus(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).OnScreenSizeChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).OnViewPhysicsTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).Pan(*(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).PositionCamera(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).PositionLookat(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).ResetAndStopRotation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).ResetClipPlanes();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).ResetHarness(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MainCamera)GCHandledObjects.GCHandleToObject(instance)).ScreenPointToGroundAnchor(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).CurrentCameraShakeOffset = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).MainPosCameraHarness = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).MainRotCameraHarness = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).RotateAboutPoint = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).SetCameraFeel((CameraFeel)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).SetClipPlanes(*(float*)args, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).SetFov(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).SetHarnessPosition(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).SetLookAtPositionImmediately(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).SetRotationFeel((CameraFeel)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).SetRotationHarnessPosition(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).SetupDefaults(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3), *(float*)(args + 4), *(float*)(args + 5), *(*(IntPtr*)(args + 6)), *(*(IntPtr*)(args + 7)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).StopAddonBehaviors();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).StopMoving();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).UpdateHarnessPosition(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).UpdateRotationAnchor(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).UpdateRotationImmediatelyBy(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((MainCamera)GCHandledObjects.GCHandleToObject(instance)).UpdateRotationImmediatelyTo(*(float*)args);
-			return -1L;
+			Vector3 vector = cameraEye;
+			Vector3 vector2 = Vector3.Normalize(Vector3.zero - cameraEye);
+			return -vector.y / vector2.y;
 		}
 	}
 }

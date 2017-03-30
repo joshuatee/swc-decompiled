@@ -7,13 +7,11 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
-	public class HolocommScreen : ScreenBase, IUserInputObserver, IEventObserver
+	public class HolocommScreen : ScreenBase, IEventObserver, IUserInputObserver
 	{
 		public delegate void HoloCallback();
 
@@ -97,10 +95,6 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private UXLabel storeBodyLabel;
 
-		private float storeAnchorAbsolute;
-
-		private float regularAnchorAbsolute;
-
 		private HoloCharacter currentCharacter;
 
 		public HolocommScreen() : base("gui_npc_dialog")
@@ -115,29 +109,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			return this.currentCharacter != null;
 		}
 
-		public void ResizeCharacter()
+		public void RepositionCharacters()
 		{
 			if (this.currentCharacter != null)
 			{
-				this.currentCharacter.ResizeCurrentCharacter();
-				float num = (float)Screen.height / 1080f;
-				this.storeTitleLabel.GetUIWidget.transform.parent.GetComponent<UIWidget>().leftAnchor.absolute = 50 + (int)(this.storeAnchorAbsolute * num);
-				this.regularTitleLabel.GetUIWidget.transform.parent.GetComponent<UIWidget>().leftAnchor.absolute = 50 + (int)(this.storeAnchorAbsolute * num);
-			}
-		}
-
-		public void ResizeCurrentCharacter(int width, int height)
-		{
-			if (this.currentCharacter != null)
-			{
-				string characterId = this.currentCharacter.CharacterId;
-				this.ShowHoloCharacter(characterId);
-				Vector3 vector = this.holoPositioner.LocalPosition;
-				vector = base.UXCamera.Camera.ScreenToViewportPoint(vector);
-				this.currentCharacter.ResizeCurrentCharacter(vector, width, height);
-				float num = (float)Screen.height / 1080f;
-				this.storeTitleLabel.GetUIWidget.transform.parent.GetComponent<UIWidget>().leftAnchor.absolute = 50 + (int)(this.storeAnchorAbsolute * num);
-				this.regularTitleLabel.GetUIWidget.transform.parent.GetComponent<UIWidget>().leftAnchor.absolute = 50 + (int)(this.storeAnchorAbsolute * num);
+				this.currentCharacter.UpdatePositionOnScreen();
 			}
 		}
 
@@ -163,11 +139,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.storeTextBoxGroup = base.GetElement<UXElement>("NpcDialog");
 			this.storeTitleLabel = base.GetElement<UXLabel>("LabelNpcMessageBottomLeftTitle");
 			this.storeBodyLabel = base.GetElement<UXLabel>("LabelNpcMessageBottomLeftBody");
-			this.storeAnchorAbsolute = (float)this.storeTitleLabel.GetUIWidget.transform.parent.GetComponent<UIWidget>().leftAnchor.absolute;
-			this.regularAnchorAbsolute = (float)this.regularTitleLabel.GetUIWidget.transform.parent.GetComponent<UIWidget>().leftAnchor.absolute;
-			float num = (float)Screen.height / 1080f;
-			this.storeTitleLabel.GetUIWidget.transform.parent.GetComponent<UIWidget>().leftAnchor.absolute = 50 + (int)(this.storeAnchorAbsolute * num);
-			this.regularTitleLabel.GetUIWidget.transform.parent.GetComponent<UIWidget>().leftAnchor.absolute = 50 + (int)(this.storeAnchorAbsolute * num);
 			this.HideAllElements();
 		}
 
@@ -214,9 +185,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.infoTitleLabel.Visible = true;
 				this.infoTitleLabel.Text = this.lang.Get(title, new object[0]);
-				return;
 			}
-			this.infoTitleLabel.Visible = false;
+			else
+			{
+				this.infoTitleLabel.Visible = false;
+			}
 		}
 
 		public void HideInfoPanel()
@@ -236,7 +209,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			if (!base.IsLoaded())
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Cannot display {0} because screen is not loaded yet!", new object[]
+				Service.Get<Logger>().ErrorFormat("Cannot display {0} because screen is not loaded yet!", new object[]
 				{
 					characterId
 				});
@@ -246,11 +219,13 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.currentCharacter != null)
 			{
 				this.currentCharacter.ChangeCharacter(characterId);
-				return;
 			}
-			Vector3 vector = this.holoPositioner.LocalPosition;
-			vector = base.UXCamera.Camera.ScreenToViewportPoint(vector);
-			this.currentCharacter = new HoloCharacter(characterId, vector);
+			else
+			{
+				Vector3 vector = this.holoPositioner.LocalPosition;
+				vector = base.UXCamera.Camera.ScreenToViewportPoint(vector);
+				this.currentCharacter = new HoloCharacter(characterId, vector);
+			}
 		}
 
 		public void PlayHoloAnimation(string animName)
@@ -258,9 +233,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.currentCharacter != null)
 			{
 				this.currentCharacter.Animate(animName);
-				return;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("There is no character currently on screen.", new object[0]);
+			else
+			{
+				Service.Get<Logger>().ErrorFormat("There is no character currently on screen.", new object[0]);
+			}
 		}
 
 		public void CloseAndDestroyHoloCharacter()
@@ -295,7 +272,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (!string.IsNullOrEmpty(text))
 			{
 				string text2 = this.lang.Get(text, new object[0]);
-				uXLabel.Text = (string.IsNullOrEmpty(text2) ? text : text2);
+				uXLabel.Text = ((!string.IsNullOrEmpty(text2)) ? text2 : text);
 				uXElement.Visible = true;
 			}
 			if (!string.IsNullOrEmpty(title))
@@ -312,8 +289,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			UXElement uXElement;
 			UXLabel uXLabel2;
 			this.FindLabelAndPanelForSide(out uXLabel, out uXElement, out uXLabel2);
-			uXLabel.Text = "";
-			uXLabel2.Text = "";
+			uXLabel.Text = string.Empty;
+			uXLabel2.Text = string.Empty;
 			uXElement.Visible = false;
 			this.DestroyIfEmpty();
 		}
@@ -325,11 +302,13 @@ namespace StaRTS.Main.Views.UX.Screens
 				label = this.storeBodyLabel;
 				panel = this.storeTextBoxGroup;
 				title = this.storeTitleLabel;
-				return;
 			}
-			label = this.regularBodyLabel;
-			panel = this.regularTextBoxGroup;
-			title = this.regularTitleLabel;
+			else
+			{
+				label = this.regularBodyLabel;
+				panel = this.regularTextBoxGroup;
+				title = this.regularTitleLabel;
+			}
 		}
 
 		public void ShowButton(string buttonType)
@@ -413,171 +392,13 @@ namespace StaRTS.Main.Views.UX.Screens
 			return EatResponse.NotEaten;
 		}
 
-		public EatResponse OnEvent(EventId id, object cookie)
+		public override EatResponse OnEvent(EventId id, object cookie)
 		{
 			if (id == EventId.ShowHologramComplete)
 			{
 				Service.Get<Engine>().ForceGarbageCollection(null);
 			}
-			return EatResponse.NotEaten;
-		}
-
-		protected internal HolocommScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).AddDialogue(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).CharacterAlreadyShowing(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).CloseAndDestroyHoloCharacter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).DestroyCharacterImmediately();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).DestroyIfEmpty();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).GetHoloCamera());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).HasCharacterShowing());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).HideAllElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).HideInfoPanel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).InitElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).OnCharacterAnimatedAway();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).OnNextButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).PlayHoloAnimation(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).RemoveDialogue();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).ResizeCharacter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).ResizeCurrentCharacter(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRootCollider();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).ShowButton(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).ShowHoloCharacter(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((HolocommScreen)GCHandledObjects.GCHandleToObject(instance)).ShowInfoPanel(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(sbyte*)(args + 3) != 0);
-			return -1L;
+			return base.OnEvent(id, cookie);
 		}
 	}
 }

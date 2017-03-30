@@ -9,12 +9,15 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views
 {
 	public class LongPressView : IViewFrameTimeObserver
 	{
+		private const string LONG_PRESS_BKG = "SpriteLongPressBkg";
+
+		private const string LONG_PRESS_FILL = "SpriteLongPressFill";
+
 		private float preFadeDuration;
 
 		private float fadeDuration;
@@ -36,10 +39,6 @@ namespace StaRTS.Main.Views
 		private ViewTimeEngine time;
 
 		private bool registered;
-
-		private const string LONG_PRESS_BKG = "SpriteLongPressBkg";
-
-		private const string LONG_PRESS_FILL = "SpriteLongPressFill";
 
 		public LongPressView()
 		{
@@ -123,46 +122,6 @@ namespace StaRTS.Main.Views
 		{
 			this.longPressFill.Alpha = proportion;
 			this.longPressBkg.Alpha = proportion;
-		}
-
-		protected internal LongPressView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LongPressView)GCHandledObjects.GCHandleToObject(instance)).KillTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((LongPressView)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((LongPressView)GCHandledObjects.GCHandleToObject(instance)).StartTimer((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((LongPressView)GCHandledObjects.GCHandleToObject(instance)).StartTimer(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((LongPressView)GCHandledObjects.GCHandleToObject(instance)).UpdateFade(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((LongPressView)GCHandledObjects.GCHandleToObject(instance)).UpdateFillAmount(*(float*)args);
-			return -1L;
 		}
 	}
 }

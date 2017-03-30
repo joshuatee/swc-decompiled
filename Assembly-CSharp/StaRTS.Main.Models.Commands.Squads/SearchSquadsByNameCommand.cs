@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public SearchSquadsByNameCommand(SearchSquadsByNameRequest request) : base("guild.search.byName", request, new FeaturedSquadsResponse())
 		{
 		}
-
-		protected internal SearchSquadsByNameCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

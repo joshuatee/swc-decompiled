@@ -10,22 +10,19 @@ namespace StaRTS.Main.Models
 
 		private const string INVALID = "Invalid";
 
-		public string ConditionType;
+		public string ConditionType = "Invalid";
 
-		public string ConditionValue;
+		public string ConditionValue = "Invalid";
 
 		public AudienceCondition(string source)
 		{
-			this.ConditionType = "Invalid";
-			this.ConditionValue = "Invalid";
-			base..ctor();
 			string[] array = source.Split(new char[]
 			{
 				':'
 			});
 			if (array.Length < 2)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Could not define AudienceCondition from {0}", new object[]
+				Service.Get<Logger>().WarnFormat("Could not define AudienceCondition from {0}", new object[]
 				{
 					source
 				});
@@ -33,10 +30,6 @@ namespace StaRTS.Main.Models
 			}
 			this.ConditionType = array[0];
 			this.ConditionValue = array[1];
-		}
-
-		protected internal AudienceCondition(UIntPtr dummy)
-		{
 		}
 	}
 }

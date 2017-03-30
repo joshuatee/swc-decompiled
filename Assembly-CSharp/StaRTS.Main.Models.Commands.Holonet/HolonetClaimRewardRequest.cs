@@ -1,6 +1,5 @@
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Holonet
 {
@@ -22,15 +21,6 @@ namespace StaRTS.Main.Models.Commands.Holonet
 			startedSerializer.AddString("uid", this.limitedTimeRewardUid);
 			startedSerializer.AddString("rewardContext", this.contextUid);
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal HolonetClaimRewardRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolonetClaimRewardRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

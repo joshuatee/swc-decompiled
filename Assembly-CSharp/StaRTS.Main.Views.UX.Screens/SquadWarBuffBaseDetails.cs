@@ -9,7 +9,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -210,10 +209,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.btnScout.VisuallyEnableButton();
 				this.labelScout.TextColor = this.labelScout.OriginalTextColor;
-				return;
 			}
-			this.btnScout.VisuallyDisableButton();
-			this.labelScout.TextColor = UXUtils.COLOR_LABEL_DISABLED;
+			else
+			{
+				this.btnScout.VisuallyDisableButton();
+				this.labelScout.TextColor = UXUtils.COLOR_LABEL_DISABLED;
+			}
 		}
 
 		private void OnPlayerButtonNext(UXButton next)
@@ -238,7 +239,6 @@ namespace StaRTS.Main.Views.UX.Screens
 					if (Service.Get<SquadController>().WarManager.ScoutBuffBase(buffBaseId))
 					{
 						this.Close(null);
-						return;
 					}
 				}
 				else
@@ -268,46 +268,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			this.buffBaseData = buffBases[num];
 			this.Refresh();
-		}
-
-		protected internal SquadWarBuffBaseDetails(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadWarBuffBaseDetails)GCHandledObjects.GCHandleToObject(instance)).OnPlayerButtonNext((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadWarBuffBaseDetails)GCHandledObjects.GCHandleToObject(instance)).OnPlayerButtonPrevious((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadWarBuffBaseDetails)GCHandledObjects.GCHandleToObject(instance)).OnScoutButton((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadWarBuffBaseDetails)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadWarBuffBaseDetails)GCHandledObjects.GCHandleToObject(instance)).Refresh();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadWarBuffBaseDetails)GCHandledObjects.GCHandleToObject(instance)).SwitchToAnotherBuffBase(*(int*)args);
-			return -1L;
 		}
 	}
 }

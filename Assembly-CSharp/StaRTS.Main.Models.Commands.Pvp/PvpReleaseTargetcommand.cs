@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Pvp
 		public PvpReleaseTargetcommand(PlayerIdChecksumRequest request) : base("player.pvp.releaseTarget", request, new DefaultResponse())
 		{
 		}
-
-		protected internal PvpReleaseTargetcommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

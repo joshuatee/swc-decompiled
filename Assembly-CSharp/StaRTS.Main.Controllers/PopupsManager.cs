@@ -10,17 +10,16 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class PopupsManager : IEventObserver
 	{
+		private const float LOGIN_NOTIFICATION_TIME_DELAY = 2f;
+
 		private EventManager eventManager;
 
 		private bool haveShownLoginNotification;
-
-		private const float LOGIN_NOTIFICATION_TIME_DELAY = 2f;
 
 		private List<string> seenMessages;
 
@@ -89,10 +88,10 @@ namespace StaRTS.Main.Controllers
 				if (!criticalOnly || (criticalOnly && adminMessageData.IsCritical))
 				{
 					result = true;
-					string title = "";
+					string empty = string.Empty;
 					string text;
 					lang.GetOptional(adminMessageData.Message, out text);
-					AlertScreen.ShowModalWithBI(adminMessageData.IsCritical, title, text, adminMessageData.IsCritical ? (text + " :" + adminMessageData.Uid) : null);
+					AlertScreen.ShowModalWithBI(adminMessageData.IsCritical, empty, text, (!adminMessageData.IsCritical) ? null : (text + " :" + adminMessageData.Uid));
 				}
 				else
 				{
@@ -104,31 +103,6 @@ namespace StaRTS.Main.Controllers
 				this.queuedMessages.Enqueue(list[i]);
 			}
 			return result;
-		}
-
-		protected internal PopupsManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PopupsManager)GCHandledObjects.GCHandleToObject(instance)).DisplayAdminMessagesOnQueue(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PopupsManager)GCHandledObjects.GCHandleToObject(instance)).ShowHQCelebrationPopup);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PopupsManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PopupsManager)GCHandledObjects.GCHandleToObject(instance)).ShowHQCelebrationPopup = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

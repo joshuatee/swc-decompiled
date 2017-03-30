@@ -8,16 +8,19 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class RewardManager
 	{
 		public delegate void SuccessCallback(object cookie);
+
+		private const string CRYSTAL_REWARD = "specialoffers";
+
+		private const string LVL_DISPLAY_STRING_ID = "lcfly_level";
+
+		private const string AMOUNT_AND_NAME = "AMOUNT_AND_NAME";
 
 		private Dictionary<int, RewardTag> rewardTags;
 
@@ -28,12 +31,6 @@ namespace StaRTS.Main.Controllers
 		private Lang lang;
 
 		private int callbackCounter;
-
-		private const string CRYSTAL_REWARD = "specialoffers";
-
-		private const string LVL_DISPLAY_STRING_ID = "lcfly_level";
-
-		private const string AMOUNT_AND_NAME = "AMOUNT_AND_NAME";
 
 		public RewardManager()
 		{
@@ -72,27 +69,29 @@ namespace StaRTS.Main.Controllers
 		public void TryAndGrantReward(RewardVO vo, RewardManager.SuccessCallback onSuccess, object cookie, bool checkCurrencyCapacity)
 		{
 			RewardabilityResult rewardabilityResult = RewardUtils.CanPlayerHandleReward(this.cp, vo, checkCurrencyCapacity);
-			int num = this.callbackCounter + 1;
-			this.callbackCounter = num;
-			int num2 = num;
+			int num = ++this.callbackCounter;
 			RewardTag rewardTag = new RewardTag();
 			rewardTag.Vo = vo;
 			rewardTag.GlobalSuccess = onSuccess;
 			rewardTag.Cookie = cookie;
-			this.rewardTags.Add(num2, rewardTag);
+			this.rewardTags.Add(num, rewardTag);
 			if (rewardabilityResult.CanAward)
 			{
-				this.GrantReward(num2);
-				return;
+				this.GrantReward(num);
 			}
-			string message = Service.Get<Lang>().Get(rewardabilityResult.Reason, new object[0]);
-			string title = Service.Get<Lang>().Get("INVENTORY_NO_ROOM_TITLE", new object[0]);
-			if (rewardabilityResult.Reason == "INVENTORY_NO_ROOM")
+			else
 			{
-				YesNoScreen.ShowModal(title, message, false, new OnScreenModalResult(this.ForceCurrencyRewardUsage), rewardTag, false);
-				return;
+				string message = Service.Get<Lang>().Get(rewardabilityResult.Reason, new object[0]);
+				string title = Service.Get<Lang>().Get("INVENTORY_NO_ROOM_TITLE", new object[0]);
+				if (rewardabilityResult.Reason == "INVENTORY_NO_ROOM")
+				{
+					YesNoScreen.ShowModal(title, message, false, new OnScreenModalResult(this.ForceCurrencyRewardUsage), rewardTag);
+				}
+				else
+				{
+					AlertScreen.ShowModal(false, null, message, null, null);
+				}
 			}
-			AlertScreen.ShowModal(false, null, message, null, null);
 		}
 
 		private void ForceCurrencyRewardUsage(object result, object cookie)
@@ -124,27 +123,27 @@ namespace StaRTS.Main.Controllers
 				return;
 			}
 			RewardVO rewardVO = this.sdc.Get<RewardVO>(rewardUid);
-			if (rewardVO.BuildingUnlocks != null && rewardVO.BuildingUnlocks.Length != 0)
+			if (rewardVO.BuildingUnlocks != null && rewardVO.BuildingUnlocks.Length > 0)
 			{
 				BuildingTypeVO buildingTypeVO = this.sdc.Get<BuildingTypeVO>(rewardVO.BuildingUnlocks[0]);
 				type = RewardType.Building;
 				config = buildingTypeVO;
 				return;
 			}
-			if (rewardVO.TroopUnlocks != null && rewardVO.TroopUnlocks.Length != 0)
+			if (rewardVO.TroopUnlocks != null && rewardVO.TroopUnlocks.Length > 0)
 			{
 				TroopTypeVO troopTypeVO = this.sdc.Get<TroopTypeVO>(rewardVO.TroopUnlocks[0]);
 				type = RewardType.Troop;
 				config = troopTypeVO;
 				return;
 			}
-			if (rewardVO.TroopRewards != null && rewardVO.TroopRewards.Length != 0)
+			if (rewardVO.TroopRewards != null && rewardVO.TroopRewards.Length > 0)
 			{
 				string[] array = rewardVO.TroopRewards[0].Split(new char[]
 				{
 					':'
 				});
-				if (array != null && array.Length != 0)
+				if (array != null && array.Length > 0)
 				{
 					TroopTypeVO troopTypeVO = this.sdc.Get<TroopTypeVO>(array[0]);
 					type = RewardType.Troop;
@@ -152,20 +151,20 @@ namespace StaRTS.Main.Controllers
 					return;
 				}
 			}
-			if (rewardVO.HeroUnlocks != null && rewardVO.HeroUnlocks.Length != 0)
+			if (rewardVO.HeroUnlocks != null && rewardVO.HeroUnlocks.Length > 0)
 			{
 				TroopTypeVO troopTypeVO2 = this.sdc.Get<TroopTypeVO>(rewardVO.HeroUnlocks[0]);
 				type = RewardType.Troop;
 				config = troopTypeVO2;
 				return;
 			}
-			if (rewardVO.HeroRewards != null && rewardVO.HeroRewards.Length != 0)
+			if (rewardVO.HeroRewards != null && rewardVO.HeroRewards.Length > 0)
 			{
 				string[] array2 = rewardVO.HeroRewards[0].Split(new char[]
 				{
 					':'
 				});
-				if (array2 != null && array2.Length != 0)
+				if (array2 != null && array2.Length > 0)
 				{
 					TroopTypeVO troopTypeVO2 = this.sdc.Get<TroopTypeVO>(array2[0]);
 					type = RewardType.Troop;
@@ -173,13 +172,13 @@ namespace StaRTS.Main.Controllers
 					return;
 				}
 			}
-			if (rewardVO.SpecialAttackRewards != null && rewardVO.SpecialAttackRewards.Length != 0)
+			if (rewardVO.SpecialAttackRewards != null && rewardVO.SpecialAttackRewards.Length > 0)
 			{
 				string[] array3 = rewardVO.SpecialAttackRewards[0].Split(new char[]
 				{
 					':'
 				});
-				if (array3 != null && array3.Length != 0)
+				if (array3 != null && array3.Length > 0)
 				{
 					SpecialAttackTypeVO specialAttackTypeVO = this.sdc.Get<SpecialAttackTypeVO>(array3[0]);
 					type = RewardType.Troop;
@@ -187,14 +186,14 @@ namespace StaRTS.Main.Controllers
 					return;
 				}
 			}
-			if (rewardVO.SpecialAttackUnlocks != null && rewardVO.SpecialAttackUnlocks.Length != 0)
+			if (rewardVO.SpecialAttackUnlocks != null && rewardVO.SpecialAttackUnlocks.Length > 0)
 			{
 				SpecialAttackTypeVO specialAttackTypeVO = this.sdc.Get<SpecialAttackTypeVO>(rewardVO.SpecialAttackUnlocks[0]);
 				type = RewardType.Troop;
 				config = specialAttackTypeVO;
 				return;
 			}
-			if (rewardVO.CurrencyRewards != null && rewardVO.CurrencyRewards.Length != 0)
+			if (rewardVO.CurrencyRewards != null && rewardVO.CurrencyRewards.Length > 0)
 			{
 				type = RewardType.Currency;
 				config = null;
@@ -202,7 +201,7 @@ namespace StaRTS.Main.Controllers
 				{
 					':'
 				});
-				if (array4 != null && array4.Length != 0)
+				if (array4 != null && array4.Length > 0)
 				{
 					string text = array4[0];
 					if (!string.IsNullOrEmpty(text))
@@ -254,11 +253,7 @@ namespace StaRTS.Main.Controllers
 					{
 						':'
 					});
-					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, formatString, new object[]
-					{
-						this.lang.Get(array[0].ToUpper(), new object[0]),
-						this.lang.ThousandsSeparated(Convert.ToInt32(array[1], CultureInfo.InvariantCulture))
-					});
+					stringBuilder.AppendFormat(formatString, this.lang.Get(array[0].ToUpper(), new object[0]), this.lang.ThousandsSeparated(Convert.ToInt32(array[1])));
 					flag = false;
 					i++;
 				}
@@ -453,96 +448,17 @@ namespace StaRTS.Main.Controllers
 		{
 			if (unlocked)
 			{
-				sb.AppendFormat(CultureInfo.InvariantCulture, this.lang.Get("UPGRADE_UNIT", new object[0]), new object[]
-				{
-					displayName
-				});
-				return;
+				sb.AppendFormat(this.lang.Get("UPGRADE_UNIT", new object[0]), displayName);
 			}
-			sb.AppendFormat(CultureInfo.InvariantCulture, this.lang.Get("LABEL_CAMPAIGN_UNLOCKS", new object[0]), new object[]
+			else
 			{
-				displayName
-			});
+				sb.AppendFormat(this.lang.Get("LABEL_CAMPAIGN_UNLOCKS", new object[0]), displayName);
+			}
 		}
 
 		private void AppendRewardString(StringBuilder sb, string format, string displayName, string amount)
 		{
-			sb.AppendFormat(CultureInfo.InvariantCulture, format, new object[]
-			{
-				displayName,
-				this.lang.ThousandsSeparated(Convert.ToInt32(amount, CultureInfo.InvariantCulture))
-			});
-		}
-
-		protected internal RewardManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RewardManager)GCHandledObjects.GCHandleToObject(instance)).AppendRewardString((StringBuilder)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((RewardManager)GCHandledObjects.GCHandleToObject(instance)).AppendUnlockString((StringBuilder)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((RewardManager)GCHandledObjects.GCHandleToObject(instance)).ForceCurrencyRewardUsage(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RewardManager)GCHandledObjects.GCHandleToObject(instance)).GetRewardString(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RewardManager)GCHandledObjects.GCHandleToObject(instance)).GetRewardString((RewardVO)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RewardManager)GCHandledObjects.GCHandleToObject(instance)).GetRewardStringInternal((RewardVO)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RewardManager)GCHandledObjects.GCHandleToObject(instance)).GetRewardStringWithLevel((RewardVO)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((RewardManager)GCHandledObjects.GCHandleToObject(instance)).GrantReward(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RewardManager)GCHandledObjects.GCHandleToObject(instance)).IsRewardOnlySoftCurrency(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((RewardManager)GCHandledObjects.GCHandleToObject(instance)).TryAndGrantReward(Marshal.PtrToStringUni(*(IntPtr*)args), (RewardManager.SuccessCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((RewardManager)GCHandledObjects.GCHandleToObject(instance)).TryAndGrantReward((RewardVO)GCHandledObjects.GCHandleToObject(*args), (RewardManager.SuccessCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]), *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((RewardManager)GCHandledObjects.GCHandleToObject(instance)).TryAndGrantReward(Marshal.PtrToStringUni(*(IntPtr*)args), (RewardManager.SuccessCallback)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]), *(sbyte*)(args + 3) != 0);
-			return -1L;
+			sb.AppendFormat(format, displayName, this.lang.ThousandsSeparated(Convert.ToInt32(amount)));
 		}
 	}
 }

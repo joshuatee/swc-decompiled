@@ -12,9 +12,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Audio
 {
@@ -44,7 +42,7 @@ namespace StaRTS.Audio
 
 		private Dictionary<AudioTypeVO, AudioData> loadedAudio;
 
-		private StaRTSLogger logger;
+		private Logger logger;
 
 		private IDataController sdc;
 
@@ -59,7 +57,7 @@ namespace StaRTS.Audio
 		public AudioManager(AssetsCompleteDelegate onComplete)
 		{
 			Service.Set<AudioManager>(this);
-			this.logger = Service.Get<StaRTSLogger>();
+			this.logger = Service.Get<Logger>();
 			this.sdc = Service.Get<IDataController>();
 			new AudioEventManager(this);
 			this.audioObject = new GameObject("Audio");
@@ -127,7 +125,6 @@ namespace StaRTS.Audio
 				if (onComplete != null)
 				{
 					onComplete(null);
-					return;
 				}
 			}
 			else
@@ -160,7 +157,7 @@ namespace StaRTS.Audio
 			{
 				return this.loadedAudio[vo];
 			}
-			Service.Get<StaRTSLogger>().Warn("AudioData for " + vo.Uid + " does not exist.");
+			Service.Get<Logger>().Warn("AudioData for " + vo.Uid + " does not exist.");
 			return null;
 		}
 
@@ -212,7 +209,7 @@ namespace StaRTS.Audio
 				return null;
 			}
 			int num2 = Service.Get<Rand>().ViewRangeInt(0, num);
-			string result = "";
+			string result = string.Empty;
 			for (int j = 0; j < count; j++)
 			{
 				StrIntPair strIntPair = clips[j];
@@ -388,15 +385,17 @@ namespace StaRTS.Audio
 				if (this.fadeOutDictionary.ContainsKey(audioSource))
 				{
 					this.fadeOutDictionary[audioSource].QueueNextAudio(audioVO);
-					goto IL_D5;
 				}
-				audioSource.clip = audioData.Clip;
-				audioSource.loop = audioVO.Loop;
-				audioSource.Play();
-				goto IL_D5;
+				else
+				{
+					audioSource.clip = audioData.Clip;
+					audioSource.loop = audioVO.Loop;
+					audioSource.Play();
+				}
+				goto IL_F9;
 			}
 			audioSource.PlayOneShot(audioData.Clip);
-			IL_D5:
+			IL_F9:
 			return audioData.Clip.length;
 		}
 
@@ -519,12 +518,10 @@ namespace StaRTS.Audio
 				if (category == AudioCategory.Music || category == AudioCategory.Ambience || category == AudioCategory.Dialogue)
 				{
 					this.UnloadLastPlayed(category);
-					return;
 				}
-				if (category == AudioCategory.Effect)
+				else if (category == AudioCategory.Effect)
 				{
 					this.UnloadEffectsAudio();
-					return;
 				}
 			}
 			else
@@ -541,9 +538,9 @@ namespace StaRTS.Audio
 		{
 			foreach (KeyValuePair<AudioTypeVO, AudioData> current in this.loadedAudio)
 			{
-				if (current.get_Key().Category == AudioCategory.Effect)
+				if (current.Key.Category == AudioCategory.Effect)
 				{
-					this.UnloadAudio(current.get_Value());
+					this.UnloadAudio(current.Value);
 				}
 			}
 		}
@@ -572,226 +569,16 @@ namespace StaRTS.Audio
 			if (enabled)
 			{
 				this.RefreshVolume();
-				return;
 			}
-			this.SetAllVolume(0f);
+			else
+			{
+				this.SetAllVolume(0f);
+			}
 		}
 
 		public bool IsThirdPartyNativePluginActive()
 		{
 			return TapjoyManager.Instance != null && TapjoyManager.IsEnabled() && TapjoyManager.IsOfferWallOpen();
-		}
-
-		protected internal AudioManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).AssignLoadedAudioClip((AudioTypeVO)GCHandledObjects.GCHandleToObject(*args), (AudioClip)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).CanLoadAudio(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).CleanUp();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).ClearAudioRepeatTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).CreateAudioSource(*(int*)args));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).FadeOut((AudioSource)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).FadeOutComplete((AudioSource)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).GetAudioData((AudioTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).GetBattleAudioFlag((AudioCollectionType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).GetClipLength((AudioCategory)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).GetOrCreateAudioData((AudioTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).GetRandomClip((List<StrIntPair>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).IsPlaying((AudioCategory)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).IsPlaying((AudioCategory)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).IsPreloadable((AudioTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).IsThirdPartyNativePluginActive());
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).LoadAudio(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).OnDemandAudioAssetSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).PlayAudio(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioManager)GCHandledObjects.GCHandleToObject(instance)).PlayAudioClip((AudioTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).PlayAudioDelayed(Marshal.PtrToStringUni(*(IntPtr*)args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).PlayAudioRepeat(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(float*)(args + 2), *(float*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).PreloadAudioAssetFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).PreloadAudioAssets((AssetsCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).PreloadAudioAssetSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).RefreshMusic();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).RefreshVolume();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).ResetBattleAudioFlags();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).SetAllVolume(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).SetBattleAudioFlag((AudioCollectionType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).SetVolume((AudioCategory)(*(int*)args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).Stop((AudioCategory)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).Stop((AudioCategory)(*(int*)args), (AudioCategory)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).ToggleAllSounds(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).UnloadAudio((AudioData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).UnloadEffectsAudio();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((AudioManager)GCHandledObjects.GCHandleToObject(instance)).UnloadLastPlayed((AudioCategory)(*(int*)args));
-			return -1L;
 		}
 	}
 }

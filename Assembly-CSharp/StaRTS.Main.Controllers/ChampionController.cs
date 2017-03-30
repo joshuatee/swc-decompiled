@@ -23,7 +23,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -33,9 +32,9 @@ namespace StaRTS.Main.Controllers
 
 		private const string REPAIR_PURCHASE_CONTEXT_NAME = "repair";
 
-		private TroopTypeVO repairChampionType;
-
 		private const float CHAMPION_INITIAL_ROTATION = 180f;
+
+		private TroopTypeVO repairChampionType;
 
 		public ChampionController()
 		{
@@ -87,7 +86,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (troopTypeVO == null)
 			{
-				Service.Get<StaRTSLogger>().Error("No champion found for platform builing " + uid);
+				Service.Get<Logger>().Error("No champion found for platform builing " + uid);
 			}
 			return troopTypeVO;
 		}
@@ -219,7 +218,7 @@ namespace StaRTS.Main.Controllers
 					return (SmartEntity)championPlatformNode.Entity;
 				}
 			}
-			Service.Get<StaRTSLogger>().Error("No platform building found for champion " + champion.Uid);
+			Service.Get<Logger>().Error("No platform building found for champion " + champion.Uid);
 			return null;
 		}
 
@@ -230,7 +229,6 @@ namespace StaRTS.Main.Controllers
 				if (!PayMeScreen.ShowIfNoFreeDroids(new OnScreenModalResult(this.OnPayMeForDroidResult), null))
 				{
 					this.ConfirmRepair();
-					return;
 				}
 			}
 			else
@@ -244,9 +242,11 @@ namespace StaRTS.Main.Controllers
 			if (result != null)
 			{
 				this.ConfirmRepair();
-				return;
 			}
-			this.repairChampionType = null;
+			else
+			{
+				this.repairChampionType = null;
+			}
 		}
 
 		private void ConfirmRepair()
@@ -298,100 +298,91 @@ namespace StaRTS.Main.Controllers
 			bool flag = currentState is HomeState;
 			bool flag2 = currentState is WarBoardState;
 			bool flag3 = currentState is ApplicationLoadState;
-			if (id <= EventId.BuildingLevelUpgraded)
+			switch (id)
 			{
-				if (id <= EventId.BuildingStartedUpgrading)
+			case EventId.TroopViewReady:
+				if (flag || flag2 || flag3)
 				{
-					if (id != EventId.BuildingCancelled)
+					EntityViewParams entityViewParams = cookie as EntityViewParams;
+					SmartEntity entity = entityViewParams.Entity;
+					if (entity.ChampionComp != null)
 					{
-						if (id == EventId.BuildingStartedUpgrading)
-						{
-							this.HandleChampionPlatformUpgradeStarted((SmartEntity)cookie);
-						}
+						bool underRepair = this.IsChampionBroken(entity.ChampionComp);
+						Service.Get<EntityRenderController>().UpdateChampionAnimationStateInHomeOrWarBoardMode(entity, underRepair);
 					}
-					else
+				}
+				return EatResponse.NotEaten;
+			case EventId.TroopLevelUpgraded:
+			case EventId.StarshipLevelUpgraded:
+			case EventId.BuildingSwapped:
+				IL_4F:
+				if (id != EventId.ExitEditMode && id != EventId.ExitBaseLayoutToolMode)
+				{
+					if (id == EventId.BuildingCancelled)
 					{
 						ContractEventData contractEventData = (ContractEventData)cookie;
 						this.AddChampionToInventoryIfAlive((SmartEntity)contractEventData.Entity, false);
+						return EatResponse.NotEaten;
 					}
-				}
-				else if (id != EventId.ChampionRepaired)
-				{
-					if (id != EventId.TroopViewReady)
+					if (id == EventId.BuildingStartedUpgrading)
 					{
-						if (id == EventId.BuildingLevelUpgraded)
+						this.HandleChampionPlatformUpgradeStarted((SmartEntity)cookie);
+						return EatResponse.NotEaten;
+					}
+					if (id == EventId.ChampionRepaired)
+					{
+						if (flag && cookie != null)
 						{
-							ContractEventData contractEventData = (ContractEventData)cookie;
-							this.UpgradeChampionToMatchPlatform((SmartEntity)contractEventData.Entity);
-						}
-					}
-					else if (flag | flag2 | flag3)
-					{
-						EntityViewParams entityViewParams = cookie as EntityViewParams;
-						SmartEntity entity = entityViewParams.Entity;
-						if (entity.ChampionComp != null)
-						{
-							bool underRepair = this.IsChampionBroken(entity.ChampionComp);
-							Service.Get<EntityRenderController>().UpdateChampionAnimationStateInHomeOrWarBoardMode(entity, underRepair);
-						}
-					}
-				}
-				else if (flag && cookie != null)
-				{
-					ContractEventData contractEventData2 = cookie as ContractEventData;
-					SmartEntity smartEntity = contractEventData2.Entity as SmartEntity;
-					TroopTypeVO troopTypeVO = this.FindChampionTypeIfPlatform(smartEntity.BuildingComp.BuildingType);
-					if (troopTypeVO != null)
-					{
-						SmartEntity entity2 = this.FindChampionEntity(troopTypeVO);
-						Service.Get<EntityRenderController>().UpdateChampionAnimationStateInHomeOrWarBoardMode(entity2, false);
-					}
-				}
-			}
-			else
-			{
-				if (id <= EventId.WorldLoadComplete)
-				{
-					if (id != EventId.BuildingConstructed)
-					{
-						if (id != EventId.WorldLoadComplete)
-						{
-							return EatResponse.NotEaten;
-						}
-					}
-					else
-					{
-						ContractEventData contractEventData = (ContractEventData)cookie;
-						this.AddChampionToInventoryIfAlive((SmartEntity)contractEventData.Entity, flag);
-						if (flag)
-						{
-							Service.Get<BuildingTooltipController>().EnsureBuildingTooltip((SmartEntity)contractEventData.Entity);
-							return EatResponse.NotEaten;
+							ContractEventData contractEventData2 = cookie as ContractEventData;
+							SmartEntity smartEntity = contractEventData2.Entity as SmartEntity;
+							TroopTypeVO troopTypeVO = this.FindChampionTypeIfPlatform(smartEntity.BuildingComp.BuildingType);
+							if (troopTypeVO != null)
+							{
+								SmartEntity entity2 = this.FindChampionEntity(troopTypeVO);
+								Service.Get<EntityRenderController>().UpdateChampionAnimationStateInHomeOrWarBoardMode(entity2, false);
+							}
 						}
 						return EatResponse.NotEaten;
 					}
-				}
-				else if (id != EventId.ExitEditMode && id != EventId.ExitBaseLayoutToolMode)
-				{
-					if (id != EventId.TargetedBundleChampionRedeemed)
+					if (id != EventId.WorldLoadComplete)
 					{
+						if (id != EventId.TargetedBundleChampionRedeemed)
+						{
+							return EatResponse.NotEaten;
+						}
+						SmartEntity building = (SmartEntity)cookie;
+						Service.Get<PlayerValuesController>().RecalculateAll();
+						this.AddChampionToInventoryIfAlive(building, flag);
 						return EatResponse.NotEaten;
 					}
-					SmartEntity building = (SmartEntity)cookie;
-					Service.Get<PlayerValuesController>().RecalculateAll();
-					this.AddChampionToInventoryIfAlive(building, flag);
-					return EatResponse.NotEaten;
 				}
 				this.CreateChampionsOnPlatforms();
+				return EatResponse.NotEaten;
+			case EventId.BuildingLevelUpgraded:
+			{
+				ContractEventData contractEventData = (ContractEventData)cookie;
+				this.UpgradeChampionToMatchPlatform((SmartEntity)contractEventData.Entity);
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			case EventId.BuildingConstructed:
+			{
+				ContractEventData contractEventData = (ContractEventData)cookie;
+				this.AddChampionToInventoryIfAlive((SmartEntity)contractEventData.Entity, flag);
+				if (flag)
+				{
+					Service.Get<BuildingTooltipController>().EnsureBuildingTooltip((SmartEntity)contractEventData.Entity);
+				}
+				return EatResponse.NotEaten;
+			}
+			}
+			goto IL_4F;
 		}
 
 		private bool IsChampionBroken(ChampionComponent championComp)
 		{
 			TroopTypeVO championType = championComp.ChampionType;
 			SmartEntity selectedBuilding = this.FindPlatformForChampion(championType);
-			return !this.PlayerHasChampion(championType) && !ContractUtils.IsBuildingUpgrading(selectedBuilding) && !ContractUtils.IsBuildingConstructing(selectedBuilding);
+			return !this.PlayerHasChampion(championType) && (!ContractUtils.IsBuildingUpgrading(selectedBuilding) && !ContractUtils.IsBuildingConstructing(selectedBuilding));
 		}
 
 		public void RegisterChampionPlatforms(CurrentBattle currentBattle)
@@ -416,49 +407,34 @@ namespace StaRTS.Main.Controllers
 					}
 					else if (troopTypeVO != null && currentBattle.DisabledBuildings != null && !currentBattle.DisabledBuildings.Contains(buildingNode.BuildingComp.BuildingTO.Key))
 					{
-						if (!currentBattle.IsPvP())
+						if (currentBattle.IsPvP())
 						{
-							goto IL_129;
-						}
-						if (currentBattle.DefenderChampionsAvailable != null)
-						{
-							using (Dictionary<string, int>.Enumerator enumerator = currentBattle.DefenderChampionsAvailable.GetEnumerator())
+							if (currentBattle.DefenderChampionsAvailable != null)
 							{
-								while (enumerator.MoveNext())
+								foreach (KeyValuePair<string, int> current in currentBattle.DefenderChampionsAvailable)
 								{
-									KeyValuePair<string, int> current = enumerator.Current;
-									if (current.get_Key() == troopTypeVO.Uid && current.get_Value() > 0)
+									if (current.Key == troopTypeVO.Uid && current.Value > 0)
 									{
 										flag = true;
 									}
 								}
-								goto IL_182;
 							}
-							goto IL_129;
 						}
-						IL_182:
+						else if (currentBattle.Type == BattleType.PveDefend && !ContractUtils.IsBuildingUpgrading(smartEntity) && !ContractUtils.IsChampionRepairing(smartEntity))
+						{
+							Inventory inventory = Service.Get<CurrentPlayer>().Inventory;
+							bool flag2 = inventory.Champion.HasItem(troopTypeVO.Uid) && inventory.Champion.GetItemAmount(troopTypeVO.Uid) > 0;
+							if (flag2)
+							{
+								flag = true;
+							}
+						}
 						if (flag)
 						{
 							this.AddDefensiveChampionToPlatfrom(smartEntity, troopTypeVO);
-							goto IL_18D;
 						}
-						goto IL_18D;
-						IL_129:
-						if (currentBattle.Type != BattleType.PveDefend || ContractUtils.IsBuildingUpgrading(smartEntity) || ContractUtils.IsChampionRepairing(smartEntity))
-						{
-							goto IL_182;
-						}
-						Inventory inventory = Service.Get<CurrentPlayer>().Inventory;
-						bool flag2 = inventory.Champion.HasItem(troopTypeVO.Uid) && inventory.Champion.GetItemAmount(troopTypeVO.Uid) > 0;
-						if (flag2)
-						{
-							flag = true;
-							goto IL_182;
-						}
-						goto IL_182;
 					}
 				}
-				IL_18D:;
 			}
 		}
 
@@ -472,127 +448,6 @@ namespace StaRTS.Main.Controllers
 			}
 			championPlatform.ChampionPlatformComp.DefensiveChampion = smartEntity;
 			Service.Get<CombatTriggerManager>().RegisterTrigger(new DefendedBuildingCombatTrigger(championPlatform, CombatTriggerType.Area, false, champion, 1, true, 0u, 1800u));
-		}
-
-		protected internal ChampionController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).AddChampionToInventoryIfAlive((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).AddDefensiveChampionToPlatfrom((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (TroopTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).ConfirmRepair();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChampionController)GCHandledObjects.GCHandleToObject(instance)).CreateChampionEntity((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).CreateChampionsOnPlatforms();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChampionController)GCHandledObjects.GCHandleToObject(instance)).CreateDefensiveChampionEntityForBattle((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).DestroyAllChampionEntities();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).DestroyChampionEntity((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChampionController)GCHandledObjects.GCHandleToObject(instance)).FindChampionEntity((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChampionController)GCHandledObjects.GCHandleToObject(instance)).FindChampionTypeIfPlatform((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChampionController)GCHandledObjects.GCHandleToObject(instance)).FindPlatformForChampion((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).HandleChampionPlatformUpgradeStarted((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChampionController)GCHandledObjects.GCHandleToObject(instance)).IsChampionAvailable((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChampionController)GCHandledObjects.GCHandleToObject(instance)).IsChampionBroken((ChampionComponent)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChampionController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForDroidResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChampionController)GCHandledObjects.GCHandleToObject(instance)).PlayerHasChampion((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).RegisterChampionPlatforms((CurrentBattle)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).StartChampionRepair((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((ChampionController)GCHandledObjects.GCHandleToObject(instance)).UpgradeChampionToMatchPlatform((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

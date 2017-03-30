@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/Interaction/Wrap Content")]
-public class UIWrapContent : MonoBehaviour, IUnitySerializable
+public class UIWrapContent : MonoBehaviour
 {
 	public delegate void OnInitializeItem(GameObject go, int wrapIndex, int realIndex);
 
-	public int itemSize;
+	public int itemSize = 100;
 
-	public bool cullContent;
+	public bool cullContent = true;
 
 	public int minIndex;
 
@@ -28,9 +25,9 @@ public class UIWrapContent : MonoBehaviour, IUnitySerializable
 
 	protected bool mHorizontal;
 
-	protected bool mFirstTime;
+	protected bool mFirstTime = true;
 
-	protected List<Transform> mChildren;
+	protected List<Transform> mChildren = new List<Transform>();
 
 	protected virtual void Start()
 	{
@@ -118,7 +115,7 @@ public class UIWrapContent : MonoBehaviour, IUnitySerializable
 		while (i < count)
 		{
 			Transform transform = this.mChildren[i];
-			transform.localPosition = (this.mHorizontal ? new Vector3((float)(i * this.itemSize), 0f, 0f) : new Vector3(0f, (float)(-(float)i * this.itemSize), 0f));
+			transform.localPosition = ((!this.mHorizontal) ? new Vector3(0f, (float)(-(float)i * this.itemSize), 0f) : new Vector3((float)(i * this.itemSize), 0f, 0f));
 			this.UpdateItem(transform, i);
 			i++;
 		}
@@ -270,161 +267,8 @@ public class UIWrapContent : MonoBehaviour, IUnitySerializable
 	{
 		if (this.onInitializeItem != null)
 		{
-			int realIndex = (this.mScroll.movement == UIScrollView.Movement.Vertical) ? Mathf.RoundToInt(item.localPosition.y / (float)this.itemSize) : Mathf.RoundToInt(item.localPosition.x / (float)this.itemSize);
+			int realIndex = (this.mScroll.movement != UIScrollView.Movement.Vertical) ? Mathf.RoundToInt(item.localPosition.x / (float)this.itemSize) : Mathf.RoundToInt(item.localPosition.y / (float)this.itemSize);
 			this.onInitializeItem(item.gameObject, index, realIndex);
 		}
-	}
-
-	public UIWrapContent()
-	{
-		this.itemSize = 100;
-		this.cullContent = true;
-		this.mFirstTime = true;
-		this.mChildren = new List<Transform>();
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		SerializedStateWriter.Instance.WriteInt32(this.itemSize);
-		SerializedStateWriter.Instance.WriteBoolean(this.cullContent);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32(this.minIndex);
-		SerializedStateWriter.Instance.WriteInt32(this.maxIndex);
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		this.itemSize = SerializedStateReader.Instance.ReadInt32();
-		this.cullContent = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.minIndex = SerializedStateReader.Instance.ReadInt32();
-		this.maxIndex = SerializedStateReader.Instance.ReadInt32();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		ISerializedNamedStateWriter arg_1F_0 = SerializedNamedStateWriter.Instance;
-		int arg_1F_1 = this.itemSize;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		arg_1F_0.WriteInt32(arg_1F_1, &var_0_cp_0[var_0_cp_1] + 2053);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.cullContent, &var_0_cp_0[var_0_cp_1] + 2062);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32(this.minIndex, &var_0_cp_0[var_0_cp_1] + 2074);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.maxIndex, &var_0_cp_0[var_0_cp_1] + 2083);
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		ISerializedNamedStateReader arg_1A_0 = SerializedNamedStateReader.Instance;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		this.itemSize = arg_1A_0.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2053);
-		this.cullContent = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 2062);
-		SerializedNamedStateReader.Instance.Align();
-		this.minIndex = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2074);
-		this.maxIndex = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2083);
-	}
-
-	protected internal UIWrapContent(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static bool $Get0(object instance)
-	{
-		return ((UIWrapContent)instance).cullContent;
-	}
-
-	public static void $Set0(object instance, bool value)
-	{
-		((UIWrapContent)instance).cullContent = value;
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).CacheScrollView());
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).OnMove((UIPanel)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).OnValidate();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).ResetChildPositions();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).SortAlphabetically();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).SortBasedOnScrollMovement();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).UpdateItem((Transform)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UIWrapContent)GCHandledObjects.GCHandleToObject(instance)).WrapContent();
-		return -1L;
 	}
 }

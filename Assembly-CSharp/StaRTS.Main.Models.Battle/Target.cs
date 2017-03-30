@@ -4,7 +4,6 @@ using StaRTS.Main.Utils;
 using StaRTS.Utils;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Battle
 {
@@ -61,7 +60,7 @@ namespace StaRTS.Main.Models.Battle
 				Target.SetDefaultTargetWorldLocation(target, 1.25f);
 				return target;
 			}
-			TransformComponent transformComponent = troopEntity.TroopComp.TroopType.IsHealer ? troopEntity.TransformComp : targetEntity.TransformComp;
+			TransformComponent transformComponent = (!troopEntity.TroopComp.TroopType.IsHealer) ? targetEntity.TransformComp : troopEntity.TransformComp;
 			if (transformComponent == null)
 			{
 				return null;
@@ -86,35 +85,6 @@ namespace StaRTS.Main.Models.Battle
 		private static void SetDefaultTargetWorldLocation(Target target, float targetWorldY)
 		{
 			target.TargetWorldLocation = new Vector3(Units.BoardToWorldX(target.TargetBoardX), targetWorldY, Units.BoardToWorldZ(target.TargetBoardZ));
-		}
-
-		public Target()
-		{
-		}
-
-		protected internal Target(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Target.CreateTargetForTroop((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]), (SecondaryTargetsComponent)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Target.CreateTargetForTurret((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Target.CreateTargetWithWorldLocation((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			Target.SetDefaultTargetWorldLocation((Target)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
 		}
 	}
 }

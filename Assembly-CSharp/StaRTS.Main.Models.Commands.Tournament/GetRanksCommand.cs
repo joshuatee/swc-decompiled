@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Tournament
 		public GetRanksCommand(PlayerIdRequest request) : base("player.leaderboard.tournament.getRanks", request, new ConflictRanks())
 		{
 		}
-
-		protected internal GetRanksCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

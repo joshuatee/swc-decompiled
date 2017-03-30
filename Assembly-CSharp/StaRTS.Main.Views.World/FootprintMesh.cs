@@ -2,7 +2,6 @@ using StaRTS.Utils;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -83,33 +82,6 @@ namespace StaRTS.Main.Views.World
 				result = true;
 			}
 			return result;
-		}
-
-		protected internal FootprintMesh(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((FootprintMesh)GCHandledObjects.GCHandleToObject(instance)).AddQuad(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((FootprintMesh)GCHandledObjects.GCHandleToObject(instance)).DestroyFootprintMesh();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((FootprintMesh)GCHandledObjects.GCHandleToObject(instance)).GenerateMeshFromQuads();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FootprintMesh)GCHandledObjects.GCHandleToObject(instance)).ModifyTiles(*(*(IntPtr*)args), (Material)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

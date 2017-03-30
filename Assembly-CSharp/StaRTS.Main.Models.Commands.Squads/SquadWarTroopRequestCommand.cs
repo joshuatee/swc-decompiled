@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public SquadWarTroopRequestCommand(TroopSquadRequest request) : base("guild.war.troops.request", request, new DefaultResponse())
 		{
 		}
-
-		protected internal SquadWarTroopRequestCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

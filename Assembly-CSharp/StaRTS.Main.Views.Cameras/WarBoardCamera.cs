@@ -12,15 +12,12 @@ namespace StaRTS.Main.Views.Cameras
 
 		private float distanceFromEyeToScreen;
 
-		private Vector3 warboardCameraPosFromUnity;
+		private Vector3 warboardCameraPosFromUnity = new Vector3(0f, 160f, -50f);
 
-		private Vector3 warboardCameraRotation;
+		private Vector3 warboardCameraRotation = new Vector3(18f, 0f, 0f);
 
 		public WarBoardCamera()
 		{
-			this.warboardCameraPosFromUnity = new Vector3(0f, 160f, -50f);
-			this.warboardCameraRotation = new Vector3(18f, 0f, 0f);
-			base..ctor();
 			this.cameraGameObject = new GameObject("WarboardCamera");
 			this.cameraGameObject.transform.position = this.warboardCameraPosFromUnity;
 			this.cameraGameObject.transform.position += new Vector3(-10000f, -10000f, 0f);
@@ -48,10 +45,6 @@ namespace StaRTS.Main.Views.Cameras
 				return CameraUtils.GetGroundPositionHelper(this.unityCamera, screenPosition, position, this.distanceFromEyeToScreen, base.GroundOffset, ref groundPosition);
 			}
 			return false;
-		}
-
-		protected internal WarBoardCamera(UIntPtr dummy) : base(dummy)
-		{
 		}
 	}
 }

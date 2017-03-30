@@ -7,7 +7,6 @@ using StaRTS.Utils.MeshCombiner;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.CombineMesh
 {
@@ -49,9 +48,11 @@ namespace StaRTS.Main.Controllers.CombineMesh
 			if (noFutureAddCallExpected)
 			{
 				this.CombineMesh(buildingType, meshCombiners[buildingType]);
-				return;
 			}
-			this.UncombineMesh(buildingType, meshCombiners[buildingType]);
+			else
+			{
+				this.UncombineMesh(buildingType, meshCombiners[buildingType]);
+			}
 		}
 
 		public void BuildingObjectDestroyed(BuildingType buildingType, Dictionary<BuildingType, MeshCombiner> meshCombiners, bool noFutureAddCallExpected)
@@ -85,8 +86,8 @@ namespace StaRTS.Main.Controllers.CombineMesh
 			Dictionary<BuildingType, HashSet<Renderer>> allRenderersToCombine = this.GetAllRenderersToCombine();
 			foreach (KeyValuePair<BuildingType, HashSet<Renderer>> current in allRenderersToCombine)
 			{
-				BuildingType key = current.get_Key();
-				meshCombiners[key].CombineMeshes(current.get_Value());
+				BuildingType key = current.Key;
+				meshCombiners[key].CombineMeshes(current.Value);
 			}
 		}
 
@@ -94,9 +95,9 @@ namespace StaRTS.Main.Controllers.CombineMesh
 		{
 			foreach (KeyValuePair<BuildingType, MeshCombiner> current in meshCombiners)
 			{
-				if (current.get_Value() != null)
+				if (current.Value != null)
 				{
-					current.get_Value().UncombineMesh();
+					current.Value.UncombineMesh();
 				}
 			}
 		}
@@ -181,114 +182,6 @@ namespace StaRTS.Main.Controllers.CombineMesh
 					this.AddRenderFromGameObject(renderers, component.ShadowGameObject);
 				}
 			}
-		}
-
-		protected AbstractCombineMeshHelper()
-		{
-		}
-
-		protected internal AbstractCombineMeshHelper(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).AddRenderersFromEntity((HashSet<Renderer>)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).AddRenderFromGameObject((HashSet<Renderer>)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).BuildingObjectAdded((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (Dictionary<BuildingType, MeshCombiner>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).BuildingObjectDestroyed((BuildingType)(*(int*)args), (Dictionary<BuildingType, MeshCombiner>)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).BuildingObjectDestroyed((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (Dictionary<BuildingType, MeshCombiner>)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).CombineAllMeshTypes((Dictionary<BuildingType, MeshCombiner>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).CombineMesh((BuildingType)(*(int*)args), (MeshCombiner)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).GetAllRenderersToCombine());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).GetBuildingEntityListByType((BuildingType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).GetBuildingTypeFromBuilding((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).GetEligibleBuildingTypes());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).GetRenderersToCombine((BuildingType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).InternalBuildingObjectDestroyed((BuildingType)(*(int*)args), (Dictionary<BuildingType, MeshCombiner>)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).IsBuildingTypeEligible((BuildingType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).IsEntityEligible((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).IsEntityEligibleForEligibleBuildingType((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).UncombineAllMeshTypes((Dictionary<BuildingType, MeshCombiner>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((AbstractCombineMeshHelper)GCHandledObjects.GCHandleToObject(instance)).UncombineMesh((BuildingType)(*(int*)args), (MeshCombiner)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

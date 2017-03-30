@@ -4,7 +4,6 @@ using StaRTS.Main.Models.Player.Objectives;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Objectives
 {
@@ -22,19 +21,9 @@ namespace StaRTS.Main.Models.Commands.Objectives
 			currentPlayer.Objectives.Clear();
 			foreach (KeyValuePair<string, ObjectiveGroup> current in base.ResponseResult.Groups)
 			{
-				currentPlayer.Objectives.Add(current.get_Key(), current.get_Value());
+				currentPlayer.Objectives.Add(current.Key, current.Value);
 			}
 			base.OnSuccess();
-		}
-
-		protected internal GetObjectivesCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GetObjectivesCommand)GCHandledObjects.GCHandleToObject(instance)).OnSuccess();
-			return -1L;
 		}
 	}
 }

@@ -2,9 +2,6 @@ using StaRTS.Main.Models;
 using StaRTS.Utils;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.TrapConditions
 {
@@ -20,7 +17,7 @@ namespace StaRTS.Main.Controllers.TrapConditions
 		{
 			if (trapType == "radius")
 			{
-				uint radius = Convert.ToUInt32(args[0], CultureInfo.InvariantCulture);
+				uint radius = Convert.ToUInt32(args[0]);
 				return new RadiusTrapCondition(radius);
 			}
 			if (trapType == "intrudertype")
@@ -41,11 +38,6 @@ namespace StaRTS.Main.Controllers.TrapConditions
 				return new ArmorNotTrapCondition(list);
 			}
 			return null;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TrapConditionFactory.GenerateTrapCondition(Marshal.PtrToStringUni(*(IntPtr*)args), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1])));
 		}
 	}
 }

@@ -8,17 +8,12 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
-using System.Collections;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Story
 {
 	public class HoloCharacter
 	{
-		private readonly Vector3 HOLO_CONTAINER_POSITION;
-
 		private const float CAM_NEAR_CLIP = -2f;
 
 		private const float CAM_FAR_CLIP = 2f;
@@ -59,6 +54,8 @@ namespace StaRTS.Main.Views.Story
 
 		private const float DELAY_SWITCH = 0.4f;
 
+		private readonly Vector3 HOLO_CONTAINER_POSITION = new Vector3(0f, 2000f, 0f);
+
 		private static readonly Vector3 HOLO_OFFSET = new Vector3(0.34f, 1.07f, 0f);
 
 		public HolocommScreen.HoloCallback destructionCallback;
@@ -66,8 +63,6 @@ namespace StaRTS.Main.Views.Story
 		private GameObject holoAssetPositioner;
 
 		private GameObject holo;
-
-		private Transform holoTransform;
 
 		private AssetHandle holoHandle;
 
@@ -101,6 +96,8 @@ namespace StaRTS.Main.Views.Story
 
 		private Vector3 holoPosition;
 
+		private Vector3 desiredScale;
+
 		public string CharacterId
 		{
 			get;
@@ -123,8 +120,6 @@ namespace StaRTS.Main.Views.Story
 
 		public HoloCharacter(string characterId, Vector3 holoPosition)
 		{
-			this.HOLO_CONTAINER_POSITION = new Vector3(0f, 2000f, 0f);
-			base..ctor();
 			this.OnDoneLoading = null;
 			this.holoPosition = holoPosition;
 			this.destroyed = false;
@@ -135,71 +130,6 @@ namespace StaRTS.Main.Views.Story
 			this.assetManager = Service.Get<AssetManager>();
 			this.assetManager.Load(ref this.holoHandle, "hologram", new AssetSuccessDelegate(this.OnHologramLoaded), new AssetFailureDelegate(this.OnHologramLoadFailed), null);
 			this.LoadCharacter(characterId, false);
-		}
-
-		public void ResizeCurrentCharacter()
-		{
-			if (this.holoContainer == null || this.holoTransform == null || this.holoCharacterTexture == null)
-			{
-				return;
-			}
-			Transform transform = this.holoContainer.transform;
-			transform.localPosition = this.HOLO_CONTAINER_POSITION;
-			Transform transform2 = this.holoCam.transform;
-			transform2.parent = transform;
-			transform2.localPosition = Vector3.zero;
-			transform2.localScale = Vector3.one;
-			transform2.localRotation = Quaternion.identity;
-			this.holoAssetPositioner.transform.parent = this.holoContainer.transform;
-			float num = Math.Min((float)Screen.width / 1920f, (float)Screen.height / 1080f) * 1.7f;
-			num = Math.Min(1f, num);
-			Vector3 localScale = new Vector3(num, num, 1f);
-			this.holoAssetPositioner.transform.localScale = localScale;
-			this.holoAssetPositioner.transform.position = this.holoCam.ViewportToWorldPoint(this.holoPosition);
-			this.holoTransform.parent = this.holoAssetPositioner.transform;
-			this.holoTransform.localScale = Vector3.one;
-			this.holoTransform.localRotation = Quaternion.identity;
-			this.charMaterialParent = this.holoTransform.FindChild("Char");
-			this.holoTransform.transform.localPosition = HoloCharacter.HOLO_OFFSET;
-			if (this.holoCharacterTexture != null)
-			{
-				this.UpdateCharacterMaterials();
-			}
-		}
-
-		public void ResizeCurrentCharacter(Vector3 holoPosition, int width, int height)
-		{
-			if (this.holoContainer == null || this.holo == null || this.holoCharacterTexture == null)
-			{
-				return;
-			}
-			this.holoPosition = holoPosition;
-			Transform transform = this.holoContainer.transform;
-			transform.localPosition = this.HOLO_CONTAINER_POSITION;
-			this.holoCam = new GameObject("HoloCam").AddComponent<Camera>();
-			this.holoCam.clearFlags = CameraClearFlags.Depth;
-			this.holoCam.depth = 1f;
-			this.holoCam.cullingMask = 2048;
-			this.holoCam.orthographic = true;
-			this.holoCam.nearClipPlane = -2f;
-			this.holoCam.farClipPlane = 2f;
-			this.holoCam.orthographicSize = 1.5f;
-			Transform transform2 = this.holoCam.transform;
-			transform2.parent = transform;
-			transform2.localPosition = Vector3.zero;
-			transform2.localScale = Vector3.one;
-			transform2.localRotation = Quaternion.identity;
-			this.holoAssetPositioner.transform.parent = this.holoContainer.transform;
-			float num = Math.Min((float)Screen.width / 1920f, (float)Screen.height / 1080f) * 1.7f;
-			num = Math.Min(0.84375f, num);
-			this.holoAssetPositioner.transform.localScale = new Vector3(num, num, 1f);
-			this.holoAssetPositioner.transform.position = this.holoCam.ViewportToWorldPoint(holoPosition);
-			Transform transform3 = this.holo.transform;
-			transform3.parent = this.holoAssetPositioner.transform;
-			transform3.localScale = Vector3.one;
-			transform3.localRotation = Quaternion.identity;
-			this.charMaterialParent = transform3.FindChild("Char");
-			transform3.transform.localPosition = HoloCharacter.HOLO_OFFSET;
 		}
 
 		private void OnHologramLoaded(object asset, object cookie)
@@ -223,17 +153,17 @@ namespace StaRTS.Main.Views.Story
 			this.holo = (GameObject)asset;
 			this.holoAnimator = this.holo.GetComponent<Animator>();
 			this.holoAssetPositioner = new GameObject("uiAnchor");
-			this.holoTransform = this.holo.transform;
+			this.desiredScale = this.holo.transform.localScale;
 			this.holoAssetPositioner.transform.parent = this.holoContainer.transform;
-			float num = Math.Min((float)Screen.width / 1920f, (float)Screen.height / 1080f) * 1.7f;
-			num = Math.Min(1f, num);
-			this.holoAssetPositioner.transform.localScale = new Vector3(num, num, 1f);
+			this.holoAssetPositioner.transform.localScale = this.desiredScale;
 			this.holoAssetPositioner.transform.position = this.holoCam.ViewportToWorldPoint(this.holoPosition);
-			this.holoTransform.parent = this.holoAssetPositioner.transform;
-			this.holoTransform.localScale = Vector3.one;
-			this.holoTransform.localRotation = Quaternion.identity;
-			this.charMaterialParent = this.holoTransform.FindChild("Char");
-			this.holoTransform.transform.localPosition = HoloCharacter.HOLO_OFFSET;
+			this.UpdatePositionOnScreen();
+			Transform transform3 = this.holo.transform;
+			transform3.parent = this.holoAssetPositioner.transform;
+			transform3.localScale = Vector3.one;
+			transform3.localRotation = Quaternion.identity;
+			this.charMaterialParent = transform3.FindChild("Char");
+			transform3.transform.localPosition = HoloCharacter.HOLO_OFFSET;
 			if (this.holoCharacterTexture != null)
 			{
 				this.UpdateCharacterMaterials();
@@ -246,9 +176,13 @@ namespace StaRTS.Main.Views.Story
 			return 1.565723f + -1.6636014f / (1f + Mathf.Pow(x / 0.6395921f, 0.9056507f));
 		}
 
+		public void UpdatePositionOnScreen()
+		{
+		}
+
 		private void OnHologramLoadFailed(object cookie)
 		{
-			Service.Get<StaRTSLogger>().ErrorFormat("Failed to load hologram asset", new object[0]);
+			Service.Get<Logger>().ErrorFormat("Failed to load hologram asset", new object[0]);
 			this.eventManager.SendEvent(EventId.ShowHologramComplete, null);
 		}
 
@@ -273,17 +207,19 @@ namespace StaRTS.Main.Views.Story
 				this.holoAnimator.SetTrigger("TransOut");
 				this.KillActiveTimer();
 				this.timerId = this.viewTimerManager.CreateViewTimer(0.4f, false, new TimerDelegate(this.OnTransitionOutTimer), null);
-				return;
 			}
-			this.UpdateCharacterMaterials();
-			this.TryAnimateTurnOn();
+			else
+			{
+				this.UpdateCharacterMaterials();
+				this.TryAnimateTurnOn();
+			}
 		}
 
 		private void CallDoneLoadingCallback()
 		{
 			if (this.OnDoneLoading != null)
 			{
-				this.OnDoneLoading.Invoke();
+				this.OnDoneLoading();
 			}
 		}
 
@@ -306,11 +242,14 @@ namespace StaRTS.Main.Views.Story
 		{
 			this.UnloadAndResetPrevHandle();
 			this.CallDoneLoadingCallback();
-			using (IEnumerator enumerator = this.charMaterialParent.GetEnumerator())
+			foreach (Transform transform in this.charMaterialParent)
 			{
-				while (enumerator.MoveNext())
+				if (transform.gameObject.name == "Char04_Bands")
 				{
-					Transform transform = (Transform)enumerator.get_Current();
+					transform.GetComponent<Renderer>().sharedMaterial.SetTexture("_MaskTex", this.holoCharacterTexture);
+				}
+				else
+				{
 					transform.GetComponent<Renderer>().sharedMaterial.mainTexture = this.holoCharacterTexture;
 				}
 			}
@@ -318,7 +257,7 @@ namespace StaRTS.Main.Views.Story
 
 		private void OnCharacterLoadFailed(object cookie)
 		{
-			Service.Get<StaRTSLogger>().ErrorFormat("Failed to load character asset for hologram: {0}", new object[]
+			Service.Get<Logger>().ErrorFormat("Failed to load character asset for hologram: {0}", new object[]
 			{
 				cookie
 			});
@@ -373,9 +312,11 @@ namespace StaRTS.Main.Views.Story
 			{
 				this.holoAnimator.SetTrigger("TurnOff");
 				this.timerId = this.viewTimerManager.CreateViewTimer(1f, false, new TimerDelegate(this.OnTurnOffTimer), null);
-				return;
 			}
-			this.OnTurnOffTimer(0u, null);
+			else
+			{
+				this.OnTurnOffTimer(0u, null);
+			}
 		}
 
 		private void OnTurnOffTimer(uint timerId, object cookie)
@@ -417,7 +358,6 @@ namespace StaRTS.Main.Views.Story
 				UnityEngine.Object.Destroy(this.holoCam.gameObject);
 				UnityEngine.Object.Destroy(this.holoContainer);
 				this.holo = null;
-				this.holoTransform = null;
 				this.holoCam = null;
 				this.holoAssetPositioner = null;
 				this.holoContainer = null;
@@ -445,150 +385,6 @@ namespace StaRTS.Main.Views.Story
 				this.prevCharHandle = this.charHandle;
 				this.charHandle = AssetHandle.Invalid;
 			}
-		}
-
-		protected internal HoloCharacter(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).Animate(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).AnimateTurnOff();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).CallDoneLoadingCallback();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).ChangeCharacter(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).CloseAndDestroy((HolocommScreen.HoloCallback)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).DestroyCharacterAssets();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).Camera);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).CharacterId);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).OnDoneLoading);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).GetScaleForAspectRatio(*(float*)args));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).KillActiveTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).LoadCharacter(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).OnCharacterLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).OnCharacterLoadFailed(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).OnHologramLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).OnHologramLoadFailed(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).ResizeCurrentCharacter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).ResizeCurrentCharacter(*(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).CharacterId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).OnDoneLoading = (Action)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).TryAnimateTurnOn();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).UnloadAndResetPrevHandle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((HoloCharacter)GCHandledObjects.GCHandleToObject(instance)).UpdateCharacterMaterials();
-			return -1L;
 		}
 	}
 }

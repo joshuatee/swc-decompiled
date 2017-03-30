@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public PlayerErrorCommand(PlayerErrorRequest request) : base("player.error", request, new DefaultResponse())
 		{
 		}
-
-		protected internal PlayerErrorCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

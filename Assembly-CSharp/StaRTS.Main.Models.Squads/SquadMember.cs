@@ -1,13 +1,10 @@
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Squads
 {
-	public class SquadMember : ISerializable, IComparable<SquadMember>
+	public class SquadMember : IComparable<SquadMember>, ISerializable
 	{
 		public string MemberName
 		{
@@ -107,7 +104,7 @@ namespace StaRTS.Main.Models.Squads
 
 		public SquadMember()
 		{
-			this.MemberName = "";
+			this.MemberName = string.Empty;
 			this.MemberID = "0";
 			this.Score = 0;
 			this.TroopsDonated = 0;
@@ -138,17 +135,17 @@ namespace StaRTS.Main.Models.Squads
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary.ContainsKey("name"))
 			{
-				this.MemberName = Convert.ToString(dictionary["name"], CultureInfo.InvariantCulture);
+				this.MemberName = Convert.ToString(dictionary["name"]);
 			}
 			bool flag = false;
 			if (dictionary.ContainsKey("isOwner"))
 			{
-				flag = Convert.ToBoolean(dictionary["isOwner"], CultureInfo.InvariantCulture);
+				flag = Convert.ToBoolean(dictionary["isOwner"]);
 			}
 			bool flag2 = false;
 			if (dictionary.ContainsKey("isOfficer"))
 			{
-				flag2 = Convert.ToBoolean(dictionary["isOfficer"], CultureInfo.InvariantCulture);
+				flag2 = Convert.ToBoolean(dictionary["isOfficer"]);
 			}
 			if (flag)
 			{
@@ -164,35 +161,35 @@ namespace StaRTS.Main.Models.Squads
 			}
 			if (dictionary.ContainsKey("score"))
 			{
-				this.Score = Convert.ToInt32(dictionary["score"], CultureInfo.InvariantCulture);
+				this.Score = Convert.ToInt32(dictionary["score"]);
 			}
 			if (dictionary.ContainsKey("joinDate"))
 			{
-				this.JoinDate = Convert.ToUInt32(dictionary["joinDate"], CultureInfo.InvariantCulture);
+				this.JoinDate = Convert.ToUInt32(dictionary["joinDate"]);
 			}
 			if (dictionary.ContainsKey("lastLoginTime"))
 			{
-				this.LastLoginTime = Convert.ToUInt32(dictionary["lastLoginTime"], CultureInfo.InvariantCulture);
+				this.LastLoginTime = Convert.ToUInt32(dictionary["lastLoginTime"]);
 			}
 			if (dictionary.ContainsKey("troopsDonated"))
 			{
-				this.TroopsDonated = Convert.ToInt32(dictionary["troopsDonated"], CultureInfo.InvariantCulture);
+				this.TroopsDonated = Convert.ToInt32(dictionary["troopsDonated"]);
 			}
 			if (dictionary.ContainsKey("reputationInvested"))
 			{
-				this.ReputationInvested = Convert.ToInt32(dictionary["reputationInvested"], CultureInfo.InvariantCulture);
+				this.ReputationInvested = Convert.ToInt32(dictionary["reputationInvested"]);
 			}
 			if (dictionary.ContainsKey("troopsReceived"))
 			{
-				this.TroopsReceived = Convert.ToInt32(dictionary["troopsReceived"], CultureInfo.InvariantCulture);
+				this.TroopsReceived = Convert.ToInt32(dictionary["troopsReceived"]);
 			}
 			if (dictionary.ContainsKey("attacksWon"))
 			{
-				this.AttacksWon = Convert.ToInt32(dictionary["attacksWon"], CultureInfo.InvariantCulture);
+				this.AttacksWon = Convert.ToInt32(dictionary["attacksWon"]);
 			}
 			if (dictionary.ContainsKey("defensesWon"))
 			{
-				this.DefensesWon = Convert.ToInt32(dictionary["defensesWon"], CultureInfo.InvariantCulture);
+				this.DefensesWon = Convert.ToInt32(dictionary["defensesWon"]);
 			}
 			if (dictionary.ContainsKey("tournamentScores"))
 			{
@@ -204,30 +201,30 @@ namespace StaRTS.Main.Models.Squads
 					{
 						foreach (KeyValuePair<string, object> current in dictionary2)
 						{
-							this.TournamentScore.Add(current.get_Key(), Convert.ToInt32(current.get_Value(), CultureInfo.InvariantCulture));
+							this.TournamentScore.Add(current.Key, Convert.ToInt32(current.Value));
 						}
 					}
 				}
 			}
 			if (dictionary.ContainsKey("playerId"))
 			{
-				this.MemberID = Convert.ToString(dictionary["playerId"], CultureInfo.InvariantCulture);
+				this.MemberID = Convert.ToString(dictionary["playerId"]);
 			}
 			if (dictionary.ContainsKey("planet"))
 			{
-				this.Planet = Convert.ToString(dictionary["planet"], CultureInfo.InvariantCulture);
+				this.Planet = Convert.ToString(dictionary["planet"]);
 			}
 			if (dictionary.ContainsKey("warParty"))
 			{
-				this.WarParty = Convert.ToInt32(dictionary["warParty"], CultureInfo.InvariantCulture);
+				this.WarParty = Convert.ToInt32(dictionary["warParty"]);
 			}
 			if (dictionary.ContainsKey("hqLevel"))
 			{
-				this.HQLevel = Convert.ToInt32(dictionary["hqLevel"], CultureInfo.InvariantCulture);
+				this.HQLevel = Convert.ToInt32(dictionary["hqLevel"]);
 			}
 			if (dictionary.ContainsKey("xp"))
 			{
-				this.BaseScore = Convert.ToInt32(dictionary["xp"], CultureInfo.InvariantCulture);
+				this.BaseScore = Convert.ToInt32(dictionary["xp"]);
 			}
 			return this;
 		}
@@ -235,179 +232,6 @@ namespace StaRTS.Main.Models.Squads
 		public string ToJson()
 		{
 			return Serializer.Start().End().ToString();
-		}
-
-		protected internal SquadMember(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).CompareTo((SquadMember)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).AttacksWon);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).BaseScore);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).DefensesWon);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).HQLevel);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).MemberID);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).MemberName);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).Planet);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).ReputationInvested);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).Role);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).Score);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).TournamentScore);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).TroopsDonated);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).TroopsReceived);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).WarParty);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).AttacksWon = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).BaseScore = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).DefensesWon = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).HQLevel = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).MemberID = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).MemberName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).Planet = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).ReputationInvested = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).Role = (SquadRole)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).Score = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).TournamentScore = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).TroopsDonated = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).TroopsReceived = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((SquadMember)GCHandledObjects.GCHandleToObject(instance)).WarParty = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadMember)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

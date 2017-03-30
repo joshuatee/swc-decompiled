@@ -23,9 +23,7 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -195,9 +193,11 @@ namespace StaRTS.Main.Controllers
 				alertWithCheckBoxScreen.SetSecondaryLabelText(lang.Get("s_Cancel", new object[0]));
 				alertWithCheckBoxScreen.Set2ButtonGroupEnabledState(true);
 				Service.Get<ScreenController>().AddScreen(alertWithCheckBoxScreen);
-				return;
 			}
-			this.StartCurrentRaidDefenseInternal();
+			else
+			{
+				this.StartCurrentRaidDefenseInternal();
+			}
 		}
 
 		private void OnDefendNowScreenClosed(object result, bool skipFuture)
@@ -215,9 +215,11 @@ namespace StaRTS.Main.Controllers
 			if (this.IsRaidAvailable())
 			{
 				this.nextUpdateTimestamp = currentPlayer.RaidEndTime;
-				return;
 			}
-			this.nextUpdateTimestamp = currentPlayer.RaidStartTime;
+			else
+			{
+				this.nextUpdateTimestamp = currentPlayer.RaidStartTime;
+			}
 		}
 
 		public string GetDisplayForTimeTillNextRaid()
@@ -291,9 +293,11 @@ namespace StaRTS.Main.Controllers
 			if (this.IsRaidAvailable())
 			{
 				this.CreateScoutHolo();
-				return;
 			}
-			this.DestroyScoutHolo();
+			else
+			{
+				this.DestroyScoutHolo();
+			}
 		}
 
 		public void SendRaidDefenseComplete(CampaignMissionVO raidMission, Action endRaidCallback, EndPvEBattleTO endBattleTO)
@@ -306,10 +310,12 @@ namespace StaRTS.Main.Controllers
 				raidDefenseCompleteCommand.AddSuccessCallback(new AbstractCommand<RaidDefenseCompleteRequest, RaidDefenseCompleteResponse>.OnSuccessCallback(this.OnRaidCompleteSuccessWrapper));
 				this.onRaidEndCallback = endRaidCallback;
 				Service.Get<ServerAPI>().Sync(raidDefenseCompleteCommand);
-				this.finalWaveIdOfLastDefense = "";
-				return;
+				this.finalWaveIdOfLastDefense = string.Empty;
 			}
-			Service.Get<StaRTSLogger>().Error("Ended Raid Defense does not match the current raid.Ended: " + this.GetUidToLog(raidMission) + ", Scheduled: " + this.GetUidToLog(currentRaid));
+			else
+			{
+				Service.Get<Logger>().Error("Ended Raid Defense does not match the current raid.Ended: " + this.GetUidToLog(raidMission) + ", Scheduled: " + this.GetUidToLog(currentRaid));
+			}
 		}
 
 		public void SendRaidDefenseStart(CampaignMissionVO raidMission, RaidDefenseController.OnSuccessCallback successCB)
@@ -323,9 +329,11 @@ namespace StaRTS.Main.Controllers
 				this.raidStartCallback = successCB;
 				raidDefenseStartCommand.AddSuccessCallback(new AbstractCommand<RaidDefenseStartRequest, RaidDefenseStartResponse>.OnSuccessCallback(this.OnRaidStartSuccessWrapper));
 				Service.Get<ServerAPI>().Sync(raidDefenseStartCommand);
-				return;
 			}
-			Service.Get<StaRTSLogger>().Error("Started Raid Defense does not match the next scheduled raid.Started: " + this.GetUidToLog(raidMission) + ", Scheduled: " + this.GetUidToLog(currentRaid));
+			else
+			{
+				Service.Get<Logger>().Error("Started Raid Defense does not match the next scheduled raid.Started: " + this.GetUidToLog(raidMission) + ", Scheduled: " + this.GetUidToLog(currentRaid));
+			}
 		}
 
 		private void OnRaidStartSuccessWrapper(RaidDefenseStartResponse response, object cookie)
@@ -353,7 +361,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (this.onRaidEndCallback != null)
 			{
-				this.onRaidEndCallback.Invoke();
+				this.onRaidEndCallback();
 			}
 		}
 
@@ -375,9 +383,11 @@ namespace StaRTS.Main.Controllers
 			if (this.AreRaidsAccessible())
 			{
 				Service.Get<ScreenController>().AddScreen(new RaidInfoScreen());
-				return;
 			}
-			Service.Get<StaRTSLogger>().Warn("Tried to Show Raid Briefing While Raids Are Not Accessible");
+			else
+			{
+				Service.Get<Logger>().Warn("Tried to Show Raid Briefing While Raids Are Not Accessible");
+			}
 		}
 
 		private string GetUidToLog(IValueObject vo)
@@ -424,149 +434,133 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.BuildingReplaced)
+			switch (id)
 			{
-				if (id <= EventId.BuildingCancelled)
+			case EventId.WorldLoadComplete:
+			{
+				IState currentState = Service.Get<GameStateMachine>().CurrentState;
+				if (currentState is HomeState && this.RaidCompleteDidAwardCrate())
 				{
-					if (id != EventId.BuildingViewReady)
-					{
-						if (id != EventId.BuildingCancelled)
-						{
-							return EatResponse.NotEaten;
-						}
-					}
-					else
-					{
-						EntityViewParams entityViewParams = (EntityViewParams)cookie;
-						if (entityViewParams.Entity.Has<ScoutTowerComponent>())
-						{
-							this.CreateScoutHolo();
-							return EatResponse.NotEaten;
-						}
-						return EatResponse.NotEaten;
-					}
+					GameUtils.ShowCrateAwardModal(this.lastAwardedCrateUid);
+					this.lastAwardedCrateUid = null;
+					Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldLoadComplete);
 				}
-				else if (id != EventId.EntityKilled)
+				return EatResponse.NotEaten;
+			}
+			case EventId.WorldInTransitionComplete:
+			case EventId.WorldOutTransitionComplete:
+			{
+				IL_1D:
+				switch (id)
 				{
-					if (id != EventId.BuildingConstructed)
+				case EventId.BuildingViewReady:
+				{
+					EntityViewParams entityViewParams = (EntityViewParams)cookie;
+					if (entityViewParams.Entity.Has<ScoutTowerComponent>())
 					{
-						if (id != EventId.BuildingReplaced)
-						{
-							return EatResponse.NotEaten;
-						}
+						this.CreateScoutHolo();
+					}
+					return EatResponse.NotEaten;
+				}
+				case EventId.BuildingViewFailed:
+					IL_32:
+					if (id == EventId.BuildingConstructed)
+					{
+						goto IL_B1;
+					}
+					if (id == EventId.BuildingReplaced)
+					{
 						Entity entity = cookie as Entity;
 						if (entity.Has<ScoutTowerComponent>())
 						{
 							this.CreateScoutHolo();
-							return EatResponse.NotEaten;
 						}
 						return EatResponse.NotEaten;
 					}
-				}
-				else
-				{
-					SmartEntity smartEntity = (SmartEntity)cookie;
-					if (smartEntity.BuildingComp == null)
+					if (id == EventId.ContractStarted || id == EventId.ContractContinued)
 					{
-						return EatResponse.NotEaten;
-					}
-					BuildingType type = smartEntity.BuildingComp.BuildingType.Type;
-					if (!this.raidDefenseTrainerBindings.Contains(type))
-					{
-						return EatResponse.NotEaten;
-					}
-					UXController uXController = Service.Get<UXController>();
-					Lang lang = Service.Get<Lang>();
-					switch (type)
-					{
-					case BuildingType.FleetCommand:
-						Service.Get<DeployerController>().SpecialAttackDeployer.ExitMode();
-						uXController.HUD.DisableSpecialAttacks();
-						uXController.MiscElementsManager.ShowPlayerInstructions(lang.Get("STARSHIP_TRAINER_DESTROYED", new object[0]));
-						return EatResponse.NotEaten;
-					case BuildingType.HeroMobilizer:
-						Service.Get<DeployerController>().HeroDeployer.ExitMode();
-						uXController.HUD.DisableHeroDeploys();
-						uXController.MiscElementsManager.ShowPlayerInstructions(lang.Get("HERO_TRAINER_DESTROYED", new object[0]));
-						return EatResponse.NotEaten;
-					case BuildingType.ChampionPlatform:
-					case BuildingType.Housing:
-						return EatResponse.NotEaten;
-					case BuildingType.Squad:
-						Service.Get<DeployerController>().SquadTroopDeployer.ExitMode();
-						uXController.HUD.DisableSquadDeploy();
-						uXController.MiscElementsManager.ShowPlayerInstructions(lang.Get("SQUAD_CENTER_DESTROYED", new object[0]));
-						return EatResponse.NotEaten;
-					default:
-						return EatResponse.NotEaten;
-					}
-				}
-				ContractEventData contractEventData = (ContractEventData)cookie;
-				if (contractEventData.BuildingVO.Type == BuildingType.ScoutTower)
-				{
-					this.SendRaidDefenseUpdate();
-				}
-			}
-			else
-			{
-				if (id <= EventId.ContractStarted)
-				{
-					if (id != EventId.WorldLoadComplete)
-					{
-						if (id == EventId.WorldReset)
+						ContractEventData contractEventData = (ContractEventData)cookie;
+						if (contractEventData.BuildingVO.Type == BuildingType.ScoutTower)
 						{
 							this.DestroyScoutHolo();
+						}
+						return EatResponse.NotEaten;
+					}
+					if (id != EventId.EntityKilled)
+					{
+						if (id == EventId.HeroDeployed)
+						{
+							EntityController entityController = Service.Get<EntityController>();
+							NodeList<OffensiveTroopNode> nodeList = entityController.GetNodeList<OffensiveTroopNode>();
+							TroopAttackController troopAttackController = Service.Get<TroopAttackController>();
+							for (OffensiveTroopNode offensiveTroopNode = nodeList.Head; offensiveTroopNode != null; offensiveTroopNode = offensiveTroopNode.Next)
+							{
+								troopAttackController.RefreshTarget((SmartEntity)offensiveTroopNode.Entity);
+							}
 							return EatResponse.NotEaten;
 						}
-						if (id != EventId.ContractStarted)
+						if (id != EventId.PlanetRelocateStarted)
 						{
 							return EatResponse.NotEaten;
 						}
+						if (this.AreRaidsAccessible())
+						{
+							this.SendRaidDefenseUpdate();
+						}
+						return EatResponse.NotEaten;
 					}
 					else
 					{
-						IState currentState = Service.Get<GameStateMachine>().CurrentState;
-						if (currentState is HomeState && this.RaidCompleteDidAwardCrate())
+						SmartEntity smartEntity = (SmartEntity)cookie;
+						if (smartEntity.BuildingComp == null)
 						{
-							GameUtils.ShowCrateAwardModal(this.lastAwardedCrateUid);
-							this.lastAwardedCrateUid = null;
-							Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldLoadComplete);
 							return EatResponse.NotEaten;
 						}
-						return EatResponse.NotEaten;
-					}
-				}
-				else if (id != EventId.ContractContinued)
-				{
-					if (id == EventId.HeroDeployed)
-					{
-						EntityController entityController = Service.Get<EntityController>();
-						NodeList<OffensiveTroopNode> nodeList = entityController.GetNodeList<OffensiveTroopNode>();
-						TroopAttackController troopAttackController = Service.Get<TroopAttackController>();
-						for (OffensiveTroopNode offensiveTroopNode = nodeList.Head; offensiveTroopNode != null; offensiveTroopNode = offensiveTroopNode.Next)
+						BuildingType type = smartEntity.BuildingComp.BuildingType.Type;
+						if (!this.raidDefenseTrainerBindings.Contains(type))
 						{
-							troopAttackController.RefreshTarget((SmartEntity)offensiveTroopNode.Entity);
+							return EatResponse.NotEaten;
+						}
+						UXController uXController = Service.Get<UXController>();
+						Lang lang = Service.Get<Lang>();
+						switch (type)
+						{
+						case BuildingType.FleetCommand:
+							Service.Get<DeployerController>().SpecialAttackDeployer.ExitMode();
+							uXController.HUD.DisableSpecialAttacks();
+							uXController.MiscElementsManager.ShowPlayerInstructions(lang.Get("STARSHIP_TRAINER_DESTROYED", new object[0]));
+							break;
+						case BuildingType.HeroMobilizer:
+							Service.Get<DeployerController>().HeroDeployer.ExitMode();
+							uXController.HUD.DisableHeroDeploys();
+							uXController.MiscElementsManager.ShowPlayerInstructions(lang.Get("HERO_TRAINER_DESTROYED", new object[0]));
+							break;
+						case BuildingType.Squad:
+							Service.Get<DeployerController>().SquadTroopDeployer.ExitMode();
+							uXController.HUD.DisableSquadDeploy();
+							uXController.MiscElementsManager.ShowPlayerInstructions(lang.Get("SQUAD_CENTER_DESTROYED", new object[0]));
+							break;
 						}
 						return EatResponse.NotEaten;
 					}
-					if (id != EventId.PlanetRelocateStarted)
-					{
-						return EatResponse.NotEaten;
-					}
-					if (this.AreRaidsAccessible())
-					{
-						this.SendRaidDefenseUpdate();
-						return EatResponse.NotEaten;
-					}
-					return EatResponse.NotEaten;
+					break;
+				case EventId.BuildingCancelled:
+					goto IL_B1;
 				}
+				goto IL_32;
+				IL_B1:
 				ContractEventData contractEventData2 = (ContractEventData)cookie;
 				if (contractEventData2.BuildingVO.Type == BuildingType.ScoutTower)
 				{
-					this.DestroyScoutHolo();
+					this.SendRaidDefenseUpdate();
 				}
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			case EventId.WorldReset:
+				this.DestroyScoutHolo();
+				return EatResponse.NotEaten;
+			}
+			goto IL_1D;
 		}
 
 		private void RegisterBattleObservers()
@@ -581,214 +575,6 @@ namespace StaRTS.Main.Controllers
 			EventManager eventManager = Service.Get<EventManager>();
 			eventManager.UnregisterObserver(this, EventId.EntityKilled);
 			eventManager.UnregisterObserver(this, EventId.HeroDeployed);
-		}
-
-		protected internal RaidDefenseController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).AreRaidsAccessible());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).AttemptToShowRaidWaitConfirmation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).CreateScoutHolo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).DestroyScoutHolo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).ActiveRaidColor);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).InactiveColor);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).InactiveTickerColor);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).GetDisplayForTimeLeftInRaid());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).GetDisplayForTimeTillNextRaid());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).GetRaidTimeSeconds());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).GetUidToLog((IValueObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).IsRaidAvailable());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).OnDefendNowScreenClosed(GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).OnEndRaidDefenseMission(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).OnRaidCompleteSuccessWrapper((RaidDefenseCompleteResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).OnRaidStartSuccessWrapper((RaidDefenseStartResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).OnRaidUpdateSuccess((RaidUpdateResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).OnStartRaidDefenseMission();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).OnWaitScreenClosed(GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).RaidCompleteDidAwardCrate());
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).RegisterBattleObservers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).SendRaidDefenseComplete((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args), (Action)GCHandledObjects.GCHandleToObject(args[1]), (EndPvEBattleTO)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).SendRaidDefenseStart((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args), (RaidDefenseController.OnSuccessCallback)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).SendRaidDefenseUpdate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).ActiveRaidColor = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).InactiveColor = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).InactiveTickerColor = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).SetupRaidUpdateTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).ShowRaidInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).SquadTroopDeployAllowed());
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).StartCurrentRaidDefense();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).StartCurrentRaidDefenseInternal();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).UnregisterBattleObservers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((RaidDefenseController)GCHandledObjects.GCHandleToObject(instance)).UpdateRaidExpiration();
-			return -1L;
 		}
 	}
 }

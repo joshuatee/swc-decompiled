@@ -17,10 +17,8 @@ using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -172,7 +170,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		public ArmoryScreen(Entity armoryBuilding) : base("gui_armory")
 		{
-			this.buildingInfo = ((armoryBuilding == null) ? null : armoryBuilding.Get<BuildingComponent>().BuildingType);
+			this.buildingInfo = ((armoryBuilding != null) ? armoryBuilding.Get<BuildingComponent>().BuildingType : null);
 			this.equipmentTabs = new EquipmentTabHelper();
 			ArmoryScreen.qualityColor = new Dictionary<ShardQuality, Color>();
 			ArmoryScreen.qualityColor.Add(ShardQuality.Basic, ArmoryScreen.quality1);
@@ -364,12 +362,15 @@ namespace StaRTS.Main.Views.UX.Screens
 				int level = 1;
 				if (levels.ContainsKey(text))
 				{
-					level = levels.get_Item(text);
+					level = levels[text];
 				}
 				EquipmentVO byLevel = equipmentUpgradeCatalog.GetByLevel(text, level);
-				if (currentPlayer.Faction == byLevel.Faction && !currentPlayer.ActiveArmory.Equipment.Contains(byLevel.Uid) && this.equipmentTabs.IsEquipmentValidForTab(byLevel, currentTab))
+				if (currentPlayer.Faction == byLevel.Faction && !currentPlayer.ActiveArmory.Equipment.Contains(byLevel.Uid))
 				{
-					list.Add(new SortableEquipment(currentPlayer, byLevel));
+					if (this.equipmentTabs.IsEquipmentValidForTab(byLevel, currentTab))
+					{
+						list.Add(new SortableEquipment(currentPlayer, byLevel));
+					}
 				}
 				i++;
 			}
@@ -407,12 +408,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			int count = currentPlayer.ActiveArmory.Equipment.Count;
 			while (i < count)
 			{
-				EquipmentVO equipmentVO = dataController.Get<EquipmentVO>(currentPlayer.ActiveArmory.Equipment[i]);
-				List<SortableEquipment> arg_5D_0 = list;
-				EquipmentVO arg_58_0 = equipmentVO;
-				int num = this.activeCardID;
-				this.activeCardID = num + 1;
-				arg_5D_0.Add(new SortableEquipment(arg_58_0, num));
+				EquipmentVO equipment = dataController.Get<EquipmentVO>(currentPlayer.ActiveArmory.Equipment[i]);
+				list.Add(new SortableEquipment(equipment, this.activeCardID++));
 				i++;
 			}
 			list = this.AddEmptyCardsToSortableEquipmentList(this.activeGrid, 5, list);
@@ -463,10 +460,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		private UXElement CreateEmptyCard(UXGrid grid)
 		{
 			SortableEquipment sortableEquipment = new SortableEquipment(null);
-			SortableEquipment arg_1C_0 = sortableEquipment;
-			int num = this.emptyCardID;
-			this.emptyCardID = num + 1;
-			arg_1C_0.EmptyIndex = num;
+			sortableEquipment.EmptyIndex = this.emptyCardID++;
 			StringBuilder stringBuilder = new StringBuilder("EMPTY");
 			string text = stringBuilder.Append(sortableEquipment.EmptyIndex).ToString();
 			UXElement uXElement = this.CreateEmptyCardInternal(grid, text);
@@ -496,7 +490,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			UXSprite subElement3 = grid.GetSubElement<UXSprite>(uid, icon);
 			ProjectorConfig projectorConfig = ProjectorUtils.GenerateEquipmentConfig(equipment, subElement3, closeup);
-			projectorConfig.buildingEquipmentShaderName = "UnlitTexture_Fade";
 			if (shouldAnimate)
 			{
 				projectorConfig.AnimPreference = AnimationPreference.AnimationPreferred;
@@ -510,10 +503,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			UXElement uXElement = this.CreateCommonEquipmentCard(this.activeGrid, equipment, "LabelEquipmentActiveName", "LabelEquipmentActiveLevel", "SpriteEquipmentActiveItemImage", "EquipmentActiveItemCardQ{0}", true, false);
 			SortableEquipment sortableEquipment = uXElement.Tag as SortableEquipment;
-			SortableEquipment arg_45_0 = sortableEquipment;
-			int num = this.activeCardID;
-			this.activeCardID = num + 1;
-			arg_45_0.IncrementingIndex = num;
+			sortableEquipment.IncrementingIndex = this.activeCardID++;
 			UXLabel subElement = this.activeGrid.GetSubElement<UXLabel>(equipment.Uid, "LabelEquipmentActiveInstructions");
 			subElement.Visible = false;
 			UXButton subElement2 = this.activeGrid.GetSubElement<UXButton>(equipment.Uid, "BtnEquipmentActiveCancel");
@@ -610,9 +600,9 @@ namespace StaRTS.Main.Views.UX.Screens
 			subElement4.Visible = false;
 			subElement5.Visible = false;
 			bool flag = ArmoryUtils.IsEquipmentOwned(player, equipment);
-			if ((ArmoryUtils.IsBuildingRequirementMet(equipment) & flag) && ArmoryUtils.IsEquipmentValidForPlanet(equipment, player.PlanetId))
+			if (ArmoryUtils.IsBuildingRequirementMet(equipment) && flag && ArmoryUtils.IsEquipmentValidForPlanet(equipment, player.PlanetId))
 			{
-				subElement3.Text = "";
+				subElement3.Text = string.Empty;
 				if (ArmoryUtils.HasEnoughCapacityToActivateEquipment(player.ActiveArmory, equipment))
 				{
 					subElement.Visible = false;
@@ -639,7 +629,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 				UXButton subElement6 = this.inactiveGrid.GetSubElement<UXButton>(equipment.Uid, "BtnEquipmentItemCard");
 				subElement6.Enabled = false;
-				if (!ArmoryUtils.IsEquipmentOnValidPlanet(player, equipment) & flag)
+				if (!ArmoryUtils.IsEquipmentOnValidPlanet(player, equipment) && flag)
 				{
 					subElement.Visible = false;
 					subElement2.Visible = true;
@@ -660,12 +650,14 @@ namespace StaRTS.Main.Views.UX.Screens
 					{
 						equipment.UpgradeShards - player.Shards[equipment.EquipmentID]
 					});
-					return;
 				}
-				subElement3.Text = this.lang.Get("EQUIPMENT_LOCKED", new object[]
+				else
 				{
-					equipment.UpgradeShards
-				});
+					subElement3.Text = this.lang.Get("EQUIPMENT_LOCKED", new object[]
+					{
+						equipment.UpgradeShards
+					});
+				}
 				return;
 			}
 		}
@@ -688,18 +680,14 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			if (equipmentVO.UpgradeShards == 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
+				Service.Get<Logger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
 				{
 					equipment.Uid
 				});
 				return 0f;
 			}
 			float num = (float)currentShards / (float)equipmentVO.UpgradeShards;
-			if (num <= 1f)
-			{
-				return num;
-			}
-			return 1f;
+			return (num <= 1f) ? num : 1f;
 		}
 
 		private void InitTabs()
@@ -709,11 +697,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				while (enumerator.MoveNext())
 				{
-					EquipmentTab key = (EquipmentTab)enumerator.get_Current();
-					string text = key.ToString();
+					EquipmentTab equipmentTab = (EquipmentTab)((int)enumerator.Current);
+					string text = equipmentTab.ToString();
 					StringBuilder stringBuilder = new StringBuilder("EQUIPMENT_TAB_");
 					stringBuilder.Append(text.ToUpper());
-					dictionary.Add((int)key, this.lang.Get(stringBuilder.ToString(), new object[0]));
+					dictionary.Add((int)equipmentTab, this.lang.Get(stringBuilder.ToString(), new object[0]));
 				}
 			}
 			this.equipmentTabs.CreateTabs(this, new Action(this.OnEquipmentTabChanged), dictionary, 0);
@@ -899,12 +887,8 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.RemoveCardFromGridByUid(this.inactiveGrid, equipmentVO.Uid);
 				this.inactiveGrid.RepositionItemsFrameDelayed(new UXDragDelegate(this.RepositionInactiveGridItemsCallback), 2);
 				this.RemoveAnEmptyCard(this.activeGrid);
-				UXElement uXElement2 = this.CreateActiveCard(this.activeGrid, equipmentVO, currentPlayer);
-				AbstractUXList arg_AD_0 = this.activeGrid;
-				UXElement arg_AD_1 = uXElement2;
-				int num = this.activeCardID;
-				this.activeCardID = num + 1;
-				arg_AD_0.AddItem(arg_AD_1, num);
+				UXElement item2 = this.CreateActiveCard(this.activeGrid, equipmentVO, currentPlayer);
+				this.activeGrid.AddItem(item2, this.activeCardID++);
 				this.activeGrid.RepositionItems(false);
 				this.ShowInstructionalTextOnFirstEmptyCard(this.activeGrid);
 				if (this.activeGrid.Count > 5)
@@ -958,225 +942,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.activeGrid.Visible = false;
 			}
 			base.Close(modalResult);
-		}
-
-		protected internal ArmoryScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).ActiveGridRepositionComplete((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).AddEmptyCardsToEnsureMinimumGridSize((UXGrid)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).AddEmptyCardsToSortableEquipmentList((UXGrid)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), (List<SortableEquipment>)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).CreateActiveCard((UXGrid)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1]), (CurrentPlayer)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).CreateCommonEquipmentCard((UXGrid)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), *(sbyte*)(args + 6) != 0, *(sbyte*)(args + 7) != 0));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).CreateEmptyCard((UXGrid)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).CreateEmptyCardInternal((UXGrid)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).CreateInactiveCard((UXGrid)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1]), (CurrentPlayer)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).GenerateInactiveEquipmentList());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).GetEquipmentVOFromCard((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).GetSliderProgressValue((EquipmentVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).InitActiveGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).InitInactiveGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).InitTabs();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).IsElementInGrid((UXGrid)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnActiveCardButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnCancelButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnCardButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnEquipmentTabChanged();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnInfoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).PopulateActiveGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).PopulateInactiveGridWithList((List<EquipmentVO>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).RecreateInactiveGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshInactiveCardStatusesBasedOnOverallCapacity();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).RemoveAnEmptyCard((UXGrid)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).RemoveCardFromGrid((UXGrid)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).RemoveCardFromGridByUid((UXGrid)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).RepositionInactiveGridItemsCallback((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).ResetScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).SetDimmerBasedOnRequirements((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).ShowInstructionalTextOnFirstEmptyCard((UXGrid)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).SortActiveGrid((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ArmoryScreen)GCHandledObjects.GCHandleToObject(instance)).SortInactiveGrid((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

@@ -48,13 +48,5 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 		public UXElement ObjectiveContainer;
 
 		public UXElement ObjectiveContainerLEI;
-
-		public ObjectiveViewData()
-		{
-		}
-
-		protected internal ObjectiveViewData(UIntPtr dummy)
-		{
-		}
 	}
 }

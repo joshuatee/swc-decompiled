@@ -11,7 +11,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -75,11 +74,7 @@ namespace StaRTS.Main.Views.World
 					int num = Math.Min(buildingType.SizeY, 6);
 					for (int i = 2; i <= num; i++)
 					{
-						string item = string.Format("scaffold_{0}-mod_{1}", new object[]
-						{
-							text,
-							i
-						});
+						string item = string.Format("scaffold_{0}-mod_{1}", text, i);
 						list.Add(item);
 						list2.Add(new ScaffoldingData(building, num - i, false));
 						list3.Add(AssetHandle.Invalid);
@@ -87,11 +82,7 @@ namespace StaRTS.Main.Views.World
 					int num2 = Math.Min(buildingType.SizeX, 6);
 					for (int j = 2; j <= num2; j++)
 					{
-						string item2 = string.Format("scaffold_{0}-mod_{1}", new object[]
-						{
-							text,
-							j
-						});
+						string item2 = string.Format("scaffold_{0}-mod_{1}", text, j);
 						list.Add(item2);
 						list2.Add(new ScaffoldingData(building, num2 - j, true));
 						list3.Add(AssetHandle.Invalid);
@@ -124,12 +115,7 @@ namespace StaRTS.Main.Views.World
 			{
 				int offset = scaffoldingData.Offset;
 				bool flip = scaffoldingData.Flip;
-				gameObject.name = string.Format("Scaffold_{0}_{1}{2}", new object[]
-				{
-					building.ID,
-					flip ? "L" : "R",
-					offset
-				});
+				gameObject.name = string.Format("Scaffold_{0}_{1}{2}", building.ID, (!flip) ? "R" : "L", offset);
 				BuildingComponent buildingComponent = building.Get<BuildingComponent>();
 				BuildingTypeVO buildingType = buildingComponent.BuildingType;
 				Transform transform = gameObject.transform;
@@ -152,16 +138,17 @@ namespace StaRTS.Main.Views.World
 				List<ScaffoldingData> list = this.viewObjects[building];
 				list.Add(scaffoldingData);
 				GameObjectViewComponent gameObjectViewComponent = building.Get<GameObjectViewComponent>();
-				if (gameObjectViewComponent != null)
+				if (gameObjectViewComponent == null)
+				{
+					gameObject.SetActive(false);
+					if (!this.waitingForView.Contains(building))
+					{
+						this.waitingForView.Add(building);
+					}
+				}
+				else
 				{
 					this.AttachToView(gameObject, gameObjectViewComponent);
-					return;
-				}
-				gameObject.SetActive(false);
-				if (!this.waitingForView.Contains(building))
-				{
-					this.waitingForView.Add(building);
-					return;
 				}
 			}
 			else
@@ -224,149 +211,90 @@ namespace StaRTS.Main.Views.World
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ChampionStartedRepairing)
+			switch (id)
 			{
+			case EventId.BuildingViewReady:
+			{
+				EntityViewParams entityViewParams = (EntityViewParams)cookie;
+				Entity entity = entityViewParams.Entity;
+				if (this.waitingForView.Contains(entity))
+				{
+					this.waitingForView.Remove(entity);
+					GameObjectViewComponent view = entity.Get<GameObjectViewComponent>();
+					List<ScaffoldingData> list = this.viewObjects[entity];
+					int i = 0;
+					int count = list.Count;
+					while (i < count)
+					{
+						GameObject gameObj = list[i].GameObj;
+						gameObj.SetActive(true);
+						this.AttachToView(gameObj, view);
+						i++;
+					}
+				}
+				return EatResponse.NotEaten;
+			}
+			case EventId.BuildingViewFailed:
+				IL_1C:
 				switch (id)
 				{
-				case EventId.BuildingViewReady:
+				case EventId.BuildingLevelUpgraded:
+				case EventId.BuildingSwapped:
+				case EventId.BuildingConstructed:
 				{
-					EntityViewParams entityViewParams = (EntityViewParams)cookie;
-					Entity entity = entityViewParams.Entity;
-					if (this.waitingForView.Contains(entity))
-					{
-						this.waitingForView.Remove(entity);
-						GameObjectViewComponent view = entity.Get<GameObjectViewComponent>();
-						List<ScaffoldingData> list = this.viewObjects[entity];
-						int i = 0;
-						int count = list.Count;
-						while (i < count)
-						{
-							GameObject gameObj = list[i].GameObj;
-							gameObj.SetActive(true);
-							this.AttachToView(gameObj, view);
-							i++;
-						}
-						return EatResponse.NotEaten;
-					}
+					ContractEventData contractEventData = (ContractEventData)cookie;
+					this.HideScaffold(contractEventData.Entity);
 					return EatResponse.NotEaten;
 				}
-				case EventId.BuildingViewFailed:
-					return EatResponse.NotEaten;
-				case EventId.BuildingCancelled:
-					this.HideScaffold(((ContractEventData)cookie).Entity);
-					return EatResponse.NotEaten;
-				case EventId.TroopCancelled:
-					break;
 				default:
-					if (id == EventId.ViewObjectsPurged)
-					{
-						this.HideScaffold((Entity)cookie);
-						return EatResponse.NotEaten;
-					}
 					if (id != EventId.ChampionStartedRepairing)
 					{
-						return EatResponse.NotEaten;
+						if (id == EventId.ChampionRepaired)
+						{
+							goto IL_AE;
+						}
+						if (id == EventId.ViewObjectsPurged)
+						{
+							this.HideScaffold((Entity)cookie);
+							return EatResponse.NotEaten;
+						}
+						if (id == EventId.ContractStarted)
+						{
+							ContractEventData contractEventData2 = (ContractEventData)cookie;
+							switch (contractEventData2.Contract.DeliveryType)
+							{
+							case DeliveryType.Building:
+							case DeliveryType.UpgradeBuilding:
+							case DeliveryType.SwapBuilding:
+								this.ShowScaffold(contractEventData2.Entity);
+								break;
+							}
+							return EatResponse.NotEaten;
+						}
+						if (id != EventId.ShowScaffolding)
+						{
+							return EatResponse.NotEaten;
+						}
 					}
-					goto IL_E2;
-				}
-			}
-			else if (id <= EventId.BuildingConstructed)
-			{
-				if (id != EventId.ChampionRepaired)
-				{
-					switch (id)
-					{
-					case EventId.BuildingLevelUpgraded:
-					case EventId.BuildingSwapped:
-					case EventId.BuildingConstructed:
-					{
-						ContractEventData contractEventData = (ContractEventData)cookie;
-						this.HideScaffold(contractEventData.Entity);
-						return EatResponse.NotEaten;
-					}
-					default:
-						return EatResponse.NotEaten;
-					}
-				}
-			}
-			else if (id != EventId.ContractStarted)
-			{
-				if (id != EventId.ShowScaffolding)
-				{
+					this.ShowScaffold((Entity)cookie);
 					return EatResponse.NotEaten;
 				}
-				goto IL_E2;
+				break;
+			case EventId.BuildingCancelled:
+				this.HideScaffold(((ContractEventData)cookie).Entity);
+				return EatResponse.NotEaten;
+			case EventId.TroopCancelled:
+				goto IL_AE;
 			}
-			else
-			{
-				ContractEventData contractEventData2 = (ContractEventData)cookie;
-				switch (contractEventData2.Contract.DeliveryType)
-				{
-				case DeliveryType.Building:
-				case DeliveryType.UpgradeBuilding:
-				case DeliveryType.SwapBuilding:
-					this.ShowScaffold(contractEventData2.Entity);
-					return EatResponse.NotEaten;
-				default:
-					return EatResponse.NotEaten;
-				}
-			}
+			goto IL_1C;
+			IL_AE:
 			ContractEventData contractEventData3 = cookie as ContractEventData;
 			SmartEntity smartEntity = (SmartEntity)contractEventData3.Entity;
 			if (smartEntity.BuildingComp.BuildingType.Type == BuildingType.ChampionPlatform)
 			{
 				this.HideScaffold(contractEventData3.Entity);
-				return EatResponse.NotEaten;
 			}
 			return EatResponse.NotEaten;
-			IL_E2:
-			this.ShowScaffold((Entity)cookie);
-			return EatResponse.NotEaten;
-		}
-
-		protected internal Scaffolding(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((Scaffolding)GCHandledObjects.GCHandleToObject(instance)).AttachToView((GameObject)GCHandledObjects.GCHandleToObject(*args), (GameObjectViewComponent)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((Scaffolding)GCHandledObjects.GCHandleToObject(instance)).HideScaffold((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((Scaffolding)GCHandledObjects.GCHandleToObject(instance)).OnAssetFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((Scaffolding)GCHandledObjects.GCHandleToObject(instance)).OnAssetSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Scaffolding)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((Scaffolding)GCHandledObjects.GCHandleToObject(instance)).ShowScaffold((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((Scaffolding)GCHandledObjects.GCHandleToObject(instance)).UnloadScaffold((ScaffoldingData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

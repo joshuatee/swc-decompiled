@@ -10,7 +10,6 @@ using StaRTS.Main.Views.UX.Tags;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -183,24 +182,22 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			{
 			case ChatFilterType.ShowAll:
 				this.chatOpenFiltersLabel.Text = this.lang.Get("s_ShowAll", new object[0]);
-				return;
+				break;
 			case ChatFilterType.Messages:
 				this.chatOpenFiltersLabel.Text = this.lang.Get("s_Messages", new object[0]);
-				return;
+				break;
 			case ChatFilterType.Requests:
 				this.chatOpenFiltersLabel.Text = this.lang.Get("s_Requests", new object[0]);
-				return;
+				break;
 			case ChatFilterType.Replays:
 				this.chatOpenFiltersLabel.Text = this.lang.Get("s_Replays", new object[0]);
-				return;
+				break;
 			case ChatFilterType.Updates:
 				this.chatOpenFiltersLabel.Text = this.lang.Get("s_Updates", new object[0]);
-				return;
+				break;
 			case ChatFilterType.Videos:
 				this.chatOpenFiltersLabel.Text = this.lang.Get("s_Videos", new object[0]);
-				return;
-			default:
-				return;
+				break;
 			}
 		}
 
@@ -218,9 +215,11 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (this.chatFilterPanel.Visible)
 			{
 				this.HideView();
-				return;
 			}
-			this.ShowView();
+			else
+			{
+				this.ShowView();
+			}
 		}
 
 		private void OnChatFilterSelected(UXCheckbox chatFilterOption, bool selected)
@@ -228,7 +227,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (selected)
 			{
 				chatFilterOption.Selected = false;
-				this.HandleFilterSelection((ChatFilterType)chatFilterOption.Tag, false);
+				this.HandleFilterSelection((ChatFilterType)((int)chatFilterOption.Tag), false);
 			}
 			this.HideView();
 		}
@@ -276,7 +275,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			{
 			case SquadMsgType.Chat:
 				this.msgCount++;
-				return;
+				break;
 			case SquadMsgType.Join:
 			case SquadMsgType.JoinRequest:
 			case SquadMsgType.JoinRequestAccepted:
@@ -288,19 +287,17 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			case SquadMsgType.Demotion:
 			case SquadMsgType.WarMatchMakingBegin:
 				this.updateCount++;
-				return;
+				break;
 			case SquadMsgType.ShareBattle:
 				this.replayCount++;
-				return;
+				break;
 			case SquadMsgType.ShareLink:
 				this.videoCount++;
-				return;
+				break;
 			case SquadMsgType.TroopRequest:
 			case SquadMsgType.TroopDonation:
 				this.requestCount++;
-				return;
-			default:
-				return;
+				break;
 			}
 		}
 
@@ -390,7 +387,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private void SetLastViewedTime(ChatFilterType type, uint data, bool forceUpdate)
 		{
-			if ((this.screen.IsOpen() || this.screen.IsOpening()) | forceUpdate)
+			if (this.screen.IsOpen() || this.screen.IsOpening() || forceUpdate)
 			{
 				string prefsKeyByType = this.GetPrefsKeyByType(type);
 				this.SetSquadPlayerPref(prefsKeyByType, data);
@@ -412,97 +409,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		public override bool IsVisible()
 		{
 			return this.chatFilterPanel.Visible;
-		}
-
-		protected internal SquadScreenChatFilterView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).CountChatMessages();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).GetPrefsKeyByType((ChatFilterType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).HandleFilterSelection((ChatFilterType)(*(int*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).HideView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).IncrementBadgeByMessageType((SquadMsgType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).IsVisible());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).OnChatFilterButton((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).OnChatFilterSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).OnChatViewOpened();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).ShowView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).ToggleView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenChatFilterView)GCHandledObjects.GCHandleToObject(instance)).UpdateBadges());
 		}
 	}
 }

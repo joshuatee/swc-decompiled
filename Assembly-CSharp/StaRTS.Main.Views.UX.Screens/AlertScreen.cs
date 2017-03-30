@@ -6,9 +6,7 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -200,6 +198,15 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 		}
 
+		protected AlertScreen(bool fatal, string title, string message, string spriteName, bool disableCloseBtn) : base("gui_dialog_small")
+		{
+			this.IsFatal = fatal;
+			this.title = title;
+			this.message = message;
+			this.spriteName = spriteName;
+			this.disableCloseBtn = disableCloseBtn;
+		}
+
 		public static AlertScreen ShowModalWithImage(bool fatal, string title, string message, string spriteName, OnScreenModalResult onModalResult, object modalResultCookie)
 		{
 			return AlertScreen.ShowModal(fatal, title, message, spriteName, onModalResult, modalResultCookie, false, false, null, true);
@@ -233,7 +240,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			alertScreen.IsAlwaysOnTop = isAlwaysOnTop;
 			if (fatal && !string.IsNullOrEmpty(biMessage))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Force Reload Popup: {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Force Reload Popup: {0}", new object[]
 				{
 					biMessage
 				});
@@ -243,15 +250,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				Service.Get<ScreenController>().AddScreen(alertScreen, turnOffTicker);
 			}
 			return alertScreen;
-		}
-
-		protected AlertScreen(bool fatal, string title, string message, string spriteName, bool disableCloseBtn) : base("gui_dialog_small")
-		{
-			this.IsFatal = fatal;
-			this.title = title;
-			this.message = message;
-			this.spriteName = spriteName;
-			this.disableCloseBtn = disableCloseBtn;
 		}
 
 		public override void OnDestroyElement()
@@ -327,8 +325,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.primaryLabel = base.GetElement<UXLabel>("LabelBtnPrimary");
 			this.primary2Option = base.GetElement<UXLabel>("LabelBtnPrimary_2option");
 			this.secondary2Option = base.GetElement<UXLabel>("LabelBtnSecondary");
-			this.centerLabel.Text = "";
-			this.rightLabel.Text = "";
+			this.centerLabel.Text = string.Empty;
+			this.rightLabel.Text = string.Empty;
 			UXElement element = base.GetElement<UXElement>("TitleGroupPerks");
 			element.Visible = false;
 			this.costRequirement = base.GetElement<UXElement>("Requirement");
@@ -398,12 +396,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.titleLabel.Text = this.title;
 			if (this.title == null)
 			{
-				this.titleLabel.Text = this.lang.Get(this.IsFatal ? "ERROR" : "ALERT", new object[0]);
+				this.titleLabel.Text = this.lang.Get((!this.IsFatal) ? "ALERT" : "ERROR", new object[0]);
 			}
 			if (string.IsNullOrEmpty(this.primaryLabelOverride))
 			{
 				this.primary2Option.Text = this.lang.Get("YES", new object[0]);
-				this.primaryLabel.Text = this.lang.Get(this.IsFatal ? "RELOAD" : "OK", new object[0]);
+				this.primaryLabel.Text = this.lang.Get((!this.IsFatal) ? "OK" : "RELOAD", new object[0]);
 			}
 			else
 			{
@@ -427,9 +425,8 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.sprite.SpriteName = "bkgClear";
 				this.textureImageInset.LoadTexture(this.textureInsetAssetName);
 				this.sprite.Enabled = false;
-				return;
 			}
-			if (this.geometry != null)
+			else if (this.geometry != null)
 			{
 				this.centerLabel.Visible = false;
 				this.rightLabel.Visible = true;
@@ -437,22 +434,23 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.sprite.SpriteName = "bkgClear";
 				this.textureImageInset.Enabled = false;
 				UXUtils.SetupGeometryForIcon(this.sprite, this.geometry);
-				return;
 			}
-			if (string.IsNullOrEmpty(this.spriteName))
+			else if (string.IsNullOrEmpty(this.spriteName))
 			{
 				this.centerLabel.Visible = true;
 				this.rightLabel.Visible = false;
 				this.centerLabel.Text = this.message;
 				this.textureImageInset.Enabled = false;
-				return;
 			}
-			this.centerLabel.Visible = false;
-			this.rightLabel.Visible = true;
-			this.rightLabel.Text = this.message;
-			this.sprite.SpriteName = "bkgClear";
-			this.textureImageInset.Enabled = false;
-			UXUtils.SetupGeometryForIcon(this.sprite, this.spriteName);
+			else
+			{
+				this.centerLabel.Visible = false;
+				this.rightLabel.Visible = true;
+				this.rightLabel.Text = this.message;
+				this.sprite.SpriteName = "bkgClear";
+				this.textureImageInset.Enabled = false;
+				UXUtils.SetupGeometryForIcon(this.sprite, this.spriteName);
+			}
 		}
 
 		public void OnPrimaryButtonClicked(UXButton button)
@@ -500,133 +498,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		public void SetTextureInset(string assetName)
 		{
 			this.textureInsetAssetName = assetName;
-		}
-
-		protected internal AlertScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).AdjustDepthRecursively((GameObject)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).AllowGarbageCollection);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).IsFatal);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).InitMultiGroupItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).OnPrimaryButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).IsFatal = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).SetIconAsset((IGeometryVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).SetPrimaryLabelText(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).SetSecondaryLabelText(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).SetTextureInset(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((AlertScreen)GCHandledObjects.GCHandleToObject(instance)).SetupControls();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(AlertScreen.ShowModal(*(sbyte*)args != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[3]), GCHandledObjects.GCHandleToObject(args[4])));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(AlertScreen.ShowModal(*(sbyte*)args != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[3]), GCHandledObjects.GCHandleToObject(args[4]), *(sbyte*)(args + 5) != 0));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(AlertScreen.ShowModal(*(sbyte*)args != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[4]), GCHandledObjects.GCHandleToObject(args[5]), *(sbyte*)(args + 6) != 0, *(sbyte*)(args + 7) != 0));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(AlertScreen.ShowModal(*(sbyte*)args != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[4]), GCHandledObjects.GCHandleToObject(args[5]), *(sbyte*)(args + 6) != 0, *(sbyte*)(args + 7) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 8)), *(sbyte*)(args + 9) != 0));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(AlertScreen.ShowModalWithBI(*(sbyte*)args != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(AlertScreen.ShowModalWithImage(*(sbyte*)args != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[4]), GCHandledObjects.GCHandleToObject(args[5])));
 		}
 	}
 }

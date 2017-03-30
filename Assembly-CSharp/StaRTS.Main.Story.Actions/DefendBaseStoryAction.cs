@@ -4,7 +4,6 @@ using StaRTS.Main.Models.Battle;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -31,24 +30,8 @@ namespace StaRTS.Main.Story.Actions
 		public override void Execute()
 		{
 			base.Execute();
-			Service.Get<DefensiveBattleController>().StartDefenseMissionAfterLoadingAssets(this.encounterVO);
+			Service.Get<DefensiveBattleController>().StartDefenseMission(this.encounterVO);
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal DefendBaseStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DefendBaseStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DefendBaseStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

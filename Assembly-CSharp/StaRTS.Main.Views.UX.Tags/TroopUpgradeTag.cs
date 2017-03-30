@@ -20,9 +20,5 @@ namespace StaRTS.Main.Views.UX.Tags
 			this.Troop = troop;
 			this.ReqMet = reqMet;
 		}
-
-		protected internal TroopUpgradeTag(UIntPtr dummy)
-		{
-		}
 	}
 }

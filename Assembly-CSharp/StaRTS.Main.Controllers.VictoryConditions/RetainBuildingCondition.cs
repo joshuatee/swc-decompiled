@@ -8,8 +8,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.VictoryConditions
 {
@@ -48,7 +46,7 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 			}
 			else if (!this.any && this.prepareArgs.Length > 2)
 			{
-				this.level = Convert.ToInt32(this.prepareArgs[2], CultureInfo.InvariantCulture);
+				this.level = Convert.ToInt32(this.prepareArgs[2]);
 			}
 			else
 			{
@@ -68,21 +66,23 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 				}
 				buildingNode = buildingNode.Next;
 			}
-			if (!this.prepareArgs[0].Contains("%"))
+			if (this.prepareArgs[0].Contains("%"))
 			{
-				this.buildingsToDestroy = num - Convert.ToInt32(this.prepareArgs[0], CultureInfo.InvariantCulture);
-				return;
+				this.byPercent = true;
+				string text = this.prepareArgs[0];
+				text = text.Substring(0, text.Length - 1);
+				int percent = 100 - Convert.ToInt32(text);
+				if (this.any && this.byPercent)
+				{
+					this.buildingsToDestroy = percent;
+					return;
+				}
+				this.buildingsToDestroy = IntMath.GetPercent(percent, num);
 			}
-			this.byPercent = true;
-			string text = this.prepareArgs[0];
-			text = text.Substring(0, text.get_Length() - 1);
-			int percent = 100 - Convert.ToInt32(text, CultureInfo.InvariantCulture);
-			if (this.any && this.byPercent)
+			else
 			{
-				this.buildingsToDestroy = percent;
-				return;
+				this.buildingsToDestroy = num - Convert.ToInt32(this.prepareArgs[0]);
 			}
-			this.buildingsToDestroy = IntMath.GetPercent(percent, num);
 		}
 
 		public override void Start()
@@ -90,9 +90,11 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 			if (this.any && this.byPercent)
 			{
 				this.events.RegisterObserver(this, EventId.DamagePercentUpdated, EventPriority.Default);
-				return;
 			}
-			this.events.RegisterObserver(this, EventId.EntityKilled, EventPriority.Default);
+			else
+			{
+				this.events.RegisterObserver(this, EventId.EntityKilled, EventPriority.Default);
+			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
@@ -163,43 +165,6 @@ namespace StaRTS.Main.Controllers.VictoryConditions
 		{
 			current = this.buildingsDestroyed;
 			total = this.buildingsToDestroy;
-		}
-
-		protected internal RetainBuildingCondition(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RetainBuildingCondition)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((RetainBuildingCondition)GCHandledObjects.GCHandleToObject(instance)).EvaluateAmount();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RetainBuildingCondition)GCHandledObjects.GCHandleToObject(instance)).IsBuildingValid((BuildingComponent)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RetainBuildingCondition)GCHandledObjects.GCHandleToObject(instance)).IsConditionSatisfied());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RetainBuildingCondition)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((RetainBuildingCondition)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

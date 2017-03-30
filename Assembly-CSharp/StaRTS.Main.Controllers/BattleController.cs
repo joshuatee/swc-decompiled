@@ -42,10 +42,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -121,7 +118,7 @@ namespace StaRTS.Main.Controllers
 
 		private List<Entity> defenderGuildTroopsDeployed;
 
-		public RandSimSeed SimSeed;
+		public RandSimSeed SimSeed = default(RandSimSeed);
 
 		public CameraShake CameraShakeObj
 		{
@@ -286,7 +283,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (this.currentBattle.Type == BattleType.Pvp && string.IsNullOrEmpty(this.currentBattle.RecordID))
 			{
-				Service.Get<StaRTSLogger>().Error("No Battle Record ID (" + this.currentBattle.RecordID + ") Set by InitializeCurrentBattle.");
+				Service.Get<Logger>().Error("No Battle Record ID (" + this.currentBattle.RecordID + ") Set by InitializeCurrentBattle.");
 			}
 			if (this.IsSquadWarsBattle())
 			{
@@ -330,21 +327,20 @@ namespace StaRTS.Main.Controllers
 				{
 					deployables = new Dictionary<string, int>();
 				}
-				using (IEnumerator<KeyValuePair<string, InventoryEntry>> enumerator = inventoryDeployables.GetEnumerator())
+				foreach (KeyValuePair<string, InventoryEntry> current in inventoryDeployables)
 				{
-					while (enumerator.MoveNext())
+					if (deployables.ContainsKey(current.Key))
 					{
-						KeyValuePair<string, InventoryEntry> current = enumerator.get_Current();
-						if (deployables.ContainsKey(current.get_Key()))
-						{
-							Dictionary<string, int> dictionary = deployables;
-							string key = current.get_Key();
-							dictionary[key] += current.get_Value().Amount;
-						}
-						else
-						{
-							deployables.Add(current.get_Key(), current.get_Value().Amount);
-						}
+						Dictionary<string, int> dictionary;
+						Dictionary<string, int> expr_39 = dictionary = deployables;
+						string key;
+						string expr_42 = key = current.Key;
+						int num = dictionary[key];
+						expr_39[expr_42] = num + current.Value.Amount;
+					}
+					else
+					{
+						deployables.Add(current.Key, current.Value.Amount);
 					}
 				}
 			}
@@ -533,7 +529,7 @@ namespace StaRTS.Main.Controllers
 			this.currentBattle.RecordID = battleId;
 			if (this.waitingToSendBattleEndCommand)
 			{
-				Service.Get<StaRTSLogger>().Debug("Battle Record ID (" + this.currentBattle.RecordID + ") Set After Initial EndBattle");
+				Service.Get<Logger>().Debug("Battle Record ID (" + this.currentBattle.RecordID + ") Set After Initial EndBattle");
 				Service.Get<SimTimeEngine>().ScaleTime(1u);
 				Service.Get<UserInputInhibitor>().AllowAll();
 				this.EndBattle();
@@ -559,10 +555,10 @@ namespace StaRTS.Main.Controllers
 				{
 					foreach (KeyValuePair<string, int> current in defenderGuildTroopsAvailable)
 					{
-						if (current.get_Value() >= 1)
+						if (current.Value >= 1)
 						{
-							TroopTypeVO troop = this.sdc.Get<TroopTypeVO>(current.get_Key());
-							this.ctm.RegisterTrigger(new DefendedBuildingCombatTrigger(entity, CombatTriggerType.Area, false, troop, current.get_Value(), true, GameConstants.SQUAD_TROOP_DEPLOY_STAGGER, 1800u));
+							TroopTypeVO troop = this.sdc.Get<TroopTypeVO>(current.Key);
+							this.ctm.RegisterTrigger(new DefendedBuildingCombatTrigger(entity, CombatTriggerType.Area, false, troop, current.Value, true, GameConstants.SQUAD_TROOP_DEPLOY_STAGGER, 1800u));
 						}
 					}
 				}
@@ -590,66 +586,68 @@ namespace StaRTS.Main.Controllers
 				EncounterProfileVO optional = this.sdc.GetOptional<EncounterProfileVO>(this.currentBattle.DefenseEncounterProfile);
 				if (optional == null || optional.GroupString == null)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Battle {0} has an invalid encounter profile {1}", new object[]
+					Service.Get<Logger>().ErrorFormat("Battle {0} has an invalid encounter profile {1}", new object[]
 					{
 						this.currentBattle.BattleUid,
 						this.currentBattle.DefenseEncounterProfile
 					});
-					return;
 				}
-				string[] array = optional.GroupString.Split(new char[]
+				else
 				{
-					'|'
-				});
-				int i = 0;
-				int num = array.Length;
-				while (i < num)
-				{
-					string[] array2 = array[i].Split(new char[]
+					string[] array = optional.GroupString.Split(new char[]
 					{
-						','
+						'|'
 					});
-					BuildingTypeVO buildingTypeVO = this.sdc.Get<BuildingTypeVO>(array2[0]);
-					NodeList<BuildingNode> nodeList = Service.Get<EntityController>().GetNodeList<BuildingNode>();
-					for (BuildingNode buildingNode = nodeList.Head; buildingNode != null; buildingNode = buildingNode.Next)
+					int i = 0;
+					int num = array.Length;
+					while (i < num)
 					{
-						if (buildingNode.BuildingComp.BuildingType == buildingTypeVO)
+						string[] array2 = array[i].Split(new char[]
 						{
-							string text = array2[1];
-							CombatTriggerType type;
-							if (text == "onDeath")
+							','
+						});
+						BuildingTypeVO buildingTypeVO = this.sdc.Get<BuildingTypeVO>(array2[0]);
+						NodeList<BuildingNode> nodeList = Service.Get<EntityController>().GetNodeList<BuildingNode>();
+						for (BuildingNode buildingNode = nodeList.Head; buildingNode != null; buildingNode = buildingNode.Next)
+						{
+							if (buildingNode.BuildingComp.BuildingType == buildingTypeVO)
 							{
-								type = CombatTriggerType.Death;
-							}
-							else if (text == "proximity")
-							{
-								type = CombatTriggerType.Area;
-							}
-							else if (text == "onLoad")
-							{
-								type = CombatTriggerType.Load;
-							}
-							else
-							{
-								type = CombatTriggerType.Death;
-							}
-							TroopTypeVO troop = Service.Get<IDataController>().Get<TroopTypeVO>(array2[2]);
-							int troopCount = Convert.ToInt32(array2[3], CultureInfo.InvariantCulture);
-							bool leashed = array2[4].ToLower() == "true";
-							uint stagger = Convert.ToUInt32(array2[5], CultureInfo.InvariantCulture);
-							uint lastDitchDelaySeconds = 90u;
-							if (array2.Length > 6)
-							{
-								uint num2 = Convert.ToUInt32(array2[6], CultureInfo.InvariantCulture);
-								if (num2 > 0u)
+								string a = array2[1];
+								CombatTriggerType type;
+								if (a == "onDeath")
 								{
-									lastDitchDelaySeconds = num2;
+									type = CombatTriggerType.Death;
 								}
+								else if (a == "proximity")
+								{
+									type = CombatTriggerType.Area;
+								}
+								else if (a == "onLoad")
+								{
+									type = CombatTriggerType.Load;
+								}
+								else
+								{
+									type = CombatTriggerType.Death;
+								}
+								TroopTypeVO troop = Service.Get<IDataController>().Get<TroopTypeVO>(array2[2]);
+								int troopCount = Convert.ToInt32(array2[3]);
+								bool leashed = array2[4].ToLower() == "true";
+								uint stagger = Convert.ToUInt32(array2[5]);
+								uint lastDitchDelaySeconds = 90u;
+								if (array2.Length > 6)
+								{
+									uint num2 = Convert.ToUInt32(array2[6]);
+									if (num2 > 0u)
+									{
+										lastDitchDelaySeconds = num2;
+									}
+								}
+								this.ctm.RegisterTrigger(new DefendedBuildingCombatTrigger(buildingNode.Entity, type, true, troop, troopCount, leashed, stagger, lastDitchDelaySeconds));
 							}
-							this.ctm.RegisterTrigger(new DefendedBuildingCombatTrigger(buildingNode.Entity, type, true, troop, troopCount, leashed, stagger, lastDitchDelaySeconds));
 						}
+						i++;
 					}
-					i++;
 				}
 			}
 		}
@@ -661,63 +659,65 @@ namespace StaRTS.Main.Controllers
 				BattleScriptVO optional = this.sdc.GetOptional<BattleScriptVO>(this.currentBattle.BattleScript);
 				if (optional == null || optional.Scripts == null)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Battle {0} has an invalid battle script {1}", new object[]
+					Service.Get<Logger>().ErrorFormat("Battle {0} has an invalid battle script {1}", new object[]
 					{
 						this.currentBattle.BattleUid,
 						this.currentBattle.BattleScript
 					});
-					return;
 				}
-				string[] array = optional.Scripts.Split(new char[]
+				else
 				{
-					'|'
-				});
-				int i = 0;
-				int num = array.Length;
-				while (i < num)
-				{
-					string[] array2 = array[i].Split(new char[]
+					string[] array = optional.Scripts.Split(new char[]
 					{
-						','
+						'|'
 					});
-					if (array2[1] == "onTroopDeploy")
+					int i = 0;
+					int num = array.Length;
+					while (i < num)
 					{
-						this.ctm.RegisterTrigger(new StoryActionCombatTrigger(array2[0].ToLower(), CombatTriggerType.TroopDeploy, array2[2]));
-					}
-					else if (array2[1] == "onLoad")
-					{
-						Service.Get<StaRTSLogger>().ErrorFormat("Load triggers are not allowed in battle scripts.  Please use the intro story hook for script {0} instead", new object[]
+						string[] array2 = array[i].Split(new char[]
 						{
-							this.currentBattle.BattleScript
+							','
 						});
-					}
-					else if (array2[1] == "onDeath" || array2[1] == "proximity")
-					{
-						BuildingTypeVO buildingTypeVO = this.sdc.Get<BuildingTypeVO>(array2[0]);
-						NodeList<BuildingNode> nodeList = Service.Get<EntityController>().GetNodeList<BuildingNode>();
-						for (BuildingNode buildingNode = nodeList.Head; buildingNode != null; buildingNode = buildingNode.Next)
+						if (array2[1] == "onTroopDeploy")
 						{
-							if (buildingNode.BuildingComp.BuildingType == buildingTypeVO)
+							this.ctm.RegisterTrigger(new StoryActionCombatTrigger(array2[0].ToLower(), CombatTriggerType.TroopDeploy, array2[2]));
+						}
+						else if (array2[1] == "onLoad")
+						{
+							Service.Get<Logger>().ErrorFormat("Load triggers are not allowed in battle scripts.  Please use the intro story hook for script {0} instead", new object[]
 							{
-								string text = array2[1];
-								CombatTriggerType triggerType;
-								if (text == "onDeath")
+								this.currentBattle.BattleScript
+							});
+						}
+						else if (array2[1] == "onDeath" || array2[1] == "proximity")
+						{
+							BuildingTypeVO buildingTypeVO = this.sdc.Get<BuildingTypeVO>(array2[0]);
+							NodeList<BuildingNode> nodeList = Service.Get<EntityController>().GetNodeList<BuildingNode>();
+							for (BuildingNode buildingNode = nodeList.Head; buildingNode != null; buildingNode = buildingNode.Next)
+							{
+								if (buildingNode.BuildingComp.BuildingType == buildingTypeVO)
 								{
-									triggerType = CombatTriggerType.Death;
+									string a = array2[1];
+									CombatTriggerType triggerType;
+									if (a == "onDeath")
+									{
+										triggerType = CombatTriggerType.Death;
+									}
+									else if (a == "proximity")
+									{
+										triggerType = CombatTriggerType.Area;
+									}
+									else
+									{
+										triggerType = CombatTriggerType.Death;
+									}
+									this.ctm.RegisterTrigger(new StoryActionCombatTrigger(buildingNode.Entity, triggerType, array2[2]));
 								}
-								else if (text == "proximity")
-								{
-									triggerType = CombatTriggerType.Area;
-								}
-								else
-								{
-									triggerType = CombatTriggerType.Death;
-								}
-								this.ctm.RegisterTrigger(new StoryActionCombatTrigger(buildingNode.Entity, triggerType, array2[2]));
 							}
 						}
+						i++;
 					}
-					i++;
 				}
 			}
 		}
@@ -741,7 +741,6 @@ namespace StaRTS.Main.Controllers
 				if (this.defenseController.AllWavesClear)
 				{
 					this.EndBattleWithDelay();
-					return;
 				}
 			}
 			else if (this.AllPlayerTroopsDeployed())
@@ -776,7 +775,7 @@ namespace StaRTS.Main.Controllers
 				Service.Get<UserInputInhibitor>().DenyAll();
 				if (this.currentBattle.Type == BattleType.Pvp)
 				{
-					Service.Get<StaRTSLogger>().Error("No Battle Record ID (" + this.currentBattle.RecordID + ") Set by EndBattle.");
+					Service.Get<Logger>().Error("No Battle Record ID (" + this.currentBattle.RecordID + ") Set by EndBattle.");
 				}
 				this.waitingToSendBattleEndCommand = true;
 				return;
@@ -999,7 +998,7 @@ namespace StaRTS.Main.Controllers
 			Dictionary<string, string> dictionary = new Dictionary<string, string>();
 			foreach (KeyValuePair<string, string> current in this.currentBattle.DeadBuildingKeys)
 			{
-				dictionary.Add(current.get_Key(), current.get_Value());
+				dictionary.Add(current.Key, current.Value);
 			}
 			NodeList<BuildingNode> nodeList = Service.Get<EntityController>().GetNodeList<BuildingNode>();
 			for (BuildingNode buildingNode = nodeList.Head; buildingNode != null; buildingNode = buildingNode.Next)
@@ -1011,7 +1010,7 @@ namespace StaRTS.Main.Controllers
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().Error("Duplicate building key found when creating pve building map");
+					Service.Get<Logger>().Error("Duplicate building key found when creating pve building map");
 				}
 			}
 			return dictionary;
@@ -1019,7 +1018,7 @@ namespace StaRTS.Main.Controllers
 
 		private void KillChampions(Dictionary<string, int> defendingUnitsKilled, Dictionary<string, int> attackingUnitsKilled)
 		{
-			Dictionary<string, int> dictionary = (this.CurrentPlayerTeamType == TeamType.Attacker) ? attackingUnitsKilled : defendingUnitsKilled;
+			Dictionary<string, int> dictionary = (this.CurrentPlayerTeamType != TeamType.Attacker) ? defendingUnitsKilled : attackingUnitsKilled;
 			foreach (string current in dictionary.Keys)
 			{
 				TroopTypeVO troopTypeVO = this.sdc.Get<TroopTypeVO>(current);
@@ -1071,9 +1070,11 @@ namespace StaRTS.Main.Controllers
 			if (gameStateMachine.CurrentState is BattlePlaybackState)
 			{
 				gameStateMachine.SetState(new BattleEndPlaybackState(isSquadWarBattle));
-				return;
 			}
-			gameStateMachine.SetState(new BattleEndState(isSquadWarBattle));
+			else
+			{
+				gameStateMachine.SetState(new BattleEndState(isSquadWarBattle));
+			}
 		}
 
 		public Dictionary<string, int> GetBuildingDamageMap()
@@ -1082,7 +1083,7 @@ namespace StaRTS.Main.Controllers
 			Dictionary<string, int> dictionary = new Dictionary<string, int>();
 			foreach (KeyValuePair<string, string> current in this.currentBattle.DeadBuildingKeys)
 			{
-				dictionary.Add(current.get_Key(), 100);
+				dictionary.Add(current.Key, 100);
 			}
 			for (BuildingNode buildingNode = nodeList.Head; buildingNode != null; buildingNode = buildingNode.Next)
 			{
@@ -1220,10 +1221,7 @@ namespace StaRTS.Main.Controllers
 
 		public void CheckTimeLeft(uint id, object cookie)
 		{
-			CurrentBattle expr_06 = this.currentBattle;
-			int num = expr_06.TimeLeft - 1;
-			expr_06.TimeLeft = num;
-			bool warning = num <= GameConstants.BATTLE_WARNING_TIME;
+			bool warning = --this.currentBattle.TimeLeft <= GameConstants.BATTLE_WARNING_TIME;
 			Service.Get<UXController>().HUD.RefreshTimerView(this.currentBattle.TimeLeft, warning);
 			if (this.currentBattle.IsReplay)
 			{
@@ -1257,7 +1255,7 @@ namespace StaRTS.Main.Controllers
 				string key = buildingComponent.BuildingTO.Key;
 				if (string.IsNullOrEmpty(key))
 				{
-					Service.Get<StaRTSLogger>().Error("Received dead building with invalid BuildingTO Key!");
+					Service.Get<Logger>().Error("Received dead building with invalid BuildingTO Key!");
 				}
 				else if (!this.currentBattle.DeadBuildingKeys.ContainsKey(key))
 				{
@@ -1269,7 +1267,7 @@ namespace StaRTS.Main.Controllers
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Entity {0} reported dead twice to LootController.", new object[]
+					Service.Get<Logger>().ErrorFormat("Entity {0} reported dead twice to LootController.", new object[]
 					{
 						key
 					});
@@ -1297,17 +1295,21 @@ namespace StaRTS.Main.Controllers
 			{
 				return;
 			}
-			Dictionary<string, int> dictionary = (teamComponent.TeamType == TeamType.Attacker) ? this.currentBattle.AttackingUnitsKilled : this.currentBattle.DefendingUnitsKilled;
+			Dictionary<string, int> dictionary = (teamComponent.TeamType != TeamType.Attacker) ? this.currentBattle.DefendingUnitsKilled : this.currentBattle.AttackingUnitsKilled;
 			string uid = troopComponent.TroopType.Uid;
 			if (dictionary.ContainsKey(uid))
 			{
-				Dictionary<string, int> arg_51_0 = dictionary;
-				string key = uid;
-				int num = arg_51_0[key];
-				arg_51_0[key] = num + 1;
-				return;
+				Dictionary<string, int> dictionary2;
+				Dictionary<string, int> expr_5D = dictionary2 = dictionary;
+				string key;
+				string expr_61 = key = uid;
+				int num = dictionary2[key];
+				expr_5D[expr_61] = num + 1;
 			}
-			dictionary.Add(uid, 1);
+			else
+			{
+				dictionary.Add(uid, 1);
+			}
 		}
 
 		private void RecordDefenderGuildTroopDestroyed(Entity entity)
@@ -1316,172 +1318,174 @@ namespace StaRTS.Main.Controllers
 			string uid = troopComponent.TroopType.Uid;
 			if (this.currentBattle.DefenderGuildTroopsDestroyed.ContainsKey(uid))
 			{
-				Dictionary<string, int> arg_33_0 = this.currentBattle.DefenderGuildTroopsDestroyed;
-				string key = uid;
-				int num = arg_33_0[key];
-				arg_33_0[key] = num + 1;
-				return;
+				Dictionary<string, int> defenderGuildTroopsDestroyed;
+				Dictionary<string, int> expr_34 = defenderGuildTroopsDestroyed = this.currentBattle.DefenderGuildTroopsDestroyed;
+				string key;
+				string expr_37 = key = uid;
+				int num = defenderGuildTroopsDestroyed[key];
+				expr_34[expr_37] = num + 1;
 			}
-			this.currentBattle.DefenderGuildTroopsDestroyed.Add(uid, 1);
+			else
+			{
+				this.currentBattle.DefenderGuildTroopsDestroyed.Add(uid, 1);
+			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
 			Vector3 worldPosition = Vector3.zero;
-			if (id <= EventId.SquadTroopsDeployedByPlayer)
+			switch (id)
 			{
-				if (id <= EventId.ApplicationQuit)
+			case EventId.TroopNotPlacedInvalidArea:
+				worldPosition = Units.BoardToWorldVec((IntPosition)cookie);
+				this.battleMessageView.Show(worldPosition, true, Service.Get<Lang>().Get("AREA_INVALID", new object[0]));
+				return EatResponse.NotEaten;
+			case EventId.TroopNotPlacedInvalidTroop:
+				this.battleMessageView.Show((Vector3)cookie, true, Service.Get<Lang>().Get("TROOP_INVALID", new object[0]));
+				return EatResponse.NotEaten;
+			case EventId.TroopPlacedInsideShieldError:
+				worldPosition = Units.BoardToWorldVec((IntPosition)cookie);
+				this.battleMessageView.Show(worldPosition, true, Service.Get<Lang>().Get("INVALID_DEPLOY_SHIELD", new object[0]));
+				return EatResponse.NotEaten;
+			case EventId.TroopPlacedInsideBuildingError:
+				worldPosition = Units.BoardToWorldVec((IntPosition)cookie);
+				this.battleMessageView.Show(worldPosition, true, Service.Get<Lang>().Get("INVALID_DEPLOY_BUILDING", new object[0]));
+				return EatResponse.NotEaten;
+			case EventId.HeroNotActivated:
+			case EventId.TroopDonationTrackProgressUpdated:
+			case EventId.TroopDonationTrackRewardReceived:
+			case EventId.SquadTroopsReceived:
+				IL_37:
+				switch (id)
 				{
-					if (id != EventId.ApplicationPauseToggled)
+				case EventId.BattleEndRecorded:
+					this.OnBattleEndRecorded();
+					return EatResponse.NotEaten;
+				case EventId.BattleEndFullyProcessed:
+				{
+					IL_50:
+					if (id == EventId.ApplicationPauseToggled)
 					{
-						if (id == EventId.ApplicationQuit)
+						if (this.BattleInProgress && (bool)cookie && GameConstants.PVP_LOSE_ON_PAUSE && this.currentBattle.Type == BattleType.Pvp)
 						{
-							if (this.BattleInProgress && GameConstants.PVP_LOSE_ON_QUIT && this.currentBattle.Type == BattleType.Pvp)
+							this.CancelBattleRightAway();
+						}
+						return EatResponse.NotEaten;
+					}
+					if (id == EventId.ApplicationQuit)
+					{
+						if (this.BattleInProgress && GameConstants.PVP_LOSE_ON_QUIT && this.currentBattle.Type == BattleType.Pvp)
+						{
+							this.CancelBattleRightAway();
+						}
+						return EatResponse.NotEaten;
+					}
+					if (id == EventId.VictoryConditionSuccess)
+					{
+						this.currentBattle.Won = true;
+						int count = this.conditionController.Successes.Count;
+						if (count == 3)
+						{
+							this.UpdateHealth();
+							this.EndBattleWithDelay();
+						}
+						if (Service.Get<UXController>().HUD.AreBattleStarsVisible())
+						{
+							string message = Service.Get<Lang>().Get("STAR_MESSAGE_" + count, new object[0]);
+							this.starAnimations.Enqueue(new VictoryStarAnimation(count, message));
+							this.PumpStarAnimations();
+							Service.Get<EventManager>().SendEvent(EventId.StarEarned, count);
+						}
+						return EatResponse.NotEaten;
+					}
+					if (id == EventId.VictoryConditionFailure)
+					{
+						if (this.conditionController.FailureConditionVO == cookie)
+						{
+							this.currentBattle.FailedConditionUid = ((ConditionVO)cookie).Uid;
+							Service.Get<UXController>().HUD.UpdateDamageStars(0);
+							this.UpdateHealth();
+							this.EndBattleWithDelay();
+						}
+						else if (this.currentBattle.Type == BattleType.PveDefend)
+						{
+							int num = 3 - this.conditionController.Failures.Count;
+							Service.Get<UXController>().HUD.UpdateDamageStars(num);
+							if (num == 0)
 							{
-								this.CancelBattleRightAway();
+								this.EndBattleWithDelay();
 							}
 						}
+						return EatResponse.NotEaten;
 					}
-					else if (this.BattleInProgress && (bool)cookie && GameConstants.PVP_LOSE_ON_PAUSE && this.currentBattle.Type == BattleType.Pvp)
+					if (id == EventId.EntityKilled)
 					{
-						this.CancelBattleRightAway();
-					}
-				}
-				else if (id != EventId.EntityKilled)
-				{
-					if (id != EventId.TroopPlacedOnBoard)
-					{
-						switch (id)
+						Entity entity = cookie as Entity;
+						this.PerformShakeEffect(entity);
+						this.RecordBuildingDestroyed(entity);
+						this.RecordUnitKilled(entity);
+						if (this.defenderGuildTroopsDeployed != null && this.defenderGuildTroopsDeployed.Contains(entity))
 						{
-						case EventId.TroopNotPlacedInvalidArea:
-							worldPosition = Units.BoardToWorldVec((IntPosition)cookie);
-							this.battleMessageView.Show(worldPosition, true, Service.Get<Lang>().Get("AREA_INVALID", new object[0]));
-							break;
-						case EventId.TroopNotPlacedInvalidTroop:
-							this.battleMessageView.Show((Vector3)cookie, true, Service.Get<Lang>().Get("TROOP_INVALID", new object[0]));
-							break;
-						case EventId.TroopPlacedInsideShieldError:
-							worldPosition = Units.BoardToWorldVec((IntPosition)cookie);
-							this.battleMessageView.Show(worldPosition, true, Service.Get<Lang>().Get("INVALID_DEPLOY_SHIELD", new object[0]));
-							break;
-						case EventId.TroopPlacedInsideBuildingError:
-							worldPosition = Units.BoardToWorldVec((IntPosition)cookie);
-							this.battleMessageView.Show(worldPosition, true, Service.Get<Lang>().Get("INVALID_DEPLOY_BUILDING", new object[0]));
-							break;
-						case EventId.SquadTroopsDeployedByPlayer:
-							this.currentBattle.PlayerDeployedGuildTroops = true;
-							if (!this.currentBattle.IsReplay)
-							{
-								if (this.currentBattle.IsSquadDeployAllowedInRaid())
-								{
-									this.currentBattle.DefenderGuildTroopsDestroyed = new Dictionary<string, int>(this.currentBattle.DefenderGuildTroopsAvailable);
-									this.currentBattle.DefenderDeployedData.SquadData = new Dictionary<string, int>(this.currentBattle.DefenderGuildTroopsAvailable);
-								}
-								else
-								{
-									this.currentBattle.AttackerGuildTroopsDeployed = new Dictionary<string, int>(this.currentBattle.AttackerGuildTroopsAvailable);
-									this.currentBattle.AttackerDeployedData.SquadData = new Dictionary<string, int>(this.currentBattle.AttackerGuildTroopsAvailable);
-								}
-								if (Service.Get<SquadController>().StateManager.Troops != null)
-								{
-									Service.Get<SquadController>().StateManager.Troops.Clear();
-								}
-							}
-							break;
+							this.RecordDefenderGuildTroopDestroyed(entity);
 						}
+						return EatResponse.NotEaten;
 					}
-					else
+					if (id == EventId.TroopPlacedOnBoard)
 					{
 						this.battleMessageView.HideImmediately();
+						return EatResponse.NotEaten;
 					}
-				}
-				else
-				{
-					Entity entity = cookie as Entity;
-					this.PerformShakeEffect(entity);
-					this.RecordBuildingDestroyed(entity);
-					this.RecordUnitKilled(entity);
-					if (this.defenderGuildTroopsDeployed != null && this.defenderGuildTroopsDeployed.Contains(entity))
+					if (id == EventId.LootEarnedUpdated)
 					{
-						this.RecordDefenderGuildTroopDestroyed(entity);
+						this.UpdateCurrencyInventory();
+						return EatResponse.NotEaten;
 					}
-				}
-			}
-			else if (id <= EventId.LootEarnedUpdated)
-			{
-				if (id != EventId.BattleEndRecorded)
-				{
-					if (id != EventId.BattleCancelRequested)
+					if (id != EventId.DefenderTriggeredInBattle)
 					{
-						if (id == EventId.LootEarnedUpdated)
+						return EatResponse.NotEaten;
+					}
+					DefenderTroopDeployedData defenderTroopDeployedData = (DefenderTroopDeployedData)cookie;
+					BuildingComponent buildingComponent = defenderTroopDeployedData.OwnerEntity.Get<BuildingComponent>();
+					if (buildingComponent != null && buildingComponent.BuildingType.Type == BuildingType.Squad)
+					{
+						if (this.defenderGuildTroopsDeployed == null)
 						{
-							this.UpdateCurrencyInventory();
+							this.defenderGuildTroopsDeployed = new List<Entity>();
 						}
+						this.defenderGuildTroopsDeployed.Add(defenderTroopDeployedData.TroopEntity);
+					}
+					return EatResponse.NotEaten;
+				}
+				case EventId.BattleCancelRequested:
+				{
+					string message2 = Service.Get<Lang>().Get("CONFIRM_END_BATTLE", new object[0]);
+					AlertScreen.ShowModal(false, null, message2, new OnScreenModalResult(this.OnAlertModalResult), null);
+					return EatResponse.NotEaten;
+				}
+				}
+				goto IL_50;
+			case EventId.SquadTroopsDeployedByPlayer:
+				this.currentBattle.PlayerDeployedGuildTroops = true;
+				if (!this.currentBattle.IsReplay)
+				{
+					if (this.currentBattle.IsSquadDeployAllowedInRaid())
+					{
+						this.currentBattle.DefenderGuildTroopsDestroyed = new Dictionary<string, int>(this.currentBattle.DefenderGuildTroopsAvailable);
+						this.currentBattle.DefenderDeployedData.SquadData = new Dictionary<string, int>(this.currentBattle.DefenderGuildTroopsAvailable);
 					}
 					else
 					{
-						string message = Service.Get<Lang>().Get("CONFIRM_END_BATTLE", new object[0]);
-						AlertScreen.ShowModal(false, null, message, new OnScreenModalResult(this.OnAlertModalResult), null);
+						this.currentBattle.AttackerGuildTroopsDeployed = new Dictionary<string, int>(this.currentBattle.AttackerGuildTroopsAvailable);
+						this.currentBattle.AttackerDeployedData.SquadData = new Dictionary<string, int>(this.currentBattle.AttackerGuildTroopsAvailable);
 					}
-				}
-				else
-				{
-					this.OnBattleEndRecorded();
-				}
-			}
-			else if (id != EventId.VictoryConditionSuccess)
-			{
-				if (id != EventId.VictoryConditionFailure)
-				{
-					if (id == EventId.DefenderTriggeredInBattle)
+					if (Service.Get<SquadController>().StateManager.Troops != null)
 					{
-						DefenderTroopDeployedData defenderTroopDeployedData = (DefenderTroopDeployedData)cookie;
-						BuildingComponent buildingComponent = defenderTroopDeployedData.OwnerEntity.Get<BuildingComponent>();
-						if (buildingComponent != null && buildingComponent.BuildingType.Type == BuildingType.Squad)
-						{
-							if (this.defenderGuildTroopsDeployed == null)
-							{
-								this.defenderGuildTroopsDeployed = new List<Entity>();
-							}
-							this.defenderGuildTroopsDeployed.Add(defenderTroopDeployedData.TroopEntity);
-						}
+						Service.Get<SquadController>().StateManager.Troops.Clear();
 					}
 				}
-				else if (this.conditionController.FailureConditionVO == cookie)
-				{
-					this.currentBattle.FailedConditionUid = ((ConditionVO)cookie).Uid;
-					Service.Get<UXController>().HUD.UpdateDamageStars(0);
-					this.UpdateHealth();
-					this.EndBattleWithDelay();
-				}
-				else if (this.currentBattle.Type == BattleType.PveDefend)
-				{
-					int num = 3 - this.conditionController.Failures.Count;
-					Service.Get<UXController>().HUD.UpdateDamageStars(num);
-					if (num == 0)
-					{
-						this.EndBattleWithDelay();
-					}
-				}
+				return EatResponse.NotEaten;
 			}
-			else
-			{
-				this.currentBattle.Won = true;
-				int count = this.conditionController.Successes.Count;
-				if (count == 3)
-				{
-					this.UpdateHealth();
-					this.EndBattleWithDelay();
-				}
-				if (Service.Get<UXController>().HUD.AreBattleStarsVisible())
-				{
-					string message2 = Service.Get<Lang>().Get("STAR_MESSAGE_" + count, new object[0]);
-					this.starAnimations.Enqueue(new VictoryStarAnimation(count, message2));
-					this.PumpStarAnimations();
-					Service.Get<EventManager>().SendEvent(EventId.StarEarned, count);
-				}
-			}
-			return EatResponse.NotEaten;
+			goto IL_37;
 		}
 
 		private void PumpStarAnimations()
@@ -1550,10 +1554,6 @@ namespace StaRTS.Main.Controllers
 			int num = 0;
 			if (this.currentBattle.InitialHealth != 0)
 			{
-				if (this.currentBattle.InitialHealth < this.currentBattle.CurrentHealth)
-				{
-					this.currentBattle.InitialHealth = this.currentBattle.CurrentHealth;
-				}
 				num = (this.currentBattle.InitialHealth - this.currentBattle.CurrentHealth) * 100 / this.currentBattle.InitialHealth;
 			}
 			this.currentBattle.DamagePercent = num;
@@ -1583,11 +1583,11 @@ namespace StaRTS.Main.Controllers
 
 		public int GetHealth(BuildingType buildingType, HealthComponent health)
 		{
-			if (buildingType == BuildingType.Wall || buildingType == BuildingType.Blocker || buildingType == BuildingType.Trap)
+			if (buildingType != BuildingType.Blocker && buildingType != BuildingType.Trap && buildingType != BuildingType.Wall)
 			{
-				return 0;
+				return health.Health;
 			}
-			return health.Health;
+			return 0;
 		}
 
 		private void InitializeLoot()
@@ -1640,8 +1640,8 @@ namespace StaRTS.Main.Controllers
 			{
 				foreach (KeyValuePair<string, int> current in playerDeployableData.TroopData)
 				{
-					TroopTypeVO troopTypeVO = this.sdc.Get<TroopTypeVO>(current.get_Key());
-					if (!troopTypeVO.IsHealer && current.get_Value() > 0)
+					TroopTypeVO troopTypeVO = this.sdc.Get<TroopTypeVO>(current.Key);
+					if (!troopTypeVO.IsHealer && current.Value > 0)
 					{
 						bool result = false;
 						return result;
@@ -1699,10 +1699,12 @@ namespace StaRTS.Main.Controllers
 					ITroopDeployableVO troopType = troopNode.TroopComp.TroopType;
 					if (troopType.Type != TroopType.Hero && troopType.Type != TroopType.Champion)
 					{
-						Dictionary<string, int> arg_6B_0 = playerDeployedData.TroopData;
-						string uid = troopType.Uid;
-						int num = arg_6B_0[uid];
-						arg_6B_0[uid] = num - 1;
+						Dictionary<string, int> troopData;
+						Dictionary<string, int> expr_7A = troopData = playerDeployedData.TroopData;
+						string uid;
+						string expr_83 = uid = troopType.Uid;
+						int num = troopData[uid];
+						expr_7A[expr_83] = num - 1;
 					}
 				}
 			}
@@ -1740,61 +1742,46 @@ namespace StaRTS.Main.Controllers
 		public int GetPlayerDeployableTroopCount(string uid)
 		{
 			Dictionary<string, int> allPlayerDeployableTroops = this.GetAllPlayerDeployableTroops();
-			if (allPlayerDeployableTroops == null || !allPlayerDeployableTroops.ContainsKey(uid))
-			{
-				return 0;
-			}
-			return allPlayerDeployableTroops[uid];
+			return (allPlayerDeployableTroops == null || !allPlayerDeployableTroops.ContainsKey(uid)) ? 0 : allPlayerDeployableTroops[uid];
 		}
 
 		public int GetPlayerDeployableSpecialAttackCount(string uid)
 		{
 			Dictionary<string, int> allPlayerDeployableSpecialAttacks = this.GetAllPlayerDeployableSpecialAttacks();
-			if (allPlayerDeployableSpecialAttacks == null || !allPlayerDeployableSpecialAttacks.ContainsKey(uid))
-			{
-				return 0;
-			}
-			return allPlayerDeployableSpecialAttacks[uid];
+			return (allPlayerDeployableSpecialAttacks == null || !allPlayerDeployableSpecialAttacks.ContainsKey(uid)) ? 0 : allPlayerDeployableSpecialAttacks[uid];
 		}
 
 		public int GetPlayerDeployableHeroCount(string uid)
 		{
 			Dictionary<string, int> allPlayerDeployableHeroes = this.GetAllPlayerDeployableHeroes();
-			if (allPlayerDeployableHeroes == null || !allPlayerDeployableHeroes.ContainsKey(uid))
-			{
-				return 0;
-			}
-			return allPlayerDeployableHeroes[uid];
+			return (allPlayerDeployableHeroes == null || !allPlayerDeployableHeroes.ContainsKey(uid)) ? 0 : allPlayerDeployableHeroes[uid];
 		}
 
 		public int GetPlayerDeployableChampionCount(string uid)
 		{
 			Dictionary<string, int> allPlayerDeployableChampions = this.GetAllPlayerDeployableChampions();
-			if (allPlayerDeployableChampions == null || !allPlayerDeployableChampions.ContainsKey(uid))
-			{
-				return 0;
-			}
-			return allPlayerDeployableChampions[uid];
+			return (allPlayerDeployableChampions == null || !allPlayerDeployableChampions.ContainsKey(uid)) ? 0 : allPlayerDeployableChampions[uid];
 		}
 
 		public void UpdateDeployableSpendDict(string unitTypeUid, Dictionary<string, int> seededData, DeploymentRecord record)
 		{
-			if (seededData == null || !seededData.ContainsKey(unitTypeUid))
+			if (seededData != null && seededData.ContainsKey(unitTypeUid))
 			{
-				if (record != null)
+				int num = seededData[unitTypeUid];
+				num--;
+				if (num > 0)
 				{
-					this.troopsSpendDelta.Add(record);
+					seededData[unitTypeUid] = num;
 				}
-				return;
+				else
+				{
+					seededData.Remove(unitTypeUid);
+				}
 			}
-			int num = seededData[unitTypeUid];
-			num--;
-			if (num > 0)
+			else if (record != null)
 			{
-				seededData[unitTypeUid] = num;
-				return;
+				this.troopsSpendDelta.Add(record);
 			}
-			seededData.Remove(unitTypeUid);
 		}
 
 		public void SendSquadDeployedCommand(int x, int z)
@@ -1837,9 +1824,10 @@ namespace StaRTS.Main.Controllers
 			BattleDeploymentData battleDeploymentData = null;
 			BattleDeploymentData battleDeploymentData2 = null;
 			this.GetDeploymentDataFromTeamType(teamType, out battleDeploymentData, out battleDeploymentData2);
-			Dictionary<string, int> expr_17 = battleDeploymentData.TroopData;
-			int num = expr_17[uid];
-			expr_17[uid] = num - 1;
+			Dictionary<string, int> troopData;
+			Dictionary<string, int> expr_15 = troopData = battleDeploymentData.TroopData;
+			int num = troopData[uid];
+			expr_15[uid] = num - 1;
 			if (battleDeploymentData2.TroopData == null)
 			{
 				battleDeploymentData2.TroopData = new Dictionary<string, int>();
@@ -1850,9 +1838,10 @@ namespace StaRTS.Main.Controllers
 			}
 			if (battleDeploymentData2.TroopData.ContainsKey(uid))
 			{
-				Dictionary<string, int> expr_66 = battleDeploymentData2.TroopData;
-				num = expr_66[uid];
-				expr_66[uid] = num + 1;
+				Dictionary<string, int> troopData2;
+				Dictionary<string, int> expr_71 = troopData2 = battleDeploymentData2.TroopData;
+				num = troopData2[uid];
+				expr_71[uid] = num + 1;
 			}
 			else
 			{
@@ -1871,9 +1860,10 @@ namespace StaRTS.Main.Controllers
 			BattleDeploymentData battleDeploymentData = null;
 			BattleDeploymentData battleDeploymentData2 = null;
 			this.GetDeploymentDataFromTeamType(teamType, out battleDeploymentData, out battleDeploymentData2);
-			Dictionary<string, int> expr_17 = battleDeploymentData.SpecialAttackData;
-			int num = expr_17[uid];
-			expr_17[uid] = num - 1;
+			Dictionary<string, int> specialAttackData;
+			Dictionary<string, int> expr_15 = specialAttackData = battleDeploymentData.SpecialAttackData;
+			int num = specialAttackData[uid];
+			expr_15[uid] = num - 1;
 			if (battleDeploymentData2.SpecialAttackData == null)
 			{
 				battleDeploymentData2.SpecialAttackData = new Dictionary<string, int>();
@@ -1884,9 +1874,10 @@ namespace StaRTS.Main.Controllers
 			}
 			if (battleDeploymentData2.SpecialAttackData.ContainsKey(uid))
 			{
-				Dictionary<string, int> expr_66 = battleDeploymentData2.SpecialAttackData;
-				num = expr_66[uid];
-				expr_66[uid] = num + 1;
+				Dictionary<string, int> specialAttackData2;
+				Dictionary<string, int> expr_71 = specialAttackData2 = battleDeploymentData2.SpecialAttackData;
+				num = specialAttackData2[uid];
+				expr_71[uid] = num + 1;
 			}
 			else
 			{
@@ -1905,9 +1896,10 @@ namespace StaRTS.Main.Controllers
 			BattleDeploymentData battleDeploymentData = null;
 			BattleDeploymentData battleDeploymentData2 = null;
 			this.GetDeploymentDataFromTeamType(teamType, out battleDeploymentData, out battleDeploymentData2);
-			Dictionary<string, int> expr_17 = battleDeploymentData.HeroData;
-			int num = expr_17[uid];
-			expr_17[uid] = num - 1;
+			Dictionary<string, int> heroData;
+			Dictionary<string, int> expr_15 = heroData = battleDeploymentData.HeroData;
+			int num = heroData[uid];
+			expr_15[uid] = num - 1;
 			if (battleDeploymentData2.HeroData == null)
 			{
 				battleDeploymentData2.HeroData = new Dictionary<string, int>();
@@ -1918,9 +1910,10 @@ namespace StaRTS.Main.Controllers
 			}
 			if (battleDeploymentData2.HeroData.ContainsKey(uid))
 			{
-				Dictionary<string, int> expr_66 = battleDeploymentData2.HeroData;
-				num = expr_66[uid];
-				expr_66[uid] = num + 1;
+				Dictionary<string, int> heroData2;
+				Dictionary<string, int> expr_71 = heroData2 = battleDeploymentData2.HeroData;
+				num = heroData2[uid];
+				expr_71[uid] = num + 1;
 			}
 			else
 			{
@@ -1941,13 +1934,14 @@ namespace StaRTS.Main.Controllers
 			this.GetDeploymentDataFromTeamType(teamType, out battleDeploymentData, out battleDeploymentData2);
 			if (battleDeploymentData.ChampionData != null && battleDeploymentData.ChampionData.ContainsKey(uid))
 			{
-				Dictionary<string, int> expr_2D = battleDeploymentData.ChampionData;
-				int num = expr_2D[uid];
-				expr_2D[uid] = num - 1;
+				Dictionary<string, int> championData;
+				Dictionary<string, int> expr_31 = championData = battleDeploymentData.ChampionData;
+				int num = championData[uid];
+				expr_31[uid] = num - 1;
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("No ChampionData found for : " + uid);
+				Service.Get<Logger>().Error("No ChampionData found for : " + uid);
 			}
 			if (battleDeploymentData2.ChampionData == null)
 			{
@@ -1959,9 +1953,10 @@ namespace StaRTS.Main.Controllers
 			}
 			if (battleDeploymentData2.ChampionData.ContainsKey(uid))
 			{
-				Dictionary<string, int> expr_93 = battleDeploymentData2.ChampionData;
-				int num = expr_93[uid];
-				expr_93[uid] = num + 1;
+				Dictionary<string, int> championData2;
+				Dictionary<string, int> expr_A7 = championData2 = battleDeploymentData2.ChampionData;
+				int num = championData2[uid];
+				expr_A7[uid] = num + 1;
 			}
 			else
 			{
@@ -1983,10 +1978,12 @@ namespace StaRTS.Main.Controllers
 			{
 				deployableData = this.currentBattle.DefenderDeployableData;
 				deployedData = this.currentBattle.DefenderDeployedData;
-				return;
 			}
-			deployableData = this.currentBattle.AttackerDeployableData;
-			deployedData = this.currentBattle.AttackerDeployedData;
+			else
+			{
+				deployableData = this.currentBattle.AttackerDeployableData;
+				deployedData = this.currentBattle.AttackerDeployedData;
+			}
 		}
 
 		private BattleDeploymentData GetPlayerDeployedData()
@@ -2035,500 +2032,6 @@ namespace StaRTS.Main.Controllers
 		public bool IsSquadWarsBuffBaseBattle()
 		{
 			return this.currentBattle.Type == BattleType.PveBuffBase;
-		}
-
-		protected internal BattleController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).AddBattleScript();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).AddDefendingTroops();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).AddDeployablesFromInventory((Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args), (IEnumerable<KeyValuePair<string, InventoryEntry>>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).AllowTroopSpend());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).AllPlayerTroopsDeployed());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).CancelBattle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).CancelBattleRightAway();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).CanPlayerDeploySquadTroops());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).Clear();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).CountExpendedSeededUnits());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).CreateBuildingMapForPve());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).CreateDeployableSpendCommand((DeployableSpendRequest)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).DeinitializeLoot();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).EndBattle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).EndBattleRightAway();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).EndBattleWithDelay();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).ExpendPlayerDeployedUnits();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).BattleEndProcessing);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).BattleInProgress);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).CameraShakeObj);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).CurrentPlayerTeamType);
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).LootController);
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).ViewTimePassedPreBattle);
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetAllPlayerDeployableChampions());
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetAllPlayerDeployableHeroes());
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetAllPlayerDeployableSpecialAttacks());
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetAllPlayerDeployableTroops());
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetBuildingDamageMap());
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentBattle());
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetHealth((BuildingType)(*(int*)args), (HealthComponent)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetHealth((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetNumberOfTroopsToDeduct(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetPlayerDeployableChampionCount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetPlayerDeployableData());
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetPlayerDeployableHeroCount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetPlayerDeployableSpecialAttackCount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetPlayerDeployableTroopCount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).GetPlayerDeployedData());
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).HandleMissionStarted(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).IdleAllEntities();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).InitializeCurrentBattle((BattleInitializationData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).InitializeLoot();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).InitPlayerDeployables();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).IsSquadWarsBattle());
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).IsSquadWarsBuffBaseBattle());
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).KillChampions((Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnAlertModalResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnAllTroopsDead();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnBattleEndCommandSuccess((AbstractResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnBattleEndRecorded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnCameraShake(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnChampionDeployed(Marshal.PtrToStringUni(*(IntPtr*)args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnHeroDeployed(Marshal.PtrToStringUni(*(IntPtr*)args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnPveMissionStarted((BattleIdResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnRaidDefenseStarted((AbstractResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnSpecialAttackDeployed(Marshal.PtrToStringUni(*(IntPtr*)args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnStarAnimationComplete(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).OnTroopDeployed(Marshal.PtrToStringUni(*(IntPtr*)args), (TeamType)(*(int*)(args + 1)), *(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).PerformShakeEffect((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).PrepareDisabledBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).PrepareWorldForBattle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).PumpStarAnimations();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).RaidDefenseComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).RecordBuildingDestroyed((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).RecordDefenderGuildTroopDestroyed((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).RecordUnitKilled((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).RefundSurvivorTroops();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).SendSquadDeployedCommand(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).BattleEndProcessing = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).BattleInProgress = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).CameraShakeObj = (CameraShake)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).CurrentPlayerTeamType = (TeamType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).LootController = (LootController)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).ViewTimePassedPreBattle = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).SetInitialHealth();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).SetupSquadBuildingTrigger();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).StartBattle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).TryFinallyEnd();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).TryRegisterTriggeredTrap((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrencyInventory();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentBattleResult();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentHealth(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).UpdateDamagePercentage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).UpdateDeployableSpendDict(Marshal.PtrToStringUni(*(IntPtr*)args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]), (DeploymentRecord)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			((BattleController)GCHandledObjects.GCHandleToObject(instance)).UpdateHealth();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleController)GCHandledObjects.GCHandleToObject(instance)).WasLastBattleWon());
 		}
 	}
 }

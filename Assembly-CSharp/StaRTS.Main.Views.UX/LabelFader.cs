@@ -3,7 +3,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX
 {
@@ -58,9 +57,8 @@ namespace StaRTS.Main.Views.UX
 			if (this.remainingTime <= 0f || this.label == null)
 			{
 				this.Destroy();
-				return;
 			}
-			if (this.remainingTime < this.fadeTime)
+			else if (this.remainingTime < this.fadeTime)
 			{
 				this.tempColor = this.label.TextColor;
 				this.tempColor.a = this.remainingTime / this.fadeTime;
@@ -74,10 +72,12 @@ namespace StaRTS.Main.Views.UX
 			if (localPosition.y > (float)Screen.height * 0.5f)
 			{
 				this.Destroy();
-				return;
 			}
-			localPosition.y += this.label.LineHeight * (float)linesToMove;
-			this.label.LocalPosition = localPosition;
+			else
+			{
+				localPosition.y += this.label.LineHeight * (float)linesToMove;
+				this.label.LocalPosition = localPosition;
+			}
 		}
 
 		public void Destroy()
@@ -95,44 +95,6 @@ namespace StaRTS.Main.Views.UX
 			this.objectToDestroy = null;
 			this.uxFactory = null;
 			this.label = null;
-		}
-
-		protected internal LabelFader(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LabelFader)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LabelFader)GCHandledObjects.GCHandleToObject(instance)).Label);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LabelFader)GCHandledObjects.GCHandleToObject(instance)).LineCount);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((LabelFader)GCHandledObjects.GCHandleToObject(instance)).MoveUp(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((LabelFader)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((LabelFader)GCHandledObjects.GCHandleToObject(instance)).LineCount = *(int*)args;
-			return -1L;
 		}
 	}
 }

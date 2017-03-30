@@ -1,6 +1,5 @@
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Perks
 {
@@ -22,15 +21,6 @@ namespace StaRTS.Main.Models.Commands.Perks
 			startedSerializer.AddString("perkId", this.perkId);
 			startedSerializer.AddString("repToInvest", this.repToInvest.ToString());
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal PlayerPerkInvestRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlayerPerkInvestRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

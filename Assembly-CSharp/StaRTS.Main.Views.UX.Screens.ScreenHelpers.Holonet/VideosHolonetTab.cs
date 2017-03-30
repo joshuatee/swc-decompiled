@@ -11,10 +11,8 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 {
@@ -225,44 +223,44 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			stringBuilder = new StringBuilder(" (");
 			stringBuilder.Append(text);
 			stringBuilder.Append(")");
-			string text2 = stringBuilder.ToString();
+			string str = stringBuilder.ToString();
 			if (queryChoiceData.UIType == ChoiceType.SimpleList)
 			{
-				this.parentScreen.DestroyElement(this.parentScreen.GetElement<UXElement>("MakerContainerHQLevelSubFilter" + text2));
-				UXElement element3 = this.parentScreen.GetElement<UXElement>("MakerContainerBGSubFilters" + text2);
+				this.parentScreen.DestroyElement(this.parentScreen.GetElement<UXElement>("MakerContainerHQLevelSubFilter" + str));
+				UXElement element3 = this.parentScreen.GetElement<UXElement>("MakerContainerBGSubFilters" + str);
 				UIWidget component = element3.Root.GetComponent<UIWidget>();
 				component.SetDimensions(component.width, 80 * queryChoiceData.Choices.Count);
 			}
 			else
 			{
-				this.parentScreen.DestroyElement(this.parentScreen.GetElement<UXElement>("MakerContainerBGSubFilters" + text2));
-				UXLabel element4 = this.parentScreen.GetElement<UXLabel>("MakerLabelTitleHQLevel" + text2);
+				this.parentScreen.DestroyElement(this.parentScreen.GetElement<UXElement>("MakerContainerBGSubFilters" + str));
+				UXLabel element4 = this.parentScreen.GetElement<UXLabel>("MakerLabelTitleHQLevel" + str);
 				element4.Text = queryChoiceData.UILabel;
-				UXButton element5 = this.parentScreen.GetElement<UXButton>("MakerCounterButtonDecrement" + text2);
+				UXButton element5 = this.parentScreen.GetElement<UXButton>("MakerCounterButtonDecrement" + str);
 				element5.OnClicked = new UXButtonClickedDelegate(this.OnFilterPickerClicked);
 				element5.Tag = PickerButtonType.Decrement;
-				UXButton element6 = this.parentScreen.GetElement<UXButton>("MakerCounterButtonIncrement" + text2);
+				UXButton element6 = this.parentScreen.GetElement<UXButton>("MakerCounterButtonIncrement" + str);
 				element6.OnClicked = new UXButtonClickedDelegate(this.OnFilterPickerClicked);
 				element6.Tag = PickerButtonType.Increment;
-				UXButton element7 = this.parentScreen.GetElement<UXButton>("MakerButtonSetHQLevel" + text2);
+				UXButton element7 = this.parentScreen.GetElement<UXButton>("MakerButtonSetHQLevel" + str);
 				element7.OnClicked = new UXButtonClickedDelegate(this.OnFilterPickerClicked);
 				element7.Tag = PickerButtonType.SetType;
-				UXLabel element8 = this.parentScreen.GetElement<UXLabel>("MakerLabelSetHQLevel" + text2);
+				UXLabel element8 = this.parentScreen.GetElement<UXLabel>("MakerLabelSetHQLevel" + str);
 				element8.Text = this.lang.Get("s_Set", new object[0]);
 			}
-			UXElement element9 = this.parentScreen.GetElement<UXElement>("MakerContainerSubFilters" + text2);
+			UXElement element9 = this.parentScreen.GetElement<UXElement>("MakerContainerSubFilters" + str);
 			element9.Visible = false;
-			UXButton element10 = this.parentScreen.GetElement<UXButton>("MakerButtonFiltersTop" + text2);
+			UXButton element10 = this.parentScreen.GetElement<UXButton>("MakerButtonFiltersTop" + str);
 			element10.OnClicked = new UXButtonClickedDelegate(this.OnFilterButtonClicked);
 			element10.Tag = queryChoiceData.UIType;
-			UXLabel element11 = this.parentScreen.GetElement<UXLabel>("MakerLabelFilter" + text2);
+			UXLabel element11 = this.parentScreen.GetElement<UXLabel>("MakerLabelFilter" + str);
 			element11.Text = queryChoiceData.UILabel;
 			ChoiceListUI value = default(ChoiceListUI);
 			value.buttonLabel = element11;
 			value.choices = new List<ChoiceUI>();
 			value.filterOptions = element9;
 			value.id = queryChoiceData.Id;
-			UXGrid element12 = this.parentScreen.GetElement<UXGrid>("MakerGridSubFilters" + text2);
+			UXGrid element12 = this.parentScreen.GetElement<UXGrid>("MakerGridSubFilters" + str);
 			value.filterGrid = element12;
 			this.filters[element10] = value;
 			for (int i = 0; i < queryChoiceData.Choices.Count; i++)
@@ -274,24 +272,24 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 					stringBuilder.Append(queryChoiceData.Id);
 					stringBuilder.Append("_");
 					stringBuilder.Append(i);
-					string text3 = stringBuilder.ToString();
+					string text2 = stringBuilder.ToString();
 					this.grids.Add(element12);
 					UXElement element13 = this.parentScreen.GetElement<UXElement>("MakerCardSubFilter");
-					UXElement item2 = this.parentScreen.CloneElement<UXElement>(element13, text3, element12.Root);
+					UXElement item2 = this.parentScreen.CloneElement<UXElement>(element13, text2, element12.Root);
 					element12.AddItem(item2, element12.Count);
 					stringBuilder = new StringBuilder("MakerButtonSubFilter");
 					stringBuilder.Append(" (");
-					stringBuilder.Append(text3);
+					stringBuilder.Append(text2);
 					stringBuilder.Append(")");
 					VideoFilterOption videoFilterOption = queryChoiceData.Choices[i];
 					UXButton element14 = this.parentScreen.GetElement<UXButton>(stringBuilder.ToString());
 					element14.OnClicked = new UXButtonClickedDelegate(this.OnFilterChoiceClicked);
 					stringBuilder = new StringBuilder("MakerLabelSubFilter");
 					stringBuilder.Append(" (");
-					stringBuilder.Append(text3);
+					stringBuilder.Append(text2);
 					stringBuilder.Append(")");
 					UXLabel element15 = this.parentScreen.GetElement<UXLabel>(stringBuilder.ToString());
-					if (videoFilterOption.UILabel != "")
+					if (videoFilterOption.UILabel != string.Empty)
 					{
 						element15.Text = videoFilterOption.UILabel;
 					}
@@ -303,16 +301,16 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 					VideoFilterOption videoFilterOption2 = queryChoiceData.Choices[i];
 					if (videoFilterOption2.Id == this.searchPage.GetFirstFilterLocation())
 					{
-						UXLabel element16 = this.parentScreen.GetElement<UXLabel>("MakerLabelCounterValueHQLevel" + text2);
+						UXLabel element16 = this.parentScreen.GetElement<UXLabel>("MakerLabelCounterValueHQLevel" + str);
 						element16.Text = videoFilterOption2.UILabel;
 					}
-					UXButton element17 = this.parentScreen.GetElement<UXButton>("MakerCounterButtonDecrement" + text2);
+					UXButton element17 = this.parentScreen.GetElement<UXButton>("MakerCounterButtonDecrement" + str);
 					ChoiceUI item4 = new ChoiceUI(element17, videoFilterOption2.UILabel, videoFilterOption2.Id);
 					value.choices.Add(item4);
-					element17 = this.parentScreen.GetElement<UXButton>("MakerCounterButtonIncrement" + text2);
+					element17 = this.parentScreen.GetElement<UXButton>("MakerCounterButtonIncrement" + str);
 					item4 = new ChoiceUI(element17, videoFilterOption2.UILabel, videoFilterOption2.Id);
 					value.choices.Add(item4);
-					element17 = this.parentScreen.GetElement<UXButton>("MakerButtonSetHQLevel" + text2);
+					element17 = this.parentScreen.GetElement<UXButton>("MakerButtonSetHQLevel" + str);
 					item4 = new ChoiceUI(element17, videoFilterOption2.UILabel, videoFilterOption2.Id);
 					value.choices.Add(item4);
 				}
@@ -350,15 +348,10 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			case EventId.UIVideosQueryResponse:
 			{
 				KeyValuePair<VideoSummaryStyle, List<VideoSummaryData>> keyValuePair = (KeyValuePair<VideoSummaryStyle, List<VideoSummaryData>>)cookie;
-				if (!this.CanUpdateVideoSummaryStyle(keyValuePair.get_Key()))
+				if (this.CanUpdateVideoSummaryStyle(keyValuePair.Key))
 				{
-					return EatResponse.NotEaten;
-				}
-				using (List<VideoSummaryData>.Enumerator enumerator = keyValuePair.get_Value().GetEnumerator())
-				{
-					while (enumerator.MoveNext())
+					foreach (VideoSummaryData current in keyValuePair.Value)
 					{
-						VideoSummaryData current = enumerator.Current;
 						this.videoSummaries[current.Location] = new VideoSummaryDisplay(this.parentScreen, current);
 						switch (current.Style)
 						{
@@ -380,19 +373,14 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 							this.SetupMessageSearch(current);
 							continue;
 						}
-						Service.Get<StaRTSLogger>().ErrorFormat("VideosHolonetTab UIVideosQueryResponse unhandled type {0}", new object[]
+						Service.Get<Logger>().ErrorFormat("VideosHolonetTab UIVideosQueryResponse unhandled type {0}", new object[]
 						{
 							current.Style
 						});
 					}
-					return EatResponse.NotEaten;
 				}
 				break;
 			}
-			case EventId.UIVideosThumbnailResponse:
-			case EventId.VideoStart:
-			case EventId.VideoEnd:
-				return EatResponse.NotEaten;
 			case EventId.UIVideosFeaturedStart:
 				this.parentScreen.GetElement<UXLabel>("MakerLabelFeaturedVideo").Text = this.lang.Get("hn_ui_featured_video", new object[0]);
 				this.parentScreen.GetElement<UXLabel>("MakerLabelShare").Text = this.lang.Get("hn_ui_share", new object[0]);
@@ -407,7 +395,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				}
 				this.parentScreen.GetElement<UXElement>("MakerContainerErrorMsgFeatured").Visible = false;
 				this.ShowFeaturedSpinnerUI();
-				return EatResponse.NotEaten;
+				break;
 			case EventId.UIVideosQueryStart:
 				foreach (VideoSummaryDisplay current2 in this.videoSummaries.Values)
 				{
@@ -417,41 +405,47 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				this.searchGridDynamic.RemoveItems();
 				this.parentScreen.GetElement<UXElement>("MakerContainerErrorMsgMoreVideos").Visible = false;
 				this.ShowSearchSpinnerUI();
-				return EatResponse.NotEaten;
+				break;
 			case EventId.UIVideosQueryFilter:
+				this.SetupDropdownChoice((ChoiceData)cookie);
 				break;
 			case EventId.UIVideosViewBegin:
 				this.ShowPreViewPage(false);
-				return EatResponse.NotEaten;
+				break;
 			case EventId.UIVideosViewComplete:
 			{
 				KeyValuePair<bool, string> keyValuePair2 = (KeyValuePair<bool, string>)cookie;
-				if (keyValuePair2.get_Key())
+				if (keyValuePair2.Key)
 				{
-					this.ShowPostViewPage(keyValuePair2.get_Value());
-					return EatResponse.NotEaten;
+					this.ShowPostViewPage(keyValuePair2.Value);
 				}
-				this.HidePreViewPage();
-				return EatResponse.NotEaten;
+				else
+				{
+					this.HidePreViewPage();
+				}
+				break;
 			}
 			case EventId.UIVideosRefresh:
-				goto IL_3C5;
+				if (this.currentState == HolonetVideoTabState.Search && this.searchPage != null)
+				{
+					this.searchPage.PerformSearch();
+				}
+				else if (this.currentState == HolonetVideoTabState.Featured && this.featuredPage != null)
+				{
+					this.featuredPage.DoFeaturedQuery();
+				}
+				break;
 			case EventId.UIVideosSourceTypeResponse:
 			{
 				KeyValuePair<List<string>, string> keyValuePair3 = (KeyValuePair<List<string>, string>)cookie;
-				using (Dictionary<int, VideoSummaryDisplay>.ValueCollection.Enumerator enumerator3 = this.videoSummaries.Values.GetEnumerator())
+				foreach (VideoSummaryDisplay current3 in this.videoSummaries.Values)
 				{
-					while (enumerator3.MoveNext())
+					if (keyValuePair3.Key.Contains(current3.GetGuid()))
 					{
-						VideoSummaryDisplay current3 = enumerator3.Current;
-						if (keyValuePair3.get_Key().Contains(current3.GetGuid()))
-						{
-							current3.UpdateSourceType(keyValuePair3.get_Value());
-						}
+						current3.UpdateSourceType(keyValuePair3.Value);
 					}
-					return EatResponse.NotEaten;
 				}
-				goto IL_3C5;
+				break;
 			}
 			case EventId.UIDynamicScrollingListCreateItem:
 			{
@@ -460,7 +454,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				VideoSummaryData oldVideoThumb = (VideoSummaryData)listItemCreateData.ParentList.GetItemCookie(listItemCreateData.OldLocation);
 				UXElement item = this.CreateDynamicScrollingListItem((VideoSummaryData)listItemCreateData.Cookie, listItemCreateData.ParentList, itemUI, oldVideoThumb);
 				listItemCreateData.ParentList.SetItemUI(item, listItemCreateData.Location);
-				return EatResponse.NotEaten;
+				break;
 			}
 			case EventId.UIDynamicScrollingListCleanupItem:
 			{
@@ -470,23 +464,9 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				if (videoSummaryDisplay != null)
 				{
 					videoSummaryDisplay.Recycle();
-					return EatResponse.NotEaten;
 				}
-				return EatResponse.NotEaten;
+				break;
 			}
-			default:
-				return EatResponse.NotEaten;
-			}
-			this.SetupDropdownChoice((ChoiceData)cookie);
-			return EatResponse.NotEaten;
-			IL_3C5:
-			if (this.currentState == HolonetVideoTabState.Search && this.searchPage != null)
-			{
-				this.searchPage.PerformSearch();
-			}
-			else if (this.currentState == HolonetVideoTabState.Featured && this.featuredPage != null)
-			{
-				this.featuredPage.DoFeaturedQuery();
 			}
 			return EatResponse.NotEaten;
 		}
@@ -527,20 +507,21 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 
 		private UXElement CreateDynamicScrollingListItem(VideoSummaryData videoThumb, DynamicScrollingList list, UXElement existingItem, VideoSummaryData oldVideoThumb)
 		{
+			string text = string.Empty;
 			UXElement uXElement;
 			if (existingItem != null)
 			{
 				videoThumb.UILabel = oldVideoThumb.UILabel;
-				string uILabel = videoThumb.UILabel;
-				existingItem.SetRootName(uILabel);
+				text = videoThumb.UILabel;
+				existingItem.SetRootName(text);
 				uXElement = existingItem;
 				oldVideoThumb.IsVisible = false;
 			}
 			else
 			{
-				string uILabel = videoThumb.UILabel;
+				text = videoThumb.UILabel;
 				uXElement = this.parentScreen.GetElement<UXElement>("MakerCardMoreVideos");
-				uXElement = this.parentScreen.CloneElement<UXElement>(uXElement, uILabel, list.Root);
+				uXElement = this.parentScreen.CloneElement<UXElement>(uXElement, text, list.Root);
 			}
 			videoThumb.IsVisible = true;
 			this.videoSummaries[videoThumb.Location].GenerateSummary();
@@ -717,7 +698,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			}
 			this.currentState = HolonetVideoTabState.PreView;
 			this.anims.ShowBlank();
-			if (this.lastPage == PageType.NONE | fromExternalTab)
+			if (this.lastPage == PageType.NONE || fromExternalTab)
 			{
 				this.lastPage = PageType.POSTVIEW;
 			}
@@ -749,7 +730,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			this.HideSharedUI();
 			this.postViewPage.ShowPage(guid);
 			this.anims.ShowVideoPostView();
-			if (this.lastPage == PageType.NONE | fromExternalTab)
+			if (this.lastPage == PageType.NONE || fromExternalTab)
 			{
 				this.lastPage = PageType.POSTVIEW;
 			}
@@ -987,14 +968,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			if (button == this.backToFeatured)
 			{
 				this.ShowFeaturedPage();
-				return;
 			}
-			if (button == this.toMoreVideos)
+			else if (button == this.toMoreVideos)
 			{
 				this.ShowSearchPage(null);
-				return;
 			}
-			if (button == this.shareCloseButton)
+			else if (button == this.shareCloseButton)
 			{
 				this.HidePostViewPage();
 				EventManager eventManager = Service.Get<EventManager>();
@@ -1002,14 +981,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 				if (this.lastPage == PageType.SEARCH)
 				{
 					this.ShowSearchPage(null);
-					return;
 				}
-				if (this.lastPage == PageType.FEATURED)
+				else if (this.lastPage == PageType.FEATURED)
 				{
 					this.ShowFeaturedPage();
-					return;
 				}
-				if (this.lastPage == PageType.POSTVIEW)
+				else if (this.lastPage == PageType.POSTVIEW)
 				{
 					this.ShowSharedUI();
 					if (this.screen.PreviousTab != null)
@@ -1044,7 +1021,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 					else
 					{
 						this.filters[current].filterOptions.Visible = true;
-						if ((ChoiceType)button.Tag == ChoiceType.Picker)
+						if ((int)button.Tag == 2)
 						{
 							string filterCardName = this.GetFilterCardName("MakerCardFiltersTop", this.filters[current].id);
 							UXLabel element = this.parentScreen.GetElement<UXLabel>("MakerLabelFilter" + filterCardName);
@@ -1104,38 +1081,30 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 					{
 						string filterCardName = this.GetFilterCardName("MakerCardFiltersTop", this.filters[current].id);
 						UXLabel element = this.parentScreen.GetElement<UXLabel>("MakerLabelCounterValueHQLevel" + filterCardName);
-						if ((PickerButtonType)button.Tag == PickerButtonType.SetType)
+						if ((int)button.Tag == 1)
 						{
 							this.filters[current].buttonLabel.Text = element.Text;
 							int choiceIdFromLabel = this.searchPage.GetChoiceIdFromLabel(this.filters[current].id, this.filters[current].buttonLabel.Text);
 							this.searchPage.OptionSelected(this.filters[current].id, choiceIdFromLabel);
 							this.filters[current].filterOptions.Visible = false;
-							break;
 						}
-						if ((PickerButtonType)button.Tag == PickerButtonType.Decrement)
+						else if ((int)button.Tag == 2)
 						{
 							string nextChoice = this.searchPage.GetNextChoice(this.filters[current].id, element.Text, true, true);
-							if (nextChoice != "")
+							if (nextChoice != string.Empty)
 							{
 								element.Text = nextChoice;
-								break;
 							}
-							break;
 						}
-						else
+						else if ((int)button.Tag == 3)
 						{
-							if ((PickerButtonType)button.Tag != PickerButtonType.Increment)
-							{
-								break;
-							}
 							string nextChoice2 = this.searchPage.GetNextChoice(this.filters[current].id, element.Text, false, true);
-							if (nextChoice2 != "")
+							if (nextChoice2 != string.Empty)
 							{
 								element.Text = nextChoice2;
-								break;
 							}
-							break;
 						}
+						break;
 					}
 				}
 			}
@@ -1146,9 +1115,8 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			if (this.currentState != HolonetVideoTabState.Search)
 			{
 				this.ShowSearchPage(this.searchInput.Text);
-				return;
 			}
-			if (this.searchPage != null)
+			else if (this.searchPage != null)
 			{
 				this.searchPage.SetKeywords(this.searchInput.Text);
 				this.searchPage.PerformSearch();
@@ -1159,7 +1127,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		{
 			if (this.featuredPage == null)
 			{
-				Service.Get<StaRTSLogger>().Error("No featured page to retry query");
+				Service.Get<Logger>().Error("No featured page to retry query");
 				return;
 			}
 			this.featuredPage.DoFeaturedQuery();
@@ -1169,7 +1137,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		{
 			if (this.searchPage == null)
 			{
-				Service.Get<StaRTSLogger>().Error("No search page to retry query");
+				Service.Get<Logger>().Error("No search page to retry query");
 				return;
 			}
 			this.searchPage.PerformSearch();
@@ -1189,298 +1157,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 
 		public override string GetBITabName()
 		{
-			string text = string.Empty;
+			string str = string.Empty;
 			if (this.currentState != HolonetVideoTabState.Invalid)
 			{
-				text = "_" + this.currentState.ToString().ToLower();
+				str = "_" + this.currentState.ToString().ToLower();
 			}
-			return "video" + text;
-		}
-
-		protected internal VideosHolonetTab(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).CanUpdateVideoSummaryStyle((VideoSummaryStyle)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).CloseAllDropdowns((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).CreateDynamicScrollingListItem((VideoSummaryData)GCHandledObjects.GCHandleToObject(*args), (DynamicScrollingList)GCHandledObjects.GCHandleToObject(args[1]), (UXElement)GCHandledObjects.GCHandleToObject(args[2]), (VideoSummaryData)GCHandledObjects.GCHandleToObject(args[3])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).CreateLoadingUI((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).GetBITabName());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).GetFilterCardName(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HideAllPages();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HideFeaturedPage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HideFeaturedSpinnerUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HidePostViewPage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HidePreViewPage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HideSearchPage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HideSearchSpinnerUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HideSharedUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).HideShareToSquad();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).InitChoices();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).InitDisplay();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnConfirmButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnDestroyTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnFilterButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnFilterChoiceClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnFilterPickerClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnMoreVideosClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnRetryFeatured((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnRetrySearch((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnSubmit();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnTabClose();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnTabOpen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupDropdownChoice((ChoiceData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupMessageFeatured((VideoSummaryData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupMessageSearch((VideoSummaryData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupSearchFilters();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupVideoSummaryFeatured((VideoSummaryData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupVideoSummaryPostView((VideoSummaryData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupVideoSummarySearch((VideoSummaryData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetVisibleByTabButton((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ShowFeaturedPage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ShowFeaturedSpinnerUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ShowPostViewPage(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ShowPostViewPage(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ShowPreViewPage(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ShowSearchPage(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ShowSearchSpinnerUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).ShowSharedUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((VideosHolonetTab)GCHandledObjects.GCHandleToObject(instance)).UpdateScrollArrowsDelayed((UXGrid)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
+			return "video" + str;
 		}
 	}
 }

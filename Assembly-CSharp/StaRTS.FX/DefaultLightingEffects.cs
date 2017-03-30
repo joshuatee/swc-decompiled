@@ -8,9 +8,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -99,9 +97,11 @@ namespace StaRTS.FX
 			if (this.planetLightingUid != null)
 			{
 				this.SetShaderColorsFromPlanetLightingVO(this.planetLightingUid);
-				return;
 			}
-			this.SetDefaultColors();
+			else
+			{
+				this.SetDefaultColors();
+			}
 		}
 
 		public override Color GetCurrentLightingColor(LightingColorType type)
@@ -111,7 +111,7 @@ namespace StaRTS.FX
 				return this.defaultColor;
 			}
 			DefaultLightingVO defaultLightingVO = Service.Get<IDataController>().Get<DefaultLightingVO>(this.planetVO.PlanetaryLighting);
-			string hexColor = "";
+			string hexColor = string.Empty;
 			switch (type)
 			{
 			case LightingColorType.BuildingColorDark:
@@ -163,56 +163,6 @@ namespace StaRTS.FX
 			string lightingColorShadow = defaultLightingVO.LightingColorShadow;
 			base.PLColorShadow = FXUtils.ConvertHexStringToColorObject(lightingColorShadow);
 			Shader.SetGlobalColor("_PL_Shadow", base.PLColorShadow);
-		}
-
-		protected internal DefaultLightingEffects(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefaultLightingEffects)GCHandledObjects.GCHandleToObject(instance)).GetCurrentLightingColor((LightingColorType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DefaultLightingEffects)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DefaultLightingEffects)GCHandledObjects.GCHandleToObject(instance)).RefreshShaderColors();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((DefaultLightingEffects)GCHandledObjects.GCHandleToObject(instance)).ResetPlanetColors();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((DefaultLightingEffects)GCHandledObjects.GCHandleToObject(instance)).SetDefaultColors();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((DefaultLightingEffects)GCHandledObjects.GCHandleToObject(instance)).SetShaderColorsFromPlanetLightingVO(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((DefaultLightingEffects)GCHandledObjects.GCHandleToObject(instance)).UpdateEnvironmentForPlanetaryLighting();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((DefaultLightingEffects)GCHandledObjects.GCHandleToObject(instance)).UpdateEnvironmentLighting(*(float*)args);
-			return -1L;
 		}
 	}
 }

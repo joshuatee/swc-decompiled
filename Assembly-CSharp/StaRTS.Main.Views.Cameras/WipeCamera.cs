@@ -5,9 +5,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Cameras
 {
@@ -49,14 +47,12 @@ namespace StaRTS.Main.Views.Cameras
 
 		private bool takingSnapshot;
 
-		private int snapshotFramesToWait;
+		private int snapshotFramesToWait = 4;
 
 		private bool continueWipeRequested;
 
-		public WipeCamera(Vector3 position)
+		public WipeCamera(Vector3 position) : base("Wipe", position, 12, 3)
 		{
-			this.snapshotFramesToWait = 4;
-			base..ctor("Wipe", position, 12, 3);
 			this.cameraManager = Service.Get<CameraManager>();
 		}
 
@@ -140,8 +136,8 @@ namespace StaRTS.Main.Views.Cameras
 			float num3 = Mathf.Abs(num) + Mathf.Abs(num2);
 			this.quadMaterial.SetFloat("_cos_sum", num / num3);
 			this.quadMaterial.SetFloat("_sin_sum", num2 / num3);
-			this.quadMaterial.SetFloat("_xedge", (num < 0f) ? 1f : 0f);
-			this.quadMaterial.SetFloat("_yedge", (num2 < 0f) ? 1f : 0f);
+			this.quadMaterial.SetFloat("_xedge", (num >= 0f) ? 0f : 1f);
+			this.quadMaterial.SetFloat("_yedge", (num2 >= 0f) ? 0f : 1f);
 			this.quadMaterial.SetFloat("_cx", centerX);
 			this.quadMaterial.SetFloat("_cy", centerY);
 			this.quadMaterial.SetFloat("_aspect", (float)Screen.width / (float)Screen.height);
@@ -415,178 +411,6 @@ namespace StaRTS.Main.Views.Cameras
 			{
 				this.StopWipe();
 			}
-		}
-
-		protected internal WipeCamera(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).ContinueWipe();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).DstCamerasAddHoloCamera();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).OnSnapShotTaken();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupCamerasForGalaxy((List<Camera>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupCamerasForWarBoard((List<Camera>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupDestinationWipeFromBaseToWarboard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupDestinationWipeFromWarboardToBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupStandardSourceCameras();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromBaseToBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromBaseToGalaxy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromBaseToWarboard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromGalaxyToBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromGalaxyToHyperspace();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromGalaxyToLoadingScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromHyperspaceToBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromIntroToBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromLoadingScreenToBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromLoadingScreenToWarboard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromStoryToLoadingScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromWarboardToBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SetupWipeFromWarboardToLoadingScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).SrcCamerasAddHoloCamera();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).StartEllipticalWipe((WipeTransition)(*(int*)args), *(float*)(args + 1), *(float*)(args + 2), (WipeCompleteDelegate)GCHandledObjects.GCHandleToObject(args[3]), GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).StartLinearWipe((WipeTransition)(*(int*)args), *(float*)(args + 1), (WipeCompleteDelegate)GCHandledObjects.GCHandleToObject(args[2]), GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).StartWipe(Marshal.PtrToStringUni(*(IntPtr*)args), (WipeTransition)(*(int*)(args + 1)), *(float*)(args + 2), *(float*)(args + 3), *(float*)(args + 4), (WipeCompleteDelegate)GCHandledObjects.GCHandleToObject(args[5]), GCHandledObjects.GCHandleToObject(args[6]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).StopWipe();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((WipeCamera)GCHandledObjects.GCHandleToObject(instance)).TakeSnapshotForDelayedWipe((WipeTransition)(*(int*)args), *(float*)(args + 1), (WipeCompleteDelegate)GCHandledObjects.GCHandleToObject(args[2]), GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
 		}
 	}
 }

@@ -8,7 +8,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -80,7 +79,7 @@ namespace StaRTS.Main.Controllers
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Deployable has unlockedByEvent but not upgradeShardUid {0} {1} {2}", new object[]
+					Service.Get<Logger>().ErrorFormat("Deployable has unlockedByEvent but not upgradeShardUid {0} {1} {2}", new object[]
 					{
 						currentVO.GetType(),
 						currentVO.UpgradeGroup,
@@ -108,16 +107,16 @@ namespace StaRTS.Main.Controllers
 		{
 			if (currentVO == null || nextVO == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Deployable upgrade data is null '{0}' '{1}'", new object[]
+				Service.Get<Logger>().ErrorFormat("Deployable upgrade data is null '{0}' '{1}'", new object[]
 				{
-					(currentVO == null) ? "null" : currentVO.GetType().ToString(),
-					(nextVO == null) ? "null" : nextVO.GetType().ToString()
+					(currentVO != null) ? currentVO.GetType().ToString() : "null",
+					(nextVO != null) ? nextVO.GetType().ToString() : "null"
 				});
 				return false;
 			}
 			if (currentVO.GetType() != nextVO.GetType())
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Deployable upgrade type differs from next type: {0} {1} {2} vs {3} {4} {5}", new object[]
+				Service.Get<Logger>().ErrorFormat("Deployable upgrade type differs from next type: {0} {1} {2} vs {3} {4} {5}", new object[]
 				{
 					currentVO.GetType(),
 					currentVO.UpgradeGroup,
@@ -346,7 +345,7 @@ namespace StaRTS.Main.Controllers
 				}
 				if (levelMap != null)
 				{
-					result = (levelMap.Has(vo) ? levelMap.GetLevel(vo.UpgradeGroup) : 0);
+					result = ((!levelMap.Has(vo)) ? 0 : levelMap.GetLevel(vo.UpgradeGroup));
 				}
 			}
 			return result;
@@ -357,14 +356,12 @@ namespace StaRTS.Main.Controllers
 			if (vo is BuildingTypeVO)
 			{
 				this.currentPlayer.UnlockedLevels.Buildings.SetLevel(vo);
-				return;
 			}
-			if (vo is TroopTypeVO)
+			else if (vo is TroopTypeVO)
 			{
 				this.currentPlayer.UnlockedLevels.Troops.SetLevel(vo);
-				return;
 			}
-			if (vo is SpecialAttackTypeVO)
+			else if (vo is SpecialAttackTypeVO)
 			{
 				this.currentPlayer.UnlockedLevels.Starships.SetLevel(vo);
 			}
@@ -419,119 +416,6 @@ namespace StaRTS.Main.Controllers
 				}
 				this.eventManager.SendEvent(EventId.InventoryUnlockUpdated, null);
 			}
-		}
-
-		protected internal UnlockController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).CanDeployableBeUpgraded((IDeployableVO)GCHandledObjects.GCHandleToObject(*args), (IDeployableVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentLevelUnlockedByReward((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((UnlockController)GCHandledObjects.GCHandleToObject(instance)).GrantBuildingUnlockReward((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((UnlockController)GCHandledObjects.GCHandleToObject(instance)).GrantSpecialAttackUnlockReward((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((UnlockController)GCHandledObjects.GCHandleToObject(instance)).GrantTroopUnlockReward((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((UnlockController)GCHandledObjects.GCHandleToObject(instance)).GrantUnlockByReward((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).HasUnlockedBuildingByReward((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).HasUnlockedBuildingByReward((GamePlayer)GCHandledObjects.GCHandleToObject(*args), (IUpgradeableVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).HasUnlockedByReward((GamePlayer)GCHandledObjects.GCHandleToObject(*args), (IUpgradeableVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).HasUnlockedByReward((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args), (LevelMap)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).HasUnlockedSpecialAttackByReward((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).HasUnlockedSpecialAttackByReward((GamePlayer)GCHandledObjects.GCHandleToObject(*args), (IUpgradeableVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).HasUnlockedTroopByReward((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).HasUnlockedTroopByReward((GamePlayer)GCHandledObjects.GCHandleToObject(*args), (IUpgradeableVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).IsMinLevelUnlocked((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).IsSpecialAttackUnlocked((GamePlayer)GCHandledObjects.GCHandleToObject(*args), (SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).IsTroopUnlocked((GamePlayer)GCHandledObjects.GCHandleToObject(*args), (TroopTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).IsUnlockedByRequirement((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).IsUpgradeableUnlocked((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).RequiresUnlockByEventReward((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UnlockController)GCHandledObjects.GCHandleToObject(instance)).VerifyUpgradeData((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args), (IUpgradeableVO)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

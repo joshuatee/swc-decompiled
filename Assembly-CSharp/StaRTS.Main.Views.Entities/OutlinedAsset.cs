@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -52,44 +51,6 @@ namespace StaRTS.Main.Views.Entities
 				this.shaderSwappedMaterials[i].SetFloat("_Outline", width);
 				i++;
 			}
-		}
-
-		public OutlinedAsset()
-		{
-		}
-
-		protected internal OutlinedAsset(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((OutlinedAsset)GCHandledObjects.GCHandleToObject(instance)).Init((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((OutlinedAsset)GCHandledObjects.GCHandleToObject(instance)).RemoveOutline();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((OutlinedAsset)GCHandledObjects.GCHandleToObject(instance)).SetColor(*(int*)args, *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((OutlinedAsset)GCHandledObjects.GCHandleToObject(instance)).SetOutlineColor(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((OutlinedAsset)GCHandledObjects.GCHandleToObject(instance)).SetOutlineWidth(*(float*)args);
-			return -1L;
 		}
 	}
 }

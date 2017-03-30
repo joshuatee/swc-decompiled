@@ -4,18 +4,11 @@ using StaRTS.Main.Utils;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Battle.Replay
 {
 	public class BattleAttributes : ISerializable
 	{
-		private List<string> deathLogUids;
-
-		private List<uint> deathLogTimes;
-
 		private const string BATTLE_ENDED_AT_KEY = "battleEndedAt";
 
 		private const string DAMAGE_PERCENTAGE_AT_KEY = "damagePercentage";
@@ -27,6 +20,10 @@ namespace StaRTS.Main.Models.Battle.Replay
 		private const string DEATH_LOG_DELIM = "_";
 
 		private const string DEATH_LOG_UNKNOWN = "unknown";
+
+		private List<string> deathLogUids;
+
+		private List<uint> deathLogTimes;
 
 		public uint BattleEndedAt
 		{
@@ -99,27 +96,27 @@ namespace StaRTS.Main.Models.Battle.Replay
 			}
 			if (dictionary.ContainsKey("battleEndedAt"))
 			{
-				this.BattleEndedAt = Convert.ToUInt32(dictionary["battleEndedAt"], CultureInfo.InvariantCulture);
+				this.BattleEndedAt = Convert.ToUInt32(dictionary["battleEndedAt"]);
 			}
 			if (dictionary.ContainsKey("damagePercentage"))
 			{
-				this.DamagePercentage = Convert.ToInt32(dictionary["damagePercentage"], CultureInfo.InvariantCulture);
+				this.DamagePercentage = Convert.ToInt32(dictionary["damagePercentage"]);
 			}
 			if (dictionary.ContainsKey("timeLeft"))
 			{
-				this.TimeLeft = Convert.ToInt32(dictionary["timeLeft"], CultureInfo.InvariantCulture);
+				this.TimeLeft = Convert.ToInt32(dictionary["timeLeft"]);
 			}
 			if (dictionary.ContainsKey("lootCreditsEarned"))
 			{
-				this.LootCreditsEarned = Convert.ToInt32(dictionary["lootCreditsEarned"], CultureInfo.InvariantCulture);
+				this.LootCreditsEarned = Convert.ToInt32(dictionary["lootCreditsEarned"]);
 			}
 			if (dictionary.ContainsKey("lootMaterialsEarned"))
 			{
-				this.LootMaterialsEarned = Convert.ToInt32(dictionary["lootMaterialsEarned"], CultureInfo.InvariantCulture);
+				this.LootMaterialsEarned = Convert.ToInt32(dictionary["lootMaterialsEarned"]);
 			}
 			if (dictionary.ContainsKey("lootContrabandEarned"))
 			{
-				this.LootContrabandEarned = Convert.ToInt32(dictionary["lootContrabandEarned"], CultureInfo.InvariantCulture);
+				this.LootContrabandEarned = Convert.ToInt32(dictionary["lootContrabandEarned"]);
 			}
 			if (dictionary.ContainsKey("deviceInfo"))
 			{
@@ -144,7 +141,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 							if (num >= 0)
 							{
 								string uid = text.Substring(0, num);
-								uint time = Convert.ToUInt32(text.Substring(num + 1), CultureInfo.InvariantCulture);
+								uint time = Convert.ToUInt32(text.Substring(num + 1));
 								this.InternalAddToDeathLog(uid, time);
 							}
 						}
@@ -160,12 +157,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 			List<string> list = new List<string>();
 			for (int i = 0; i < this.DeathLogCount; i++)
 			{
-				string item = string.Format("{0}{1}{2}", new object[]
-				{
-					this.deathLogUids[i],
-					"_",
-					this.deathLogTimes[i]
-				});
+				string item = string.Format("{0}{1}{2}", this.deathLogUids[i], "_", this.deathLogTimes[i]);
 				list.Add(item);
 			}
 			return Serializer.Start().Add<uint>("battleEndedAt", this.BattleEndedAt).Add<int>("damagePercentage", this.DamagePercentage).Add<int>("timeLeft", this.TimeLeft).Add<int>("lootCreditsEarned", this.LootCreditsEarned).Add<int>("lootMaterialsEarned", this.LootMaterialsEarned).Add<int>("lootContrabandEarned", this.LootContrabandEarned).AddArrayOfPrimitives<string>("deathLog", list).AddString("deviceInfo", this.DeviceInfo).End().ToString();
@@ -173,7 +165,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 
 		public static bool Equals(BattleAttributes attr1, BattleAttributes attr2)
 		{
-			if (attr1 == attr2)
+			if (object.ReferenceEquals(attr1, attr2))
 			{
 				return true;
 			}
@@ -211,8 +203,7 @@ namespace StaRTS.Main.Models.Battle.Replay
 			}
 			this.deathLogUids.Add(uid);
 			this.deathLogTimes.Add(time);
-			int deathLogCount = this.DeathLogCount;
-			this.DeathLogCount = deathLogCount + 1;
+			this.DeathLogCount++;
 		}
 
 		public void AddToDeathLog(SmartEntity entity, uint time)
@@ -240,108 +231,6 @@ namespace StaRTS.Main.Models.Battle.Replay
 		public void AddDeviceInfo()
 		{
 			this.DeviceInfo = GameUtils.GetDeviceInfo();
-		}
-
-		protected internal BattleAttributes(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).AddDeviceInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BattleAttributes.Equals((BattleAttributes)GCHandledObjects.GCHandleToObject(*args), (BattleAttributes)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).DamagePercentage);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).DeathLogCount);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).DeviceInfo);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).LootContrabandEarned);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).LootCreditsEarned);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).LootMaterialsEarned);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).TimeLeft);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).DamagePercentage = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).DeathLogCount = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).DeviceInfo = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).LootContrabandEarned = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).LootCreditsEarned = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).LootMaterialsEarned = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).TimeLeft = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleAttributes)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

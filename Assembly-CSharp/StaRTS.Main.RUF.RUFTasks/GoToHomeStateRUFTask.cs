@@ -2,7 +2,6 @@ using StaRTS.Main.Controllers.GameStates;
 using StaRTS.Main.Controllers.World;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.RUF.RUFTasks
 {
@@ -36,22 +35,6 @@ namespace StaRTS.Main.RUF.RUFTasks
 		private void OnHomeLoaded()
 		{
 			base.Process(this.continueProcessing);
-		}
-
-		protected internal GoToHomeStateRUFTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GoToHomeStateRUFTask)GCHandledObjects.GCHandleToObject(instance)).OnHomeLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GoToHomeStateRUFTask)GCHandledObjects.GCHandleToObject(instance)).Process(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

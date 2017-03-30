@@ -20,9 +20,5 @@ namespace StaRTS.Main.Models.Commands.Perks
 			}
 			return base.OnFailure(status, data);
 		}
-
-		protected internal PlayerPerkInvestCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

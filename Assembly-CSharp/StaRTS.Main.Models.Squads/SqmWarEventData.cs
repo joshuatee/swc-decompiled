@@ -31,13 +31,5 @@ namespace StaRTS.Main.Models.Squads
 		public string EmpireCrateId;
 
 		public string RebelCrateId;
-
-		public SqmWarEventData()
-		{
-		}
-
-		protected internal SqmWarEventData(UIntPtr dummy)
-		{
-		}
 	}
 }

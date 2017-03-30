@@ -7,21 +7,22 @@ using StaRTS.Main.Utils.Chat;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
-using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using System.Diagnostics;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Squads
 {
 	public class ChatServerAdapter : AbstractSquadServerAdapter
 	{
+		private const int WWW_MAX_RETRY_DEFAULT = 3;
+
+		private const float PUBLISH_TIMER_DELAY_DEFAULT = 2f;
+
 		private ChatSessionState sessionState;
 
 		private string sessionUrl;
@@ -40,11 +41,7 @@ namespace StaRTS.Main.Controllers.Squads
 
 		private int wwwRetryCount;
 
-		private const int WWW_MAX_RETRY_DEFAULT = 3;
-
 		private int wwwMaxRetry;
-
-		private const float PUBLISH_TIMER_DELAY_DEFAULT = 2f;
 
 		private float publishTimerDelay;
 
@@ -81,10 +78,7 @@ namespace StaRTS.Main.Controllers.Squads
 				string locale = Service.Get<Lang>().ExtractLanguageFromLocale();
 				string json = ChatSessionUtils.CreateSessionString(currentPlayer.PlayerId, currentPlayer.PlayerName, locale, num.ToString(), chatType, channelId);
 				this.signedSession = ChatSessionUtils.GetSignedString(json);
-				this.channelUrl = string.Format("https://startswin-prod-chat-manager.playdom.com/dsg/chat/v1/strtw/getChannel?session={0}", new object[]
-				{
-					this.signedSession
-				});
+				this.channelUrl = string.Format("https://n7-starts-prod-chat-manager.playdom.com/dsg/chat/v1/starts/getChannel?session={0}", this.signedSession);
 				Service.Get<Engine>().StartCoroutine(this.ConnectToChannel());
 			}
 		}
@@ -100,8 +94,8 @@ namespace StaRTS.Main.Controllers.Squads
 
 		public override void Enable(SquadController.SquadMsgsCallback callback, float pollFrequency)
 		{
-			this.wwwMaxRetry = ((GameConstants.WWW_MAX_RETRY == 0) ? 3 : GameConstants.WWW_MAX_RETRY);
-			this.publishTimerDelay = ((GameConstants.PUBLISH_TIMER_DELAY == 0) ? 2f : ((float)GameConstants.PUBLISH_TIMER_DELAY));
+			this.wwwMaxRetry = ((GameConstants.WWW_MAX_RETRY != 0) ? GameConstants.WWW_MAX_RETRY : 3);
+			this.publishTimerDelay = ((GameConstants.PUBLISH_TIMER_DELAY != 0) ? ((float)GameConstants.PUBLISH_TIMER_DELAY) : 2f);
 			base.Enable(callback, pollFrequency);
 		}
 
@@ -115,11 +109,7 @@ namespace StaRTS.Main.Controllers.Squads
 			this.list.Clear();
 			this.list.Add(item);
 			this.callback(this.list);
-			string item2 = string.Format("https://startswin-prod-chat-manager.playdom.com/dsg/chat/v1/strtw/postMessage?session={0}&message={1}", new object[]
-			{
-				this.signedSession,
-				WWW.EscapeURL(message)
-			});
+			string item2 = string.Format("https://n7-starts-prod-chat-manager.playdom.com/dsg/chat/v1/starts/postMessage?session={0}&message={1}", this.signedSession, WWW.EscapeURL(message));
 			this.queuedPublishUrls.Enqueue(item2);
 			if (this.publishTimerId == 0u)
 			{
@@ -165,107 +155,30 @@ namespace StaRTS.Main.Controllers.Squads
 			}
 		}
 
-		[IteratorStateMachine(typeof(ChatServerAdapter.<ConnectToChannel>d__22))]
+		[DebuggerHidden]
 		private IEnumerator ConnectToChannel()
 		{
-			WWW wWW = new WWW(this.channelUrl);
-			WWWManager.Add(wWW);
-			yield return wWW;
-			if (WWWManager.Remove(wWW) && this.sessionState == ChatSessionState.Connecting)
-			{
-				string error = wWW.error;
-				string text = wWW.text;
-				if (error == null)
-				{
-					this.wwwRetryCount = 0;
-					this.sessionState = ChatSessionState.Connected;
-					this.sessionUrl = ChatSessionUtils.GetSessionUrlFromChannelResponse(text);
-					if (!string.IsNullOrEmpty(this.sessionUrl))
-					{
-						this.Poll();
-					}
-					else
-					{
-						Service.Get<StaRTSLogger>().Error("Invalid chat channel response: " + text);
-					}
-				}
-				else
-				{
-					int num = this.wwwRetryCount + 1;
-					this.wwwRetryCount = num;
-					if (num < this.wwwMaxRetry)
-					{
-						this.ReconnectSession();
-						Service.Get<StaRTSLogger>().Warn("Unable to start chat session. Retrying: " + error);
-					}
-					else
-					{
-						this.sessionState = ChatSessionState.Disconnected;
-						Service.Get<StaRTSLogger>().Warn("Unable to start chat session: " + error);
-					}
-				}
-			}
-			wWW.Dispose();
-			yield break;
+			ChatServerAdapter.<ConnectToChannel>c__Iterator16 <ConnectToChannel>c__Iterator = new ChatServerAdapter.<ConnectToChannel>c__Iterator16();
+			<ConnectToChannel>c__Iterator.<>f__this = this;
+			return <ConnectToChannel>c__Iterator;
 		}
 
-		[IteratorStateMachine(typeof(ChatServerAdapter.<PullMessages>d__23))]
+		[DebuggerHidden]
 		private IEnumerator PullMessages()
 		{
-			string url = this.sessionUrl + this.sessionTimeTag;
-			uint num = this.pullRequestId;
-			WWW wWW = new WWW(url);
-			WWWManager.Add(wWW);
-			yield return wWW;
-			if (WWWManager.Remove(wWW) && num == this.pullRequestId)
-			{
-				if (wWW.error == null)
-				{
-					this.OnPollFinished(wWW.text);
-				}
-				else if (this.sessionState == ChatSessionState.Connected)
-				{
-					this.OnPollFinished(null);
-				}
-				else
-				{
-					this.ReconnectSession();
-					Service.Get<StaRTSLogger>().Warn("Unable to pull chat messages. Reconnecting: " + wWW.error);
-				}
-			}
-			wWW.Dispose();
-			yield break;
+			ChatServerAdapter.<PullMessages>c__Iterator17 <PullMessages>c__Iterator = new ChatServerAdapter.<PullMessages>c__Iterator17();
+			<PullMessages>c__Iterator.<>f__this = this;
+			return <PullMessages>c__Iterator;
 		}
 
-		[IteratorStateMachine(typeof(ChatServerAdapter.<Publish>d__24))]
+		[DebuggerHidden]
 		private IEnumerator Publish(string url)
 		{
-			WWW wWW = new WWW(url);
-			WWWManager.Add(wWW);
-			yield return wWW;
-			if (WWWManager.Remove(wWW))
-			{
-				if (wWW.error == null)
-				{
-					this.wwwRetryCount = 0;
-				}
-				else
-				{
-					int num = this.wwwRetryCount + 1;
-					this.wwwRetryCount = num;
-					if (num < this.wwwMaxRetry)
-					{
-						Service.Get<Engine>().StartCoroutine(this.Publish(url));
-						Service.Get<StaRTSLogger>().Warn("Unable to publish chat message. Retrying: " + wWW.error);
-					}
-					else
-					{
-						Service.Get<StaRTSLogger>().Warn("Unable to publish chat: " + wWW.error);
-					}
-				}
-			}
-			wWW.Dispose();
-			yield break;
+			ChatServerAdapter.<Publish>c__Iterator18 <Publish>c__Iterator = new ChatServerAdapter.<Publish>c__Iterator18();
+			<Publish>c__Iterator.url = url;
+			<Publish>c__Iterator.<$>url = url;
+			<Publish>c__Iterator.<>f__this = this;
+			return <Publish>c__Iterator;
 		}
 
 		protected override void PopulateSquadMsgsReceived(object response)
@@ -287,12 +200,15 @@ namespace StaRTS.Main.Controllers.Squads
 				while (i < count)
 				{
 					SquadMsg squadMsg2 = SquadMsgUtils.GenerateMessageFromChatObject(list[i]);
-					if (squadMsg2 != null && this.IsMsgValid(squadMsg2))
+					if (squadMsg2 != null)
 					{
-						this.list.Add(squadMsg2);
-						if (squadMsg == null || squadMsg2.TimeSent > squadMsg.TimeSent)
+						if (this.IsMsgValid(squadMsg2))
 						{
-							squadMsg = squadMsg2;
+							this.list.Add(squadMsg2);
+							if (squadMsg == null || squadMsg2.TimeSent > squadMsg.TimeSent)
+							{
+								squadMsg = squadMsg2;
+							}
 						}
 					}
 					i++;
@@ -300,12 +216,8 @@ namespace StaRTS.Main.Controllers.Squads
 			}
 			if (squadMsg != null && squadMsg.ChatData != null)
 			{
-				string text2 = WWW.EscapeURL(squadMsg.ChatData.Time).Replace("+", "%20");
-				this.sessionTimeTag = string.Format("&tag={0}&time={1}", new object[]
-				{
-					squadMsg.ChatData.Tag,
-					text2
-				});
+				string arg = WWW.EscapeURL(squadMsg.ChatData.Time).Replace("+", "%20");
+				this.sessionTimeTag = string.Format("&tag={0}&time={1}", squadMsg.ChatData.Tag, arg);
 			}
 		}
 
@@ -313,78 +225,6 @@ namespace StaRTS.Main.Controllers.Squads
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			return msg.OwnerData == null || !(currentPlayer.PlayerId == msg.OwnerData.PlayerId) || currentPlayer.LoginTime >= msg.TimeSent;
-		}
-
-		protected internal ChatServerAdapter(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).ConnectToChannel());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Disable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Enable((SquadController.SquadMsgsCallback)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).IsMsgValid((SquadMsg)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Poll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).PopulateSquadMsgsReceived(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Publish(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).PublishMessage(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).PullMessages());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).ReconnectSession();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ChatServerAdapter)GCHandledObjects.GCHandleToObject(instance)).StartSession((ChatType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
 		}
 	}
 }

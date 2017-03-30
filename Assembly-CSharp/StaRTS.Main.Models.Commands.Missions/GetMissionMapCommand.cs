@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Missions
 		public GetMissionMapCommand(MissionIdRequest request) : base("player.missions.missionMap", request, new GetMissionMapResponse())
 		{
 		}
-
-		protected internal GetMissionMapCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

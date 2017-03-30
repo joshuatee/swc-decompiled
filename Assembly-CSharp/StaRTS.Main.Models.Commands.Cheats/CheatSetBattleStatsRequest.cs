@@ -4,7 +4,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Cheats
 {
@@ -22,17 +21,8 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		{
 			Serializer serializer = Serializer.Start();
 			serializer.AddString("playerId", base.PlayerId);
-			serializer.Add<int>(this.argument.get_Key(), this.argument.get_Value());
+			serializer.Add<int>(this.argument.Key, this.argument.Value);
 			return serializer.End().ToString();
-		}
-
-		protected internal CheatSetBattleStatsRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CheatSetBattleStatsRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

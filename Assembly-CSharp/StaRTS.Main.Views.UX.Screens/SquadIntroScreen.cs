@@ -5,7 +5,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Main.Views.UX.Screens.Leaderboard;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -46,9 +45,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.InitButtons();
 			UXTexture element = base.GetElement<UXTexture>("SquadImage");
 			FactionType faction = Service.Get<CurrentPlayer>().Faction;
-			if (faction != FactionType.Empire)
+			FactionType factionType = faction;
+			if (factionType != FactionType.Empire)
 			{
-				if (faction == FactionType.Rebel)
+				if (factionType == FactionType.Rebel)
 				{
 					element.LoadTexture("SquadIntro_r");
 				}
@@ -86,34 +86,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			Service.Get<ScreenController>().AddScreen(new SquadJoinScreen());
 			this.Close(null);
-		}
-
-		protected internal SquadIntroScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadIntroScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadIntroScreen)GCHandledObjects.GCHandleToObject(instance)).OnCreateClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadIntroScreen)GCHandledObjects.GCHandleToObject(instance)).OnJoinClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadIntroScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
 		}
 	}
 }

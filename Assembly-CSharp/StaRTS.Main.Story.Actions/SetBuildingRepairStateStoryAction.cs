@@ -8,9 +8,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -46,7 +44,7 @@ namespace StaRTS.Main.Story.Actions
 				2,
 				6
 			});
-			this.repairPercent = (float)Convert.ToInt32(this.prepareArgs[0], CultureInfo.InvariantCulture) / 100f;
+			this.repairPercent = (float)Convert.ToInt32(this.prepareArgs[0]) / 100f;
 			if (this.prepareArgs.Length >= 2)
 			{
 				this.type = StringUtils.ParseEnum<BuildingType>(this.prepareArgs[1]);
@@ -57,7 +55,7 @@ namespace StaRTS.Main.Story.Actions
 			}
 			if (this.prepareArgs.Length >= 6)
 			{
-				this.area = new Rect((float)Convert.ToInt32(this.prepareArgs[2], CultureInfo.InvariantCulture), (float)Convert.ToInt32(this.prepareArgs[3], CultureInfo.InvariantCulture), (float)Convert.ToInt32(this.prepareArgs[4], CultureInfo.InvariantCulture), (float)Convert.ToInt32(this.prepareArgs[5], CultureInfo.InvariantCulture));
+				this.area = new Rect((float)Convert.ToInt32(this.prepareArgs[2]), (float)Convert.ToInt32(this.prepareArgs[3]), (float)Convert.ToInt32(this.prepareArgs[4]), (float)Convert.ToInt32(this.prepareArgs[5]));
 			}
 			else
 			{
@@ -81,22 +79,6 @@ namespace StaRTS.Main.Story.Actions
 			}
 			Service.Get<EntityController>().GetViewSystem<HealthRenderSystem>().ForceUpdate();
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal SetBuildingRepairStateStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SetBuildingRepairStateStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SetBuildingRepairStateStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

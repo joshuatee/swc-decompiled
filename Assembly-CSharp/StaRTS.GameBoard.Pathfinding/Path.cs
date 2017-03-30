@@ -12,12 +12,19 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.GameBoard.Pathfinding
 {
 	public class Path
 	{
+		public const int DIST_STRAIGHT = 1000;
+
+		public const int DIST_DIAGONAL = 1414;
+
+		public const int MAX_SPEED_NORMALIZER = 10;
+
+		private const int DIR_LEN = 8;
+
 		private List<BoardCell<Entity>> pathCells;
 
 		private List<BoardCell<Entity>> turns;
@@ -35,12 +42,6 @@ namespace StaRTS.GameBoard.Pathfinding
 		private Board<Entity> board;
 
 		private PathingManager pathingManager;
-
-		public const int DIST_STRAIGHT = 1000;
-
-		public const int DIST_DIAGONAL = 1414;
-
-		public const int MAX_SPEED_NORMALIZER = 10;
 
 		private int damagePerSecond;
 
@@ -63,8 +64,6 @@ namespace StaRTS.GameBoard.Pathfinding
 		private bool isHealer;
 
 		private uint targetInRangeModifier;
-
-		private const int DIR_LEN = 8;
 
 		private static readonly int[] dirX;
 
@@ -100,9 +99,46 @@ namespace StaRTS.GameBoard.Pathfinding
 			}
 		}
 
-		public BoardCell<Entity> GetDestCell()
+		public Path(BoardCell<Entity> fromCell, BoardCell<Entity> toCell, BoardCell<Entity> targetAt, int maxLength, PathTroopParams troopParams, PathBoardParams boardParams)
 		{
-			return this.destCell;
+			this.pathCells = new List<BoardCell<Entity>>();
+			this.turns = new List<BoardCell<Entity>>();
+			this.turnDistances = new List<int>();
+			BoardController boardController = Service.Get<BoardController>();
+			this.board = boardController.Board;
+			this.pathingManager = Service.Get<PathingManager>();
+			this.startCell = fromCell;
+			this.destCell = toCell;
+			this.targetCell = targetAt;
+			this.NoWall = (boardParams.IgnoreWall || troopParams.CrushesWalls);
+			this.crushesWalls = troopParams.CrushesWalls;
+			this.destructible = boardParams.Destructible;
+			this.isHealer = troopParams.IsHealer;
+			this.TroopWidth = troopParams.TroopWidth;
+			this.damagePerSecond = troopParams.DPS;
+			this.maxShooterRange = troopParams.MaxRange;
+			this.targetInRangeModifier = troopParams.TargetInRangeModifier;
+			if (this.isHealer && this.maxShooterRange > troopParams.SupportRange)
+			{
+				this.maxShooterRange = troopParams.SupportRange;
+			}
+			this.minShooterRange = troopParams.MinRange;
+			this.maxSpeed = troopParams.MaxSpeed;
+			this.heristicMultiplier = (int)troopParams.PathSearchWidth;
+			this.maxPathLength = ((!this.isHealer) ? maxLength : -1);
+			this.melee = troopParams.IsMelee;
+			this.overWalls = troopParams.IsOverWall;
+			this.projectileType = troopParams.ProjectileType;
+			this.isTargetShield = troopParams.IsTargetShield;
+			this.openCells = new HeapPriorityQueue<PathfindingCellInfo>(boardController.GetPriorityQueueSize());
+			this.curPathingCell = this.pathingManager.GetPathingCell();
+			this.curPathingCell.Cell = this.startCell;
+			this.startCell.PathInfo = this.curPathingCell;
+			this.curPathingCell.InRange = this.InRangeOfTarget(this.startCell);
+			this.curPathingCell.RemainingCost = this.HeuristicDiagonal(this.startCell, this.destCell);
+			this.curPathingCell.PathLength = 0;
+			this.curPathingCell.PastCost = 0;
+			this.curPathingCell.InClosedSet = true;
 		}
 
 		static Path()
@@ -136,46 +172,9 @@ namespace StaRTS.GameBoard.Pathfinding
 			}
 		}
 
-		public Path(BoardCell<Entity> fromCell, BoardCell<Entity> toCell, BoardCell<Entity> targetAt, int maxLength, PathTroopParams troopParams, PathBoardParams boardParams)
+		public BoardCell<Entity> GetDestCell()
 		{
-			this.pathCells = new List<BoardCell<Entity>>();
-			this.turns = new List<BoardCell<Entity>>();
-			this.turnDistances = new List<int>();
-			BoardController boardController = Service.Get<BoardController>();
-			this.board = boardController.Board;
-			this.pathingManager = Service.Get<PathingManager>();
-			this.startCell = fromCell;
-			this.destCell = toCell;
-			this.targetCell = targetAt;
-			this.NoWall = (boardParams.IgnoreWall || troopParams.CrushesWalls);
-			this.crushesWalls = troopParams.CrushesWalls;
-			this.destructible = boardParams.Destructible;
-			this.isHealer = troopParams.IsHealer;
-			this.TroopWidth = troopParams.TroopWidth;
-			this.damagePerSecond = troopParams.DPS;
-			this.maxShooterRange = troopParams.MaxRange;
-			this.targetInRangeModifier = troopParams.TargetInRangeModifier;
-			if (this.isHealer && this.maxShooterRange > troopParams.SupportRange)
-			{
-				this.maxShooterRange = troopParams.SupportRange;
-			}
-			this.minShooterRange = troopParams.MinRange;
-			this.maxSpeed = troopParams.MaxSpeed;
-			this.heristicMultiplier = (int)troopParams.PathSearchWidth;
-			this.maxPathLength = (this.isHealer ? -1 : maxLength);
-			this.melee = troopParams.IsMelee;
-			this.overWalls = troopParams.IsOverWall;
-			this.projectileType = troopParams.ProjectileType;
-			this.isTargetShield = troopParams.IsTargetShield;
-			this.openCells = new HeapPriorityQueue<PathfindingCellInfo>(boardController.GetPriorityQueueSize());
-			this.curPathingCell = this.pathingManager.GetPathingCell();
-			this.curPathingCell.Cell = this.startCell;
-			this.startCell.PathInfo = this.curPathingCell;
-			this.curPathingCell.InRange = this.InRangeOfTarget(this.startCell);
-			this.curPathingCell.RemainingCost = this.HeuristicDiagonal(this.startCell, this.destCell);
-			this.curPathingCell.PathLength = 0;
-			this.curPathingCell.PastCost = 0;
-			this.curPathingCell.InClosedSet = true;
+			return this.destCell;
 		}
 
 		public BoardCell<Entity> GetCell(int index)
@@ -213,9 +212,9 @@ namespace StaRTS.GameBoard.Pathfinding
 			int num = curCell.X + halfWidthForOffset;
 			int num2 = curCell.Z + halfWidthForOffset;
 			int num3 = num - x;
-			int num4 = num3 + ((num3 > 0) ? 1 : -1);
+			int num4 = num3 + ((num3 <= 0) ? -1 : 1);
 			int num5 = num2 - z;
-			int num6 = num5 + ((num5 > 0) ? 1 : -1);
+			int num6 = num5 + ((num5 <= 0) ? -1 : 1);
 			int num7 = num4 * num4 + num6 * num6;
 			num7 *= 1;
 			int num8 = num3 * num3 + num5 * num5;
@@ -282,7 +281,7 @@ namespace StaRTS.GameBoard.Pathfinding
 		{
 			if (rawTurns.Count == 0)
 			{
-				Service.Get<StaRTSLogger>().Error("SmoothThePath: Not expecting empty path!");
+				Service.Get<Logger>().Error("SmoothThePath: Not expecting empty path!");
 				return;
 			}
 			pathCells.Add(rawTurns[0]);
@@ -336,10 +335,10 @@ namespace StaRTS.GameBoard.Pathfinding
 								{
 									if (!this.destructible)
 									{
-										int num4 = this.NoWall ? boardCell.ClearanceNoWall : boardCell.Clearance;
+										int num4 = (!this.NoWall) ? boardCell.Clearance : boardCell.ClearanceNoWall;
 										if (this.TroopWidth > num4)
 										{
-											goto IL_278;
+											goto IL_2A2;
 										}
 									}
 									int num5 = this.CostToNeighbor(cell, boardCell, list);
@@ -354,7 +353,7 @@ namespace StaRTS.GameBoard.Pathfinding
 											{
 												if (!this.openCells.Contains(pathfindingCellInfo))
 												{
-													Service.Get<StaRTSLogger>().ErrorFormat("Allocated cell not in close/open sets,PoolIndex:{0}, FreeIndex:{1}", new object[]
+													Service.Get<Logger>().ErrorFormat("Allocated cell not in close/open sets,PoolIndex:{0}, FreeIndex:{1}", new object[]
 													{
 														pathfindingCellInfo.PoolIndex,
 														this.pathingManager.FreeCellIndex
@@ -389,7 +388,7 @@ namespace StaRTS.GameBoard.Pathfinding
 								}
 							}
 						}
-						IL_278:;
+						IL_2A2:;
 					}
 				}
 				if (this.openCells.Count == 0)
@@ -418,7 +417,7 @@ namespace StaRTS.GameBoard.Pathfinding
 			int count = list.Count;
 			if (count == 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Empth Path from {0} to {1} within range {2}", new object[]
+				Service.Get<Logger>().ErrorFormat("Empth Path from {0} to {1} within range {2}", new object[]
 				{
 					this.startCell,
 					this.destCell,
@@ -427,7 +426,7 @@ namespace StaRTS.GameBoard.Pathfinding
 			}
 			if (list[count - 1] != this.startCell)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("First cell doesn't match: {0} and {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("First cell doesn't match: {0} and {1}", new object[]
 				{
 					this.startCell,
 					list[count - 1]
@@ -452,7 +451,7 @@ namespace StaRTS.GameBoard.Pathfinding
 				num = 1000;
 			}
 			int num2 = num * 10 / this.maxSpeed;
-			int num3 = this.TroopWidth - (this.NoWall ? toCell.ClearanceNoWall : toCell.Clearance);
+			int num3 = this.TroopWidth - ((!this.NoWall) ? toCell.Clearance : toCell.ClearanceNoWall);
 			if (num3 > 0)
 			{
 				int num4 = this.RasterCrossSection(fromCell.X, fromCell.Z, toCell.X, toCell.Z, this.TroopWidth, cells);
@@ -460,41 +459,44 @@ namespace StaRTS.GameBoard.Pathfinding
 				{
 					BoardCell<Entity> boardCell = cells[i];
 					uint flags = boardCell.Flags;
-					if ((flags & 3u) != 0u && (!this.NoWall || (flags & 1u) != 0u))
+					if ((flags & 3u) != 0u)
 					{
-						if ((flags & 64u) != 0u || this.isHealer)
+						if (!this.NoWall || (flags & 1u) != 0u)
 						{
-							num2 = 2147483647;
-							break;
-						}
-						HealthComponent buildingHealth = boardCell.BuildingHealth;
-						if (buildingHealth != null && this.damagePerSecond != 0)
-						{
-							ArmorType armorType = buildingHealth.ArmorType;
-							int num5 = 100;
-							if (this.projectileType != null)
-							{
-								int num6 = this.projectileType.DamageMultipliers[(int)armorType];
-								if (num6 >= 0)
-								{
-									num5 = num6;
-								}
-								else
-								{
-									Service.Get<StaRTSLogger>().ErrorFormat("ArmorType {0} not found in ProjectileType {1}", new object[]
-									{
-										armorType,
-										this.projectileType.Uid
-									});
-								}
-							}
-							int num7 = this.damagePerSecond * num5 / 100;
-							if (num7 <= 0)
+							if ((flags & 64u) != 0u || this.isHealer)
 							{
 								num2 = 2147483647;
 								break;
 							}
-							num2 += buildingHealth.Health * 1000 / num7;
+							HealthComponent buildingHealth = boardCell.BuildingHealth;
+							if (buildingHealth != null && this.damagePerSecond != 0)
+							{
+								ArmorType armorType = buildingHealth.ArmorType;
+								int num5 = 100;
+								if (this.projectileType != null)
+								{
+									int num6 = this.projectileType.DamageMultipliers[(int)armorType];
+									if (num6 >= 0)
+									{
+										num5 = num6;
+									}
+									else
+									{
+										Service.Get<Logger>().ErrorFormat("ArmorType {0} not found in ProjectileType {1}", new object[]
+										{
+											armorType,
+											this.projectileType.Uid
+										});
+									}
+								}
+								int num7 = this.damagePerSecond * num5 / 100;
+								if (num7 <= 0)
+								{
+									num2 = 2147483647;
+									break;
+								}
+								num2 += buildingHealth.Health * 1000 / num7;
+							}
 						}
 					}
 				}
@@ -538,23 +540,25 @@ namespace StaRTS.GameBoard.Pathfinding
 			{
 				return;
 			}
-			if (!cell.IsWalkableNoWall() || ((!this.NoWall || (this.crushesWalls & isPathingCell)) && (isPathingCell || !this.overWalls) && !cell.IsWalkable()))
+			if (!cell.IsWalkableNoWall() || ((!this.NoWall || (this.crushesWalls && isPathingCell)) && (isPathingCell || !this.overWalls) && !cell.IsWalkable()))
 			{
-				using (IEnumerator<BoardItem<Entity>> enumerator = cell.Children.GetEnumerator())
+				foreach (BoardItem<Entity> current in cell.Children)
 				{
-					while (enumerator.MoveNext())
+					if (current.Data.Has(typeof(HealthComponent)))
 					{
-						BoardItem<Entity> current = enumerator.get_Current();
-						if (current.Data.Has(typeof(HealthComponent)) && entityIds.Add(current.Data.ID) && current.Data.ID != targetId)
+						if (entityIds.Add(current.Data.ID))
 						{
-							SmartEntity smartEntity = (SmartEntity)current.Data;
-							if (smartEntity.BuildingComp != null && smartEntity.BuildingComp.BuildingType.Type == BuildingType.Wall && this.crushesWalls)
+							if (current.Data.ID != targetId)
 							{
-								wallList.AddLast(current.Data);
-							}
-							else
-							{
-								list.AddLast(current.Data);
+								SmartEntity smartEntity = (SmartEntity)current.Data;
+								if (smartEntity.BuildingComp != null && smartEntity.BuildingComp.BuildingType.Type == BuildingType.Wall && this.crushesWalls)
+								{
+									wallList.AddLast(current.Data);
+								}
+								else
+								{
+									list.AddLast(current.Data);
+								}
 							}
 						}
 					}
@@ -708,7 +712,7 @@ namespace StaRTS.GameBoard.Pathfinding
 			for (int i = 0; i < this.pathCells.Count; i++)
 			{
 				BoardCell<Entity> boardCell = this.pathCells[i];
-				int num = (this.NoWall && !this.crushesWalls) ? boardCell.ClearanceNoWall : boardCell.Clearance;
+				int num = (!this.NoWall || this.crushesWalls) ? boardCell.Clearance : boardCell.ClearanceNoWall;
 				if (num < this.TroopWidth)
 				{
 					int x;
@@ -746,21 +750,17 @@ namespace StaRTS.GameBoard.Pathfinding
 				bool flag = true;
 				if (this.isTargetShield)
 				{
-					using (IEnumerator<BoardItem<Entity>> enumerator = this.targetCell.Children.GetEnumerator())
+					foreach (BoardItem<Entity> current in this.targetCell.Children)
 					{
-						while (enumerator.MoveNext())
+						if (GameUtils.IsEntityShieldGenerator((SmartEntity)current.Data))
 						{
-							BoardItem<Entity> current = enumerator.get_Current();
-							if (GameUtils.IsEntityShieldGenerator((SmartEntity)current.Data))
-							{
-								smartEntity = (SmartEntity)current.Data;
-								break;
-							}
+							smartEntity = (SmartEntity)current.Data;
+							break;
 						}
 					}
 					if (smartEntity == null)
 					{
-						Service.Get<StaRTSLogger>().Error("Pathing believes target is shield generator, however targetCell does not have shield generator entity.");
+						Service.Get<Logger>().Error("Pathing believes target is shield generator, however targetCell does not have shield generator entity.");
 					}
 					else
 					{
@@ -768,11 +768,13 @@ namespace StaRTS.GameBoard.Pathfinding
 					}
 				}
 				this.RasterLine(num4, num5, this.targetCell.X, this.targetCell.Z, list, out num2, out num3);
-				int num6 = 0;
-				while (num6 < list.Count - 1 && (!this.isTargetShield || flag || !Service.Get<ShieldController>().IsPositionUnderShield(list[num6].X, list[num6].Z, smartEntity)))
+				for (int k = 0; k < list.Count - 1; k++)
 				{
-					this.AddEntitiesOnCellToBlockingList(list[num6], targetId, entityIds, linkedList, linkedList2, false);
-					num6++;
+					if (this.isTargetShield && !flag && Service.Get<ShieldController>().IsPositionUnderShield(list[k].X, list[k].Z, smartEntity))
+					{
+						break;
+					}
+					this.AddEntitiesOnCellToBlockingList(list[k], targetId, entityIds, linkedList, linkedList2, false);
 				}
 			}
 			wallListForCrushing = linkedList2;
@@ -781,9 +783,9 @@ namespace StaRTS.GameBoard.Pathfinding
 
 		private void RasterLine(int x0, int y0, int x1, int y1, List<BoardCell<Entity>> cells, out int flatDist, out int diagDist)
 		{
-			int num = (x1 > x0) ? 1 : -1;
+			int num = (x1 <= x0) ? -1 : 1;
 			int num2 = (x1 - x0) * num;
-			int num3 = (y1 > y0) ? 1 : -1;
+			int num3 = (y1 <= y0) ? -1 : 1;
 			int num4 = (y1 - y0) * num3;
 			flatDist = 0;
 			diagDist = 0;
@@ -811,113 +813,32 @@ namespace StaRTS.GameBoard.Pathfinding
 					}
 					this.AddCell(num8, num9, cells);
 				}
-				return;
 			}
-			int num10 = num2 * 2 - num4;
-			int num11 = num2 * 2;
-			int num12 = (num2 - num4) * 2;
-			int num13 = x0;
-			int num14 = y0;
-			while (num14 != y1)
+			else
 			{
-				if (num10 <= 0)
+				int num10 = num2 * 2 - num4;
+				int num11 = num2 * 2;
+				int num12 = (num2 - num4) * 2;
+				int num13 = x0;
+				int num14 = y0;
+				while (num14 != y1)
 				{
-					num10 += num11;
-					num14 += num3;
-					flatDist++;
+					if (num10 <= 0)
+					{
+						num10 += num11;
+						num14 += num3;
+						flatDist++;
+					}
+					else
+					{
+						num10 += num12;
+						num13 += num;
+						num14 += num3;
+						diagDist++;
+					}
+					this.AddCell(num13, num14, cells);
 				}
-				else
-				{
-					num10 += num12;
-					num13 += num;
-					num14 += num3;
-					diagDist++;
-				}
-				this.AddCell(num13, num14, cells);
 			}
-		}
-
-		protected internal Path(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((Path)GCHandledObjects.GCHandleToObject(instance)).AddCell(*(int*)args, *(int*)(args + 1), (List<BoardCell<Entity>>)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((Path)GCHandledObjects.GCHandleToObject(instance)).AddTurn((BoardCell<Entity>)GCHandledObjects.GCHandleToObject(*args), (BoardCell<Entity>)GCHandledObjects.GCHandleToObject(args[1]), (List<BoardCell<Entity>>)GCHandledObjects.GCHandleToObject(args[2]), (List<BoardCell<Entity>>)GCHandledObjects.GCHandleToObject(args[3]), (List<int>)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).CostToNeighbor((BoardCell<Entity>)GCHandledObjects.GCHandleToObject(*args), (BoardCell<Entity>)GCHandledObjects.GCHandleToObject(args[1]), (List<BoardCell<Entity>>)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((Path)GCHandledObjects.GCHandleToObject(instance)).EndCurrentPath((PathingComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).FindTheTurns((List<BoardCell<Entity>>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).CellCount);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).TurnCount);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).GetCell(*(int*)args));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).GetDestCell());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).GetTurn(*(int*)args));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).GetTurnDistance(*(int*)args));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).HeuristicDiagonal((BoardCell<Entity>)GCHandledObjects.GCHandleToObject(*args), (BoardCell<Entity>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).InRangeOfTarget((BoardCell<Entity>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Path)GCHandledObjects.GCHandleToObject(instance)).RasterCrossSection(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), (List<BoardCell<Entity>>)GCHandledObjects.GCHandleToObject(args[5])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((Path)GCHandledObjects.GCHandleToObject(instance)).SmoothThePath((List<BoardCell<Entity>>)GCHandledObjects.GCHandleToObject(*args), (List<BoardCell<Entity>>)GCHandledObjects.GCHandleToObject(args[1]), (List<BoardCell<Entity>>)GCHandledObjects.GCHandleToObject(args[2]), (List<int>)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
 		}
 	}
 }

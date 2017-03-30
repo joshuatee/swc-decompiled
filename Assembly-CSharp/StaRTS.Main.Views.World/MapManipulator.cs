@@ -1,5 +1,6 @@
 using Net.RichardLord.Ash.Core;
 using StaRTS.Main.Controllers.GameStates;
+using StaRTS.Main.Controllers.World;
 using StaRTS.Main.Models.Entities.Components;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Main.Views.Cameras;
@@ -11,11 +12,10 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
-	public class MapManipulator : IUserInputObserver, IEventObserver, IViewPhysicsTimeObserver
+	public class MapManipulator : IEventObserver, IUserInputObserver, IViewPhysicsTimeObserver
 	{
 		private const float MAP_CAMERA_MIN_Y_ULTRA = 0f;
 
@@ -127,6 +127,8 @@ namespace StaRTS.Main.Views.World
 
 		private Vector3[] screenCorners;
 
+		private UnityEngine.Object screenLock = new UnityEngine.Object();
+
 		public float YToHypotenuse
 		{
 			get;
@@ -175,25 +177,6 @@ namespace StaRTS.Main.Views.World
 			}
 		}
 
-		private void AssertValidEdge(ref Vector3 edge0, Vector3 edge1)
-		{
-			if (edge1.x == edge0.x)
-			{
-				Service.Get<StaRTSLogger>().Error(string.Concat(new object[]
-				{
-					"Invalid map edge: ",
-					edge0,
-					",",
-					edge1
-				}));
-			}
-			if (edge0.y != 0f)
-			{
-				Service.Get<StaRTSLogger>().Warn("Corner locator not on ground: " + edge0);
-				edge0.y = 0f;
-			}
-		}
-
 		public MapManipulator(float yToHypotenuse, Vector3[] cornerLocators)
 		{
 			this.camera = Service.Get<CameraManager>().MainCamera;
@@ -229,6 +212,25 @@ namespace StaRTS.Main.Views.World
 			eventManager.RegisterObserver(this, EventId.ScreenSizeChanged, EventPriority.Default);
 		}
 
+		private void AssertValidEdge(ref Vector3 edge0, Vector3 edge1)
+		{
+			if (edge1.x == edge0.x)
+			{
+				Service.Get<Logger>().Error(string.Concat(new object[]
+				{
+					"Invalid map edge: ",
+					edge0,
+					",",
+					edge1
+				}));
+			}
+			if (edge0.y != 0f)
+			{
+				Service.Get<Logger>().Warn("Corner locator not on ground: " + edge0);
+				edge0.y = 0f;
+			}
+		}
+
 		private void EnableUserInput()
 		{
 			Service.Get<UserInputManager>().RegisterObserver(this, UserInputLayer.InternalLowest);
@@ -257,10 +259,12 @@ namespace StaRTS.Main.Views.World
 			{
 				this.mapHighYSuper = this.mapHighYSuperTopDown;
 				this.mapHighYEarly = this.mapHighYEarlyTopDown;
-				return;
 			}
-			this.mapHighYSuper = this.mapHighYSuperTopDown - 200f;
-			this.mapHighYEarly = this.mapHighYEarlyTopDown - 200f;
+			else
+			{
+				this.mapHighYSuper = this.mapHighYSuperTopDown - 200f;
+				this.mapHighYEarly = this.mapHighYEarlyTopDown - 200f;
+			}
 		}
 
 		private void OnVantageSwitchTimer(uint id, object cookie)
@@ -438,6 +442,17 @@ namespace StaRTS.Main.Views.World
 			this.AbandonPinch();
 		}
 
+		private bool IsNonBaseCameraState(IState currentState)
+		{
+			return currentState is GalaxyState || currentState is WarBoardState;
+		}
+
+		private bool IsCurrentStateANonBaseCameraState()
+		{
+			IState currentState = Service.Get<GameStateMachine>().CurrentState;
+			return this.IsNonBaseCameraState(currentState);
+		}
+
 		private void AbandonPinch()
 		{
 			this.pinchFingerId = -1;
@@ -449,6 +464,10 @@ namespace StaRTS.Main.Views.World
 			}
 			else
 			{
+				if (this.IsCurrentStateANonBaseCameraState())
+				{
+					return;
+				}
 				Vector3 amount = this.easingDirection.CalculateAndReset();
 				this.camera.Pan(amount, false);
 				this.anchorGroundPosition = Vector3.zero;
@@ -652,17 +671,17 @@ namespace StaRTS.Main.Views.World
 			if (Vector3.Cross(a - edge0, edge1 - edge0).y > 0f)
 			{
 				Vector3 vector = curPosition - edge0;
-				Vector3 vector2 = edge1 - edge0;
-				float num = vector2.z / vector2.x;
+				Vector3 value = edge1 - edge0;
+				float num = value.z / value.x;
 				if (amount.sqrMagnitude != 0f)
 				{
-					vector2 = Vector3.Normalize(vector2) * amount.magnitude;
+					value = Vector3.Normalize(value) * amount.magnitude;
 				}
-				amount.x += vector2.z;
-				amount.z += -vector2.x;
+				amount.x += value.z;
+				amount.z += -value.x;
 				float num2 = vector.z - num * vector.x;
 				float num3 = num * amount.x - amount.z;
-				amount *= ((num3 == 0f) ? 0f : (num2 / num3));
+				amount *= ((num3 != 0f) ? (num2 / num3) : 0f);
 			}
 		}
 
@@ -680,19 +699,19 @@ namespace StaRTS.Main.Views.World
 
 		private void CameraZoomToAbsolute(float absoluteValue, bool immediate)
 		{
-			Vector3 vector = immediate ? this.camera.CurrentCameraPosition : this.camera.CurrentCameraAnchor;
-			Vector3 a = immediate ? this.camera.CurrentLookatPosition : this.camera.CurrentLookatAnchor;
-			Vector3 vector2 = Vector3.Normalize(a - vector);
-			float y = vector.y;
+			Vector3 b = (!immediate) ? this.camera.CurrentCameraAnchor : this.camera.CurrentCameraPosition;
+			Vector3 a = (!immediate) ? this.camera.CurrentLookatAnchor : this.camera.CurrentLookatPosition;
+			Vector3 vector = Vector3.Normalize(a - b);
+			float y = b.y;
 			float num = absoluteValue * (this.mapHighYEarly - this.mapLowYEarly) + this.mapLowYEarly;
-			float zoomAmount = (y - num) / -vector2.y;
+			float zoomAmount = (y - num) / -vector.y;
 			this.CameraZoom(zoomAmount, immediate);
 		}
 
 		private bool CameraZoom(float zoomAmount, bool immediate)
 		{
-			Vector3 vector = immediate ? this.camera.CurrentCameraPosition : this.camera.CurrentCameraAnchor;
-			Vector3 a = immediate ? this.camera.CurrentLookatPosition : this.camera.CurrentLookatAnchor;
+			Vector3 vector = (!immediate) ? this.camera.CurrentCameraAnchor : this.camera.CurrentCameraPosition;
+			Vector3 a = (!immediate) ? this.camera.CurrentLookatAnchor : this.camera.CurrentLookatPosition;
 			Vector3 vector2 = vector;
 			Vector3 a2 = Vector3.Normalize(a - vector2);
 			Vector3 vector3 = vector2 + a2 * zoomAmount;
@@ -733,39 +752,35 @@ namespace StaRTS.Main.Views.World
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.UserLiftedBuilding)
+			if (id != EventId.GameStateChanged)
 			{
-				if (id != EventId.GameStateChanged)
+				if (id != EventId.UserLiftedBuilding)
 				{
-					if (id == EventId.UserLiftedBuilding)
+					if (id != EventId.UserLoweredBuilding)
 					{
-						this.liftedBuilding = (cookie as Entity);
+						if (id == EventId.ScreenSizeChanged)
+						{
+							Vector2 vector = (Vector2)cookie;
+							this.OnScreenSizeChanged((int)vector.x, (int)vector.y);
+						}
+					}
+					else
+					{
+						this.liftedBuilding = null;
 					}
 				}
 				else
 				{
-					IState currentState = Service.Get<GameStateMachine>().CurrentState;
-					if (currentState is GalaxyState || currentState is WarBoardState)
-					{
-						this.DisableUserInput();
-					}
-					else
-					{
-						this.EnableUserInput();
-					}
+					this.liftedBuilding = (cookie as Entity);
 				}
 			}
-			else if (id != EventId.UserLoweredBuilding)
+			else if (this.IsCurrentStateANonBaseCameraState())
 			{
-				if (id == EventId.ScreenSizeChanged)
-				{
-					Vector2 vector = (Vector2)cookie;
-					this.OnScreenSizeChanged((int)vector.x, (int)vector.y);
-				}
+				this.DisableUserInput();
 			}
 			else
 			{
-				this.liftedBuilding = null;
+				this.EnableUserInput();
 			}
 			return EatResponse.NotEaten;
 		}
@@ -775,9 +790,8 @@ namespace StaRTS.Main.Views.World
 			if (this.liftedBuilding != null)
 			{
 				this.AutoPanToLiftedBuilding();
-				return;
 			}
-			if (this.camera.IsStillMoving())
+			else if (this.camera.IsStillMoving())
 			{
 				this.EnsureWithinBounds();
 			}
@@ -794,13 +808,13 @@ namespace StaRTS.Main.Views.World
 			this.ZoomTo(1f, true);
 		}
 
-		public void PanToLocation(Vector3 worldLocation, bool immediate = false)
+		public void PanToLocation(Vector3 worldLocation)
 		{
 			this.camera.StopAddonBehaviors();
 			Vector3 currentLookatAnchor = this.camera.CurrentLookatAnchor;
 			Vector3 amount = worldLocation - currentLookatAnchor;
 			amount.y = 0f;
-			this.camera.Pan(amount, immediate);
+			this.camera.Pan(amount, false);
 		}
 
 		public void ZoomIn(bool immediate)
@@ -860,7 +874,7 @@ namespace StaRTS.Main.Views.World
 			{
 				vector.y = num2;
 			}
-			float num3 = (num > num2) ? num : num2;
+			float num3 = (num <= num2) ? num2 : num;
 			float num4 = num3 * 0.2f;
 			bool flag = false;
 			Vector3 vector2 = vector;
@@ -914,191 +928,44 @@ namespace StaRTS.Main.Views.World
 
 		public void OnScreenSizeChanged(int width, int height)
 		{
-			this.screenCorners[0] = new Vector3(0f, 0f, 0f);
-			this.screenCorners[1] = new Vector3((float)width, 0f, 0f);
-			this.screenCorners[2] = new Vector3(0f, (float)height, 0f);
-			this.screenCorners[3] = new Vector3((float)width, (float)height, 0f);
-			float magnitude = (this.mapNearLSuper - this.mapFarRSuper).magnitude;
-			this.mapHighYSuper = 1.5f * magnitude * 1280f / 1920f;
-			this.mapLowYEarly = this.mapLowYSuper + 50f;
-			this.mapHighYEarly = this.mapHighYSuper - 50f;
-			this.mapHighYSuperTopDown = this.mapHighYSuper + 200f;
-			this.mapHighYEarlyTopDown = this.mapHighYEarly + 200f;
-			if (!(Service.Get<GameStateMachine>().CurrentState is GalaxyState))
+			UnityEngine.Object obj = this.screenLock;
+			lock (obj)
 			{
-				this.ZoomTo(0.7f, true);
-				Vector3 zero = Vector3.zero;
-				this.PanToLocation(zero, true);
+				this.AbandonAnchor();
+				this.AbandonPinch();
+				PlanetView view = Service.Get<WorldInitializer>().View;
+				if (view != null)
+				{
+					view.ComputeCornerLocators();
+				}
+				this.screenCorners[0] = new Vector3(0f, 0f, 0f);
+				this.screenCorners[1] = new Vector3((float)width, 0f, 0f);
+				this.screenCorners[2] = new Vector3(0f, (float)height, 0f);
+				this.screenCorners[3] = new Vector3((float)width, (float)height, 0f);
+				float magnitude = (this.mapNearLSuper - this.mapFarRSuper).magnitude;
+				float num = (float)Screen.height / (float)Screen.width;
+				if (num > 1f)
+				{
+					num = 1f / num;
+				}
+				this.mapHighYSuper = 1.5f * magnitude * num;
+				this.mapLowYEarly = this.mapLowYSuper + 50f;
+				this.mapHighYEarly = this.mapHighYSuper;
+				this.mapHighYSuperTopDown = this.mapHighYSuper + 200f;
+				this.mapHighYEarlyTopDown = this.mapHighYEarly + 200f;
+				IState currentState = Service.Get<GameStateMachine>().CurrentState;
+				if (currentState is EditBaseState || currentState is WarBaseEditorState)
+				{
+					this.mapHighYSuper = this.mapHighYSuperTopDown;
+					this.mapHighYEarly = this.mapHighYEarlyTopDown;
+				}
+				if (!this.IsNonBaseCameraState(currentState))
+				{
+					this.ZoomTo(0.7f, false);
+					Vector3 zero = Vector3.zero;
+					this.PanToLocation(zero);
+				}
 			}
-		}
-
-		protected internal MapManipulator(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).AbandonAnchor();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).AbandonPinch();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).AutoPanToLiftedBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).CameraZoom(*(float*)args, *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).CameraZoomToAbsolute(*(float*)args, *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).ChooseFinger(*(int*)args));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).DisableUserInput();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).EnableUserInput();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).EnsureWithinBounds();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).YToHypotenuse);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).HandleAnchorAndPinch();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).HandleDrag();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).HandleZoom();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).OnScreenSizeChanged(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).OnVantageSwitch(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).OnViewPhysicsTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).PanToLocation(*(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).ResetCameraPositionImmediatly();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).CornerLocators = (Vector3[])GCHandledObjects.GCHandleToPinnedArrayObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).YToHypotenuse = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).TranslateToFinger(*(int*)args));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).ZoomIn(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).ZoomOut(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((MapManipulator)GCHandledObjects.GCHandleToObject(instance)).ZoomTo(*(float*)args, *(sbyte*)(args + 1) != 0);
-			return -1L;
 		}
 	}
 }

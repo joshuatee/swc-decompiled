@@ -1,6 +1,5 @@
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -8,7 +7,7 @@ namespace StaRTS.Utils
 	{
 		private Random viewRandom;
 
-		private RandSimSeed simSeed;
+		private RandSimSeed simSeed = default(RandSimSeed);
 
 		public RandSimSeed SimSeed
 		{
@@ -35,7 +34,7 @@ namespace StaRTS.Utils
 		public Rand()
 		{
 			Service.Set<Rand>(this);
-			this.viewRandom = new Random((int)DateTime.get_Now().get_Ticks());
+			this.viewRandom = new Random((int)DateTime.Now.Ticks);
 			this.RandomizeSimSeed();
 		}
 
@@ -80,46 +79,6 @@ namespace StaRTS.Utils
 			uint num = this.SimValue();
 			uint num2 = (uint)(highExclusive - lowInclusive);
 			return lowInclusive + (int)(num % num2);
-		}
-
-		protected internal Rand(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Rand)GCHandledObjects.GCHandleToObject(instance)).SimSeed);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Rand)GCHandledObjects.GCHandleToObject(instance)).ViewValue);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Rand)GCHandledObjects.GCHandleToObject(instance)).RandomizeSimSeed());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((Rand)GCHandledObjects.GCHandleToObject(instance)).SimSeed = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Rand)GCHandledObjects.GCHandleToObject(instance)).SimRange(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Rand)GCHandledObjects.GCHandleToObject(instance)).ViewRangeFloat(*(float*)args, *(float*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Rand)GCHandledObjects.GCHandleToObject(instance)).ViewRangeInt(*(int*)args, *(int*)(args + 1)));
 		}
 	}
 }

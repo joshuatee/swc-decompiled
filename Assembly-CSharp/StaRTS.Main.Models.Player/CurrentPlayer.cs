@@ -15,10 +15,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player
 {
@@ -413,6 +410,12 @@ namespace StaRTS.Main.Models.Player
 			}
 		}
 
+		public CurrentPlayer()
+		{
+			Service.Set<CurrentPlayer>(this);
+			this.SetPlayerId();
+		}
+
 		public bool HasNotCompletedFirstFueStep()
 		{
 			bool flag = this.FirstTimePlayer || this.RestoredQuest == GameConstants.FUE_QUEST_UID;
@@ -421,12 +424,6 @@ namespace StaRTS.Main.Models.Player
 				flag = Service.Get<PlayerIdentityController>().IsFirstIdentity(this.PlayerId);
 			}
 			return flag;
-		}
-
-		public CurrentPlayer()
-		{
-			Service.Set<CurrentPlayer>(this);
-			this.SetPlayerId();
 		}
 
 		public void Init()
@@ -488,7 +485,7 @@ namespace StaRTS.Main.Models.Player
 			TroopTypeVO optional = Service.Get<IDataController>().GetOptional<TroopTypeVO>(uid);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Troop does not exist: " + uid);
+				Service.Get<Logger>().Error("Troop does not exist: " + uid);
 				return false;
 			}
 			return this.SetDeployableCount(uid, amount, base.Inventory.Troop, optional.Size);
@@ -508,7 +505,7 @@ namespace StaRTS.Main.Models.Player
 			SpecialAttackTypeVO optional = Service.Get<IDataController>().GetOptional<SpecialAttackTypeVO>(uid);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Special Attack does not exist: " + uid);
+				Service.Get<Logger>().Error("Special Attack does not exist: " + uid);
 				return false;
 			}
 			return this.SetDeployableCount(uid, amount, base.Inventory.SpecialAttack, optional.Size);
@@ -519,7 +516,7 @@ namespace StaRTS.Main.Models.Player
 			TroopTypeVO optional = Service.Get<IDataController>().GetOptional<TroopTypeVO>(uid);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Hero does not exist: " + uid);
+				Service.Get<Logger>().Error("Hero does not exist: " + uid);
 				return false;
 			}
 			return this.SetDeployableCount(uid, amount, base.Inventory.Hero, optional.Size);
@@ -530,7 +527,7 @@ namespace StaRTS.Main.Models.Player
 			TroopTypeVO optional = Service.Get<IDataController>().GetOptional<TroopTypeVO>(uid);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Champion does not exist: " + uid);
+				Service.Get<Logger>().Error("Champion does not exist: " + uid);
 				return false;
 			}
 			return this.SetDeployableCount(uid, amount, base.Inventory.Champion, optional.Size);
@@ -540,13 +537,13 @@ namespace StaRTS.Main.Models.Player
 		{
 			if (amount < 0)
 			{
-				Service.Get<StaRTSLogger>().Debug("Cannot set a deployable count less than zero. uid: " + uid);
+				Service.Get<Logger>().Debug("Cannot set a deployable count less than zero. uid: " + uid);
 				return false;
 			}
 			int num = storage.GetTotalStorageAmount() + amount * size;
 			if (num > storage.GetTotalStorageCapacity())
 			{
-				Service.Get<StaRTSLogger>().Debug("Not enough capacity for deployable. uid: " + uid);
+				Service.Get<Logger>().Debug("Not enough capacity for deployable. uid: " + uid);
 				return false;
 			}
 			int delta = amount - storage.GetItemAmount(uid);
@@ -563,9 +560,11 @@ namespace StaRTS.Main.Models.Player
 			if (this.ProtectionCooldownUntil.ContainsKey(key))
 			{
 				this.ProtectionCooldownUntil[key] = time;
-				return;
 			}
-			this.ProtectionCooldownUntil.Add(key, time);
+			else
+			{
+				this.ProtectionCooldownUntil.Add(key, time);
+			}
 		}
 
 		public void AddProtectionCooldownUntil(int packNumber, uint time)
@@ -633,7 +632,7 @@ namespace StaRTS.Main.Models.Player
 			if (deployableCount - delta < 0)
 			{
 				delta = deployableCount;
-				Service.Get<StaRTSLogger>().WarnFormat("Can not set a deployable count less than zero. uid: {0}, amount{1}, delta: {2}", new object[]
+				Service.Get<Logger>().WarnFormat("Can not set a deployable count less than zero. uid: {0}, amount{1}, delta: {2}", new object[]
 				{
 					uid,
 					deployableCount,
@@ -649,26 +648,26 @@ namespace StaRTS.Main.Models.Player
 			Dictionary<string, InventoryEntry> internalStorage = base.Inventory.Troop.GetInternalStorage();
 			foreach (KeyValuePair<string, InventoryEntry> current in internalStorage)
 			{
-				dictionary.Add(current.get_Key(), 0);
-				base.Inventory.Troop.ClearItemAmount(current.get_Key());
+				dictionary.Add(current.Key, 0);
+				base.Inventory.Troop.ClearItemAmount(current.Key);
 			}
 			Dictionary<string, InventoryEntry> internalStorage2 = base.Inventory.SpecialAttack.GetInternalStorage();
 			foreach (KeyValuePair<string, InventoryEntry> current2 in internalStorage2)
 			{
-				dictionary.Add(current2.get_Key(), 0);
-				base.Inventory.SpecialAttack.ClearItemAmount(current2.get_Key());
+				dictionary.Add(current2.Key, 0);
+				base.Inventory.SpecialAttack.ClearItemAmount(current2.Key);
 			}
 			Dictionary<string, InventoryEntry> internalStorage3 = base.Inventory.Hero.GetInternalStorage();
 			foreach (KeyValuePair<string, InventoryEntry> current3 in internalStorage3)
 			{
-				dictionary.Add(current3.get_Key(), 0);
-				base.Inventory.Hero.ClearItemAmount(current3.get_Key());
+				dictionary.Add(current3.Key, 0);
+				base.Inventory.Hero.ClearItemAmount(current3.Key);
 			}
 			Dictionary<string, InventoryEntry> internalStorage4 = base.Inventory.Champion.GetInternalStorage();
 			foreach (KeyValuePair<string, InventoryEntry> current4 in internalStorage4)
 			{
-				dictionary.Add(current4.get_Key(), 0);
-				base.Inventory.Champion.ClearItemAmount(current4.get_Key());
+				dictionary.Add(current4.Key, 0);
+				base.Inventory.Champion.ClearItemAmount(current4.Key);
 			}
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
 			if (currentState is HomeState || currentState is EditBaseState)
@@ -720,14 +719,14 @@ namespace StaRTS.Main.Models.Player
 			{
 				foreach (string current in dictionary.Keys)
 				{
-					this.Shards.Add(current, Convert.ToInt32(dictionary[current], CultureInfo.InvariantCulture));
+					this.Shards.Add(current, Convert.ToInt32(dictionary[current]));
 				}
 			}
 		}
 
 		public int GetShards(string equipmentID)
 		{
-			return this.Shards.ContainsKey(equipmentID) ? this.Shards[equipmentID] : 0;
+			return (!this.Shards.ContainsKey(equipmentID)) ? 0 : this.Shards[equipmentID];
 		}
 
 		public void SetTroopDonationProgress(object rawDonationInfo)
@@ -765,19 +764,19 @@ namespace StaRTS.Main.Models.Player
 		{
 			if (raidData.ContainsKey("startTime"))
 			{
-				this.RaidStartTime = Convert.ToUInt32(raidData["startTime"], CultureInfo.InvariantCulture);
+				this.RaidStartTime = Convert.ToUInt32(raidData["startTime"]);
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("Raid Data Missing Start Time");
+				Service.Get<Logger>().Error("Raid Data Missing Start Time");
 			}
 			if (raidData.ContainsKey("nextRaidStartTime"))
 			{
-				this.NextRaidStartTime = Convert.ToUInt32(raidData["nextRaidStartTime"], CultureInfo.InvariantCulture);
+				this.NextRaidStartTime = Convert.ToUInt32(raidData["nextRaidStartTime"]);
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("Raid Data Missing Next Start Time");
+				Service.Get<Logger>().Error("Raid Data Missing Next Start Time");
 			}
 			if (raidData.ContainsKey("endTime"))
 			{
@@ -788,16 +787,16 @@ namespace StaRTS.Main.Models.Player
 				}
 				else
 				{
-					this.RaidEndTime = Convert.ToUInt32(obj, CultureInfo.InvariantCulture);
+					this.RaidEndTime = Convert.ToUInt32(obj);
 				}
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("Raid Data Missing End Time");
+				Service.Get<Logger>().Error("Raid Data Missing End Time");
 			}
 			if (raidData.ContainsKey("raidPoolId"))
 			{
-				string currentRaidPoolId = "";
+				string currentRaidPoolId = string.Empty;
 				object obj2 = raidData["raidPoolId"];
 				if (obj2 != null)
 				{
@@ -807,11 +806,11 @@ namespace StaRTS.Main.Models.Player
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("Raid Data Missing Pool ID");
+				Service.Get<Logger>().Error("Raid Data Missing Pool ID");
 			}
 			if (raidData.ContainsKey("raidId"))
 			{
-				string currentRaidId = "";
+				string currentRaidId = string.Empty;
 				object obj3 = raidData["raidId"];
 				if (obj3 != null)
 				{
@@ -821,20 +820,22 @@ namespace StaRTS.Main.Models.Player
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("Raid Data Missing Raid ID");
+				Service.Get<Logger>().Error("Raid Data Missing Raid ID");
 			}
 			if (raidData.ContainsKey("raidMissionId"))
 			{
-				string currentRaid = "";
+				string currentRaid = string.Empty;
 				object obj4 = raidData["raidMissionId"];
 				if (obj4 != null)
 				{
 					currentRaid = (obj4 as string);
 				}
 				this.SetCurrentRaid(currentRaid);
-				return;
 			}
-			Service.Get<StaRTSLogger>().Error("Raid Data Missing Mission ID");
+			else
+			{
+				Service.Get<Logger>().Error("Raid Data Missing Mission ID");
+			}
 		}
 
 		public void UpdateHolonetRewardsFromServer(object holonetRewards)
@@ -920,7 +921,7 @@ namespace StaRTS.Main.Models.Player
 			int num2 = num - 1;
 			if (num2 < 0 || num2 >= GameConstants.StarsPerRelocation.Length)
 			{
-				Service.Get<StaRTSLogger>().Warn("StarsPerRelocation index out of bounds! index: " + num2);
+				Service.Get<Logger>().Warn("StarsPerRelocation index out of bounds! index: " + num2);
 				return 50;
 			}
 			int num3 = GameConstants.StarsPerRelocation[num2];
@@ -1000,7 +1001,7 @@ namespace StaRTS.Main.Models.Player
 			int num3 = num2 - 1;
 			if (num3 < 0 || num3 >= GameConstants.CrystalsPerRelocationStar.Length)
 			{
-				Service.Get<StaRTSLogger>().Warn("CrystalsPerRelocationStar index out of bounds! index: " + num3);
+				Service.Get<Logger>().Warn("CrystalsPerRelocationStar index out of bounds! index: " + num3);
 				return 15;
 			}
 			int num4 = GameConstants.CrystalsPerRelocationStar[num3];
@@ -1012,728 +1013,16 @@ namespace StaRTS.Main.Models.Player
 			if (this.Shards.ContainsKey(shardId))
 			{
 				this.Shards[shardId] = newAmount;
-				return;
 			}
-			this.Shards.Add(shardId, newAmount);
+			else
+			{
+				this.Shards.Add(shardId, newAmount);
+			}
 		}
 
 		public void DoPostContentInitialization()
 		{
 			this.SetCurrentRaid(this.nextRaidId);
-		}
-
-		protected internal CurrentPlayer(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).AddChampionToInventoryIfAlive(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).AddHolonetReward(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).AddRelocationStars(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).AddUnlockedPlanet(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).DoPostContentInitialization();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).ActiveArmory);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).ActiveSaveTriggers);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).ArmoryInfo);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).AttackRating);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).BattleHistory);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CampaignProgress);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentCrystalsAmount);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentDroidsAmount);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentlyDefending);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentQuest);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentRaid);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentRaidId);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentRaidPoolId);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).DamagedBuildings);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).DefenseRating);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Faction);
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).FirstTimePlayer);
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).HolonetRewards);
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsConnectedAccount);
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsPushIncentivized);
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsRateIncentivized);
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).MaxDroidsAmount);
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).NumIdentities);
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Objectives);
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).OfferId);
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Patches);
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).PerksInfo);
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Planet);
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).PlanetId);
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).PlayerId);
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).PlayerName);
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).PlayerNameInvalid);
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Prizes);
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RelocationStarsCount);
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RestoredQuest);
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SessionCountToday);
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Shards);
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SpecOpIntros);
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).TournamentProgress);
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).TroopDonationProgress);
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UnlockedPlanets);
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetAllChampions());
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetAllHeroes());
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetAllSpecialAttacks());
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetAllTroops());
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetCrystalRelocationCost());
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetDisplayRelocationStarsCount());
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetFirstPlanetUnlockedUID());
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetPlanetStatus(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetRawRelocationStarsCount());
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetRequiredRelocationStars());
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).GetShards(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).HasNotCompletedFirstFueStep());
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Init();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsCurrentPlanet((PlanetVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsCurrentPlanet(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsPlanetUnlocked(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsRelocationFree());
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsRelocationRequirementMet());
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).ModifyShardAmount(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).OnChampionKilled(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).OnChampionRepaired(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RemoveAllDeployables());
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RemoveChampionFromInventory(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RemoveDeployable(Marshal.PtrToStringUni(*(IntPtr*)args), (InventoryStorage)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RemoveHero(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RemoveSpecialAttack(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RemoveTroop(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).ResetRelocationStars();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).ActiveArmory = (ActiveArmory)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).ActiveSaveTriggers = (List<IStoryTrigger>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).ArmoryInfo = (ArmoryInfo)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).AttackRating = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).BattleHistory = (BattleHistory)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CampaignProgress = (CampaignProgress)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentlyDefending = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentQuest = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentRaid = (CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentRaidId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).CurrentRaidPoolId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).DamagedBuildings = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).DefenseRating = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke87(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Faction = (FactionType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke88(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).FirstTimePlayer = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke89(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).HolonetRewards = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke90(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsConnectedAccount = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke91(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsPushIncentivized = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke92(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).IsRateIncentivized = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke93(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).NumIdentities = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke94(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Objectives = (Dictionary<string, ObjectiveGroup>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke95(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).OfferId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke96(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Patches = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke97(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).PerksInfo = (PerksInfo)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke98(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).PlayerId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke99(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).PlayerName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke100(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).PlayerNameInvalid = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke101(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Prizes = (PrizeInventory)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke102(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RelocationStarsCount = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke103(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).RestoredQuest = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke104(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SessionCountToday = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke105(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).Shards = (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke106(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SpecOpIntros = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke107(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).TournamentProgress = (TournamentProgress)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke108(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).TroopDonationProgress = (TroopDonationProgress)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke109(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UnlockedPlanets = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke110(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetChampionCount(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke111(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetCurrentRaid(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke112(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetDeployableCount(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), (InventoryStorage)GCHandledObjects.GCHandleToObject(args[2]), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke113(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetFreeRelocation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke114(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetHeroCount(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke115(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetPlayerId();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke116(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetRelocationStartsCount(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke117(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetSpecialAttackCount(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke118(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetTroopCount(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke119(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetTroopDonationProgress(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke120(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).SetupRaidFromDictionary((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke121(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UpdateActiveArmory(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke122(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UpdateArmoryInfo(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke123(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentRaid(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke124(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UpdateHolonetRewardsFromServer(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke125(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UpdatePerksInfo(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke126(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UpdateShardsInfo(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke127(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UpdateTroopDonationProgress(*(int*)args, *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke128(long instance, long* args)
-		{
-			((CurrentPlayer)GCHandledObjects.GCHandleToObject(instance)).UpdateUnlockedPlanetsFromServer(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

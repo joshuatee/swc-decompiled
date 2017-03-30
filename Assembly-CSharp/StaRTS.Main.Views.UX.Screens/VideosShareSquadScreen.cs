@@ -9,9 +9,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -81,8 +79,8 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.nguiInputBox.onSubmit.Add(item);
 				this.nguiInputBox.enabled = true;
 			}
-			base.GetElement<UXLabel>("MakerLabelVideoCreatorShare").Text = "";
-			base.GetElement<UXLabel>("MakerLabelVideoTitleShare").Text = "";
+			base.GetElement<UXLabel>("MakerLabelVideoCreatorShare").Text = string.Empty;
+			base.GetElement<UXLabel>("MakerLabelVideoTitleShare").Text = string.Empty;
 			Service.Get<UserInputManager>().RegisterObserver(this, UserInputLayer.Screen);
 			Service.Get<VideoDataManager>().GetVideoDetails(this.videoId, delegate(string guid)
 			{
@@ -91,10 +89,10 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					return;
 				}
-				base.GetElement<UXLabel>("MakerLabelVideoCreatorShare").Text = (string.IsNullOrEmpty(videoData.Author) ? "" : this.lang.Get("hn_ui_author", new object[]
+				base.GetElement<UXLabel>("MakerLabelVideoCreatorShare").Text = ((!string.IsNullOrEmpty(videoData.Author)) ? this.lang.Get("hn_ui_author", new object[]
 				{
 					videoData.Author
-				}));
+				}) : string.Empty);
 				base.GetElement<UXLabel>("MakerLabelVideoTitleShare").Text = videoData.Title;
 			});
 		}
@@ -112,7 +110,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			if (!TouchScreenKeyboard.visible)
 			{
-				Service.Get<StaRTSLogger>().Debug(">>>>> Inputs SquadRequestScreen : Selected keyboard missing");
+				Service.Get<Logger>().Debug(">>>>> Inputs SquadRequestScreen : Selected keyboard missing");
 				TouchScreenKeyboard.Open(this.requestLabel.Text, TouchScreenKeyboardType.Default, false, true, false);
 			}
 		}
@@ -189,77 +187,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			Service.Get<UserInputManager>().UnregisterObserver(this, UserInputLayer.Screen);
 			base.Close(modalResult);
-		}
-
-		protected internal VideosShareSquadScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).<OnScreenLoaded>b__19_0(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).CheckForValidInput());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).LabelSelected();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).OnSubmit();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((VideosShareSquadScreen)GCHandledObjects.GCHandleToObject(instance)).SendRequestClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

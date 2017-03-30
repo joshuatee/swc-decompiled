@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 public static class Localization
 {
@@ -183,9 +181,11 @@ public static class Localization
 		if (!string.IsNullOrEmpty(val))
 		{
 			Localization.mReplacement[key] = val;
-			return;
 		}
-		Localization.mReplacement.Remove(key);
+		else
+		{
+			Localization.mReplacement.Remove(key);
+		}
 	}
 
 	public static void ClearReplacements()
@@ -271,10 +271,10 @@ public static class Localization
 					Dictionary<string, string[]> dictionary = new Dictionary<string, string[]>();
 					foreach (KeyValuePair<string, string[]> current in Localization.mDictionary)
 					{
-						string[] value = current.get_Value();
+						string[] value = current.Value;
 						Array.Resize<string>(ref value, num);
 						value[num - 1] = value[0];
-						dictionary.Add(current.get_Key(), value);
+						dictionary.Add(current.Key, value);
 					}
 					Localization.mDictionary = dictionary;
 				}
@@ -327,7 +327,6 @@ public static class Localization
 			if (newLanguages == null)
 			{
 				Debug.LogWarning("Localization key '" + text + "' is already present");
-				return;
 			}
 		}
 		else
@@ -338,7 +337,7 @@ public static class Localization
 			}
 			catch (Exception ex)
 			{
-				Debug.LogError("Unable to add '" + text + "' to the Localization dictionary.\n" + ex.get_Message());
+				Debug.LogError("Unable to add '" + text + "' to the Localization dictionary.\n" + ex.Message);
 			}
 		}
 	}
@@ -427,9 +426,11 @@ public static class Localization
 		if (Localization.mOldDictionary.ContainsKey(key))
 		{
 			Localization.mOldDictionary[key] = value;
-			return;
 		}
-		Localization.mOldDictionary.Add(key, value);
+		else
+		{
+			Localization.mOldDictionary.Add(key, value);
+		}
 	}
 
 	public static string Get(string key)
@@ -540,140 +541,7 @@ public static class Localization
 		{
 			Localization.language = PlayerPrefs.GetString("Language", "English");
 		}
-		return Localization.mDictionary.ContainsKey(key) || Localization.mOldDictionary.ContainsKey(key);
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		Localization.AddCSV((BetterList<string>)GCHandledObjects.GCHandleToObject(*args), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[2]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		Localization.ClearReplacements();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.Exists(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.ExtractStrings((BetterList<string>)GCHandledObjects.GCHandleToObject(*args), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[2])));
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.Format(Marshal.PtrToStringUni(*(IntPtr*)args), (object[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1])));
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.Get(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.dictionary);
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.isActive);
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.knownLanguages);
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.language);
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.HasLanguage(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		Localization.Load((TextAsset)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.LoadAndSelect(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.LoadCSV((byte[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.LoadCSV((TextAsset)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.LoadCSV((byte[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), (TextAsset)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0));
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.LoadDictionary(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.Localize(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		Localization.ReplaceKey(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(Localization.SelectLanguage(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		Localization.Set(Marshal.PtrToStringUni(*(IntPtr*)args), (byte[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		Localization.Set(Marshal.PtrToStringUni(*(IntPtr*)args), (Dictionary<string, string>)GCHandledObjects.GCHandleToObject(args[1]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		Localization.Set(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		Localization.dictionary = (Dictionary<string, string[]>)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		Localization.language = Marshal.PtrToStringUni(*(IntPtr*)args);
-		return -1L;
+		string key2 = key + " Mobile";
+		return Localization.mDictionary.ContainsKey(key2) || Localization.mOldDictionary.ContainsKey(key2) || Localization.mDictionary.ContainsKey(key) || Localization.mOldDictionary.ContainsKey(key);
 	}
 }

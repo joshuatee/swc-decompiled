@@ -32,8 +32,6 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -157,7 +155,7 @@ namespace StaRTS.Main.Controllers
 				if (squadWarParticipantState.SquadMemberId == playerId)
 				{
 					this.currentParticipantState = squadWarParticipantState;
-					return;
+					break;
 				}
 			}
 		}
@@ -172,7 +170,7 @@ namespace StaRTS.Main.Controllers
 					return current;
 				}
 			}
-			Service.Get<StaRTSLogger>().Error("Could not find war schedule data for current squad war!");
+			Service.Get<Logger>().Error("Could not find war schedule data for current squad war!");
 			return null;
 		}
 
@@ -314,7 +312,7 @@ namespace StaRTS.Main.Controllers
 			string text = cookie as string;
 			if (this.currentMemberWarData == null || this.currentMemberWarData.WarRewards == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Attempting to claim reward for war {0} but memberWarData contains no rewards", new object[]
+				Service.Get<Logger>().ErrorFormat("Attempting to claim reward for war {0} but memberWarData contains no rewards", new object[]
 				{
 					text
 				});
@@ -335,7 +333,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (squadWarRewardData == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find reward for war {0} in memberWarData", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find reward for war {0} in memberWarData", new object[]
 				{
 					text
 				});
@@ -367,7 +365,7 @@ namespace StaRTS.Main.Controllers
 				this.ClaimSquadWarReward(currentPlayerCurrentWarReward.WarId);
 				return true;
 			}
-			Service.Get<StaRTSLogger>().Error("Trying to claim a non existant squad war reward");
+			Service.Get<Logger>().Error("Trying to claim a non existant squad war reward");
 			return false;
 		}
 
@@ -572,8 +570,8 @@ namespace StaRTS.Main.Controllers
 			{
 				return;
 			}
-			string text = (ownerData != null) ? ownerData.PlayerId : null;
-			string text2 = (ownerData != null) ? ownerData.PlayerName : null;
+			string text = (ownerData == null) ? null : ownerData.PlayerId;
+			string text2 = (ownerData == null) ? null : ownerData.PlayerName;
 			string opponentId = warEventData.OpponentId;
 			string opponentName = warEventData.OpponentName;
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
@@ -683,9 +681,8 @@ namespace StaRTS.Main.Controllers
 				if (squad.Faction == FactionType.Empire)
 				{
 					text = UXUtils.WrapTextInColor(text, "c0d0ff");
-					return;
 				}
-				if (squad.Faction == FactionType.Rebel)
+				else if (squad.Faction == FactionType.Rebel)
 				{
 					text = UXUtils.WrapTextInColor(text, "f0dfc1");
 				}
@@ -694,7 +691,9 @@ namespace StaRTS.Main.Controllers
 
 		public void EnterWarBoardMode()
 		{
-			Service.Get<GameStateMachine>().SetState(new WarBoardState());
+			HomeMapDataLoader homeMapDataLoader = Service.Get<HomeMapDataLoader>();
+			Service.Get<WorldTransitioner>().StartTransition(new BaseToWarboardTransition(new WarBoardState(), homeMapDataLoader, null));
+			this.SetupWarBoardLighting(homeMapDataLoader, true);
 		}
 
 		public void ExitWarBoardMode(TransitionCompleteDelegate callback)
@@ -892,8 +891,7 @@ namespace StaRTS.Main.Controllers
 				message = Service.Get<Lang>().Get("WAR_PREVENT_BUFF_BASE_SCOUT_WRONG_PHASE", new object[0]);
 				return false;
 			}
-			SquadWarParticipantState arg_35_0 = this.currentParticipantState;
-			return true;
+			return this.currentParticipantState != null || true;
 		}
 
 		private void OnGetBuffBaseStatusSuccess(SquadWarBuffBaseResponse response, object cookie)
@@ -904,7 +902,7 @@ namespace StaRTS.Main.Controllers
 			{
 				return;
 			}
-			SquadWarBuffBaseData squadWarBuffBaseData = (response.SquadWarBuffBaseData != null) ? response.SquadWarBuffBaseData : this.FindBuffBaseData(this.currentlyScoutedBuffBaseId);
+			SquadWarBuffBaseData squadWarBuffBaseData = (response.SquadWarBuffBaseData == null) ? this.FindBuffBaseData(this.currentlyScoutedBuffBaseId) : response.SquadWarBuffBaseData;
 			if (squadWarBuffBaseData == null)
 			{
 				return;
@@ -925,9 +923,10 @@ namespace StaRTS.Main.Controllers
 			{
 				faction = squadData2.Faction;
 			}
-			if (faction != FactionType.Empire)
+			FactionType factionType = faction;
+			if (factionType != FactionType.Empire)
 			{
-				if (faction == FactionType.Rebel)
+				if (factionType == FactionType.Rebel)
 				{
 					array = warBuffVO.EmpireBattlesByLevel;
 				}
@@ -943,7 +942,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (string.IsNullOrEmpty(text))
 			{
-				Service.Get<StaRTSLogger>().Error("Can't assign base name for:" + this.currentlyScoutedBuffBaseId);
+				Service.Get<Logger>().Error("Can't assign base name for:" + this.currentlyScoutedBuffBaseId);
 				return;
 			}
 			this.LogScoutBIGameAction(squadWarBuffBaseData.BuffBaseId);
@@ -1047,7 +1046,7 @@ namespace StaRTS.Main.Controllers
 
 		private void BattleInitializationShowBuffs(bool showOpponentBuffs)
 		{
-			Service.Get<StaRTSLogger>().Debug("BattleInitializationShowBuffs");
+			Service.Get<Logger>().Debug("BattleInitializationShowBuffs");
 			if (this.CurrentSquadWar != null)
 			{
 				Lang lang = Service.Get<Lang>();
@@ -1106,8 +1105,7 @@ namespace StaRTS.Main.Controllers
 				}
 				return false;
 			}
-			SquadWarParticipantState arg_65_0 = this.currentParticipantState;
-			return true;
+			return this.currentParticipantState != null || true;
 		}
 
 		public bool ScoutWarMember(string memberId)
@@ -1197,43 +1195,40 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ContractCompleted)
+			if (id != EventId.WorldInTransitionComplete)
 			{
-				if (id != EventId.WorldInTransitionComplete)
+				if (id != EventId.ContractCompleted)
 				{
-					if (id == EventId.ContractCompleted)
+					if (id != EventId.WarPhaseChanged)
 					{
-						if (this.currentParticipantState != null)
+						if (id == EventId.WarLaunchFlow)
 						{
-							ContractEventData contractEventData = cookie as ContractEventData;
-							ContractType contractType = contractEventData.Contract.ContractTO.ContractType;
-							if (contractType == ContractType.Upgrade)
-							{
-								BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(contractEventData.Contract.ProductUid);
-								if (buildingTypeVO.Type == BuildingType.Squad)
-								{
-									this.controller.UpdateCurrentSquad();
-								}
-							}
+							this.LaunchSquadWarFlow();
+						}
+					}
+					else if ((int)cookie == 0)
+					{
+						this.EndSquadWar();
+					}
+				}
+				else if (this.currentParticipantState != null)
+				{
+					ContractEventData contractEventData = cookie as ContractEventData;
+					ContractType contractType = contractEventData.Contract.ContractTO.ContractType;
+					if (contractType == ContractType.Upgrade)
+					{
+						BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(contractEventData.Contract.ProductUid);
+						if (buildingTypeVO.Type == BuildingType.Squad)
+						{
+							this.controller.UpdateCurrentSquad();
 						}
 					}
 				}
-				else
-				{
-					this.CheckForWarboardForceExit();
-					Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldInTransitionComplete);
-				}
 			}
-			else if (id != EventId.WarPhaseChanged)
+			else
 			{
-				if (id == EventId.WarLaunchFlow)
-				{
-					this.LaunchSquadWarFlow();
-				}
-			}
-			else if ((SquadWarStatusType)cookie == SquadWarStatusType.PhaseOpen)
-			{
-				this.EndSquadWar();
+				this.CheckForWarboardForceExit();
+				Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldInTransitionComplete);
 			}
 			return EatResponse.NotEaten;
 		}
@@ -1269,7 +1264,7 @@ namespace StaRTS.Main.Controllers
 			bool flag = squadMember.HQLevel >= GameConstants.WAR_PARTICIPANT_MIN_LEVEL;
 			bool flag2 = this.warParty.Count < GameConstants.WAR_PARTICIPANT_COUNT;
 			bool flag3 = !this.warParty.Contains(squadMember.MemberID);
-			return flag & flag2 & flag3;
+			return flag && flag2 && flag3;
 		}
 
 		public bool WarPartyAdd(SquadMember squadMember)
@@ -1319,12 +1314,16 @@ namespace StaRTS.Main.Controllers
 				i++;
 			}
 			list.Sort(new Comparison<SquadMember>(this.SortPotentialWarParty));
-			int num = 0;
+			int j = 0;
 			int count2 = list.Count;
-			while (num < count2 && this.warParty.Count < GameConstants.WAR_PARTICIPANT_COUNT)
+			while (j < count2)
 			{
-				this.WarPartyAdd(list[num]);
-				num++;
+				if (this.warParty.Count >= GameConstants.WAR_PARTICIPANT_COUNT)
+				{
+					break;
+				}
+				this.WarPartyAdd(list[j]);
+				j++;
 			}
 			this.controller.StateManager.SquadScreenState = SquadScreenState.Members;
 			Service.Get<UXController>().HUD.SlideSquadScreenOpen();
@@ -1414,11 +1413,13 @@ namespace StaRTS.Main.Controllers
 			if (this.WarExists() && gameState is WarBoardState)
 			{
 				this.CheckForWarboardForceExit();
-				return;
 			}
-			string instructions = Service.Get<Lang>().Get("WAR_MATCHMAKING_STARTED", new object[0]);
-			Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(instructions);
-			this.EndSquadWar();
+			else
+			{
+				string instructions = Service.Get<Lang>().Get("WAR_MATCHMAKING_STARTED", new object[0]);
+				Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(instructions);
+				this.EndSquadWar();
+			}
 		}
 
 		public void OnCelebrationScreenClosed(object result, object cookie)
@@ -1486,26 +1487,24 @@ namespace StaRTS.Main.Controllers
 			switch (this.GetCurrentStatus())
 			{
 			case SquadWarStatusType.PhaseOpen:
-			{
 				if (this.IsCurrentSquadMatchmaking())
 				{
 					SquadWarMatchMakeScreen screen2 = new SquadWarMatchMakeScreen();
 					Service.Get<ScreenController>().AddScreen(screen2);
-					return;
 				}
-				SquadWarStartScreen screen3 = new SquadWarStartScreen();
-				Service.Get<ScreenController>().AddScreen(screen3);
-				return;
-			}
+				else
+				{
+					SquadWarStartScreen screen3 = new SquadWarStartScreen();
+					Service.Get<ScreenController>().AddScreen(screen3);
+				}
+				break;
 			case SquadWarStatusType.PhasePrep:
 			case SquadWarStatusType.PhasePrepGrace:
 			case SquadWarStatusType.PhaseAction:
 			case SquadWarStatusType.PhaseActionGrace:
 			case SquadWarStatusType.PhaseCooldown:
 				this.EnterWarBoardMode();
-				return;
-			default:
-				return;
+				break;
 			}
 		}
 
@@ -1550,509 +1549,6 @@ namespace StaRTS.Main.Controllers
 			eventManager.UnregisterObserver(this, EventId.ContractCompleted);
 			eventManager.UnregisterObserver(this, EventId.WorldInTransitionComplete);
 			eventManager.UnregisterObserver(this, EventId.WarPhaseChanged);
-		}
-
-		protected internal SquadWarManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).BattleInitializationShowBuffs(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CalculateVictoryPointsTaken((BattleEntry)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CanAttackBuffBase((SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CanAttackCurrentlyScoutedBuffBase());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CanAttackCurrentlyScoutedOpponent());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CanAttackOpponent((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CancelEnteringMatchmaking();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CancelMatchMaking();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CancelMatchMakingTakeAction();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CanStartSquadWar());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CaptureBuffBase((SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(*args), (SquadWarSquadData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CheckForWarboardForceExit();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ClaimCurrentPlayerCurrentWarReward());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ClaimSquadWarReward(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ClearSquadWarData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).CloseWarEndedScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).DeductTurnFromParticipant((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).EndSquadWar();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).EnsurePlayerHasTroops());
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).EnterWarBoardMode();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ExchangeVictoryPoints((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(*args), (SquadWarParticipantState)GCHandledObjects.GCHandleToObject(args[1]), (SquadWarSquadData)GCHandledObjects.GCHandleToObject(args[2]), *(int*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ExitWarBoardMode((TransitionCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).FindBuffBaseData(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).FindParticipantState(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).EnableSquadWarMode);
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetBuffBaseData(*(int*)args));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetBuffBasesOwnedBySquad(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentlyScoutedBuffBaseData());
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentlyScoutedBuffBaseId());
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentMemberWarData());
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentOpponentState());
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentParticipantState());
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentPlayerCurrentWarReward());
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentSquadScore((SquadWarSquadType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentSquadWarResult());
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentStatus());
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetCurrentWarScheduleData());
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetParticipantSquad(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetParticipantState(*(int*)args, (SquadWarSquadType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetSquadData((SquadWarSquadType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetSquadData(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetWarBuffDisplayName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).GetWarPartyCount());
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).HandleWarEventMsg((SquadMsg)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).IsAlliedBuffBase((SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).IsBuffBaseUnderAttack((SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).IsCurrentlyScoutingOwnedBuffBase());
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).IsCurrentSquadMatchmaking());
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).IsEligibleForWarParty((SquadMember)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).IsMemberInWarParty(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).IsOpponentUnderAttack((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).IsSquadMemberInWarOrMatchmaking((SquadMember)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).IsTimeWithinCurrentSquadWarPhase(*(int*)args));
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).LaunchSquadWarFlow();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).LogScoutBIGameAction(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnAcceptInsufficientLevel(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnBattleReady();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnCelebrationScreenClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnCrateScreenClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnGetBuffBaseStatusSuccess((SquadWarBuffBaseResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnSameFactionScoutReady();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnScoutWarMemberSuccess((SquadMemberWarDataResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnSquadWarClaimRewardSuccess((CrateDataResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnStartAttackOnBuffBaseSuccess((BattleIdResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnStartAttackOnWarMemberSuccess((BattleIdResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnTransitionComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).OnWarMatchMakingBegin();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ReleaseCurrentlyScoutedBuffBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).RemoveCurrentPlayerCurrentWarReward());
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ScoutBuffBase(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ScoutWarMember(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).EnableSquadWarMode = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).SetupWarBoardLighting((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).SetupWarBoardLightingRemoval((HomeMapDataLoader)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ShowInfoScreen((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ShowWarEndedScreen());
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).ShowWarRewardSupplyCrateAnimation((SquadWarRewardData)GCHandledObjects.GCHandleToObject(*args), (CrateData)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).SortPotentialWarParty((SquadMember)GCHandledObjects.GCHandleToObject(*args), (SquadMember)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).StartAttackOnScoutedBuffBase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).StartAttackOnScoutedWarMember();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).StartMatchMaking(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).StartMatchMakingPreparation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).StartTranstionFromWarBaseToWarBoard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentMemberWarData((SquadMemberWarDataResponse)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke87(long instance, long* args)
-		{
-			((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadWar((SquadWarData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke88(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).WarExists());
-		}
-
-		public unsafe static long $Invoke89(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).WarPartyAdd((SquadMember)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke90(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarManager)GCHandledObjects.GCHandleToObject(instance)).WarPartyRemove(Marshal.PtrToStringUni(*(IntPtr*)args)));
 		}
 	}
 }

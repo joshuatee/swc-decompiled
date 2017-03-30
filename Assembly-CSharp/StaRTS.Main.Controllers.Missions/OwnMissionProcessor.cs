@@ -6,7 +6,6 @@ using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Missions
 {
@@ -36,9 +35,11 @@ namespace StaRTS.Main.Controllers.Missions
 			if (this.parent.OnIntroHook())
 			{
 				Service.Get<UserInputInhibitor>().DenyAll();
-				return;
 			}
-			this.StartCounting();
+			else
+			{
+				this.StartCounting();
+			}
 		}
 
 		public override void Resume()
@@ -91,58 +92,6 @@ namespace StaRTS.Main.Controllers.Missions
 			}
 			this.conditions.Clear();
 			this.conditions = null;
-		}
-
-		protected internal OwnMissionProcessor(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((OwnMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).ChildFailed((AbstractCondition)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((OwnMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).ChildSatisfied((AbstractCondition)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((OwnMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).ChildUpdated((AbstractCondition)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((OwnMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((OwnMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).OnIntroHookComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((OwnMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).Resume();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((OwnMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((OwnMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).StartCounting();
-			return -1L;
 		}
 	}
 }

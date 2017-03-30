@@ -12,9 +12,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Controls
 {
@@ -148,7 +146,7 @@ namespace StaRTS.Main.Views.UX.Controls
 		private bool IsEquipmentActiveOnDeployable(IDataController sdc, string deployableUid)
 		{
 			CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
-			List<string> list = (currentBattle.Type == BattleType.PveDefend) ? currentBattle.DefenderEquipment : currentBattle.AttackerEquipment;
+			List<string> list = (currentBattle.Type != BattleType.PveDefend) ? currentBattle.AttackerEquipment : currentBattle.DefenderEquipment;
 			if (list == null)
 			{
 				return false;
@@ -157,7 +155,7 @@ namespace StaRTS.Main.Views.UX.Controls
 			{
 				return false;
 			}
-			string text = this.IsStarship ? sdc.Get<SpecialAttackTypeVO>(deployableUid).SpecialAttackID : sdc.Get<TroopTypeVO>(deployableUid).TroopID;
+			string b = (!this.IsStarship) ? sdc.Get<TroopTypeVO>(deployableUid).TroopID : sdc.Get<SpecialAttackTypeVO>(deployableUid).SpecialAttackID;
 			int i = 0;
 			int count = list.Count;
 			while (i < count)
@@ -166,12 +164,12 @@ namespace StaRTS.Main.Views.UX.Controls
 				for (int j = 0; j < equipmentVO.EffectUids.Length; j++)
 				{
 					EquipmentEffectVO equipmentEffectVO = sdc.Get<EquipmentEffectVO>(equipmentVO.EffectUids[j]);
-					string[] array = this.IsStarship ? equipmentEffectVO.AffectedSpecialAttackIds : equipmentEffectVO.AffectedTroopIds;
+					string[] array = (!this.IsStarship) ? equipmentEffectVO.AffectedTroopIds : equipmentEffectVO.AffectedSpecialAttackIds;
 					if (array != null)
 					{
 						for (int k = 0; k < array.Length; k++)
 						{
-							if (array[k] == text)
+							if (array[k] == b)
 							{
 								return true;
 							}
@@ -223,9 +221,8 @@ namespace StaRTS.Main.Views.UX.Controls
 				eventManager2.UnregisterObserver(this, EventId.WorldInTransitionComplete);
 				eventManager2.UnregisterObserver(this, EventId.HoloCommScreenDestroyed);
 				this.observingTroopEquipmentEvents = false;
-				return;
 			}
-			if (this.observingStarshipEvents)
+			else if (this.observingStarshipEvents)
 			{
 				EventManager eventManager3 = Service.Get<EventManager>();
 				eventManager3.UnregisterObserver(this, EventId.WorldInTransitionComplete);
@@ -268,7 +265,7 @@ namespace StaRTS.Main.Views.UX.Controls
 			this.TroopCountLabel.TextColor = UXUtils.GetCostColor(this.TroopCountLabel, false, false);
 			if (clearTroopCountLabel)
 			{
-				this.TroopCountLabel.Text = "";
+				this.TroopCountLabel.Text = string.Empty;
 			}
 			if (this.IsHero && this.AbilityState == HeroAbilityState.InUse)
 			{
@@ -361,174 +358,6 @@ namespace StaRTS.Main.Views.UX.Controls
 				break;
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal DeployableTroopControl(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).Disable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).Disable(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).Enable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).AbilityState);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).DeployableUid);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).DisableDueToBuildingDestruction);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).Enabled);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).IsHero);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).IsStarship);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).TroopCheckbox);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).TroopCountLabel);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).IsEquipmentActiveOnDeployable((IDataController)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).PlayActiveEquipmentAnimation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).PrepareHeroAbility();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).PutHeroAbilityOnCoolDown();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).AbilityState = (HeroAbilityState)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).DeployableUid = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).DisableDueToBuildingDestruction = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).Enabled = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).IsHero = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).IsStarship = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).TroopCheckbox = (UXCheckbox)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).TroopCountLabel = (UXLabel)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).StopActiveEquipmentAnimation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).StopCoolDown();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).StopObserving();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((DeployableTroopControl)GCHandledObjects.GCHandleToObject(instance)).UseHeroAbility();
-			return -1L;
 		}
 	}
 }

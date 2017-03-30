@@ -6,7 +6,6 @@ using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -37,19 +36,24 @@ namespace StaRTS.Main.Story.Actions
 			{
 				Service.Get<EventManager>().RegisterObserver(this, EventId.StoreScreenReady, EventPriority.Default);
 				this.PerformStoreLookup(highestLevelScreen);
-				return;
 			}
-			Service.Get<EventManager>().RegisterObserver(this, EventId.ScreenLoaded, EventPriority.Default);
+			else
+			{
+				Service.Get<EventManager>().RegisterObserver(this, EventId.ScreenLoaded, EventPriority.Default);
+			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
 			if (id != EventId.StoreScreenReady)
 			{
-				if (id == EventId.ScreenLoaded && cookie is StoreScreen)
+				if (id == EventId.ScreenLoaded)
 				{
-					Service.Get<EventManager>().RegisterObserver(this, EventId.StoreScreenReady, EventPriority.Default);
-					this.PerformStoreLookup(cookie as StoreScreen);
+					if (cookie is StoreScreen)
+					{
+						Service.Get<EventManager>().RegisterObserver(this, EventId.StoreScreenReady, EventPriority.Default);
+						this.PerformStoreLookup(cookie as StoreScreen);
+					}
 				}
 			}
 			else
@@ -71,39 +75,6 @@ namespace StaRTS.Main.Story.Actions
 		{
 			Service.Get<EventManager>().UnregisterObserver(this, EventId.ScreenLoaded);
 			Service.Get<EventManager>().UnregisterObserver(this, EventId.StoreScreenReady);
-		}
-
-		protected internal StoreLookupStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StoreLookupStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StoreLookupStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((StoreLookupStoryAction)GCHandledObjects.GCHandleToObject(instance)).PerformStoreLookup((StoreScreen)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((StoreLookupStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((StoreLookupStoryAction)GCHandledObjects.GCHandleToObject(instance)).RemoveListeners();
-			return -1L;
 		}
 	}
 }

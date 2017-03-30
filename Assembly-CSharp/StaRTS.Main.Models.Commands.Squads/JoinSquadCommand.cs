@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public JoinSquadCommand(SquadIDRequest request) : base("guild.join", request, new SquadResponse())
 		{
 		}
-
-		protected internal JoinSquadCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -4,7 +4,6 @@ using StaRTS.Main.Models.Player.World;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player.Building.Contracts
 {
@@ -32,15 +31,6 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Contracts
 			BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(buildingUid);
 			bool simulateTroopContractUpdate = buildingTypeVO.Type != BuildingType.Starport;
 			base.CalculateChecksum(contract, true, simulateTroopContractUpdate);
-		}
-
-		protected internal BuildingInstantUpgradeRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingInstantUpgradeRequest)GCHandledObjects.GCHandleToObject(instance)).CalculateChecksumManually);
 		}
 	}
 }

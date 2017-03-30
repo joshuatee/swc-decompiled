@@ -3,6 +3,7 @@ using StaRTS.Audio;
 using StaRTS.Externals.BI;
 using StaRTS.Externals.DMOAnalytics;
 using StaRTS.Externals.GameServices;
+using StaRTS.Externals.Tapjoy;
 using StaRTS.FX;
 using StaRTS.Main.Controllers.GameStates;
 using StaRTS.Main.Controllers.Performance;
@@ -50,6 +51,10 @@ namespace StaRTS.Main.Controllers
 			{
 				Service.Get<AudioManager>().CleanUp();
 			}
+			if (TapjoyManager.IsEnabled())
+			{
+				TapjoyManager.Instance.DisableTapjoy();
+			}
 			if (Service.IsSet<WWWManager>())
 			{
 				Service.Get<WWWManager>().CancelAll();
@@ -75,10 +80,6 @@ namespace StaRTS.Main.Controllers
 			ProcessingScreen.StaticReset();
 			YesNoScreen.StaticReset();
 			DynamicRadiusView.StaticReset();
-			if (Service.IsSet<Lang>())
-			{
-				Service.Get<Lang>().CustomKoreanFont = null;
-			}
 		}
 
 		public static void CleanupReferences()
@@ -99,28 +100,6 @@ namespace StaRTS.Main.Controllers
 			{
 				Service.Get<DMOAnalyticsController>().Destroy();
 			}
-		}
-
-		protected internal MainController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			MainController.CleanupReferences();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			MainController.StaticInit();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			MainController.StaticReset();
-			return -1L;
 		}
 	}
 }

@@ -2,7 +2,6 @@ using StaRTS.Utils;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -78,20 +77,6 @@ namespace StaRTS.Main.Utils
 			mesh.triangles = list2.ToArray();
 			mesh.normals = list3.ToArray();
 			mesh.bounds = new Bounds(Vector3.zero, new Vector3(radius + ringWidth, 0.1f, radius + ringWidth));
-		}
-
-		public CircleMeshUtils()
-		{
-		}
-
-		protected internal CircleMeshUtils(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			CircleMeshUtils.AddCircleMesh((GameObject)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3));
-			return -1L;
 		}
 	}
 }

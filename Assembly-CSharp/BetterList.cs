@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using WinRTBridge;
 
 public class BetterList<T>
 {
@@ -26,24 +24,17 @@ public class BetterList<T>
 		}
 	}
 
-	[DebuggerHidden, DebuggerStepThrough, IteratorStateMachine(typeof(BetterList<>.<GetEnumerator>d__2))]
+	[DebuggerHidden, DebuggerHidden, DebuggerStepThrough]
 	public IEnumerator<T> GetEnumerator()
 	{
-		if (this.buffer != null)
-		{
-			int num;
-			for (int i = 0; i < this.size; i = num)
-			{
-				yield return this.buffer[i];
-				num = i + 1;
-			}
-		}
-		yield break;
+		BetterList<T>.<GetEnumerator>c__Iterator4 <GetEnumerator>c__Iterator = new BetterList<T>.<GetEnumerator>c__Iterator4();
+		<GetEnumerator>c__Iterator.<>f__this = this;
+		return <GetEnumerator>c__Iterator;
 	}
 
 	private void AllocateMore()
 	{
-		T[] array = (this.buffer != null) ? new T[Mathf.Max(this.buffer.Length << 1, 32)] : new T[32];
+		T[] array = (this.buffer == null) ? new T[32] : new T[Mathf.Max(this.buffer.Length << 1, 32)];
 		if (this.buffer != null && this.size > 0)
 		{
 			this.buffer.CopyTo(array, 0);
@@ -63,7 +54,6 @@ public class BetterList<T>
 					array[i] = this.buffer[i];
 				}
 				this.buffer = array;
-				return;
 			}
 		}
 		else
@@ -89,10 +79,7 @@ public class BetterList<T>
 		{
 			this.AllocateMore();
 		}
-		T[] arg_36_0 = this.buffer;
-		int num = this.size;
-		this.size = num + 1;
-		arg_36_0[num] = item;
+		this.buffer[this.size++] = item;
 	}
 
 	public void Insert(int index, T item)
@@ -109,9 +96,11 @@ public class BetterList<T>
 			}
 			this.buffer[index] = item;
 			this.size++;
-			return;
 		}
-		this.Add(item);
+		else
+		{
+			this.Add(item);
+		}
 	}
 
 	public bool Contains(T item)
@@ -187,10 +176,7 @@ public class BetterList<T>
 	{
 		if (this.buffer != null && this.size != 0)
 		{
-			T[] arg_27_0 = this.buffer;
-			int num = this.size - 1;
-			this.size = num;
-			T result = arg_27_0[num];
+			T result = this.buffer[--this.size];
 			this.buffer[this.size] = default(T);
 			return result;
 		}
@@ -223,257 +209,9 @@ public class BetterList<T>
 				}
 				else if (!flag)
 				{
-					num = ((i == 0) ? 0 : (i - 1));
+					num = ((i != 0) ? (i - 1) : 0);
 				}
 			}
 		}
-	}
-
-	public BetterList()
-	{
-	}
-
-	protected internal BetterList(UIntPtr dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((BetterList<int>)GCHandledObjects.GCHandleToObject(instance)).AllocateMore();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((BetterList<int>)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((BetterList<int>)GCHandledObjects.GCHandleToObject(instance)).Release();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		((BetterList<int>)GCHandledObjects.GCHandleToObject(instance)).RemoveAt(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((BetterList<int>)GCHandledObjects.GCHandleToObject(instance)).Trim();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((BetterList<string>)GCHandledObjects.GCHandleToObject(instance)).AllocateMore();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((BetterList<string>)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((BetterList<string>)GCHandledObjects.GCHandleToObject(instance)).Release();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((BetterList<string>)GCHandledObjects.GCHandleToObject(instance)).RemoveAt(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((BetterList<string>)GCHandledObjects.GCHandleToObject(instance)).Trim();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((BetterList<UIDrawCall>)GCHandledObjects.GCHandleToObject(instance)).AllocateMore();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((BetterList<UIDrawCall>)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((BetterList<UIDrawCall>)GCHandledObjects.GCHandleToObject(instance)).Release();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((BetterList<UIDrawCall>)GCHandledObjects.GCHandleToObject(instance)).RemoveAt(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		((BetterList<UIDrawCall>)GCHandledObjects.GCHandleToObject(instance)).Trim();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		((BetterList<UITextList.Paragraph>)GCHandledObjects.GCHandleToObject(instance)).AllocateMore();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		((BetterList<UITextList.Paragraph>)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		((BetterList<UITextList.Paragraph>)GCHandledObjects.GCHandleToObject(instance)).Release();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		((BetterList<UITextList.Paragraph>)GCHandledObjects.GCHandleToObject(instance)).RemoveAt(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		((BetterList<UITextList.Paragraph>)GCHandledObjects.GCHandleToObject(instance)).Trim();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		((BetterList<Color32>)GCHandledObjects.GCHandleToObject(instance)).AllocateMore();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		((BetterList<Color32>)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((BetterList<Color32>)GCHandledObjects.GCHandleToObject(instance)).Release();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		((BetterList<Color32>)GCHandledObjects.GCHandleToObject(instance)).RemoveAt(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		((BetterList<Color32>)GCHandledObjects.GCHandleToObject(instance)).Trim();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		((BetterList<Vector2>)GCHandledObjects.GCHandleToObject(instance)).AllocateMore();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		((BetterList<Vector2>)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		((BetterList<Vector2>)GCHandledObjects.GCHandleToObject(instance)).Release();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		((BetterList<Vector2>)GCHandledObjects.GCHandleToObject(instance)).RemoveAt(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		((BetterList<Vector2>)GCHandledObjects.GCHandleToObject(instance)).Trim();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		((BetterList<Vector3>)GCHandledObjects.GCHandleToObject(instance)).AllocateMore();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		((BetterList<Vector3>)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		((BetterList<Vector3>)GCHandledObjects.GCHandleToObject(instance)).Release();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		((BetterList<Vector3>)GCHandledObjects.GCHandleToObject(instance)).RemoveAt(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		((BetterList<Vector3>)GCHandledObjects.GCHandleToObject(instance)).Trim();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		((BetterList<Vector4>)GCHandledObjects.GCHandleToObject(instance)).AllocateMore();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		((BetterList<Vector4>)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		((BetterList<Vector4>)GCHandledObjects.GCHandleToObject(instance)).Release();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke38(long instance, long* args)
-	{
-		((BetterList<Vector4>)GCHandledObjects.GCHandleToObject(instance)).RemoveAt(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke39(long instance, long* args)
-	{
-		((BetterList<Vector4>)GCHandledObjects.GCHandleToObject(instance)).Trim();
-		return -1L;
 	}
 }

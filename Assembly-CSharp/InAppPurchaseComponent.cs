@@ -5,42 +5,38 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
-public class InAppPurchaseComponent : MonoBehaviour, IUnitySerializable
+public class InAppPurchaseComponent : MonoBehaviour
 {
 	public void OnGetInfoForProducts(string jsonString)
 	{
 		if (!string.IsNullOrEmpty(jsonString))
 		{
-			if (Service.IsSet<StaRTSLogger>())
+			if (Service.IsSet<Logger>())
 			{
-				Service.Get<StaRTSLogger>().Debug("ProductInfoString: " + jsonString);
+				Service.Get<Logger>().Debug("ProductInfoString: " + jsonString);
 			}
 			if (Service.IsSet<InAppPurchaseController>())
 			{
-				Service.Get<InAppPurchaseController>().OnGetInfoForProducts(jsonString);
-				return;
+				Service.Get<InAppPurchaseController>().OnGetInfoForProducts(jsonString, null);
 			}
-			if (Service.IsSet<StaRTSLogger>())
+			else if (Service.IsSet<Logger>())
 			{
-				Service.Get<StaRTSLogger>().Error("ProductInfoString: InAppPurchaseController is not set");
-				return;
+				Service.Get<Logger>().Error("ProductInfoString: InAppPurchaseController is not set");
 			}
 		}
-		else if (Service.IsSet<StaRTSLogger>())
+		else if (Service.IsSet<Logger>())
 		{
-			Service.Get<StaRTSLogger>().Error("ProductInfoString: IsNullOrEmpty");
+			Service.Get<Logger>().Error("ProductInfoString: IsNullOrEmpty");
 		}
 	}
 
 	public void OnPurchaseProduct(string jsonString)
 	{
-		if (Service.IsSet<StaRTSLogger>())
+		if (Service.IsSet<Logger>())
 		{
-			Service.Get<StaRTSLogger>().Debug("OnPurchaseProduct: " + jsonString);
+			Service.Get<Logger>().Debug("OnPurchaseProduct: " + jsonString);
 		}
 		if (!string.IsNullOrEmpty(jsonString) && Service.IsSet<InAppPurchaseController>())
 		{
@@ -52,7 +48,7 @@ public class InAppPurchaseComponent : MonoBehaviour, IUnitySerializable
 	{
 		if (!string.IsNullOrEmpty(jsonString))
 		{
-			Service.Get<StaRTSLogger>().Debug("OnConsumeProduct: " + jsonString);
+			Service.Get<Logger>().Debug("OnConsumeProduct: " + jsonString);
 		}
 	}
 
@@ -63,7 +59,7 @@ public class InAppPurchaseComponent : MonoBehaviour, IUnitySerializable
 			return;
 		}
 		string text = biLog;
-		string action = "";
+		string action = string.Empty;
 		int num = text.IndexOf('|');
 		if (num >= 0)
 		{
@@ -80,7 +76,8 @@ public class InAppPurchaseComponent : MonoBehaviour, IUnitySerializable
 	{
 		if (!string.IsNullOrEmpty(jsonString))
 		{
-			Service.Get<StaRTSLogger>().Debug("OnRestorePurchases: " + jsonString);
+			Service.Get<Logger>().Debug("OnRestorePurchases: " + jsonString);
+			this.RestoreAndroidPurchases(jsonString);
 		}
 	}
 
@@ -91,28 +88,24 @@ public class InAppPurchaseComponent : MonoBehaviour, IUnitySerializable
 			IDictionary<string, object> dictionary = new JsonParser(jsonString).Parse() as Dictionary<string, object>;
 			if (dictionary != null && dictionary.ContainsKey("purchases"))
 			{
-				List<object> list = dictionary.get_Item("purchases") as List<object>;
+				List<object> list = dictionary["purchases"] as List<object>;
 				for (int i = 0; i < list.Count; i++)
 				{
 					Serializer serializer = new Serializer();
 					IDictionary<string, object> dictionary2 = list[i] as Dictionary<string, object>;
-					using (IEnumerator<KeyValuePair<string, object>> enumerator = dictionary2.GetEnumerator())
+					foreach (KeyValuePair<string, object> current in dictionary2)
 					{
-						while (enumerator.MoveNext())
+						Service.Get<Logger>().Debug(string.Concat(new object[]
 						{
-							KeyValuePair<string, object> current = enumerator.get_Current();
-							Service.Get<StaRTSLogger>().Debug(string.Concat(new object[]
-							{
-								"key: ",
-								current.get_Key(),
-								" value: ",
-								current.get_Value()
-							}));
-							serializer.AddString(current.get_Key(), current.get_Value() as string);
-						}
+							"key: ",
+							current.Key,
+							" value: ",
+							current.Value
+						}));
+						serializer.AddString(current.Key, current.Value as string);
 					}
 					serializer.End();
-					Service.Get<StaRTSLogger>().Debug("Restored Purcase:" + serializer.ToString());
+					Service.Get<Logger>().Debug("Restored Purcase:" + serializer.ToString());
 					Service.Get<InAppPurchaseController>().OnPurchaseProductResponse(serializer.ToString(), true);
 				}
 			}
@@ -129,105 +122,5 @@ public class InAppPurchaseComponent : MonoBehaviour, IUnitySerializable
 		{
 			Service.Get<InAppPurchaseController>().OnPurchaseProductResponse(jsonString, true);
 		}
-	}
-
-	public InAppPurchaseComponent()
-	{
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-	}
-
-	public override void Unity_NamedSerialize(int depth)
-	{
-	}
-
-	public override void Unity_NamedDeserialize(int depth)
-	{
-	}
-
-	protected internal InAppPurchaseComponent(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).OnBILog(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).onConsumePurchase(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).OnGetInfoForProducts(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).OnPurchaseProduct(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).OnRestorePurchases(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).RestoreAndroidPurchases(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).RestoreIOSPurchases(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((InAppPurchaseComponent)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
 	}
 }

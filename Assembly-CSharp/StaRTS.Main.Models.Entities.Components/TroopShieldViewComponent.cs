@@ -7,7 +7,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Entities.Components
 {
@@ -26,6 +25,13 @@ namespace StaRTS.Main.Models.Entities.Components
 		private AssetHandle assetHandle;
 
 		private Animator anim;
+
+		public TroopShieldViewComponent(TroopTypeVO troop)
+		{
+			string shieldAssetName = troop.ShieldAssetName;
+			string assetName = Service.Get<IDataController>().Get<EffectsTypeVO>(shieldAssetName).AssetName;
+			Service.Get<AssetManager>().Load(ref this.assetHandle, assetName, new AssetSuccessDelegate(this.OnEffectLoaded), null, true);
+		}
 
 		private void OnEffectLoaded(object asset, object cookie)
 		{
@@ -52,13 +58,6 @@ namespace StaRTS.Main.Models.Entities.Components
 			}
 		}
 
-		public TroopShieldViewComponent(TroopTypeVO troop)
-		{
-			string shieldAssetName = troop.ShieldAssetName;
-			string assetName = Service.Get<IDataController>().Get<EffectsTypeVO>(shieldAssetName).AssetName;
-			Service.Get<AssetManager>().Load(ref this.assetHandle, assetName, new AssetSuccessDelegate(this.OnEffectLoaded), null, true);
-		}
-
 		public override void OnRemove()
 		{
 			if (this.assetHandle != AssetHandle.Invalid)
@@ -83,34 +82,6 @@ namespace StaRTS.Main.Models.Entities.Components
 			{
 				this.anim.SetInteger("Motivation", 0);
 			}
-		}
-
-		protected internal TroopShieldViewComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TroopShieldViewComponent)GCHandledObjects.GCHandleToObject(instance)).OnEffectLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TroopShieldViewComponent)GCHandledObjects.GCHandleToObject(instance)).OnRemove();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TroopShieldViewComponent)GCHandledObjects.GCHandleToObject(instance)).PlayActivateAnimation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TroopShieldViewComponent)GCHandledObjects.GCHandleToObject(instance)).PlayDeactivateAnimation();
-			return -1L;
 		}
 	}
 }

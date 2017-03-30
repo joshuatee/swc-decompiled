@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -25,20 +24,12 @@ namespace StaRTS.Utils
 
 		public static float ExpoEaseOut(float t, float b, float c, float d)
 		{
-			if (t != d)
-			{
-				return c * (-Mathf.Pow(2f, -10f * t / d) + 1f) + b;
-			}
-			return b + c;
+			return (t != d) ? (c * (-Mathf.Pow(2f, -10f * t / d) + 1f) + b) : (b + c);
 		}
 
 		public static float ExpoEaseIn(float t, float b, float c, float d)
 		{
-			if (t != 0f)
-			{
-				return c * Mathf.Pow(2f, 10f * (t / d - 1f)) + b;
-			}
-			return b;
+			return (t != 0f) ? (c * Mathf.Pow(2f, 10f * (t / d - 1f)) + b) : b;
 		}
 
 		public static float ExpoEaseInOut(float t, float b, float c, float d)
@@ -348,221 +339,6 @@ namespace StaRTS.Utils
 				return Easing.BackEaseOut(t * 2f, b, c / 2f, d);
 			}
 			return Easing.BackEaseIn(t * 2f - d, b + c / 2f, c / 2f, d);
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.AlwaysFinal(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.AlwaysStart(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.BackEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.BackEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.BackEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.BackEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.BounceEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.BounceEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.BounceEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.BounceEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.CircEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.CircEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.CircEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.CircEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.CubicEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.CubicEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.CubicEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.CubicEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.ElasticEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.ElasticEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.ElasticEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.ElasticEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.ExpoEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.ExpoEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.ExpoEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.ExpoEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.Linear(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuadEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuadEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuadEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuadEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuartEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuartEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuartEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuartEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuintEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuintEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuintEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.QuintEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.SineEaseIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.SineEaseInOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.SineEaseOut(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Easing.SineEaseOutIn(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3)));
 		}
 	}
 }

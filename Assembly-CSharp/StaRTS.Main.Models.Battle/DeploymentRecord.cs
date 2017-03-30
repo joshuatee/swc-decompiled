@@ -1,7 +1,6 @@
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Battle
 {
@@ -93,40 +92,6 @@ namespace StaRTS.Main.Models.Battle
 			this.boardX = (int)dictionary["x"];
 			this.boardZ = (int)dictionary["z"];
 			return this;
-		}
-
-		protected internal DeploymentRecord(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeploymentRecord)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeploymentRecord)GCHandledObjects.GCHandleToObject(instance)).Action);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeploymentRecord)GCHandledObjects.GCHandleToObject(instance)).BoardX);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeploymentRecord)GCHandledObjects.GCHandleToObject(instance)).BoardZ);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeploymentRecord)GCHandledObjects.GCHandleToObject(instance)).Uid);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeploymentRecord)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

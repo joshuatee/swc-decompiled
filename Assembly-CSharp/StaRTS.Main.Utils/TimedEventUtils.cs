@@ -7,8 +7,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -54,7 +52,7 @@ namespace StaRTS.Main.Utils
 			}
 			catch
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Failed to parse date string {0} for uid {1}. Must be valid and in format {2}", new object[]
+				Service.Get<Logger>().ErrorFormat("Failed to parse date string {0} for uid {1}. Must be valid and in format {2}", new object[]
 				{
 					dateString,
 					timedEventUid,
@@ -123,51 +121,6 @@ namespace StaRTS.Main.Utils
 		private static int GetNowTimeWithEventOffset(ITimedEventVO vo)
 		{
 			return (int)(ServerTime.Time + (uint)Service.Get<CurrentPlayer>().CampaignProgress.GetOffsetSeconds(vo));
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventUtils.GetNowTimeWithEventOffset((ITimedEventVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventUtils.GetSecondsRemaining((ITimedEventVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventUtils.GetSecondsRemainingUntilClosing((ITimedEventVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventUtils.GetState((ITimedEventVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventUtils.GetStoreSecondsRemaining((ITimedEventVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventUtils.GetTimestamp(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventUtils.IsTimedEventActive((ITimedEventVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventUtils.IsTimedEventLive((ITimedEventVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TimedEventUtils.IsTimedEventLiveOrClosing((ITimedEventVO)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

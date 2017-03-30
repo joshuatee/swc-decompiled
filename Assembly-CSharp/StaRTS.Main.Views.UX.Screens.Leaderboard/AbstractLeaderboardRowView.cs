@@ -6,7 +6,6 @@ using StaRTS.Main.Views.UX.Screens.ScreenHelpers;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 {
@@ -276,66 +275,11 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				this.bgSprite.SpriteName = "BgGradientRowHighlight";
 				this.bgSprite.Color = Color.white;
 				this.bgSprite.Alpha = 0.6f;
-				return;
 			}
-			this.bgSprite.SpriteName = "BgGradientRow";
-		}
-
-		protected internal AbstractLeaderboardRowView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(instance)).CreateItem();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(instance)).Deselect();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(instance)).GetItem());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(instance)).InitElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(instance)).OnBackButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(instance)).OnClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(instance)).ToggleHighlight(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((AbstractLeaderboardRowView)GCHandledObjects.GCHandleToObject(instance)).UpdateButtonContainerTween((UXElement)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
+			else
+			{
+				this.bgSprite.SpriteName = "BgGradientRow";
+			}
 		}
 	}
 }

@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -20,15 +19,6 @@ namespace StaRTS.Main.Views.Entities
 		{
 			this.gameObject = gameObj;
 			base.InitData(this.gameObject, null);
-		}
-
-		protected internal FadingGameObject(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FadingGameObject)GCHandledObjects.GCHandleToObject(instance)).GameObj);
 		}
 	}
 }

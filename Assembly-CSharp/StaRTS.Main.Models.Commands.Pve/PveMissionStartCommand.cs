@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Pve
 		public PveMissionStartCommand(MissionIdRequest request) : base("player.pve.start", request, new BattleIdResponse())
 		{
 		}
-
-		protected internal PveMissionStartCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

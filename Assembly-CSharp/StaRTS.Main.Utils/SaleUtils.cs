@@ -3,7 +3,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -34,16 +33,6 @@ namespace StaRTS.Main.Utils
 				}
 			}
 			return list;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SaleUtils.GetCurrentActiveSale());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(SaleUtils.GetSaleItems((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args)));
 		}
 	}
 }

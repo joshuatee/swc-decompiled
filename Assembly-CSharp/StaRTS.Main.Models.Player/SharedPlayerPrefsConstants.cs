@@ -69,7 +69,5 @@ namespace StaRTS.Main.Models.Player
 		public const string FALSE = "false";
 
 		public const string TRUE = "true";
-
-		public const string LAST_FACEBOOK_ID_USED = "FB_ID";
 	}
 }

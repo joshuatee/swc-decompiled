@@ -12,8 +12,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -111,16 +109,16 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private string accountProvider;
 
+		private AccountSyncScreen() : base("gui_account_sync")
+		{
+		}
+
 		public static AccountSyncScreen CreateSyncConflictScreen(RegisterExternalAccountCommand command)
 		{
 			AccountSyncScreen accountSyncScreen = new AccountSyncScreen();
 			accountSyncScreen.command = command;
 			accountSyncScreen.accountProvider = accountSyncScreen.GetAccountProviderString(command.RequestArgs.Provider);
 			return accountSyncScreen;
-		}
-
-		private AccountSyncScreen() : base("gui_account_sync")
-		{
 		}
 
 		protected override void OnScreenLoaded()
@@ -181,10 +179,10 @@ namespace StaRTS.Main.Views.UX.Screens
 				accountSyncAccountType = AccountSyncAccountType.SingleAccount;
 			}
 			Squad currentSquad = Service.Get<SquadController>().StateManager.GetCurrentSquad();
-			this.PopulatePlayerInfo(accountSyncAccountType, currentPlayer.PlayerName, currentPlayer.Map.FindHighestHqLevel(), currentPlayer.PlayerMedals, currentPlayer.Faction, (currentSquad != null) ? currentSquad.SquadName : null);
+			this.PopulatePlayerInfo(accountSyncAccountType, currentPlayer.PlayerName, currentPlayer.Map.FindHighestHqLevel(), currentPlayer.PlayerMedals, currentPlayer.Faction, (currentSquad == null) ? null : currentSquad.SquadName);
 			if (accountSyncAccountType == AccountSyncAccountType.MultipleAccountsPrimary || accountSyncAccountType == AccountSyncAccountType.MultipleAccountsSecondary)
 			{
-				AccountSyncAccountType type = (accountSyncAccountType == AccountSyncAccountType.MultipleAccountsPrimary) ? AccountSyncAccountType.MultipleAccountsSecondary : AccountSyncAccountType.MultipleAccountsPrimary;
+				AccountSyncAccountType type = (accountSyncAccountType != AccountSyncAccountType.MultipleAccountsPrimary) ? AccountSyncAccountType.MultipleAccountsPrimary : AccountSyncAccountType.MultipleAccountsSecondary;
 				this.ShowPlayerInfoLoading(type);
 			}
 		}
@@ -197,11 +195,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private AccountSyncAccountType GetTypeForMultipleAccountId(string playerId)
 		{
-			if (!Service.Get<PlayerIdentityController>().IsFirstIdentity(playerId))
-			{
-				return AccountSyncAccountType.MultipleAccountsSecondary;
-			}
-			return AccountSyncAccountType.MultipleAccountsPrimary;
+			return (!Service.Get<PlayerIdentityController>().IsFirstIdentity(playerId)) ? AccountSyncAccountType.MultipleAccountsSecondary : AccountSyncAccountType.MultipleAccountsPrimary;
 		}
 
 		private void PopulatePlayerInfo(AccountSyncAccountType type, string playerName, int hqLevel, int medals, FactionType faction, string squadName)
@@ -276,7 +270,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				medalsLabel = base.GetElement<UXLabel>("OneLabelMedals");
 				factionLabel = base.GetElement<UXLabel>("OneLabelFaction");
 				squadLabel = base.GetElement<UXLabel>("OneLabelSquad");
-				return;
+				break;
 			case AccountSyncAccountType.MultipleAccountsPrimary:
 				this.groupOneAccount.Visible = false;
 				this.groupTwoAccounts.Visible = true;
@@ -285,7 +279,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				medalsLabel = base.GetElement<UXLabel>("TwoAccountsLabelMedalsPrimary");
 				factionLabel = base.GetElement<UXLabel>("TwoAccountsLabelFactionPrimary");
 				squadLabel = base.GetElement<UXLabel>("TwoAccountsLabelSquadPrimary");
-				return;
+				break;
 			case AccountSyncAccountType.MultipleAccountsSecondary:
 				this.groupOneAccount.Visible = false;
 				this.groupTwoAccounts.Visible = true;
@@ -294,9 +288,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				medalsLabel = base.GetElement<UXLabel>("TwoAccountsLabelMedalsSecondary");
 				factionLabel = base.GetElement<UXLabel>("TwoAccountsLabelFactionSecondary");
 				squadLabel = base.GetElement<UXLabel>("TwoAccountsLabelSquadSecondary");
-				return;
-			default:
-				return;
+				break;
 			}
 		}
 
@@ -313,9 +305,9 @@ namespace StaRTS.Main.Views.UX.Screens
 			});
 			this.labelLastSynced.Text = this.lang.Get("ACCOUNT_SYNC_LAST_DATE", new object[]
 			{
-				DateTime.get_Now().get_Month(),
-				DateTime.get_Now().get_Day(),
-				DateTime.get_Now().get_Year()
+				DateTime.Now.Month,
+				DateTime.Now.Day,
+				DateTime.Now.Year
 			});
 			this.labelLastSynced.Visible = true;
 			this.buttonOk.Visible = true;
@@ -344,9 +336,9 @@ namespace StaRTS.Main.Views.UX.Screens
 				DateTime dateTime = DateUtils.DateFromSeconds(lastSyncedTimeStamp);
 				this.labelLastSynced.Text = this.lang.Get("ACCOUNT_SYNC_LAST_DATE", new object[]
 				{
-					dateTime.get_Month(),
-					dateTime.get_Day(),
-					dateTime.get_Year()
+					dateTime.Month,
+					dateTime.Day,
+					dateTime.Year
 				});
 				this.labelLastSynced.Visible = true;
 			}
@@ -380,9 +372,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.PopulatePlayerInfo(AccountSyncAccountType.MultipleAccountsPrimary, playerIdentityInfo.PlayerName, playerIdentityInfo.HQLevel, playerIdentityInfo.Medals, playerIdentityInfo.Faction, playerIdentityInfo.SquadName);
 				this.PopulatePlayerInfo(AccountSyncAccountType.MultipleAccountsSecondary, playerIdentityInfo2.PlayerName, playerIdentityInfo2.HQLevel, playerIdentityInfo2.Medals, playerIdentityInfo2.Faction, playerIdentityInfo2.SquadName);
-				return;
 			}
-			this.PopulatePlayerInfo(AccountSyncAccountType.SingleAccount, playerIdentityInfo.PlayerName, playerIdentityInfo.HQLevel, playerIdentityInfo.Medals, playerIdentityInfo.Faction, playerIdentityInfo.SquadName);
+			else
+			{
+				this.PopulatePlayerInfo(AccountSyncAccountType.SingleAccount, playerIdentityInfo.PlayerName, playerIdentityInfo.HQLevel, playerIdentityInfo.Medals, playerIdentityInfo.Faction, playerIdentityInfo.SquadName);
+			}
 		}
 
 		private void OnSyncConflictLoadExistingClicked(UXButton button)
@@ -413,9 +407,9 @@ namespace StaRTS.Main.Views.UX.Screens
 			RegisterExternalAccountResponse responseResult = this.command.ResponseResult;
 			foreach (KeyValuePair<string, PlayerIdentityInfo> current in responseResult.PlayerIdentities)
 			{
-				if (current.get_Value().ActiveIdentity)
+				if (current.Value.ActiveIdentity)
 				{
-					Service.Get<IAccountSyncController>().LoadAccount(current.get_Key(), responseResult.Secret);
+					Service.Get<IAccountSyncController>().LoadAccount(current.Key, responseResult.Secret);
 					break;
 				}
 			}
@@ -471,108 +465,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				text = "ACCOUNT_PROVIDER_GOOGLEPLAY";
 				break;
 			}
-			if (text == null)
-			{
-				return null;
-			}
-			return this.lang.Get(text, new object[0]);
-		}
-
-		protected internal AccountSyncScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(AccountSyncScreen.CreateSyncConflictScreen((RegisterExternalAccountCommand)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).GetAccountProviderString((AccountProvider)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).GetTypeForMultipleAccountId(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).OnOtherPlayerIdentityFetched((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).OnSyncConflictCancelClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).OnSyncConflictConnectNewClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).OnSyncConflictConnectNewConfirmClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).OnSyncConflictLoadExistingClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).OnSyncConflictLoadExistingConfirmClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).PopulateCurrentPlayerInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).PopulatePlayerInfo((AccountSyncAccountType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2), *(int*)(args + 3), (FactionType)(*(int*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).ShowPlayerInfoLoading((AccountSyncAccountType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).ShowSyncConfirmation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((AccountSyncScreen)GCHandledObjects.GCHandleToObject(instance)).ShowSyncConflict();
-			return -1L;
+			return (text == null) ? null : this.lang.Get(text, new object[0]);
 		}
 	}
 }

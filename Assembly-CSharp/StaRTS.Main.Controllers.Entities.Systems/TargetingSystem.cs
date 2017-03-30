@@ -4,7 +4,6 @@ using StaRTS.Main.Models.Entities.Components;
 using StaRTS.Main.Models.Entities.Nodes;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities.Systems
 {
@@ -48,9 +47,7 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 			TroopComponent troopComp = entity.ShooterComp.Target.TroopComp;
 			if (troopComp != null)
 			{
-				TroopComponent expr_15 = troopComp;
-				int targetCount = expr_15.TargetCount;
-				expr_15.TargetCount = targetCount + 1;
+				troopComp.TargetCount++;
 			}
 		}
 
@@ -67,32 +64,6 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 		private void UpdateOffensiveTroopPeriodicUpdate(ref int numTargetingDone)
 		{
 			this.targetingController.UpdateNodes<OffensiveTroopNode>(this.offensiveTroopNodeList, ref numTargetingDone, new TargetingController.OnTargetingDone(this.OnTargetingDone), true);
-		}
-
-		public TargetingSystem()
-		{
-		}
-
-		protected internal TargetingSystem(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TargetingSystem)GCHandledObjects.GCHandleToObject(instance)).AddToGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TargetingSystem)GCHandledObjects.GCHandleToObject(instance)).OnTargetingDone((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TargetingSystem)GCHandledObjects.GCHandleToObject(instance)).RemoveFromGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

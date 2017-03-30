@@ -9,7 +9,6 @@ using StaRTS.Main.Views.UserInput;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -44,7 +43,7 @@ namespace StaRTS.Main.Story.Actions
 			NodeList<BuildingNode> nodeList = Service.Get<EntityController>().GetNodeList<BuildingNode>();
 			for (BuildingNode buildingNode = nodeList.Head; buildingNode != null; buildingNode = buildingNode.Next)
 			{
-				if (buildingNode.BuildingComp.BuildingType.BuildingID.Equals(this.prepareArgs[0], 5))
+				if (buildingNode.BuildingComp.BuildingType.BuildingID.Equals(this.prepareArgs[0], StringComparison.InvariantCultureIgnoreCase))
 				{
 					entity = buildingNode.Entity;
 					this.buildingFound = true;
@@ -69,22 +68,6 @@ namespace StaRTS.Main.Story.Actions
 				Service.Get<UserInputInhibitor>().AllowOnly(entity);
 			}
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal CircleBuildingStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CircleBuildingStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CircleBuildingStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

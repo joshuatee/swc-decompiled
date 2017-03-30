@@ -3,8 +3,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Externals.Maker.MRSS
 {
@@ -33,7 +31,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			object json;
 			if (!VideoDataParser.ParseJSON(jsonSource, out json))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to parse VideoDetails JSON");
+				Service.Get<Logger>().Error("Failed to parse VideoDetails JSON");
 				return null;
 			}
 			return new VideoData(videoGuid, json);
@@ -48,13 +46,13 @@ namespace StaRTS.Externals.Maker.MRSS
 			object json;
 			if (!VideoDataParser.ParseJSON(jsonSource, out json))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to parse UserFeed JSON");
+				Service.Get<Logger>().Error("Failed to parse UserFeed JSON");
 				return null;
 			}
 			Dictionary<string, List<VideoData>> result = new Dictionary<string, List<VideoData>>();
 			if (!VideoDataParser.ParseFeed(json, ref result))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to parse UserFeed");
+				Service.Get<Logger>().Error("Failed to parse UserFeed");
 				return null;
 			}
 			return result;
@@ -65,13 +63,13 @@ namespace StaRTS.Externals.Maker.MRSS
 			object json;
 			if (!VideoDataParser.ParseJSON(jsonSource, out json))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to parse Search JSON");
+				Service.Get<Logger>().Error("Failed to parse Search JSON");
 				return null;
 			}
 			Dictionary<string, List<VideoData>> dictionary = new Dictionary<string, List<VideoData>>();
 			if (!VideoDataParser.ParseFeed(json, ref dictionary))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to parse Search");
+				Service.Get<Logger>().Error("Failed to parse Search");
 				return null;
 			}
 			using (Dictionary<string, List<VideoData>>.ValueCollection.Enumerator enumerator = dictionary.Values.GetEnumerator())
@@ -90,7 +88,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			Dictionary<string, object> dictionary = jsonObj as Dictionary<string, object>;
 			if (dictionary != null && dictionary.ContainsKey("message") && dictionary.ContainsKey("code"))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Error in JSON - {0} {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Error in JSON - {0} {1}", new object[]
 				{
 					dictionary["code"],
 					dictionary["message"]
@@ -105,18 +103,18 @@ namespace StaRTS.Externals.Maker.MRSS
 			object obj;
 			if (!VideoDataParser.ParseJSON(jsonSource, out obj))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to parse Tag JSON");
+				Service.Get<Logger>().Error("Failed to parse Tag JSON");
 				return null;
 			}
 			if (obj == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to parse jsonSource");
+				Service.Get<Logger>().Error("Failed to parse jsonSource");
 				return null;
 			}
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Invalid structure for Tag - {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Invalid structure for Tag - {0}", new object[]
 				{
 					obj.GetType().ToString()
 				});
@@ -124,13 +122,13 @@ namespace StaRTS.Externals.Maker.MRSS
 			}
 			if (!dictionary.ContainsKey("item_groups"))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to find Group in Categories");
+				Service.Get<Logger>().Error("Failed to find Group in Categories");
 				return null;
 			}
 			List<object> list = dictionary["item_groups"] as List<object>;
 			if (list == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Null Group in Categories");
+				Service.Get<Logger>().Error("Null Group in Categories");
 				return null;
 			}
 			List<string> result = new List<string>();
@@ -138,7 +136,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			{
 				if (!VideoDataParser.ParseTagGroup(list[i], ref result))
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Failed to parse Category Group {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("Failed to parse Category Group {0}", new object[]
 					{
 						i
 					});
@@ -153,7 +151,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			Dictionary<string, object> dictionary = json as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Invalid structure for Feed - {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Invalid structure for Feed - {0}", new object[]
 				{
 					json.GetType().ToString()
 				});
@@ -161,20 +159,20 @@ namespace StaRTS.Externals.Maker.MRSS
 			}
 			if (!dictionary.ContainsKey("groups"))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to find Group in JSON");
+				Service.Get<Logger>().Error("Failed to find Group in JSON");
 				return false;
 			}
 			List<object> list = dictionary["groups"] as List<object>;
 			if (list == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Null Group in JSON");
+				Service.Get<Logger>().Error("Null Group in JSON");
 				return false;
 			}
 			foreach (object current in list)
 			{
 				if (!VideoDataParser.ParseGroup(current, ref feed))
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Failed to parse Group {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("Failed to parse Group {0}", new object[]
 					{
 						list.IndexOf(current)
 					});
@@ -188,7 +186,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			Dictionary<string, object> dictionary = json as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Invalid structure for Group - {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Invalid structure for Group - {0}", new object[]
 				{
 					json.GetType().ToString()
 				});
@@ -196,20 +194,20 @@ namespace StaRTS.Externals.Maker.MRSS
 			}
 			if (!dictionary.ContainsKey("sections"))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to find Sections in JSON");
+				Service.Get<Logger>().Error("Failed to find Sections in JSON");
 				return false;
 			}
 			List<object> list = dictionary["sections"] as List<object>;
 			if (list == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Null Sections in JSON");
+				Service.Get<Logger>().Error("Null Sections in JSON");
 				return false;
 			}
 			foreach (object current in list)
 			{
 				if (!VideoDataParser.ParseSection(current, ref feed))
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Failed to parse Section {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("Failed to parse Section {0}", new object[]
 					{
 						list.IndexOf(current)
 					});
@@ -223,7 +221,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			Dictionary<string, object> dictionary = json as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Invalid structure for Group - {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Invalid structure for Group - {0}", new object[]
 				{
 					json.GetType().ToString()
 				});
@@ -231,20 +229,20 @@ namespace StaRTS.Externals.Maker.MRSS
 			}
 			if (!dictionary.ContainsKey("items"))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to find Items in JSON");
+				Service.Get<Logger>().Error("Failed to find Items in JSON");
 				return false;
 			}
 			List<object> list = dictionary["items"] as List<object>;
 			if (list == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Null Items in JSON");
+				Service.Get<Logger>().Error("Null Items in JSON");
 				return false;
 			}
 			for (int i = 0; i < list.Count; i++)
 			{
 				if (!VideoDataParser.ParseTagItem(list[i], ref videosReceived))
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Failed to parse Item {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("Failed to parse Item {0}", new object[]
 					{
 						i
 					});
@@ -258,7 +256,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			Dictionary<string, object> dictionary = json as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Invalid structure for Section - {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Invalid structure for Section - {0}", new object[]
 				{
 					json.GetType().ToString()
 				});
@@ -266,12 +264,12 @@ namespace StaRTS.Externals.Maker.MRSS
 			}
 			if (!dictionary.ContainsKey("internal"))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to find Section Name in JSON");
+				Service.Get<Logger>().Error("Failed to find Section Name in JSON");
 				return false;
 			}
 			if (!dictionary.ContainsKey("items"))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to find Videos in JSON");
+				Service.Get<Logger>().Error("Failed to find Videos in JSON");
 				return false;
 			}
 			string key = (string)dictionary["internal"];
@@ -284,7 +282,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			Dictionary<string, object> dictionary = json as Dictionary<string, object>;
 			if (dictionary == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Invalid structure for Tag - {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Invalid structure for Tag - {0}", new object[]
 				{
 					json.GetType().ToString()
 				});
@@ -292,7 +290,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			}
 			if (!dictionary.ContainsKey("internal"))
 			{
-				Service.Get<StaRTSLogger>().Error("Failed to find Video Name in JSON");
+				Service.Get<Logger>().Error("Failed to find Video Name in JSON");
 				return false;
 			}
 			if (!videosReceived.Contains((string)dictionary["internal"]))
@@ -315,39 +313,6 @@ namespace StaRTS.Externals.Maker.MRSS
 				list2.Add(new VideoData(current));
 			}
 			return list2;
-		}
-
-		public VideoDataParser()
-		{
-		}
-
-		protected internal VideoDataParser(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(VideoDataParser.ParseDetails(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(VideoDataParser.ParseSearch(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(VideoDataParser.ParseTag(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(VideoDataParser.ParseUserFeed(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(VideoDataParser.ParseVideoList(GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

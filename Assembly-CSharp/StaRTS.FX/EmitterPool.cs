@@ -4,7 +4,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -51,9 +50,11 @@ namespace StaRTS.FX
 			{
 				uint timerId = Service.Get<ViewTimerManager>().CreateViewTimer(delayPreEmitterStop, false, new TimerDelegate(this.BeforeStopEmitter), cookie2);
 				this.AddBeforeStopTimerId(timerId);
-				return;
 			}
-			this.BeforeStopEmitter(0u, cookie2);
+			else
+			{
+				this.BeforeStopEmitter(0u, cookie2);
+			}
 		}
 
 		private void BeforeStopEmitter(uint timerId, object cookie)
@@ -68,9 +69,11 @@ namespace StaRTS.FX
 			{
 				timerId = Service.Get<ViewTimerManager>().CreateViewTimer(emitterPoolCookie.DelayPostEmitterStop, false, new TimerDelegate(this.AfterStopEmitter), emitterPoolCookie);
 				this.AddAfterStopTimerId(timerId);
-				return;
 			}
-			this.AfterStopEmitter(0u, emitterPoolCookie);
+			else
+			{
+				this.AfterStopEmitter(0u, emitterPoolCookie);
+			}
 		}
 
 		private void AfterStopEmitter(uint timerId, object cookie)
@@ -152,27 +155,6 @@ namespace StaRTS.FX
 				this.afterStopTimerIds.Clear();
 				this.afterStopTimerIds = null;
 			}
-		}
-
-		protected internal EmitterPool(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(EmitterPool.CreateEmitterPool((ParticleSystem)GCHandledObjects.GCHandleToObject(*args), (EmitterReturnedToPool)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EmitterPool)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EmitterPool)GCHandledObjects.GCHandleToObject(instance)).StopEmitterAndReturnToPool(GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), (EmitterStopDelegate)GCHandledObjects.GCHandleToObject(args[2]), *(float*)(args + 3), (EmitterStopDelegate)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
 		}
 	}
 }

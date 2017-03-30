@@ -1,6 +1,5 @@
 using Net.RichardLord.Ash.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Entities.Components
 {
@@ -41,48 +40,6 @@ namespace StaRTS.Main.Models.Entities.Components
 		public bool IsDead()
 		{
 			return this.Health <= 0;
-		}
-
-		protected internal TroopShieldHealthComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopShieldHealthComponent)GCHandledObjects.GCHandleToObject(instance)).ArmorType);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopShieldHealthComponent)GCHandledObjects.GCHandleToObject(instance)).Health);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopShieldHealthComponent)GCHandledObjects.GCHandleToObject(instance)).MaxHealth);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TroopShieldHealthComponent)GCHandledObjects.GCHandleToObject(instance)).IsDead());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TroopShieldHealthComponent)GCHandledObjects.GCHandleToObject(instance)).ArmorType = (ArmorType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TroopShieldHealthComponent)GCHandledObjects.GCHandleToObject(instance)).Health = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TroopShieldHealthComponent)GCHandledObjects.GCHandleToObject(instance)).MaxHealth = *(int*)args;
-			return -1L;
 		}
 	}
 }

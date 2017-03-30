@@ -1,7 +1,6 @@
 using StaRTS.Main.Views.UX.Elements;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Projectors
 {
@@ -58,10 +57,7 @@ namespace StaRTS.Main.Views.Projectors
 		private void SetupScreen(ProjectorConfig config)
 		{
 			this.DestroyQuad();
-			this.quadGameObject = new GameObject(string.Format("Projector Quad ({0})", new object[]
-			{
-				this.frameSprite.Root.name
-			}));
+			this.quadGameObject = new GameObject(string.Format("Projector Quad ({0})", this.frameSprite.Root.name));
 			this.quadGameObject.layer = this.frameSprite.Root.layer;
 			this.quadGameObject.transform.parent = this.frameSprite.Root.transform;
 			this.quadGameObject.transform.localPosition = Vector3.zero;
@@ -78,43 +74,9 @@ namespace StaRTS.Main.Views.Projectors
 			}
 		}
 
-		protected internal SpriteProjectorRenderer(UIntPtr dummy) : base(dummy)
+		virtual bool DoesRenderTextureNeedReload()
 		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SpriteProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SpriteProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).DestroyQuad();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SpriteProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).GetProjectorUITexture());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SpriteProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).PostRender((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SpriteProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).Render((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SpriteProjectorRenderer)GCHandledObjects.GCHandleToObject(instance)).SetupScreen((ProjectorConfig)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
+			return base.DoesRenderTextureNeedReload();
 		}
 	}
 }

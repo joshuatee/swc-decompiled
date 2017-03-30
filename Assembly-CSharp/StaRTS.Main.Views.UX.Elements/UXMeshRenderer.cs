@@ -4,9 +4,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Elements
 {
@@ -105,7 +103,7 @@ namespace StaRTS.Main.Views.UX.Elements
 			}
 			if (shader == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Shader missing: '" + shaderName + "'");
+				Service.Get<Logger>().Error("Shader missing: '" + shaderName + "'");
 				return;
 			}
 			this.material.shader = shader;
@@ -118,57 +116,6 @@ namespace StaRTS.Main.Views.UX.Elements
 				this.material = UnityUtils.EnsureMaterialCopy(this.component);
 			}
 			this.material.SetFloat(nameID, value);
-		}
-
-		protected internal UXMeshRenderer(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXMeshRenderer)GCHandledObjects.GCHandleToObject(instance)).MainTexture);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((UXMeshRenderer)GCHandledObjects.GCHandleToObject(instance)).InternalDestroyComponent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((UXMeshRenderer)GCHandledObjects.GCHandleToObject(instance)).LoadTexture(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((UXMeshRenderer)GCHandledObjects.GCHandleToObject(instance)).OnLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((UXMeshRenderer)GCHandledObjects.GCHandleToObject(instance)).MainTexture = (Texture)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((UXMeshRenderer)GCHandledObjects.GCHandleToObject(instance)).SetShader(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((UXMeshRenderer)GCHandledObjects.GCHandleToObject(instance)).SetShaderFloat(Marshal.PtrToStringUni(*(IntPtr*)args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((UXMeshRenderer)GCHandledObjects.GCHandleToObject(instance)).UnloadCurrentTexture();
-			return -1L;
 		}
 	}
 }

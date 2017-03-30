@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public GetSquadCommand(PlayerIdRequest request) : base("guild.get", request, new SquadResponse())
 		{
 		}
-
-		protected internal GetSquadCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetSquadLevelCommand(CheatSetSquadLevelRequest request) : base("cheats.guild.setLevel", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSetSquadLevelCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -6,14 +6,11 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
 	public class TournamentTierChangedScreen : ScreenBase
 	{
-		private TournamentRank playerRank;
-
 		private const string LABEL_TITLE = "DialogTournamentsTitle";
 
 		private const string LABEL_NEW_TIER = "LabelYourTier";
@@ -25,6 +22,8 @@ namespace StaRTS.Main.Views.UX.Screens
 		private const float ANIMATION_TIME = 3f;
 
 		private const string ANIMATION_TRIGGER = "Show";
+
+		private TournamentRank playerRank;
 
 		public TournamentTierChangedScreen(TournamentRank rank) : base("gui_tournaments_celebration")
 		{
@@ -60,22 +59,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void OnAnimationFinishedTimer(uint id, object cookie)
 		{
 			this.Close(null);
-		}
-
-		protected internal TournamentTierChangedScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TournamentTierChangedScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TournamentTierChangedScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
 		}
 	}
 }

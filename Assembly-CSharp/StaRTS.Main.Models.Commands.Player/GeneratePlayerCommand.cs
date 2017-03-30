@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public GeneratePlayerCommand(GeneratePlayerRequest request) : base("auth.preauth.generatePlayer", request, new GeneratePlayerResponse())
 		{
 		}
-
-		protected internal GeneratePlayerCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

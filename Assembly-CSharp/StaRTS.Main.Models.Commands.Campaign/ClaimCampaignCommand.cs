@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Campaign
 		public ClaimCampaignCommand(ClaimCampaignRequest request) : base("player.missions.claimCampaign", request, new DefaultResponse())
 		{
 		}
-
-		protected internal ClaimCampaignCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

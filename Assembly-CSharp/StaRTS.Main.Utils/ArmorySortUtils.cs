@@ -2,7 +2,6 @@ using StaRTS.Main.Models;
 using StaRTS.Main.Models.ValueObjects;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -190,72 +189,6 @@ namespace StaRTS.Main.Utils
 				return num;
 			}
 			return 0;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.CreateSortDictionary());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.RemoveWrapper((List<SortableEquipment>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortAlphabetically((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortByCapacitySize((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortByCurrentPlanet((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortByDecrementingIndex((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortByEmptyEquipment((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortByIncrementingEmptyIndex((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortByQuality((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortByRequirementsMet((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortByUnlockedEquipment((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmorySortUtils.SortWithList((SortableEquipment)GCHandledObjects.GCHandleToObject(*args), (SortableEquipment)GCHandledObjects.GCHandleToObject(args[1]), (List<EquipmentSortMethod>)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			ArmorySortUtils.SortWithPriorityList((List<SortableEquipment>)GCHandledObjects.GCHandleToObject(*args), (List<EquipmentSortMethod>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

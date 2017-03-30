@@ -3,8 +3,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Perks
 {
@@ -53,7 +51,7 @@ namespace StaRTS.Main.Models.Perks
 				{
 					foreach (KeyValuePair<string, object> current in dictionary2)
 					{
-						this.Cooldowns.Add(current.get_Key(), Convert.ToUInt32(current.get_Value(), CultureInfo.InvariantCulture));
+						this.Cooldowns.Add(current.Key, Convert.ToUInt32(current.Value));
 					}
 				}
 			}
@@ -66,48 +64,8 @@ namespace StaRTS.Main.Models.Perks
 
 		public string ToJson()
 		{
-			Service.Get<StaRTSLogger>().Warn("Attempting to inappropriately serialize PerksData");
+			Service.Get<Logger>().Warn("Attempting to inappropriately serialize PerksData");
 			return string.Empty;
-		}
-
-		public PerksData()
-		{
-		}
-
-		protected internal PerksData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerksData)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerksData)GCHandledObjects.GCHandleToObject(instance)).ActivatedPerks);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerksData)GCHandledObjects.GCHandleToObject(instance)).HasActivatedFirstPerk);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PerksData)GCHandledObjects.GCHandleToObject(instance)).ActivatedPerks = (List<ActivatedPerkData>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PerksData)GCHandledObjects.GCHandleToObject(instance)).HasActivatedFirstPerk = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerksData)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

@@ -20,59 +20,71 @@ namespace Net.RichardLord.Ash.Core
 		{
 			if (this.Head == null)
 			{
-				this.Tail = system;
-				this.Head = system;
-				SystemBase<T> arg_38_0 = system;
-				SystemBase<T> arg_32_0 = system;
-				T t = default(T);
-				arg_32_0.Previous = t;
-				arg_38_0.Next = t;
-				return;
+				T t = system;
+				this.Tail = t;
+				this.Head = t;
+				t = (T)((object)null);
+				system.Previous = t;
+				system.Next = t;
 			}
-			T t2 = this.Tail;
-			while (t2 != null && t2.Priority > system.Priority)
+			else
 			{
-				t2 = t2.Previous;
+				T t2;
+				for (t2 = this.Tail; t2 != null; t2 = t2.Previous)
+				{
+					if (t2.Priority <= system.Priority)
+					{
+						break;
+					}
+				}
+				if (t2 == this.Tail)
+				{
+					T t = this.Tail;
+					t.Next = system;
+					system.Previous = this.Tail;
+					system.Next = (T)((object)null);
+					this.Tail = system;
+				}
+				else if (t2 == null)
+				{
+					system.Next = this.Head;
+					system.Previous = (T)((object)null);
+					T head = this.Head;
+					head.Previous = system;
+					this.Head = system;
+				}
+				else
+				{
+					system.Next = t2.Next;
+					system.Previous = t2;
+					T next = t2.Next;
+					next.Previous = system;
+					t2.Next = system;
+				}
 			}
-			if (t2 == this.Tail)
-			{
-				this.Tail.Next = system;
-				system.Previous = this.Tail;
-				system.Next = default(T);
-				this.Tail = system;
-				return;
-			}
-			if (t2 == null)
-			{
-				system.Next = this.Head;
-				system.Previous = default(T);
-				this.Head.Previous = system;
-				this.Head = system;
-				return;
-			}
-			system.Next = t2.Next;
-			system.Previous = t2;
-			t2.Next.Previous = system;
-			t2.Next = system;
 		}
 
 		internal void Remove(T system)
 		{
 			if (this.Head == system)
 			{
-				this.Head = this.Head.Next;
+				T head = this.Head;
+				this.Head = head.Next;
 			}
 			if (this.Tail == system)
 			{
-				this.Tail = this.Tail.Previous;
+				T tail = this.Tail;
+				this.Tail = tail.Previous;
 			}
 			if (system.Previous != null)
 			{
-				system.Previous.Next = system.Next;
+				T previous = system.Previous;
+				previous.Next = system.Next;
 			}
 			if (system.Next != null)
 			{
-				system.Next.Previous = system.Previous;
+				T next = system.Next;
+				next.Previous = system.Previous;
 			}
 		}
 
@@ -81,11 +93,12 @@ namespace Net.RichardLord.Ash.Core
 			while (this.Head != null)
 			{
 				T head = this.Head;
-				this.Head = this.Head.Next;
-				head.Previous = default(T);
-				head.Next = default(T);
+				T head2 = this.Head;
+				this.Head = head2.Next;
+				head.Previous = (T)((object)null);
+				head.Next = (T)((object)null);
 			}
-			this.Tail = default(T);
+			this.Tail = (T)((object)null);
 		}
 
 		internal T Get(Type type)
@@ -97,7 +110,7 @@ namespace Net.RichardLord.Ash.Core
 					return t;
 				}
 			}
-			return default(T);
+			return (T)((object)null);
 		}
 	}
 }

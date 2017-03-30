@@ -27,13 +27,5 @@ namespace StaRTS.Main.Models.Squads
 		public FactionType SharerFaction;
 
 		public string Text;
-
-		public SqmReplayData()
-		{
-		}
-
-		protected internal SqmReplayData(UIntPtr dummy)
-		{
-		}
 	}
 }

@@ -12,15 +12,11 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
 	public class SquadAdvancementActivateTab : SquadAdvancementBaseTab, IEventObserver, IViewClockTimeObserver
 	{
-		private float TIME_DELAY_TO_SHOW_CELEB;
-
 		private const int AVAILABLE_SORT_ORDER_REPUTATION_OFFSET = 10000;
 
 		private const int AVAILABLE_SORT_ORDER_LOCK_OFFSET = 20000;
@@ -95,17 +91,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private const string LABEL_AVAILABLE_COOLDOWN_COST = "CostReadyNowPerksLabel";
 
-		private static readonly string[] singleCostElementName = new string[]
-		{
-			"CostAvActPerkBot"
-		};
-
-		private static readonly string[] dualCostElementNames = new string[]
-		{
-			"CostAvActPerkTop",
-			"CostAvActPerkBot"
-		};
-
 		private const string LANG_PERK_ACTIVE_SLOTS_TITLE = "PERK_ACTIVE_SLOTS_TITLE";
 
 		private const string LANG_PERK_ACTIVE_AVAILABLE_TITLE = "PERK_ACTIVE_AVAILABLE_TITLE";
@@ -126,6 +111,19 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private const string LANG_PERK_ACTIVE_SLOT_ACTIVE_TIMER_DESC = "PERK_ACTIVE_SLOT_ACTIVE_TIMER_DESC";
 
+		private float TIME_DELAY_TO_SHOW_CELEB = 0.5f;
+
+		private static readonly string[] singleCostElementName = new string[]
+		{
+			"CostAvActPerkBot"
+		};
+
+		private static readonly string[] dualCostElementNames = new string[]
+		{
+			"CostAvActPerkTop",
+			"CostAvActPerkBot"
+		};
+
 		private UXGrid activePerksGrid;
 
 		private UXGrid perksGrid;
@@ -140,10 +138,8 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private SquadScreenActivationInfoView activationInfoView;
 
-		public SquadAdvancementActivateTab(SquadSlidingScreen screen, string tabLabelName, string tabLabelString)
+		public SquadAdvancementActivateTab(SquadSlidingScreen screen, string tabLabelName, string tabLabelString) : base(screen, "ActivateGroupPerks", tabLabelName, tabLabelString)
 		{
-			this.TIME_DELAY_TO_SHOW_CELEB = 0.5f;
-			base..ctor(screen, "ActivateGroupPerks", tabLabelName, tabLabelString);
 			this.activePerkTimerLabels = new List<UXLabel>();
 			this.cooldownTimerLabels = new List<UXLabel>();
 			this.cooldownCostLabels = new List<UXLabel>();
@@ -339,80 +335,83 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				int squadLevelUnlock = current.SquadLevelUnlock;
 				bool flag = perkManager.IsPerkLevelLocked(current, level);
 				bool flag2 = perkManager.IsPerkReputationLocked(current, level, available);
-				bool flag3 = flag | flag2;
+				bool flag3 = flag || flag2;
 				bool flag4 = perkManager.IsPerkGroupActive(perkGroup);
 				bool flag5 = perkManager.IsPerkGroupInCooldown(perkGroup);
-				if ((!available.ContainsKey(perkGroup) || !(available[perkGroup] != current.Uid)) && (!flag3 || perkTier == 1))
+				if (!available.ContainsKey(perkGroup) || !(available[perkGroup] != current.Uid))
 				{
-					string text = "PerkItem_" + perkGroup;
-					UXElement uXElement = base.FetchPerkGridItem(this.perksGrid, text);
-					uXElement.Tag = current;
-					UXElement subElement = this.perksGrid.GetSubElement<UXElement>(text, "CoolDownGroupAvActCardPerks");
-					UXElement subElement2 = this.perksGrid.GetSubElement<UXElement>(text, "LockedGroupAvActCardPerks");
-					UXElement subElement3 = this.perksGrid.GetSubElement<UXElement>(text, "CostAvActPerkTop");
-					subElement3.Visible = false;
-					UXElement subElement4 = this.perksGrid.GetSubElement<UXElement>(text, "CostAvActPerkBot");
-					subElement4.Visible = false;
-					UXLabel subElement5 = this.perksGrid.GetSubElement<UXLabel>(text, "LabelPerkTitleAvActCardPerks");
-					subElement5.Text = perkViewController.GetPerkNameForGroup(perkGroup);
-					UXLabel subElement6 = this.perksGrid.GetSubElement<UXLabel>(text, "LabelPerkLvlAvActCardPerks");
-					subElement6.Text = StringUtils.GetRomanNumeral(current.PerkTier);
-					subElement6.Visible = !flag3;
-					UXTexture subElement7 = this.perksGrid.GetSubElement<UXTexture>(text, "TexturePerkArtAvActCardPerks");
-					perkViewController.SetPerkImage(subElement7, current);
-					UXButton subElement8 = this.perksGrid.GetSubElement<UXButton>(text, "BtnAvActCardPerks");
-					subElement8.Tag = current;
-					subElement8.OnClicked = new UXButtonClickedDelegate(this.OnPerkButtonClicked);
-					uXElement.Visible = true;
-					if (flag3)
+					if (!flag3 || perkTier == 1)
 					{
-						subElement.Visible = false;
-						subElement2.Visible = true;
-						UXLabel subElement9 = this.perksGrid.GetSubElement<UXLabel>(text, "LabelSquadLvlLockedAvActCardPerks");
-						if (flag)
+						string text = "PerkItem_" + perkGroup;
+						UXElement uXElement = base.FetchPerkGridItem(this.perksGrid, text);
+						uXElement.Tag = current;
+						UXElement subElement = this.perksGrid.GetSubElement<UXElement>(text, "CoolDownGroupAvActCardPerks");
+						UXElement subElement2 = this.perksGrid.GetSubElement<UXElement>(text, "LockedGroupAvActCardPerks");
+						UXElement subElement3 = this.perksGrid.GetSubElement<UXElement>(text, "CostAvActPerkTop");
+						subElement3.Visible = false;
+						UXElement subElement4 = this.perksGrid.GetSubElement<UXElement>(text, "CostAvActPerkBot");
+						subElement4.Visible = false;
+						UXLabel subElement5 = this.perksGrid.GetSubElement<UXLabel>(text, "LabelPerkTitleAvActCardPerks");
+						subElement5.Text = perkViewController.GetPerkNameForGroup(perkGroup);
+						UXLabel subElement6 = this.perksGrid.GetSubElement<UXLabel>(text, "LabelPerkLvlAvActCardPerks");
+						subElement6.Text = StringUtils.GetRomanNumeral(current.PerkTier);
+						subElement6.Visible = !flag3;
+						UXTexture subElement7 = this.perksGrid.GetSubElement<UXTexture>(text, "TexturePerkArtAvActCardPerks");
+						perkViewController.SetPerkImage(subElement7, current);
+						UXButton subElement8 = this.perksGrid.GetSubElement<UXButton>(text, "BtnAvActCardPerks");
+						subElement8.Tag = current;
+						subElement8.OnClicked = new UXButtonClickedDelegate(this.OnPerkButtonClicked);
+						uXElement.Visible = true;
+						if (flag3)
 						{
-							subElement9.Text = lang.Get("PERK_ACTIVATE_UPGRADE_CARD_LVL_REQ", new object[]
+							subElement.Visible = false;
+							subElement2.Visible = true;
+							UXLabel subElement9 = this.perksGrid.GetSubElement<UXLabel>(text, "LabelSquadLvlLockedAvActCardPerks");
+							if (flag)
 							{
-								squadLevelUnlock
-							});
+								subElement9.Text = lang.Get("PERK_ACTIVATE_UPGRADE_CARD_LVL_REQ", new object[]
+								{
+									squadLevelUnlock
+								});
+							}
+							else
+							{
+								subElement9.Text = lang.Get("PERK_ACTIVATE_POPUP_REP_REQ", new object[0]);
+							}
 						}
-						else
+						else if (flag4)
 						{
-							subElement9.Text = lang.Get("PERK_ACTIVATE_POPUP_REP_REQ", new object[0]);
+							uXElement.Visible = false;
 						}
+						else if (flag5)
+						{
+							subElement.Visible = true;
+							subElement2.Visible = false;
+							UXLabel subElement10 = this.activePerksGrid.GetSubElement<UXLabel>(text, "LabelReadyNowAvActCardPerks");
+							subElement10.Text = lang.Get("PERK_ACTIVE_CARD_COOLDOWN_CTA", new object[0]);
+							UXLabel subElement11 = this.activePerksGrid.GetSubElement<UXLabel>(text, "LabelCoolDownAvActCardPerks");
+							uint num = perkManager.GetPlayerPerkGroupCooldowns()[perkGroup];
+							this.UpdateLabelTimeRemaining(subElement11, lang, "PERK_ACTIVE_CARD_COOLDOWN_TIMER", num);
+							subElement11.Tag = num;
+							this.cooldownTimerLabels.Add(subElement11);
+							UXLabel subElement12 = this.activePerksGrid.GetSubElement<UXLabel>(text, "CostReadyNowPerksLabel");
+							subElement12.Tag = uid;
+							this.cooldownCostLabels.Add(subElement12);
+							this.UpdateGridItemCooldownSkipCost(subElement12, uid);
+							subElement8.OnClicked = new UXButtonClickedDelegate(this.OnCooldownButtonClicked);
+						}
+						else if (!flag4 && !flag5)
+						{
+							subElement.Visible = false;
+							subElement2.Visible = false;
+							Dictionary<string, int> hQScaledCostForPlayer = GameUtils.GetHQScaledCostForPlayer(current.ActivationCost);
+							int count = hQScaledCostForPlayer.Count;
+							string[] costElementNames = (count != 2) ? SquadAdvancementActivateTab.singleCostElementName : SquadAdvancementActivateTab.dualCostElementNames;
+							UXUtils.SetupMultiCostElements(this.screen, costElementNames, text, current.ActivationCost, count);
+						}
+						base.SetupPerkBadge(current, text, "ActCardPerks");
+						list.Add(uXElement);
 					}
-					else if (flag4)
-					{
-						uXElement.Visible = false;
-					}
-					else if (flag5)
-					{
-						subElement.Visible = true;
-						subElement2.Visible = false;
-						UXLabel subElement10 = this.activePerksGrid.GetSubElement<UXLabel>(text, "LabelReadyNowAvActCardPerks");
-						subElement10.Text = lang.Get("PERK_ACTIVE_CARD_COOLDOWN_CTA", new object[0]);
-						UXLabel subElement11 = this.activePerksGrid.GetSubElement<UXLabel>(text, "LabelCoolDownAvActCardPerks");
-						uint num = perkManager.GetPlayerPerkGroupCooldowns()[perkGroup];
-						this.UpdateLabelTimeRemaining(subElement11, lang, "PERK_ACTIVE_CARD_COOLDOWN_TIMER", num);
-						subElement11.Tag = num;
-						this.cooldownTimerLabels.Add(subElement11);
-						UXLabel subElement12 = this.activePerksGrid.GetSubElement<UXLabel>(text, "CostReadyNowPerksLabel");
-						subElement12.Tag = uid;
-						this.cooldownCostLabels.Add(subElement12);
-						this.UpdateGridItemCooldownSkipCost(subElement12, uid);
-						subElement8.OnClicked = new UXButtonClickedDelegate(this.OnCooldownButtonClicked);
-					}
-					else if (!flag4 && !flag5)
-					{
-						subElement.Visible = false;
-						subElement2.Visible = false;
-						Dictionary<string, int> hQScaledCostForPlayer = GameUtils.GetHQScaledCostForPlayer(current.ActivationCost);
-						int count = hQScaledCostForPlayer.Count;
-						string[] costElementNames = (count == 2) ? SquadAdvancementActivateTab.dualCostElementNames : SquadAdvancementActivateTab.singleCostElementName;
-						UXUtils.SetupMultiCostElements(this.screen, costElementNames, text, current.ActivationCost, count);
-					}
-					base.SetupPerkBadge(current, text, "ActCardPerks");
-					list.Add(uXElement);
 				}
 			}
 			list.Sort(new Comparison<UXElement>(this.SortAvailableList));
@@ -723,155 +722,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			{
 				text
 			});
-		}
-
-		protected internal SquadAdvancementActivateTab(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).CanShowGridItem((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).CleanUpActivationInfoView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).GetPerkCooldownTimeLeft(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).OnCooldownButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).OnHide();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).OnPerkButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).OnPerkSlotButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).OnRemoveButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).OnShow();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).RefreshActivePerksGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).RefreshAvailablePerksGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).RefreshPerkStates();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).RegisterEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).ResetVisibilityStates();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).ShowActivationView((PerkVO)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).SortAvailableList((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).SortPerkItemByLevelAndOrder((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).UnregisterClockTimeObserver();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).UnregisterEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).UpdateGridItemCooldownSkipCost((UXLabel)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SquadAdvancementActivateTab)GCHandledObjects.GCHandleToObject(instance)).UpdatePerkTimerLabelsOnTick();
-			return -1L;
 		}
 	}
 }

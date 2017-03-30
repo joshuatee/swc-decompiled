@@ -19,12 +19,19 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Planets
 {
 	public class PlanetRelocationController
 	{
+		private const string START_HYPERSPACE = "StartHyperspace";
+
+		private const string CURRENT_PLANET_ANCHOR = "HomePlanet";
+
+		private const string DESTINATION_PLANET_ANCHOR = "DestinationPlanet";
+
+		private const string PREFAB_LOAD_ERROR = "Invalid GameObject: ";
+
 		private AssetManager assetManager;
 
 		private AssetHandle hyperspaceHandle;
@@ -48,14 +55,6 @@ namespace StaRTS.Main.Controllers.Planets
 		private bool relocating;
 
 		private bool relocationInProgress;
-
-		private const string START_HYPERSPACE = "StartHyperspace";
-
-		private const string CURRENT_PLANET_ANCHOR = "HomePlanet";
-
-		private const string DESTINATION_PLANET_ANCHOR = "DestinationPlanet";
-
-		private const string PREFAB_LOAD_ERROR = "Invalid GameObject: ";
 
 		private TransitionVisuals transitionVisuals;
 
@@ -92,25 +91,29 @@ namespace StaRTS.Main.Controllers.Planets
 			this.relocating = false;
 			this.relocationInProgress = true;
 			Service.Get<EventManager>().SendEvent(EventId.PlanetConfirmRelocate, planetVO.Uid);
-			if (this.destinationVO != null)
+			if (this.destinationVO == null)
+			{
+				CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
+				if (planetVO != null && currentPlayer.UnlockedPlanets.Contains(planetVO.Uid))
+				{
+					this.destinationVO = planetVO;
+					RelocatePlanetRequest request = new RelocatePlanetRequest(planetVO.Uid, payHardCurrency);
+					PlanetRelocationCommand planetRelocationCommand = new PlanetRelocationCommand(request);
+					planetRelocationCommand.AddSuccessCallback(new AbstractCommand<RelocatePlanetRequest, DefaultResponse>.OnSuccessCallback(this.OnRelocateSuccess));
+					planetRelocationCommand.AddFailureCallback(new AbstractCommand<RelocatePlanetRequest, DefaultResponse>.OnFailureCallback(this.OnRelocateFail));
+					Service.Get<ServerAPI>().Sync(planetRelocationCommand);
+				}
+				else
+				{
+					Service.Get<UserInputManager>().Enable(true);
+					Service.Get<Logger>().Error("Invalid relocation request.");
+				}
+			}
+			else
 			{
 				Service.Get<UserInputManager>().Enable(true);
-				Service.Get<StaRTSLogger>().Error("Relocation request for " + planetVO.Uid + " before previous finished.");
-				return;
+				Service.Get<Logger>().Error("Relocation request for " + planetVO.Uid + " before previous finished.");
 			}
-			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-			if (planetVO != null && currentPlayer.UnlockedPlanets.Contains(planetVO.Uid))
-			{
-				this.destinationVO = planetVO;
-				RelocatePlanetRequest request = new RelocatePlanetRequest(planetVO.Uid, payHardCurrency);
-				PlanetRelocationCommand planetRelocationCommand = new PlanetRelocationCommand(request);
-				planetRelocationCommand.AddSuccessCallback(new AbstractCommand<RelocatePlanetRequest, DefaultResponse>.OnSuccessCallback(this.OnRelocateSuccess));
-				planetRelocationCommand.AddFailureCallback(new AbstractCommand<RelocatePlanetRequest, DefaultResponse>.OnFailureCallback(this.OnRelocateFail));
-				Service.Get<ServerAPI>().Sync(planetRelocationCommand);
-				return;
-			}
-			Service.Get<UserInputManager>().Enable(true);
-			Service.Get<StaRTSLogger>().Error("Invalid relocation request.");
 		}
 
 		private void OnRelocateSuccess(DefaultResponse response, object cookie)
@@ -136,7 +139,7 @@ namespace StaRTS.Main.Controllers.Planets
 			this.hyperspaceGameObject = (asset as GameObject);
 			if (this.hyperspaceGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid GameObject: planets_lightspeed_transition");
+				Service.Get<Logger>().Warn("Invalid GameObject: planets_lightspeed_transition");
 			}
 			else
 			{
@@ -158,7 +161,7 @@ namespace StaRTS.Main.Controllers.Planets
 			this.currentPlanetGameObject = (asset as GameObject);
 			if (this.currentPlanetGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid GameObject: " + Service.Get<CurrentPlayer>().Planet.GalaxyAssetName);
+				Service.Get<Logger>().Warn("Invalid GameObject: " + Service.Get<CurrentPlayer>().Planet.GalaxyAssetName);
 			}
 			this.AssembleHyperSpace();
 		}
@@ -175,7 +178,7 @@ namespace StaRTS.Main.Controllers.Planets
 			this.planetGlowGameObject = UnityEngine.Object.Instantiate<GameObject>(this.planetGlowGameObject);
 			if (this.planetGlowGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid GameObject: fx_planetGlow");
+				Service.Get<Logger>().Warn("Invalid GameObject: fx_planetGlow");
 			}
 			this.planetGlowAssetLoadReturned = true;
 			this.AssembleHyperSpace();
@@ -205,7 +208,7 @@ namespace StaRTS.Main.Controllers.Planets
 			this.destinationPlanetGameObject = (asset as GameObject);
 			if (this.destinationPlanetGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid GameObject: " + this.destinationVO.GalaxyAssetName);
+				Service.Get<Logger>().Warn("Invalid GameObject: " + this.destinationVO.GalaxyAssetName);
 			}
 			else
 			{
@@ -222,7 +225,7 @@ namespace StaRTS.Main.Controllers.Planets
 
 		private void OnRelocateFail(uint status, object cookie)
 		{
-			Service.Get<StaRTSLogger>().Warn(string.Concat(new object[]
+			Service.Get<Logger>().Warn(string.Concat(new object[]
 			{
 				"Planet Relocation Request failed: ",
 				status,
@@ -285,11 +288,13 @@ namespace StaRTS.Main.Controllers.Planets
 			Service.Get<UserInputManager>().Enable(false);
 			if (componentInChildren == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Hyperspace animator missing.");
-				return;
+				Service.Get<Logger>().Warn("Hyperspace animator missing.");
 			}
-			componentInChildren.SetTrigger("StartHyperspace");
-			Service.Get<EventManager>().SendEvent(EventId.PlanetRelocateStarted, null);
+			else
+			{
+				componentInChildren.SetTrigger("StartHyperspace");
+				Service.Get<EventManager>().SendEvent(EventId.PlanetRelocateStarted, null);
+			}
 		}
 
 		public void HyperspaceComplete()
@@ -392,135 +397,6 @@ namespace StaRTS.Main.Controllers.Planets
 		public bool IsRelocationInProgress()
 		{
 			return this.relocationInProgress;
-		}
-
-		protected internal PlanetRelocationController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).AssembleHyperSpace();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).CleanUp();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).CurrentPlanetLoadFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).CurrentPlanetLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).DestinationPlanetLoadFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).DestinationPlanetLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).HyperspaceComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).HyperspaceLoadFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).HyperSpaceLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).InternalRelocate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).IsRelocationInProgress());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).LoadingPlanetGlowFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).OnRelocateSuccess((DefaultResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).PlanetGlowLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).RelocationAudioFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).RelocationAudioLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).RelocationComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).SendRelocationRequest((PlanetVO)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).UILoaded(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).WipeFromGalaxyToHyperspaceComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((PlanetRelocationController)GCHandledObjects.GCHandleToObject(instance)).WipeFromHyperSpaceToPlanetComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

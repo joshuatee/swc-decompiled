@@ -12,7 +12,6 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -59,14 +58,16 @@ namespace StaRTS.Main.Controllers
 			if (timerId == 0u)
 			{
 				this.idleTimers.Add(num);
-				return;
 			}
-			for (int i = 0; i < this.idleTimers.Count; i++)
+			else
 			{
-				if (this.idleTimers[i] == timerId)
+				for (int i = 0; i < this.idleTimers.Count; i++)
 				{
-					this.idleTimers[i] = num;
-					return;
+					if (this.idleTimers[i] == timerId)
+					{
+						this.idleTimers[i] = num;
+						break;
+					}
 				}
 			}
 		}
@@ -94,11 +95,7 @@ namespace StaRTS.Main.Controllers
 		private float GetRandomDelayTime(bool firstTime)
 		{
 			Rand rand = Service.Get<Rand>();
-			if (!firstTime)
-			{
-				return rand.ViewRangeFloat(10f, 25f);
-			}
-			return rand.ViewRangeFloat(0f, 15f);
+			return (!firstTime) ? rand.ViewRangeFloat(10f, 25f) : rand.ViewRangeFloat(0f, 15f);
 		}
 
 		private void Stop(bool reset)
@@ -220,49 +217,6 @@ namespace StaRTS.Main.Controllers
 				this.Start();
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal EntityIdleController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EntityIdleController)GCHandledObjects.GCHandleToObject(instance)).FastForwardTrackingAfterWorldLoad(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityIdleController)GCHandledObjects.GCHandleToObject(instance)).GetRandomDelayTime(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityIdleController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityIdleController)GCHandledObjects.GCHandleToObject(instance)).SortTrackingForFastForwarding((TrackingComponent)GCHandledObjects.GCHandleToObject(*args), (TrackingComponent)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EntityIdleController)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((EntityIdleController)GCHandledObjects.GCHandleToObject(instance)).Stop(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((EntityIdleController)GCHandledObjects.GCHandleToObject(instance)).UpdateWithRandomAngle((TrackingComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

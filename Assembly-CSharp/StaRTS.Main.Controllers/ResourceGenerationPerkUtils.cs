@@ -12,7 +12,6 @@ using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -32,7 +31,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (matchingEffects == null)
 			{
-				Service.Get<StaRTSLogger>().Error("AddEffectsOfMatchingCurrencyType received null vo list");
+				Service.Get<Logger>().Error("AddEffectsOfMatchingCurrencyType received null vo list");
 				return;
 			}
 			IDataController dataController = Service.Get<IDataController>();
@@ -237,18 +236,21 @@ namespace StaRTS.Main.Controllers
 				Building buildingTO = buildingComp.BuildingTO;
 				BuildingTypeVO buildingType = buildingComp.BuildingType;
 				Contract contract = supportController.FindCurrentContract(buildingComp.BuildingTO.Key);
-				if (buildingType.Type == BuildingType.Resource && contract == null)
+				if (buildingType.Type == BuildingType.Resource)
 				{
-					uint time = ServerTime.Time;
-					uint lastCollectTime = buildingTO.LastCollectTime;
-					buildingTO.LastCollectTime = time;
-					int perkAdjustedAccruedCurrency = ResourceGenerationPerkUtils.GetPerkAdjustedAccruedCurrency(buildingType, lastCollectTime, time, allPerks);
-					buildingTO.CurrentStorage += perkAdjustedAccruedCurrency;
-					if (buildingTO.CurrentStorage > buildingType.Storage)
+					if (contract == null)
 					{
-						buildingTO.CurrentStorage = buildingType.Storage;
+						uint time = ServerTime.Time;
+						uint lastCollectTime = buildingTO.LastCollectTime;
+						buildingTO.LastCollectTime = time;
+						int perkAdjustedAccruedCurrency = ResourceGenerationPerkUtils.GetPerkAdjustedAccruedCurrency(buildingType, lastCollectTime, time, allPerks);
+						buildingTO.CurrentStorage += perkAdjustedAccruedCurrency;
+						if (buildingTO.CurrentStorage > buildingType.Storage)
+						{
+							buildingTO.CurrentStorage = buildingType.Storage;
+						}
+						buildingTO.AccruedCurrency = buildingTO.CurrentStorage;
 					}
-					buildingTO.AccruedCurrency = buildingTO.CurrentStorage;
 				}
 			}
 		}
@@ -271,32 +273,6 @@ namespace StaRTS.Main.Controllers
 				return Mathf.RoundToInt(num2 * 3600f);
 			}
 			return Mathf.RoundToInt(num * 3600f);
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ResourceGenerationPerkUtils.BaseCurrencyRate((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ResourceGenerationPerkUtils.EndTimeCompare((CurrencyPerkEffectDataTO)GCHandledObjects.GCHandleToObject(*args), (CurrencyPerkEffectDataTO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ResourceGenerationPerkUtils.GetCurrentCurrencyGenerationRate((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (List<ActivatedPerkData>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			ResourceGenerationPerkUtils.ProcessResouceGenPerkEffectsIntoStorage((List<ActivatedPerkData>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ResourceGenerationPerkUtils.StartTimeCompare((CurrencyPerkEffectDataTO)GCHandledObjects.GCHandleToObject(*args), (CurrencyPerkEffectDataTO)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

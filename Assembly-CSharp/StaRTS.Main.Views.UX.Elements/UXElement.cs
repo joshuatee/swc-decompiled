@@ -4,9 +4,7 @@ using StaRTS.Main.Views.Cameras;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Elements
 {
@@ -89,9 +87,8 @@ namespace StaRTS.Main.Views.UX.Elements
 					if (value && !this.root.activeSelf)
 					{
 						this.root.SetActive(true);
-						return;
 					}
-					if (!value && this.root.activeSelf)
+					else if (!value && this.root.activeSelf)
 					{
 						this.root.SetActive(false);
 					}
@@ -147,7 +144,7 @@ namespace StaRTS.Main.Views.UX.Elements
 			{
 				if (this.root != null)
 				{
-					this.root.transform.parent = ((value == null) ? null : value.Root.transform);
+					this.root.transform.parent = ((value != null) ? value.Root.transform : null);
 				}
 			}
 		}
@@ -179,11 +176,11 @@ namespace StaRTS.Main.Views.UX.Elements
 			{
 				if (this.root != null)
 				{
-					Vector3 vector = value;
-					vector.x = Mathf.Round(vector.x / this.uxCamera.Scale);
-					vector.y = Mathf.Round(vector.y / this.uxCamera.Scale);
-					vector.z = Mathf.Round(vector.z / this.uxCamera.Scale);
-					this.root.transform.position = this.uxCamera.Camera.ScreenToWorldPoint(vector);
+					Vector3 position = value;
+					position.x = Mathf.Round(position.x / this.uxCamera.Scale);
+					position.y = Mathf.Round(position.y / this.uxCamera.Scale);
+					position.z = Mathf.Round(position.z / this.uxCamera.Scale);
+					this.root.transform.position = this.uxCamera.Camera.ScreenToWorldPoint(position);
 				}
 			}
 		}
@@ -192,21 +189,17 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			get
 			{
-				if (!(this.root == null))
-				{
-					return this.root.transform.localPosition * this.uxCamera.Scale;
-				}
-				return Vector3.zero;
+				return (!(this.root == null)) ? (this.root.transform.localPosition * this.uxCamera.Scale) : Vector3.zero;
 			}
 			set
 			{
 				if (this.root != null)
 				{
-					Vector3 vector = value;
-					vector.x = Mathf.Round(vector.x / this.uxCamera.Scale);
-					vector.y = Mathf.Round(vector.y / this.uxCamera.Scale);
-					vector.z = Mathf.Round(vector.z / this.uxCamera.Scale);
-					this.root.transform.localPosition = vector;
+					Vector3 localPosition = value;
+					localPosition.x = Mathf.Round(localPosition.x / this.uxCamera.Scale);
+					localPosition.y = Mathf.Round(localPosition.y / this.uxCamera.Scale);
+					localPosition.z = Mathf.Round(localPosition.z / this.uxCamera.Scale);
+					this.root.transform.localPosition = localPosition;
 				}
 			}
 		}
@@ -215,11 +208,7 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			get
 			{
-				if (!(this.root == null))
-				{
-					return this.root.transform.localScale * this.uxCamera.Scale;
-				}
-				return Vector3.one;
+				return (!(this.root == null)) ? (this.root.transform.localScale * this.uxCamera.Scale) : Vector3.one;
 			}
 			set
 			{
@@ -234,11 +223,7 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			get
 			{
-				if (!(this.NGUIWidget == null))
-				{
-					return (float)this.NGUIWidget.width * this.uxCamera.Scale;
-				}
-				return 0f;
+				return (!(this.NGUIWidget == null)) ? ((float)this.NGUIWidget.width * this.uxCamera.Scale) : 0f;
 			}
 			set
 			{
@@ -253,11 +238,7 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			get
 			{
-				if (!(this.NGUIWidget == null))
-				{
-					return (float)this.NGUIWidget.height * this.uxCamera.Scale;
-				}
-				return 0f;
+				return (!(this.NGUIWidget == null)) ? ((float)this.NGUIWidget.height * this.uxCamera.Scale) : 0f;
 			}
 			set
 			{
@@ -276,9 +257,9 @@ namespace StaRTS.Main.Views.UX.Elements
 				{
 					return this.root.GetComponent<BoxCollider>().center.x;
 				}
-				Service.Get<StaRTSLogger>().WarnFormat("Collider missing for : '{0}'", new object[]
+				Service.Get<Logger>().WarnFormat("Collider missing for : '{0}'", new object[]
 				{
-					(this.root == null) ? "null root" : this.root.name
+					(!(this.root == null)) ? this.root.name : "null root"
 				});
 				return 1f;
 			}
@@ -292,9 +273,9 @@ namespace StaRTS.Main.Views.UX.Elements
 				{
 					return this.root.GetComponent<BoxCollider>().size.x;
 				}
-				Service.Get<StaRTSLogger>().WarnFormat("Collider missing for : '{0}'", new object[]
+				Service.Get<Logger>().WarnFormat("Collider missing for : '{0}'", new object[]
 				{
-					(this.root == null) ? "null root" : this.root.name
+					(!(this.root == null)) ? this.root.name : "null root"
 				});
 				return 1f;
 			}
@@ -358,7 +339,7 @@ namespace StaRTS.Main.Views.UX.Elements
 		public void InternalSetRoot(GameObject root)
 		{
 			this.root = root;
-			this.NGUIWidget = ((root == null) ? null : root.GetComponent<UIWidget>());
+			this.NGUIWidget = ((!(root == null)) ? root.GetComponent<UIWidget>() : null);
 			if (root != null)
 			{
 				this.OrigVisible = this.Visible;
@@ -661,9 +642,9 @@ namespace StaRTS.Main.Views.UX.Elements
 				this.animator = this.Root.GetComponent<Animator>();
 				if (this.animator == null)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Animator missing for : '{0}'", new object[]
+					Service.Get<Logger>().WarnFormat("Animator missing for : '{0}'", new object[]
 					{
-						this.root ? this.root.name : "null root"
+						this.root.name
 					});
 				}
 			}
@@ -675,7 +656,7 @@ namespace StaRTS.Main.Views.UX.Elements
 			{
 				if (this.root != null)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Animator not set. Call InitAnimator(). On: '{0}'", new object[]
+					Service.Get<Logger>().WarnFormat("Animator not set. Call InitAnimator(). On: '{0}'", new object[]
 					{
 						this.root.name
 					});
@@ -734,365 +715,6 @@ namespace StaRTS.Main.Views.UX.Elements
 				}
 				i++;
 			}
-		}
-
-		protected internal UXElement(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).AddUXButton((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).CloneRoot(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).DisablePlayTween();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).EnablePlayTween();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).ColliderHeight);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).ColliderWidth);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).ColliderWidthUnscaled);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).ColliderXUnscaled);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).Enabled);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).GetUIWidget);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).Height);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).LocalPosition);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).LocalScale);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).OnElementClicked);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).OrigVisible);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).Position);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).Root);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).Tag);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).UXCamera);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).Visible);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).WidgetDepth);
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).Width);
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).WorldPosition);
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).GetPanelAnchorOffset((UXAnchorSection)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).GetPanelUnifiedAnchorTarget((UIPanel)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).GetRootPanel());
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).GetWorldCorners());
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).HasCollider());
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).InitAnimator();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).InitTweenComponent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).InternalDestroyComponent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).InternalSetRoot((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).IsAnimatorSet());
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).IsAnimatorTransitioning());
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).IsCurrentAnimatorState(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXElement)GCHandledObjects.GCHandleToObject(instance)).IsPlayTweenEnabled());
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).PlayTween(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).RefreshPanel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).ResetPlayTweenTarget();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).ResetTrigger(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).SendClickEvent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).Enabled = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).Height = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).LocalPosition = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).LocalScale = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).OnElementClicked = (UXButtonClickedDelegate)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).OrigVisible = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).Parent = (UXElement)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).Position = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).Tag = GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).UXCamera = (UXCamera)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).Visible = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).WidgetDepth = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).Width = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			UXElement.SetHierarchyDepth((GameObject)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).SetPanelUnifiedAnchorBottomOffset(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).SetPanelUnifiedAnchorLeftOffset(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).SetPanelUnifiedAnchorOffsets(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).SetPanelUnifiedAnchorRightOffset(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).SetPanelUnifiedAnchorTopOffset(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).SetRootName(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).SetTrigger(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			((UXElement)GCHandledObjects.GCHandleToObject(instance)).SkipBoundsCalculations(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

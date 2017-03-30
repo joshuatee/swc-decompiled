@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatResetEquipment(PlayerIdRequest request) : base("cheats.equipment.reset", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatResetEquipment(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

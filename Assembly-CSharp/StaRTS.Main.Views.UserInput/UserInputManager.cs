@@ -9,7 +9,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UserInput
 {
@@ -24,6 +23,10 @@ namespace StaRTS.Main.Views.UserInput
 		protected Vector2[] lastScreenPosition;
 
 		protected UserInputLayer[] lastLayer;
+
+		protected bool isPressed2ndMouseBut;
+
+		protected Vector2 lastScreenPos2ndMouseBut;
 
 		protected Entity[] lastEntity;
 
@@ -108,6 +111,7 @@ namespace StaRTS.Main.Views.UserInput
 				this.lastScreenPosition[i] = -Vector2.one;
 				i++;
 			}
+			this.ResetMouse2ndButtonZoom();
 		}
 
 		private void ReleaseAllFingers()
@@ -123,6 +127,13 @@ namespace StaRTS.Main.Views.UserInput
 				this.ResetTouch(i);
 				i++;
 			}
+			this.ResetMouse2ndButtonZoom();
+		}
+
+		private void ResetMouse2ndButtonZoom()
+		{
+			this.isPressed2ndMouseBut = false;
+			this.lastScreenPos2ndMouseBut = Vector2.zero;
 		}
 
 		public bool IsPressed()
@@ -396,7 +407,7 @@ namespace StaRTS.Main.Views.UserInput
 				break;
 			case UserInputLayer.World:
 				flag = this.RaycastHelper(this.activeWorldCamera, screenPosition, ref gameObjectHit);
-				flag = (this.activeWorldCamera.GetGroundPosition(screenPosition, ref groundPosition) | flag);
+				flag = (this.activeWorldCamera.GetGroundPosition(screenPosition, ref groundPosition) || flag);
 				break;
 			case UserInputLayer.UX:
 			{
@@ -446,9 +457,12 @@ namespace StaRTS.Main.Views.UserInput
 		{
 			if (id != EventId.ApplicationPauseToggled)
 			{
-				if (id == EventId.DenyUserInput && this.enabled)
+				if (id == EventId.DenyUserInput)
 				{
-					this.ReleaseAllFingers();
+					if (this.enabled)
+					{
+						this.ReleaseAllFingers();
+					}
 				}
 			}
 			else if (this.enabled)
@@ -456,143 +470,6 @@ namespace StaRTS.Main.Views.UserInput
 				this.ReleaseAllFingers();
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal UserInputManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).Enable(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).Enabled);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).GetLastGameObject(*(int*)args));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).GetLowestLayer((UserInputLayer)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).Init();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).IsPressed());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).OnUpdate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).RegisterClickThrough((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).RegisterObserver((IUserInputObserver)GCHandledObjects.GCHandleToObject(*args), (UserInputLayer)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).ReleaseAllFingers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).ReleaseSubordinates((IUserInputObserver)GCHandledObjects.GCHandleToObject(*args), (UserInputLayer)(*(int*)(args + 1)), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).ResetLastScreenPosition();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).ResetTouch(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).SendOnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3)), (UserInputLayer)(*(int*)(args + 4)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).SendOnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3)), (UserInputLayer)(*(int*)(args + 4)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).SendOnRelease(*(int*)args, (UserInputLayer)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).SendOnScroll(*(float*)args, *(*(IntPtr*)(args + 1)), (UserInputLayer)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).SetActiveWorldCamera((WorldCamera)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).SetLastGameObject(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).UnregisterAll();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).UnregisterClickThrough((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((UserInputManager)GCHandledObjects.GCHandleToObject(instance)).UnregisterObserver((IUserInputObserver)GCHandledObjects.GCHandleToObject(*args), (UserInputLayer)(*(int*)(args + 1)));
-			return -1L;
 		}
 	}
 }

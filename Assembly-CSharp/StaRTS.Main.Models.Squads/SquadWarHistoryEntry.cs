@@ -1,13 +1,11 @@
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Squads
 {
-	public class SquadWarHistoryEntry : ISerializable, IComparable<SquadWarHistoryEntry>
+	public class SquadWarHistoryEntry : IComparable<SquadWarHistoryEntry>, ISerializable
 	{
 		public string WarId;
 
@@ -45,27 +43,27 @@ namespace StaRTS.Main.Models.Squads
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary.ContainsKey("warId"))
 			{
-				this.WarId = Convert.ToString(dictionary["warId"], CultureInfo.InvariantCulture);
+				this.WarId = Convert.ToString(dictionary["warId"]);
 			}
 			if (dictionary.ContainsKey("endDate"))
 			{
-				this.EndDate = Convert.ToUInt32(dictionary["endDate"], CultureInfo.InvariantCulture);
+				this.EndDate = Convert.ToUInt32(dictionary["endDate"]);
 			}
 			if (dictionary.ContainsKey("score"))
 			{
-				this.Score = Convert.ToInt32(dictionary["score"], CultureInfo.InvariantCulture);
+				this.Score = Convert.ToInt32(dictionary["score"]);
 			}
 			if (dictionary.ContainsKey("opponentScore"))
 			{
-				this.OpponentScore = Convert.ToInt32(dictionary["opponentScore"], CultureInfo.InvariantCulture);
+				this.OpponentScore = Convert.ToInt32(dictionary["opponentScore"]);
 			}
 			if (dictionary.ContainsKey("opponentName"))
 			{
-				this.OpponentName = WWW.UnEscapeURL(Convert.ToString(dictionary["opponentName"], CultureInfo.InvariantCulture));
+				this.OpponentName = WWW.UnEscapeURL(Convert.ToString(dictionary["opponentName"]));
 			}
 			if (dictionary.ContainsKey("opponentIcon"))
 			{
-				this.OpponentIcon = Convert.ToString(dictionary["opponentIcon"], CultureInfo.InvariantCulture);
+				this.OpponentIcon = Convert.ToString(dictionary["opponentIcon"]);
 				if (string.IsNullOrEmpty(this.OpponentIcon))
 				{
 					this.OpponentIcon = "SquadSymbols_01";
@@ -77,25 +75,6 @@ namespace StaRTS.Main.Models.Squads
 		public string ToJson()
 		{
 			return Serializer.Start().End().ToString();
-		}
-
-		protected internal SquadWarHistoryEntry(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarHistoryEntry)GCHandledObjects.GCHandleToObject(instance)).CompareTo((SquadWarHistoryEntry)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarHistoryEntry)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarHistoryEntry)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

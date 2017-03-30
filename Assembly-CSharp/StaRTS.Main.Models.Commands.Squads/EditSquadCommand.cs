@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public EditSquadCommand(EditSquadRequest request) : base("guild.edit", request, new DefaultResponse())
 		{
 		}
-
-		protected internal EditSquadCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

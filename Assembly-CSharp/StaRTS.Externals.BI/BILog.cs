@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Externals.BI
 {
@@ -713,9 +711,11 @@ namespace StaRTS.Externals.BI
 			if (this.paramDict.ContainsKey(key))
 			{
 				this.paramDict[key] = WWW.EscapeURL(value);
-				return;
 			}
-			this.paramDict.Add(key, WWW.EscapeURL(value));
+			else
+			{
+				this.paramDict.Add(key, WWW.EscapeURL(value));
+			}
 		}
 
 		public void Reset()
@@ -727,38 +727,6 @@ namespace StaRTS.Externals.BI
 		public Dictionary<string, string> GetParamDict()
 		{
 			return this.paramDict;
-		}
-
-		protected internal BILog(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BILog)GCHandledObjects.GCHandleToObject(instance)).AddParam(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILog)GCHandledObjects.GCHandleToObject(instance)).UseSecondaryUrl);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BILog)GCHandledObjects.GCHandleToObject(instance)).GetParamDict());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BILog)GCHandledObjects.GCHandleToObject(instance)).Reset();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BILog)GCHandledObjects.GCHandleToObject(instance)).UseSecondaryUrl = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

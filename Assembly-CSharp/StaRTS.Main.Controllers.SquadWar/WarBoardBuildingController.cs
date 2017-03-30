@@ -14,14 +14,32 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.SquadWar
 {
 	public class WarBoardBuildingController : IUserInputObserver, IViewFrameTimeObserver
 	{
+		private const string HOLO_DISTANCE = "_Distance";
+
+		private const string HOLO_OPACITY = "_Opacity";
+
+		private const float HOLO_DISTANCE_VALUE = 139.5f;
+
+		private const float HOLO_OPACITY_DIM_VALUE = 0.3f;
+
+		private const float MIN_SELECTION_X_ROTATION = -7.7f;
+
+		private const float MAX_SELECTION_X_ROTATION = 1.9f;
+
+		private const float FACTORY_OUTPOST_ROTATION_SPEED = 0.5f;
+
+		private const string GAMEOBJECT_PARENT_PREFIX = "WarBoardBuilding_";
+
+		private const int FINGER_ID = 0;
+
+		private const float TIME_TO_SELECT = 1f;
+
 		private Dictionary<SquadWarBoardBuilding, SquadWarParticipantState> participantBuildingsPlayer;
 
 		private Dictionary<SquadWarBoardBuilding, SquadWarParticipantState> participantBuildingsOpponent;
@@ -47,26 +65,6 @@ namespace StaRTS.Main.Controllers.SquadWar
 		private OutlinedAsset outline;
 
 		private bool dragged;
-
-		private const string HOLO_DISTANCE = "_Distance";
-
-		private const string HOLO_OPACITY = "_Opacity";
-
-		private const float HOLO_DISTANCE_VALUE = 139.5f;
-
-		private const float HOLO_OPACITY_DIM_VALUE = 0.3f;
-
-		private const float MIN_SELECTION_X_ROTATION = -7.7f;
-
-		private const float MAX_SELECTION_X_ROTATION = 1.9f;
-
-		private const float FACTORY_OUTPOST_ROTATION_SPEED = 0.5f;
-
-		private const string GAMEOBJECT_PARENT_PREFIX = "WarBoardBuilding_";
-
-		private const int FINGER_ID = 0;
-
-		private const float TIME_TO_SELECT = 1f;
 
 		public FactionType currentFaction
 		{
@@ -120,7 +118,7 @@ namespace StaRTS.Main.Controllers.SquadWar
 			{
 				foreach (KeyValuePair<SquadWarBoardBuilding, SquadWarParticipantState> current in this.participantBuildingsPlayer)
 				{
-					current.get_Key().Destroy();
+					current.Key.Destroy();
 				}
 				this.participantBuildingsPlayer.Clear();
 			}
@@ -128,7 +126,7 @@ namespace StaRTS.Main.Controllers.SquadWar
 			{
 				foreach (KeyValuePair<SquadWarBoardBuilding, SquadWarParticipantState> current2 in this.participantBuildingsOpponent)
 				{
-					current2.get_Key().Destroy();
+					current2.Key.Destroy();
 				}
 				this.participantBuildingsOpponent.Clear();
 			}
@@ -170,9 +168,9 @@ namespace StaRTS.Main.Controllers.SquadWar
 			Dictionary<SquadWarBoardBuilding, SquadWarParticipantState> currentParticipantBuildingList = this.GetCurrentParticipantBuildingList();
 			foreach (KeyValuePair<SquadWarBoardBuilding, SquadWarParticipantState> current in currentParticipantBuildingList)
 			{
-				if (current.get_Key().Building == building)
+				if (current.Key.Building == building)
 				{
-					return current.get_Value();
+					return current.Value;
 				}
 			}
 			return null;
@@ -227,9 +225,9 @@ namespace StaRTS.Main.Controllers.SquadWar
 			Dictionary<SquadWarBoardBuilding, SquadWarParticipantState> currentParticipantBuildingList = this.GetCurrentParticipantBuildingList();
 			foreach (KeyValuePair<SquadWarBoardBuilding, SquadWarParticipantState> current in currentParticipantBuildingList)
 			{
-				if (current.get_Value().SquadMemberId == squadMemberId)
+				if (current.Value.SquadMemberId == squadMemberId)
 				{
-					return current.get_Key().Building;
+					return current.Key.Building;
 				}
 			}
 			return null;
@@ -239,7 +237,7 @@ namespace StaRTS.Main.Controllers.SquadWar
 		{
 			List<SquadWarParticipantState> list = new List<SquadWarParticipantState>(squadData.Participants);
 			list.Sort(new Comparison<SquadWarParticipantState>(this.SortParticipantsAsc));
-			string upgradeGroup = (squadData.Faction == FactionType.Empire) ? this.empireHQId : this.rebelHQId;
+			string upgradeGroup = (squadData.Faction != FactionType.Empire) ? this.rebelHQId : this.empireHQId;
 			bool isEmpire = squadData.Faction == FactionType.Empire;
 			int i = 0;
 			int count = list.Count;
@@ -273,16 +271,16 @@ namespace StaRTS.Main.Controllers.SquadWar
 		public void ShowWarBuildings(SquadWarSquadType squadType, bool deselectSelectedBuilding)
 		{
 			bool flag = squadType == SquadWarSquadType.PLAYER_SQUAD;
-			Dictionary<SquadWarBoardBuilding, SquadWarParticipantState> dictionary = flag ? this.participantBuildingsPlayer : this.participantBuildingsOpponent;
+			Dictionary<SquadWarBoardBuilding, SquadWarParticipantState> dictionary = (!flag) ? this.participantBuildingsOpponent : this.participantBuildingsPlayer;
 			if (dictionary != null)
 			{
 				foreach (KeyValuePair<SquadWarBoardBuilding, SquadWarParticipantState> current in this.participantBuildingsPlayer)
 				{
-					current.get_Key().ToggleVisibility(flag);
+					current.Key.ToggleVisibility(flag);
 				}
 				foreach (KeyValuePair<SquadWarBoardBuilding, SquadWarParticipantState> current2 in this.participantBuildingsOpponent)
 				{
-					current2.get_Key().ToggleVisibility(!flag);
+					current2.Key.ToggleVisibility(!flag);
 				}
 				this.currentSquadType = squadType;
 				if (deselectSelectedBuilding)
@@ -294,12 +292,13 @@ namespace StaRTS.Main.Controllers.SquadWar
 
 		public void UpdateVisiblity()
 		{
-			Dictionary<SquadWarBoardBuilding, SquadWarParticipantState> dictionary = (this.currentSquadType == SquadWarSquadType.PLAYER_SQUAD) ? this.participantBuildingsPlayer : this.participantBuildingsOpponent;
+			bool flag = this.currentSquadType == SquadWarSquadType.PLAYER_SQUAD;
+			Dictionary<SquadWarBoardBuilding, SquadWarParticipantState> dictionary = (!flag) ? this.participantBuildingsOpponent : this.participantBuildingsPlayer;
 			foreach (KeyValuePair<SquadWarBoardBuilding, SquadWarParticipantState> current in dictionary)
 			{
-				if (current.get_Key() != null && current.get_Key().PlayerInfo != null)
+				if (current.Key != null && current.Key.PlayerInfo != null)
 				{
-					current.get_Key().PlayerInfo.UpdateVisibility();
+					current.Key.PlayerInfo.UpdateVisibility();
 				}
 			}
 		}
@@ -583,200 +582,6 @@ namespace StaRTS.Main.Controllers.SquadWar
 		public void OnViewFrameTime(float dt)
 		{
 			this.UpdateVisiblity();
-		}
-
-		protected internal WarBoardBuildingController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).AddBuildingForParticipant((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(int*)(args + 4), (AssetManager)GCHandledObjects.GCHandleToObject(args[5]), (Transform)GCHandledObjects.GCHandleToObject(args[6]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).AddBuildingsForParticipants((SquadWarSquadData)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, (BuildingUpgradeCatalog)GCHandledObjects.GCHandleToObject(args[2]), (AssetManager)GCHandledObjects.GCHandleToObject(args[3]), (List<Transform>)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).CacheHQBuildingIds();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).CreateNonSharedMaterials((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).DeselectBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).DeselectSelectedBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).DestroyBuildings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).DisableBuilding(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).DisableBuilding((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).FindBuildingForParticipant(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).currentFaction);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).currentSquadType);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentParticipantBuildingList());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).GetParticipantState((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).HaveCachedBuildingIds());
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).LoadAsset((GameObject)GCHandledObjects.GCHandleToObject(*args), (Transform)GCHandledObjects.GCHandleToObject(args[1]), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[2]), (AssetManager)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).OnAssetLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).OnBuildingReleased();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).ResetPressedBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).SelectBuilding(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).SelectBuilding((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).currentFaction = (FactionType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).currentSquadType = (SquadWarSquadType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).ShouldParticipantBuildingBeDisabled((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).ShowBuildings((List<Transform>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).ShowWarBuildings((SquadWarSquadType)(*(int*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).SortBuffBases((SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(*args), (SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).SortParticipantsAsc((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(*args), (SquadWarParticipantState)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((WarBoardBuildingController)GCHandledObjects.GCHandleToObject(instance)).UpdateVisiblity();
-			return -1L;
 		}
 	}
 }

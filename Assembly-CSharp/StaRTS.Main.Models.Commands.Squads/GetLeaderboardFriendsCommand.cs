@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public GetLeaderboardFriendsCommand(FriendLBIDRequest request) : base("player.leaderboard.getForFriends", request, new LeaderboardResponse())
 		{
 		}
-
-		protected internal GetLeaderboardFriendsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

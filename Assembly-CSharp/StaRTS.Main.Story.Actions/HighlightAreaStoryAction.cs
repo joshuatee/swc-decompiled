@@ -7,7 +7,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -41,9 +40,9 @@ namespace StaRTS.Main.Story.Actions
 			string elementName = this.prepareArgs[0];
 			string elementName2 = this.prepareArgs[1];
 			int num;
-			int.TryParse(this.prepareArgs[2], ref num);
+			int.TryParse(this.prepareArgs[2], out num);
 			int num2;
-			int.TryParse(this.prepareArgs[3], ref num2);
+			int.TryParse(this.prepareArgs[3], out num2);
 			this.dismissButton = Service.Get<ScreenController>().FindElement<UXButton>(elementName2);
 			if (this.dismissButton == null)
 			{
@@ -53,7 +52,7 @@ namespace StaRTS.Main.Story.Actions
 			this.grid = Service.Get<ScreenController>().FindElement<UXGrid>(elementName);
 			if (this.grid == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("The StoryAction {0} has an incorrect number of arguments: {1}, wrong name used.story action requires grid.", new object[]
+				Service.Get<Logger>().ErrorFormat("The StoryAction {0} has an incorrect number of arguments: {1}, wrong name used.story action requires grid.", new object[]
 				{
 					this.vo.Uid,
 					this.vo.PrepareString
@@ -89,28 +88,6 @@ namespace StaRTS.Main.Story.Actions
 				highestLevelScreen.DeactivateHighlight();
 			}
 			base.Destroy();
-		}
-
-		protected internal HighlightAreaStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HighlightAreaStoryAction)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HighlightAreaStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HighlightAreaStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

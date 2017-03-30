@@ -4,7 +4,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands
 {
@@ -32,15 +31,6 @@ namespace StaRTS.Main.Models.Commands
 				}
 			});
 			return serializer.End().ToString();
-		}
-
-		protected internal SharedPrefRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SharedPrefRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

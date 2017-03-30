@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public SimulateWarMatchMakingCommand(SimulateWarMatchMakingRequest request) : base("cheats.guildWar.getTarget", request, new DefaultResponse())
 		{
 		}
-
-		protected internal SimulateWarMatchMakingCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

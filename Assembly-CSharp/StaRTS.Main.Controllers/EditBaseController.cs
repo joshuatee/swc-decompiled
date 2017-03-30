@@ -12,7 +12,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -20,7 +19,7 @@ namespace StaRTS.Main.Controllers
 	{
 		private const string LOWERED_FOOTPRINT_NAME = "Lowered Footprint";
 
-		private string LIFTED_FOOTPRINT_NAME;
+		private string LIFTED_FOOTPRINT_NAME = "Lifted Footprint";
 
 		private Footprint loweredFootprint;
 
@@ -28,8 +27,6 @@ namespace StaRTS.Main.Controllers
 
 		public EditBaseController()
 		{
-			this.LIFTED_FOOTPRINT_NAME = "Lifted Footprint";
-			base..ctor();
 			Service.Set<EditBaseController>(this);
 			this.liftedFootprints = new Dictionary<Entity, Footprint>();
 		}
@@ -45,15 +42,17 @@ namespace StaRTS.Main.Controllers
 				eventManager.RegisterObserver(this, EventId.BuildingRemovedFromBoard, EventPriority.Default);
 				eventManager.RegisterObserver(this, EventId.BuildingSelectedFromStore, EventPriority.Default);
 				this.AddAllLoweredFootprints();
-				return;
 			}
-			this.RemoveAllLoweredFootprints();
-			this.RemoveAllLiftedFootprints();
-			eventManager.UnregisterObserver(this, EventId.UserLiftedBuilding);
-			eventManager.UnregisterObserver(this, EventId.UserLoweredBuilding);
-			eventManager.UnregisterObserver(this, EventId.UserMovedLiftedBuilding);
-			eventManager.UnregisterObserver(this, EventId.BuildingRemovedFromBoard);
-			eventManager.UnregisterObserver(this, EventId.BuildingSelectedFromStore);
+			else
+			{
+				this.RemoveAllLoweredFootprints();
+				this.RemoveAllLiftedFootprints();
+				eventManager.UnregisterObserver(this, EventId.UserLiftedBuilding);
+				eventManager.UnregisterObserver(this, EventId.UserLoweredBuilding);
+				eventManager.UnregisterObserver(this, EventId.UserMovedLiftedBuilding);
+				eventManager.UnregisterObserver(this, EventId.BuildingRemovedFromBoard);
+				eventManager.UnregisterObserver(this, EventId.BuildingSelectedFromStore);
+			}
 		}
 
 		private void AddAllLoweredFootprints()
@@ -165,91 +164,30 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id != EventId.BuildingRemovedFromBoard && id != EventId.BuildingSelectedFromStore)
+			switch (id)
 			{
-				switch (id)
-				{
-				case EventId.UserLiftedBuilding:
-					this.AddLiftedFootprint((SmartEntity)cookie);
-					this.ResetLoweredFootprints();
-					break;
-				case EventId.UserMovedLiftedBuilding:
-					this.MoveLiftedFootprint((FootprintMoveData)cookie);
-					break;
-				case EventId.UserLoweredBuilding:
-					this.RemoveLiftedFootprint((SmartEntity)cookie);
-					this.ResetLoweredFootprints();
-					break;
-				}
-			}
-			else
-			{
+			case EventId.UserLiftedBuilding:
+				this.AddLiftedFootprint((SmartEntity)cookie);
 				this.ResetLoweredFootprints();
+				return EatResponse.NotEaten;
+			case EventId.UserLiftedBuildingAudio:
+			case EventId.UserGridMovedBuildingAudio:
+				IL_22:
+				if (id != EventId.BuildingRemovedFromBoard && id != EventId.BuildingSelectedFromStore)
+				{
+					return EatResponse.NotEaten;
+				}
+				this.ResetLoweredFootprints();
+				return EatResponse.NotEaten;
+			case EventId.UserMovedLiftedBuilding:
+				this.MoveLiftedFootprint((FootprintMoveData)cookie);
+				return EatResponse.NotEaten;
+			case EventId.UserLoweredBuilding:
+				this.RemoveLiftedFootprint((SmartEntity)cookie);
+				this.ResetLoweredFootprints();
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
-		}
-
-		protected internal EditBaseController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).AddAllLoweredFootprints();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).AddLiftedFootprint((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).AddLoweredFootprint((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).Enable(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).MoveLiftedFootprint((FootprintMoveData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).RemoveAllLiftedFootprints();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).RemoveAllLoweredFootprints();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).RemoveLiftedFootprint((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((EditBaseController)GCHandledObjects.GCHandleToObject(instance)).ResetLoweredFootprints();
-			return -1L;
+			goto IL_22;
 		}
 	}
 }

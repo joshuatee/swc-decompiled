@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public GetSquadNotifsCommand(GetSquadNotifsRequest request) : base("guild.notifications.get", request, new SquadNotifsResponse())
 		{
 		}
-
-		protected internal GetSquadNotifsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

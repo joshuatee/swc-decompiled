@@ -3,9 +3,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player.Objectives
 {
@@ -72,7 +69,7 @@ namespace StaRTS.Main.Models.Player.Objectives
 
 		public string ToJson()
 		{
-			Service.Get<StaRTSLogger>().Warn("Attempting to inappropriately serialize an ObjectiveGroup");
+			Service.Get<Logger>().Warn("Attempting to inappropriately serialize an ObjectiveGroup");
 			return string.Empty;
 		}
 
@@ -81,20 +78,20 @@ namespace StaRTS.Main.Models.Player.Objectives
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary.ContainsKey("groupId"))
 			{
-				this.GroupId = Convert.ToString(dictionary["groupId"], CultureInfo.InvariantCulture);
+				this.GroupId = Convert.ToString(dictionary["groupId"]);
 				this.GroupSeriesId = this.GroupId.Substring(0, this.GroupId.LastIndexOf('_'));
 			}
 			if (dictionary.ContainsKey("startTime"))
 			{
-				this.StartTimestamp = Convert.ToInt32(dictionary["startTime"], CultureInfo.InvariantCulture);
+				this.StartTimestamp = Convert.ToInt32(dictionary["startTime"]);
 			}
 			if (dictionary.ContainsKey("graceTime"))
 			{
-				this.GraceTimestamp = Convert.ToInt32(dictionary["graceTime"], CultureInfo.InvariantCulture);
+				this.GraceTimestamp = Convert.ToInt32(dictionary["graceTime"]);
 			}
 			if (dictionary.ContainsKey("endTime"))
 			{
-				this.EndTimestamp = Convert.ToInt32(dictionary["endTime"], CultureInfo.InvariantCulture);
+				this.EndTimestamp = Convert.ToInt32(dictionary["endTime"]);
 			}
 			if (dictionary.ContainsKey("progress"))
 			{
@@ -108,86 +105,6 @@ namespace StaRTS.Main.Models.Player.Objectives
 				}
 			}
 			return this;
-		}
-
-		protected internal ObjectiveGroup(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).EndTimestamp);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).GraceTimestamp);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).GroupId);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).GroupSeriesId);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).ProgressObjects);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).StartTimestamp);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).EndTimestamp = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).GraceTimestamp = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).GroupId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).GroupSeriesId = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).ProgressObjects = (List<ObjectiveProgress>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).StartTimestamp = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ObjectiveGroup)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

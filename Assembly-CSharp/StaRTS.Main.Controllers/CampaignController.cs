@@ -16,9 +16,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -82,7 +79,7 @@ namespace StaRTS.Main.Controllers
 			}
 			this.progress.CheckForNewMissions(ref this.newChapterMissionFlag);
 			ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
-			if (Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.ChapterMissionViewed), CultureInfo.InvariantCulture) > 0)
+			if (Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.ChapterMissionViewed)) > 0)
 			{
 				this.newChapterMissionFlag = false;
 			}
@@ -90,14 +87,14 @@ namespace StaRTS.Main.Controllers
 
 		public int PlayButtonCount()
 		{
-			return Convert.ToInt32(this.newChapterMissionFlag, CultureInfo.InvariantCulture);
+			return Convert.ToInt32(this.newChapterMissionFlag);
 		}
 
 		private void UpdateMissionsViewedPref(int amount)
 		{
 			ServerPref pref = ServerPref.ChapterMissionViewed;
 			ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
-			int num = Convert.ToInt32(serverPlayerPrefs.GetPref(pref), CultureInfo.InvariantCulture);
+			int num = Convert.ToInt32(serverPlayerPrefs.GetPref(pref));
 			num = amount;
 			serverPlayerPrefs.SetPref(pref, num.ToString());
 			Service.Get<ServerAPI>().Enqueue(new SetPrefsCommand(false));
@@ -115,7 +112,7 @@ namespace StaRTS.Main.Controllers
 		public void ResumeMission(CampaignMissionVO missionVO)
 		{
 			this.CancelDuplicateMissionConductors(missionVO);
-			Service.Get<StaRTSLogger>().DebugFormat("Resuming mission {0}", new object[]
+			Service.Get<Logger>().DebugFormat("Resuming mission {0}", new object[]
 			{
 				missionVO.Uid
 			});
@@ -182,24 +179,25 @@ namespace StaRTS.Main.Controllers
 			}
 			if (campaignMissionVO != null)
 			{
-				Service.Get<StaRTSLogger>().Debug("Unlocking next mission in current campaign!");
+				Service.Get<Logger>().Debug("Unlocking next mission in current campaign!");
 				this.UnlockMission(campaignMissionVO);
-				return;
 			}
-			if (campaignMissionVO2 != null)
+			else if (campaignMissionVO2 != null)
 			{
-				Service.Get<StaRTSLogger>().Debug("Unlocking first mission in next campaign!");
+				Service.Get<Logger>().Debug("Unlocking first mission in next campaign!");
 				this.UnlockMission(campaignMissionVO2);
-				return;
 			}
-			Service.Get<StaRTSLogger>().Debug("All missions for all campaigns are unlocked!");
+			else
+			{
+				Service.Get<Logger>().Debug("All missions for all campaigns are unlocked!");
+			}
 		}
 
 		private void UnlockMission(CampaignMissionVO missionType)
 		{
 			if (!this.progress.IsMissionLocked(missionType))
 			{
-				Service.Get<StaRTSLogger>().Error("Unexpected attempt to add a mission that is already unlocked!");
+				Service.Get<Logger>().Error("Unexpected attempt to add a mission that is already unlocked!");
 				return;
 			}
 			Mission mission = Mission.CreateFromCampaignMissionVO(missionType);
@@ -224,7 +222,7 @@ namespace StaRTS.Main.Controllers
 			{
 				if (missionType == this.GetLastMission(missionType.CampaignUid) && !this.progress.CompleteCampaign(missionType.CampaignUid))
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Unable to complete campaign {0}", new object[]
+					Service.Get<Logger>().WarnFormat("Unable to complete campaign {0}", new object[]
 					{
 						missionType.CampaignUid
 					});
@@ -288,9 +286,11 @@ namespace StaRTS.Main.Controllers
 				if (this.IsPveMission(missionType.MissionType))
 				{
 					this.server.Enqueue(new PveMissionCollectCommand(request));
-					return;
 				}
-				this.server.Enqueue(new ClaimMissionCommand(request));
+				else
+				{
+					this.server.Enqueue(new ClaimMissionCommand(request));
+				}
 			}
 		}
 
@@ -345,9 +345,12 @@ namespace StaRTS.Main.Controllers
 			CampaignMissionVO campaignMissionVO = null;
 			foreach (CampaignMissionVO current in Service.Get<IDataController>().GetAll<CampaignMissionVO>())
 			{
-				if (!(current.CampaignUid != campaignUid) && (campaignMissionVO == null || current.UnlockOrder > campaignMissionVO.UnlockOrder))
+				if (!(current.CampaignUid != campaignUid))
 				{
-					campaignMissionVO = current;
+					if (campaignMissionVO == null || current.UnlockOrder > campaignMissionVO.UnlockOrder)
+					{
+						campaignMissionVO = current;
+					}
 				}
 			}
 			return campaignMissionVO;
@@ -365,7 +368,7 @@ namespace StaRTS.Main.Controllers
 
 		public void StartCampaignProgress()
 		{
-			string uid = "";
+			string uid = string.Empty;
 			FactionType faction = this.player.Faction;
 			if (faction != FactionType.Empire)
 			{
@@ -385,153 +388,6 @@ namespace StaRTS.Main.Controllers
 		private bool IsPveMission(MissionType missionType)
 		{
 			return missionType == MissionType.Attack || missionType == MissionType.Defend || missionType == MissionType.RaidDefend;
-		}
-
-		protected internal CampaignController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).CancelDuplicateMissionConductors((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignController)GCHandledObjects.GCHandleToObject(instance)).CanCurrencyRewardFit(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).CollectCampaign((CampaignVO)GCHandledObjects.GCHandleToObject(*args), (CampaignMissionVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).CollectMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).CompleteMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).EraseMissionCheat((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignController)GCHandledObjects.GCHandleToObject(instance)).HasNewChapterMission);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignController)GCHandledObjects.GCHandleToObject(instance)).GetCounters((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignController)GCHandledObjects.GCHandleToObject(instance)).GetLastMission(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignController)GCHandledObjects.GCHandleToObject(instance)).GetTotalStarsEarned());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignController)GCHandledObjects.GCHandleToObject(instance)).IsPveMission((MissionType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).OnCampaignCollectSuccess(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).OnMissionCancelled((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).OnMissionCollectSuccess(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CampaignController)GCHandledObjects.GCHandleToObject(instance)).PlayButtonCount());
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).RemoveActiveMissionConductors((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).ResumeMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).HasNewChapterMission = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).StartCampaignProgress();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).StartMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).UnlockMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).UnlockMissionCheat((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).UnlockNextMission((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).UpdateCounter((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((CampaignController)GCHandledObjects.GCHandleToObject(instance)).UpdateMissionsViewedPref(*(int*)args);
-			return -1L;
 		}
 	}
 }

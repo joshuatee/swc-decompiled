@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetCampaignPointsCommand(CheatPointsRequest request) : base("cheats.setCampaignPoints", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSetCampaignPointsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

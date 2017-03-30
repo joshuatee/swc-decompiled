@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetEquipmentCommand(CheatSetEquipmentRequest request) : base("cheats.equipment.set", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSetEquipmentCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

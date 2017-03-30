@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public ShareReplayCommand(ShareReplayRequest request) : base("guild.battle.share", request, new DefaultResponse())
 		{
 		}
-
-		protected internal ShareReplayCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

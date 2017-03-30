@@ -1,11 +1,8 @@
 using System;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/Interaction/Scroll View"), ExecuteInEditMode, RequireComponent(typeof(UIPanel))]
-public class UIScrollView : MonoBehaviour, IUnitySerializable
+public class UIScrollView : MonoBehaviour
 {
 	public enum Movement
 	{
@@ -35,29 +32,29 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 
 	public UIScrollView.Movement movement;
 
-	public UIScrollView.DragEffect dragEffect;
+	public UIScrollView.DragEffect dragEffect = UIScrollView.DragEffect.MomentumAndSpring;
 
-	public bool restrictWithinPanel;
+	public bool restrictWithinPanel = true;
 
 	public bool disableDragIfFits;
 
-	public bool smoothDragStart;
+	public bool smoothDragStart = true;
 
-	public bool iOSDragEmulation;
+	public bool iOSDragEmulation = true;
 
-	public float scrollWheelFactor;
+	public float scrollWheelFactor = 0.25f;
 
-	public float momentumAmount;
+	public float momentumAmount = 35f;
 
-	public float dampenStrength;
+	public float dampenStrength = 9f;
 
 	public UIProgressBar horizontalScrollBar;
 
 	public UIProgressBar verticalScrollBar;
 
-	public UIScrollView.ShowCondition showScrollBars;
+	public UIScrollView.ShowCondition showScrollBars = UIScrollView.ShowCondition.OnlyIfNeeded;
 
-	public Vector2 customMovement;
+	public Vector2 customMovement = new Vector2(1f, 0f);
 
 	public UIWidget.Pivot contentPivot;
 
@@ -70,10 +67,10 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 	public UIScrollView.OnDragNotification onStoppedMoving;
 
 	[HideInInspector, SerializeField]
-	protected internal Vector3 scale;
+	private Vector3 scale = new Vector3(1f, 0f, 0f);
 
 	[HideInInspector, SerializeField]
-	protected internal Vector2 relativePositionOnReset;
+	private Vector2 relativePositionOnReset = Vector2.zero;
 
 	protected Transform mTrans;
 
@@ -85,7 +82,7 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 
 	protected bool mPressed;
 
-	protected Vector3 mMomentum;
+	protected Vector3 mMomentum = Vector3.zero;
 
 	protected float mScroll;
 
@@ -97,13 +94,13 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 
 	protected bool mIgnoreCallbacks;
 
-	protected int mDragID;
+	protected int mDragID = -10;
 
-	protected Vector2 mDragStartOffset;
+	protected Vector2 mDragStartOffset = Vector2.zero;
 
 	protected bool mDragStarted;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mStarted;
 
 	[HideInInspector]
@@ -195,8 +192,8 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 			}
 			Vector4 finalClipRegion = this.mPanel.finalClipRegion;
 			Bounds bounds = this.bounds;
-			float num = (finalClipRegion.z == 0f) ? ((float)Screen.width) : (finalClipRegion.z * 0.5f);
-			float num2 = (finalClipRegion.w == 0f) ? ((float)Screen.height) : (finalClipRegion.w * 0.5f);
+			float num = (finalClipRegion.z != 0f) ? (finalClipRegion.z * 0.5f) : ((float)Screen.width);
+			float num2 = (finalClipRegion.w != 0f) ? (finalClipRegion.w * 0.5f) : ((float)Screen.height);
 			if (this.canMoveHorizontally)
 			{
 				if (bounds.min.x < finalClipRegion.x - num)
@@ -297,13 +294,13 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 		{
 			EventDelegate.Add(this.horizontalScrollBar.onChange, new EventDelegate.Callback(this.OnScrollBar));
 			this.horizontalScrollBar.BroadcastMessage("CacheDefaultColor", SendMessageOptions.DontRequireReceiver);
-			this.horizontalScrollBar.alpha = ((this.showScrollBars == UIScrollView.ShowCondition.Always || this.shouldMoveHorizontally) ? 1f : 0f);
+			this.horizontalScrollBar.alpha = ((this.showScrollBars != UIScrollView.ShowCondition.Always && !this.shouldMoveHorizontally) ? 0f : 1f);
 		}
 		if (this.verticalScrollBar != null)
 		{
 			EventDelegate.Add(this.verticalScrollBar.onChange, new EventDelegate.Callback(this.OnScrollBar));
 			this.verticalScrollBar.BroadcastMessage("CacheDefaultColor", SendMessageOptions.DontRequireReceiver);
-			this.verticalScrollBar.alpha = ((this.showScrollBars == UIScrollView.ShowCondition.Always || this.shouldMoveVertically) ? 1f : 0f);
+			this.verticalScrollBar.alpha = ((this.showScrollBars != UIScrollView.ShowCondition.Always && !this.shouldMoveVertically) ? 0f : 1f);
 		}
 	}
 
@@ -337,10 +334,10 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 		{
 			if (!instant && this.dragEffect == UIScrollView.DragEffect.MomentumAndSpring)
 			{
-				Vector3 vector2 = this.mTrans.localPosition + vector;
-				vector2.x = Mathf.Round(vector2.x);
-				vector2.y = Mathf.Round(vector2.y);
-				SpringPanel.Begin(this.mPanel.gameObject, vector2, 13f).strength = 8f;
+				Vector3 pos = this.mTrans.localPosition + vector;
+				pos.x = Mathf.Round(pos.x);
+				pos.y = Mathf.Round(pos.y);
+				SpringPanel.Begin(this.mPanel.gameObject, pos, 13f).strength = 8f;
 			}
 			else
 			{
@@ -441,7 +438,6 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 				num9 = num11 - num9;
 				num10 -= num12;
 				this.UpdateScrollbars(this.verticalScrollBar, num9, num10, contentSize2, viewSize2, true);
-				return;
 			}
 		}
 		else if (recalculateBounds)
@@ -463,14 +459,14 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 			contentMin = Mathf.Clamp01(contentMin / contentSize);
 			contentMax = Mathf.Clamp01(contentMax / contentSize);
 			num = contentMin + contentMax;
-			slider.value = (inverted ? ((num > 0.001f) ? (1f - contentMin / num) : 0f) : ((num > 0.001f) ? (contentMin / num) : 1f));
+			slider.value = ((!inverted) ? ((num <= 0.001f) ? 1f : (contentMin / num)) : ((num <= 0.001f) ? 0f : (1f - contentMin / num)));
 		}
 		else
 		{
 			contentMin = Mathf.Clamp01(-contentMin / contentSize);
 			contentMax = Mathf.Clamp01(-contentMax / contentSize);
 			num = contentMin + contentMax;
-			slider.value = (inverted ? ((num > 0.001f) ? (1f - contentMin / num) : 0f) : ((num > 0.001f) ? (contentMin / num) : 1f));
+			slider.value = ((!inverted) ? ((num <= 0.001f) ? 1f : (contentMin / num)) : ((num <= 0.001f) ? 0f : (1f - contentMin / num)));
 			if (contentSize > 0f)
 			{
 				contentMin = Mathf.Clamp01(contentMin / contentSize);
@@ -567,8 +563,8 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 			this.mIgnoreCallbacks = true;
 			this.mCalculatedBounds = false;
 			Vector2 pivotOffset = NGUIMath.GetPivotOffset(this.contentPivot);
-			float x = (this.horizontalScrollBar != null) ? this.horizontalScrollBar.value : pivotOffset.x;
-			float y = (this.verticalScrollBar != null) ? this.verticalScrollBar.value : (1f - pivotOffset.y);
+			float x = (!(this.horizontalScrollBar != null)) ? pivotOffset.x : this.horizontalScrollBar.value;
+			float y = (!(this.verticalScrollBar != null)) ? (1f - pivotOffset.y) : this.verticalScrollBar.value;
 			this.SetDragAmount(x, y, false);
 			this.UpdateScrollbars(true);
 			this.mIgnoreCallbacks = false;
@@ -580,8 +576,8 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 		if (!this.mIgnoreCallbacks)
 		{
 			this.mIgnoreCallbacks = true;
-			float x = (this.horizontalScrollBar != null) ? this.horizontalScrollBar.value : 0f;
-			float y = (this.verticalScrollBar != null) ? this.verticalScrollBar.value : 0f;
+			float x = (!(this.horizontalScrollBar != null)) ? 0f : this.horizontalScrollBar.value;
+			float y = (!(this.verticalScrollBar != null)) ? 0f : this.verticalScrollBar.value;
 			this.SetDragAmount(x, y, false);
 			this.mIgnoreCallbacks = false;
 		}
@@ -610,7 +606,7 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 		{
 			return;
 		}
-		if (this.smoothDragStart & pressed)
+		if (this.smoothDragStart && pressed)
 		{
 			this.mDragStarted = false;
 			this.mDragStartOffset = Vector2.zero;
@@ -650,17 +646,15 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 					if (this.onDragStarted != null)
 					{
 						this.onDragStarted();
-						return;
 					}
 				}
 			}
+			else if (this.centerOnChild)
+			{
+				this.centerOnChild.Recenter();
+			}
 			else
 			{
-				if (this.centerOnChild)
-				{
-					this.centerOnChild.Recenter();
-					return;
-				}
 				if (this.restrictWithinPanel && this.mPanel.clipping != UIDrawCall.Clipping.None)
 				{
 					this.RestrictWithinBounds(this.dragEffect == UIScrollView.DragEffect.None, this.canMoveHorizontally, this.canMoveVertically);
@@ -699,7 +693,7 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 					this.onDragStarted();
 				}
 			}
-			Ray ray = this.smoothDragStart ? UICamera.currentCamera.ScreenPointToRay(UICamera.currentTouch.pos - this.mDragStartOffset) : UICamera.currentCamera.ScreenPointToRay(UICamera.currentTouch.pos);
+			Ray ray = (!this.smoothDragStart) ? UICamera.currentCamera.ScreenPointToRay(UICamera.currentTouch.pos) : UICamera.currentCamera.ScreenPointToRay(UICamera.currentTouch.pos - this.mDragStartOffset);
 			float distance = 0f;
 			if (this.mPlane.Raycast(ray, out distance))
 			{
@@ -791,7 +785,7 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 			if (this.verticalScrollBar)
 			{
 				float num = this.verticalScrollBar.alpha;
-				num += (flag ? (deltaTime * 6f) : (-deltaTime * 3f));
+				num += ((!flag) ? (-deltaTime * 3f) : (deltaTime * 6f));
 				num = Mathf.Clamp01(num);
 				if (this.verticalScrollBar.alpha != num)
 				{
@@ -801,7 +795,7 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 			if (this.horizontalScrollBar)
 			{
 				float num2 = this.horizontalScrollBar.alpha;
-				num2 += (flag2 ? (deltaTime * 6f) : (-deltaTime * 3f));
+				num2 += ((!flag2) ? (-deltaTime * 3f) : (deltaTime * 6f));
 				num2 = Mathf.Clamp01(num2);
 				if (this.horizontalScrollBar.alpha != num2)
 				{
@@ -858,7 +852,6 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 				if (this.onMomentumMove != null)
 				{
 					this.onMomentumMove();
-					return;
 				}
 			}
 			else
@@ -874,7 +867,6 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 				if (this.onStoppedMoving != null)
 				{
 					this.onStoppedMoving();
-					return;
 				}
 			}
 		}
@@ -900,666 +892,11 @@ public class UIScrollView : MonoBehaviour, IUnitySerializable
 			if (this.scale.x != 0f)
 			{
 				this.Scroll(delta.x);
-				return;
 			}
-			if (this.scale.y != 0f)
+			else if (this.scale.y != 0f)
 			{
 				this.Scroll(delta.y);
 			}
 		}
-	}
-
-	public UIScrollView()
-	{
-		this.dragEffect = UIScrollView.DragEffect.MomentumAndSpring;
-		this.restrictWithinPanel = true;
-		this.smoothDragStart = true;
-		this.iOSDragEmulation = true;
-		this.scrollWheelFactor = 0.25f;
-		this.momentumAmount = 35f;
-		this.dampenStrength = 9f;
-		this.showScrollBars = UIScrollView.ShowCondition.OnlyIfNeeded;
-		this.customMovement = new Vector2(1f, 0f);
-		this.scale = new Vector3(1f, 0f, 0f);
-		this.relativePositionOnReset = Vector2.zero;
-		this.mMomentum = Vector3.zero;
-		this.mDragID = -10;
-		this.mDragStartOffset = Vector2.zero;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		SerializedStateWriter.Instance.WriteInt32((int)this.movement);
-		SerializedStateWriter.Instance.WriteInt32((int)this.dragEffect);
-		SerializedStateWriter.Instance.WriteBoolean(this.restrictWithinPanel);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.disableDragIfFits);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.smoothDragStart);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.iOSDragEmulation);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteSingle(this.scrollWheelFactor);
-		SerializedStateWriter.Instance.WriteSingle(this.momentumAmount);
-		SerializedStateWriter.Instance.WriteSingle(this.dampenStrength);
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.horizontalScrollBar);
-		}
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.verticalScrollBar);
-		}
-		SerializedStateWriter.Instance.WriteInt32((int)this.showScrollBars);
-		if (depth <= 7)
-		{
-			this.customMovement.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32((int)this.contentPivot);
-		if (depth <= 7)
-		{
-			this.scale.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			this.relativePositionOnReset.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.centerOnChild);
-		}
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		this.movement = (UIScrollView.Movement)SerializedStateReader.Instance.ReadInt32();
-		this.dragEffect = (UIScrollView.DragEffect)SerializedStateReader.Instance.ReadInt32();
-		this.restrictWithinPanel = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.disableDragIfFits = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.smoothDragStart = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.iOSDragEmulation = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.scrollWheelFactor = SerializedStateReader.Instance.ReadSingle();
-		this.momentumAmount = SerializedStateReader.Instance.ReadSingle();
-		this.dampenStrength = SerializedStateReader.Instance.ReadSingle();
-		if (depth <= 7)
-		{
-			this.horizontalScrollBar = (SerializedStateReader.Instance.ReadUnityEngineObject() as UIProgressBar);
-		}
-		if (depth <= 7)
-		{
-			this.verticalScrollBar = (SerializedStateReader.Instance.ReadUnityEngineObject() as UIProgressBar);
-		}
-		this.showScrollBars = (UIScrollView.ShowCondition)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.customMovement.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		this.contentPivot = (UIWidget.Pivot)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.scale.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.relativePositionOnReset.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.centerOnChild = (SerializedStateReader.Instance.ReadUnityEngineObject() as UICenterOnChild);
-		}
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (this.horizontalScrollBar != null)
-		{
-			this.horizontalScrollBar = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.horizontalScrollBar) as UIProgressBar);
-		}
-		if (this.verticalScrollBar != null)
-		{
-			this.verticalScrollBar = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.verticalScrollBar) as UIProgressBar);
-		}
-		if (this.centerOnChild != null)
-		{
-			this.centerOnChild = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.centerOnChild) as UICenterOnChild);
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		ISerializedNamedStateWriter arg_1F_0 = SerializedNamedStateWriter.Instance;
-		int arg_1F_1 = (int)this.movement;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		arg_1F_0.WriteInt32(arg_1F_1, &var_0_cp_0[var_0_cp_1] + 1678);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.dragEffect, &var_0_cp_0[var_0_cp_1] + 596);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.restrictWithinPanel, &var_0_cp_0[var_0_cp_1] + 665);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.disableDragIfFits, &var_0_cp_0[var_0_cp_1] + 1687);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.smoothDragStart, &var_0_cp_0[var_0_cp_1] + 607);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.iOSDragEmulation, &var_0_cp_0[var_0_cp_1] + 1705);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteSingle(this.scrollWheelFactor, &var_0_cp_0[var_0_cp_1] + 578);
-		SerializedNamedStateWriter.Instance.WriteSingle(this.momentumAmount, &var_0_cp_0[var_0_cp_1] + 623);
-		SerializedNamedStateWriter.Instance.WriteSingle(this.dampenStrength, &var_0_cp_0[var_0_cp_1] + 1722);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.horizontalScrollBar, &var_0_cp_0[var_0_cp_1] + 1737);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.verticalScrollBar, &var_0_cp_0[var_0_cp_1] + 1757);
-		}
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.showScrollBars, &var_0_cp_0[var_0_cp_1] + 1775);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 1790);
-			this.customMovement.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.contentPivot, &var_0_cp_0[var_0_cp_1] + 1805);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 572);
-			this.scale.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 1818);
-			this.relativePositionOnReset.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.centerOnChild, &var_0_cp_0[var_0_cp_1] + 1842);
-		}
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		ISerializedNamedStateReader arg_1A_0 = SerializedNamedStateReader.Instance;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		this.movement = (UIScrollView.Movement)arg_1A_0.ReadInt32(&var_0_cp_0[var_0_cp_1] + 1678);
-		this.dragEffect = (UIScrollView.DragEffect)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 596);
-		this.restrictWithinPanel = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 665);
-		SerializedNamedStateReader.Instance.Align();
-		this.disableDragIfFits = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 1687);
-		SerializedNamedStateReader.Instance.Align();
-		this.smoothDragStart = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 607);
-		SerializedNamedStateReader.Instance.Align();
-		this.iOSDragEmulation = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 1705);
-		SerializedNamedStateReader.Instance.Align();
-		this.scrollWheelFactor = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 578);
-		this.momentumAmount = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 623);
-		this.dampenStrength = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 1722);
-		if (depth <= 7)
-		{
-			this.horizontalScrollBar = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 1737) as UIProgressBar);
-		}
-		if (depth <= 7)
-		{
-			this.verticalScrollBar = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 1757) as UIProgressBar);
-		}
-		this.showScrollBars = (UIScrollView.ShowCondition)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 1775);
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 1790);
-			this.customMovement.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		this.contentPivot = (UIWidget.Pivot)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 1805);
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 572);
-			this.scale.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 1818);
-			this.relativePositionOnReset.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.centerOnChild = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 1842) as UICenterOnChild);
-		}
-	}
-
-	protected internal UIScrollView(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static bool $Get0(object instance)
-	{
-		return ((UIScrollView)instance).restrictWithinPanel;
-	}
-
-	public static void $Set0(object instance, bool value)
-	{
-		((UIScrollView)instance).restrictWithinPanel = value;
-	}
-
-	public static bool $Get1(object instance)
-	{
-		return ((UIScrollView)instance).disableDragIfFits;
-	}
-
-	public static void $Set1(object instance, bool value)
-	{
-		((UIScrollView)instance).disableDragIfFits = value;
-	}
-
-	public static bool $Get2(object instance)
-	{
-		return ((UIScrollView)instance).smoothDragStart;
-	}
-
-	public static void $Set2(object instance, bool value)
-	{
-		((UIScrollView)instance).smoothDragStart = value;
-	}
-
-	public static bool $Get3(object instance)
-	{
-		return ((UIScrollView)instance).iOSDragEmulation;
-	}
-
-	public static void $Set3(object instance, bool value)
-	{
-		((UIScrollView)instance).iOSDragEmulation = value;
-	}
-
-	public static float $Get4(object instance)
-	{
-		return ((UIScrollView)instance).scrollWheelFactor;
-	}
-
-	public static void $Set4(object instance, float value)
-	{
-		((UIScrollView)instance).scrollWheelFactor = value;
-	}
-
-	public static float $Get5(object instance)
-	{
-		return ((UIScrollView)instance).momentumAmount;
-	}
-
-	public static void $Set5(object instance, float value)
-	{
-		((UIScrollView)instance).momentumAmount = value;
-	}
-
-	public static float $Get6(object instance)
-	{
-		return ((UIScrollView)instance).dampenStrength;
-	}
-
-	public static void $Set6(object instance, float value)
-	{
-		((UIScrollView)instance).dampenStrength = value;
-	}
-
-	public static long $Get7(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)instance).horizontalScrollBar);
-	}
-
-	public static void $Set7(object instance, long value)
-	{
-		((UIScrollView)instance).horizontalScrollBar = (UIProgressBar)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static long $Get8(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)instance).verticalScrollBar);
-	}
-
-	public static void $Set8(object instance, long value)
-	{
-		((UIScrollView)instance).verticalScrollBar = (UIProgressBar)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static float $Get9(object instance, int index)
-	{
-		UIScrollView expr_06_cp_0 = (UIScrollView)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.customMovement.x;
-		case 1:
-			return expr_06_cp_0.customMovement.y;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set9(object instance, float value, int index)
-	{
-		UIScrollView expr_06_cp_0 = (UIScrollView)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.customMovement.x = value;
-			return;
-		case 1:
-			expr_06_cp_0.customMovement.y = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get10(object instance, int index)
-	{
-		UIScrollView expr_06_cp_0 = (UIScrollView)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.scale.x;
-		case 1:
-			return expr_06_cp_0.scale.y;
-		case 2:
-			return expr_06_cp_0.scale.z;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set10(object instance, float value, int index)
-	{
-		UIScrollView expr_06_cp_0 = (UIScrollView)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.scale.x = value;
-			return;
-		case 1:
-			expr_06_cp_0.scale.y = value;
-			return;
-		case 2:
-			expr_06_cp_0.scale.z = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static float $Get11(object instance, int index)
-	{
-		UIScrollView expr_06_cp_0 = (UIScrollView)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.relativePositionOnReset.x;
-		case 1:
-			return expr_06_cp_0.relativePositionOnReset.y;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set11(object instance, float value, int index)
-	{
-		UIScrollView expr_06_cp_0 = (UIScrollView)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.relativePositionOnReset.x = value;
-			return;
-		case 1:
-			expr_06_cp_0.relativePositionOnReset.y = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static long $Get12(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)instance).centerOnChild);
-	}
-
-	public static void $Set12(object instance, long value)
-	{
-		((UIScrollView)instance).centerOnChild = (UICenterOnChild)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Awake();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).CheckScrollbars();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).DisableSpring();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Drag();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).bounds);
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).canMoveHorizontally);
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).canMoveVertically);
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).currentMomentum);
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).isDragging);
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).panel);
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).shouldMove);
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).shouldMoveHorizontally);
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).shouldMoveVertically);
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).InvalidateBounds();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).LateUpdate();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).MoveAbsolute(*(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).MoveRelative(*(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).OnDisable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).OnEnable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).OnPan(*(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).OnScrollBar();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Press(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).ResetPosition();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).RestrictWithinBounds(*(sbyte*)args != 0));
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).RestrictWithinBounds(*(sbyte*)args != 0, *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0));
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Scroll(*(float*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).currentMomentum = *(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).SetDragAmount(*(float*)args, *(float*)(args + 1), *(sbyte*)(args + 2) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).UpdatePosition();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).UpdateScrollbars();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).UpdateScrollbars(*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		((UIScrollView)GCHandledObjects.GCHandleToObject(instance)).UpdateScrollbars((UIProgressBar)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3), *(float*)(args + 4), *(sbyte*)(args + 5) != 0);
-		return -1L;
 	}
 }

@@ -5,9 +5,7 @@ using StaRTS.Main.Views.Cameras;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using System.Globalization;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Squads
 {
@@ -23,14 +21,12 @@ namespace StaRTS.Main.Views.UX.Squads
 
 		protected Transform transformToTrack;
 
-		private Vector3 localOffset;
+		private Vector3 localOffset = new Vector3(0f, 2.5f, 1.5f);
 
 		protected WarBoardCamera camera;
 
-		public AbstractSquadWarBoardElement(string assetName)
+		public AbstractSquadWarBoardElement(string assetName) : base(Service.Get<CameraManager>().UXCamera)
 		{
-			this.localOffset = new Vector3(0f, 2.5f, 1.5f);
-			base..ctor(Service.Get<CameraManager>().UXCamera);
 			this.assetName = assetName;
 			if (!string.IsNullOrEmpty(GameConstants.WARBOARD_LABEL_OFFSET))
 			{
@@ -40,7 +36,7 @@ namespace StaRTS.Main.Views.UX.Squads
 				});
 				if (array.Length == 3)
 				{
-					this.localOffset = new Vector3(Convert.ToSingle(array[0], CultureInfo.InvariantCulture), Convert.ToSingle(array[1], CultureInfo.InvariantCulture), Convert.ToSingle(array[2], CultureInfo.InvariantCulture));
+					this.localOffset = new Vector3(Convert.ToSingle(array[0]), Convert.ToSingle(array[1]), Convert.ToSingle(array[2]));
 				}
 			}
 			this.assetHandle = AssetHandle.Invalid;
@@ -84,34 +80,6 @@ namespace StaRTS.Main.Views.UX.Squads
 			this.rootTrans = null;
 			this.transformToTrack = null;
 			this.camera = null;
-		}
-
-		protected internal AbstractSquadWarBoardElement(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractSquadWarBoardElement)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AbstractSquadWarBoardElement)GCHandledObjects.GCHandleToObject(instance)).LoadFailed(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AbstractSquadWarBoardElement)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractSquadWarBoardElement)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
 		}
 	}
 }

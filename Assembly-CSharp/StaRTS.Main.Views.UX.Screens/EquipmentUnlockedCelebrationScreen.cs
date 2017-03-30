@@ -14,7 +14,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -50,7 +49,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private AssetHandle subjectHandle;
 
-		private List<Material> outLineMatList;
+		private List<Material> outLineMatList = new List<Material>();
 
 		private bool fadingOutSubject;
 
@@ -66,10 +65,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 		}
 
-		public EquipmentUnlockedCelebrationScreen(EquipmentVO vo)
+		public EquipmentUnlockedCelebrationScreen(EquipmentVO vo) : base("gui_equipment_unlocked")
 		{
-			this.outLineMatList = new List<Material>();
-			base..ctor("gui_equipment_unlocked");
 			this.subjectVO = vo;
 		}
 
@@ -278,85 +275,12 @@ namespace StaRTS.Main.Views.UX.Screens
 					}
 					i++;
 				}
-				return;
 			}
-			this.fadingOutSubject = false;
-			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
-		}
-
-		protected internal EquipmentUnlockedCelebrationScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).ArrangeRig(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).FadeOutSubject();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).LoadFx();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnButtonContinueClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).SetUIText();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((EquipmentUnlockedCelebrationScreen)GCHandledObjects.GCHandleToObject(instance)).ShowFx(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
+			else
+			{
+				this.fadingOutSubject = false;
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			}
 		}
 	}
 }

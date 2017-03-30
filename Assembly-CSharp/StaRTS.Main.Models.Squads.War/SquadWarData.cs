@@ -37,9 +37,5 @@ namespace StaRTS.Main.Models.Squads.War
 			this.StartTimeStamp = 0;
 			this.RewardsProcessed = false;
 		}
-
-		protected internal SquadWarData(UIntPtr dummy)
-		{
-		}
 	}
 }

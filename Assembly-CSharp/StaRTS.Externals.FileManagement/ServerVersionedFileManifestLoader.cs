@@ -1,8 +1,8 @@
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
+using System.IO;
+using System.Net;
 
 namespace StaRTS.Externals.FileManagement
 {
@@ -27,7 +27,7 @@ namespace StaRTS.Externals.FileManagement
 			this.options = options;
 			this.onComplete = onComplete;
 			this.manifestUrl = manifestUrl;
-			Service.Get<StaRTSLogger>().DebugFormat("Setting manifestUrl to {0}", new object[]
+			Service.Get<Logger>().DebugFormat("Setting manifestUrl to {0}", new object[]
 			{
 				manifestUrl
 			});
@@ -50,6 +50,21 @@ namespace StaRTS.Externals.FileManagement
 
 		private void AttemptManifestRequest(uint id, object cookie)
 		{
+			HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(this.manifestUrl);
+			httpWebRequest.Timeout = 10000;
+			httpWebRequest.ReadWriteTimeout = 30000;
+			httpWebRequest.KeepAlive = false;
+			httpWebRequest.ProtocolVersion = HttpVersion.Version10;
+			WebResponse response = httpWebRequest.GetResponse();
+			using (Stream responseStream = response.GetResponseStream())
+			{
+				if (responseStream != null)
+				{
+					StreamReader streamReader = new StreamReader(responseStream);
+					this.PrepareManifest(streamReader.ReadToEnd());
+					responseStream.Close();
+				}
+			}
 		}
 
 		private void PrepareManifest(string json)
@@ -60,36 +75,6 @@ namespace StaRTS.Externals.FileManagement
 			{
 				this.onComplete();
 			}
-		}
-
-		public ServerVersionedFileManifestLoader()
-		{
-		}
-
-		protected internal ServerVersionedFileManifestLoader(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerVersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).GetManifest());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ServerVersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).IsLoaded());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ServerVersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).Load((FmsOptions)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (FmsCallback)GCHandledObjects.GCHandleToObject(args[2]), (FmsCallback)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ServerVersionedFileManifestLoader)GCHandledObjects.GCHandleToObject(instance)).PrepareManifest(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
 		}
 	}
 }

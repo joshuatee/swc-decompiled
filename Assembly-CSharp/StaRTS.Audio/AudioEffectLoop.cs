@@ -5,7 +5,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Audio
 {
@@ -34,9 +33,11 @@ namespace StaRTS.Audio
 			{
 				Service.Get<EventManager>().RegisterObserver(this, EventId.PlayedLoadedOnDemandAudio, EventPriority.Default);
 				Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
-				return;
 			}
-			this.OnEffectPlayed(num);
+			else
+			{
+				this.OnEffectPlayed(num);
+			}
 		}
 
 		private void OnEffectPlayed(float clipLength)
@@ -72,33 +73,6 @@ namespace StaRTS.Audio
 				this.OnEffectPlayed(clipLength);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal AudioEffectLoop(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AudioEffectLoop)GCHandledObjects.GCHandleToObject(instance)).OnEffectPlayed(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AudioEffectLoop)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AudioEffectLoop)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AudioEffectLoop)GCHandledObjects.GCHandleToObject(instance)).PlayEffect();
-			return -1L;
 		}
 	}
 }

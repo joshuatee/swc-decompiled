@@ -1,7 +1,5 @@
 using StaRTS.Utils.Json;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player.Store
 {
@@ -22,6 +20,14 @@ namespace StaRTS.Main.Models.Commands.Player.Store
 		private int count;
 
 		private string purchaseContext;
+
+		private BuyResourceRequest(string uid, int amount)
+		{
+			this.uid = uid;
+			this.count = amount;
+			this.currency = "crystals";
+			this.type = "Resources";
+		}
 
 		public static BuyResourceRequest MakeBuyResourceRequest(CurrencyType resourceToBuy, int amount)
 		{
@@ -56,14 +62,6 @@ namespace StaRTS.Main.Models.Commands.Player.Store
 			this.purchaseContext = value;
 		}
 
-		private BuyResourceRequest(string uid, int amount)
-		{
-			this.uid = uid;
-			this.count = amount;
-			this.currency = "crystals";
-			this.type = "Resources";
-		}
-
 		public override string ToJson()
 		{
 			Serializer startedSerializer = base.GetStartedSerializer();
@@ -71,41 +69,11 @@ namespace StaRTS.Main.Models.Commands.Player.Store
 			startedSerializer.AddString("currency", this.currency);
 			startedSerializer.AddString("type", this.type);
 			startedSerializer.Add<int>("count", this.count);
-			if (this.purchaseContext != null && !this.purchaseContext.Equals(""))
+			if (this.purchaseContext != null && !this.purchaseContext.Equals(string.Empty))
 			{
 				startedSerializer.AddString("purchaseContext", this.purchaseContext);
 			}
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal BuyResourceRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BuyResourceRequest.MakeBuyDroidRequest(*(int*)args));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BuyResourceRequest.MakeBuyProtectionRequest(*(int*)args));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(BuyResourceRequest.MakeBuyResourceRequest((CurrencyType)(*(int*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BuyResourceRequest)GCHandledObjects.GCHandleToObject(instance)).setPurchaseContext(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuyResourceRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

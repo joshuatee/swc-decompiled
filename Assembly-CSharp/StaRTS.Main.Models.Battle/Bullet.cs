@@ -9,12 +9,13 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Battle
 {
 	public class Bullet
 	{
+		private const float STARSHIP_TARGET_OFFSET = 1f;
+
 		public SmartEntity Owner;
 
 		private int beamSegment;
@@ -34,8 +35,6 @@ namespace StaRTS.Main.Models.Battle
 		private int beamRadius;
 
 		private int beamTrail;
-
-		private const float STARSHIP_TARGET_OFFSET = 1f;
 
 		public HealthFragment HealthFrag
 		{
@@ -223,7 +222,7 @@ namespace StaRTS.Main.Models.Battle
 
 		public void SetTravelTime(uint travelTime)
 		{
-			this.TravelTime = ((travelTime == 0u) ? 1u : travelTime);
+			this.TravelTime = ((travelTime != 0u) ? travelTime : 1u);
 		}
 
 		public void AddSplash(ISplashVO splashVO)
@@ -326,7 +325,7 @@ namespace StaRTS.Main.Models.Battle
 			{
 				int num = this.beamSegment - beamInitialZeroes;
 				int beamBulletLength = this.ProjectileType.BeamBulletLength;
-				this.beamTrail = ((beamBulletLength < num) ? beamBulletLength : num);
+				this.beamTrail = ((beamBulletLength >= num) ? num : beamBulletLength);
 			}
 			else
 			{
@@ -334,7 +333,7 @@ namespace StaRTS.Main.Models.Battle
 			}
 			int num2 = this.ProjectileType.BeamWidthSegments.Length / 2 + 1;
 			int num3 = (this.beamTrail + 3) / 2;
-			this.beamRadius = ((num2 > num3) ? num2 : num3);
+			this.beamRadius = ((num2 <= num3) ? num3 : num2);
 		}
 
 		private void SetupBeam()
@@ -384,289 +383,12 @@ namespace StaRTS.Main.Models.Battle
 			{
 				x += 1024 * entity.SizeComp.Width / 2;
 				z += 1024 * entity.SizeComp.Depth / 2;
-				return;
 			}
-			x += 512;
-			z += 512;
-		}
-
-		public Bullet()
-		{
-		}
-
-		protected internal Bullet(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).AddSplash((ISplashVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).AdvanceBeam();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).ApplyBeamDamagePercent((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).AppliedBeamHitFXThisSegment);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).AppliedBuffs);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).Cookie);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).FlashTarget);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).GunLocator);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).HealthFrag);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).IsDeflection);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).OwnerFaction);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).OwnerTeam);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).ProjectileType);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).SpawnBoardX);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).SpawnBoardZ);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).SpawnWorldLocation);
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).SplashVO);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).Target);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).TargetBoardX);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).TargetBoardZ);
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).TargetWorldLocation);
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).GetBeamDamagePercent(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).GetBeamNearbyCells());
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).InitWithTarget(*(int*)args, *(int*)(args + 1), *(*(IntPtr*)(args + 2)), (Target)GCHandledObjects.GCHandleToObject(args[3]), (TeamType)(*(int*)(args + 4)), (Entity)GCHandledObjects.GCHandleToObject(args[5]), (HealthFragment)GCHandledObjects.GCHandleToObject(args[6]), (ProjectileTypeVO)GCHandledObjects.GCHandleToObject(args[7]), (List<Buff>)GCHandledObjects.GCHandleToObject(args[8]), (FactionType)(*(int*)(args + 9)), (GameObject)GCHandledObjects.GCHandleToObject(args[10])));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).InternalSetBeamSegment(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).IsBeamFirstHit((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Bullet)GCHandledObjects.GCHandleToObject(instance)).IsSplash());
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).AppliedBeamHitFXThisSegment = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).AppliedBuffs = (List<Buff>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).Cookie = GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).FlashTarget = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).GunLocator = (GameObject)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).HealthFrag = (HealthFragment)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).IsDeflection = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).OwnerFaction = (FactionType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).OwnerTeam = (TeamType)(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).ProjectileType = (ProjectileTypeVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).SpawnBoardX = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).SpawnBoardZ = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).SpawnWorldLocation = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).SplashVO = (ISplashVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).Target = (SmartEntity)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).TargetBoardX = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).TargetBoardZ = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).TargetWorldLocation = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).SetDefaultTargetWorldLocation(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).SetTarget((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).SetTargetWorldLocation(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			((Bullet)GCHandledObjects.GCHandleToObject(instance)).SetupBeam();
-			return -1L;
+			else
+			{
+				x += 512;
+				z += 512;
+			}
 		}
 	}
 }

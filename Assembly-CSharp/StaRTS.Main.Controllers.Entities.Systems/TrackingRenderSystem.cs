@@ -5,7 +5,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities.Systems
 {
@@ -50,32 +49,6 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 					}
 				}
 			}
-		}
-
-		public TrackingRenderSystem()
-		{
-		}
-
-		protected internal TrackingRenderSystem(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TrackingRenderSystem)GCHandledObjects.GCHandleToObject(instance)).AddToGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TrackingRenderSystem)GCHandledObjects.GCHandleToObject(instance)).RemoveFromGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TrackingRenderSystem)GCHandledObjects.GCHandleToObject(instance)).Update(*(float*)args);
-			return -1L;
 		}
 	}
 }

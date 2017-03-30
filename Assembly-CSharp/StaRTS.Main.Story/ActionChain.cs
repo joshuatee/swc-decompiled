@@ -5,19 +5,18 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story
 {
 	public class ActionChain : IStoryReactor
 	{
+		private const int RECURSIVE_LIMIT = 500;
+
 		private List<IStoryAction> actions;
 
 		private int currentActionIndex;
 
 		private int recursiveCounter;
-
-		private const int RECURSIVE_LIMIT = 500;
 
 		private bool destroying;
 
@@ -40,7 +39,7 @@ namespace StaRTS.Main.Story
 				this.recursiveCounter++;
 				if (this.recursiveCounter > 500)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Bad Metadata.  The story chain that starts with {0} has caused a loop.", new object[]
+					Service.Get<Logger>().ErrorFormat("Bad Metadata.  The story chain that starts with {0} has caused a loop.", new object[]
 					{
 						firstActionUid
 					});
@@ -60,11 +59,11 @@ namespace StaRTS.Main.Story
 				}
 				catch (KeyNotFoundException ex)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Error in Story Chain Starting with {0}.  Could not find Action {1}. {2}", new object[]
+					Service.Get<Logger>().ErrorFormat("Error in Story Chain Starting with {0}.  Could not find Action {1}. {2}", new object[]
 					{
 						firstActionUid,
 						text,
-						ex.get_Message()
+						ex.Message
 					});
 					this.Valid = false;
 					return;
@@ -100,9 +99,11 @@ namespace StaRTS.Main.Story
 			{
 				this.currentActionIndex = -1;
 				this.ExecuteNextAction();
-				return;
 			}
-			this.actions[this.currentActionIndex].Prepare();
+			else
+			{
+				this.actions[this.currentActionIndex].Prepare();
+			}
 		}
 
 		private void ExecuteNextAction()
@@ -115,11 +116,13 @@ namespace StaRTS.Main.Story
 			if (this.currentActionIndex >= this.actions.Count)
 			{
 				this.Destroy();
-				return;
 			}
-			StoryActionVO vO = this.actions[this.currentActionIndex].VO;
-			Service.Get<QuestController>().LogAction(vO);
-			this.actions[this.currentActionIndex].Execute();
+			else
+			{
+				StoryActionVO vO = this.actions[this.currentActionIndex].VO;
+				Service.Get<QuestController>().LogAction(vO);
+				this.actions[this.currentActionIndex].Execute();
+			}
 		}
 
 		public void Destroy()
@@ -133,51 +136,6 @@ namespace StaRTS.Main.Story
 				i++;
 			}
 			this.actions.Clear();
-		}
-
-		protected internal ActionChain(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ActionChain)GCHandledObjects.GCHandleToObject(instance)).ChildComplete((IStoryAction)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ActionChain)GCHandledObjects.GCHandleToObject(instance)).ChildPrepared((IStoryAction)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ActionChain)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ActionChain)GCHandledObjects.GCHandleToObject(instance)).ExecuteNextAction();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ActionChain)GCHandledObjects.GCHandleToObject(instance)).Valid);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ActionChain)GCHandledObjects.GCHandleToObject(instance)).PrepareNextAction();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ActionChain)GCHandledObjects.GCHandleToObject(instance)).Valid = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

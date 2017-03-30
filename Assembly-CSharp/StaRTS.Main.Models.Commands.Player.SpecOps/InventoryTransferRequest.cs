@@ -1,6 +1,5 @@
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player.SpecOps
 {
@@ -22,15 +21,6 @@ namespace StaRTS.Main.Models.Commands.Player.SpecOps
 			startedSerializer.AddString("uid", this.uid);
 			startedSerializer.Add<int>("count", this.amount);
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal InventoryTransferRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryTransferRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

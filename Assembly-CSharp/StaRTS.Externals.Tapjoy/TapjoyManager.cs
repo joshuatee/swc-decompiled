@@ -7,12 +7,12 @@ using StaRTS.Main.Models.Player;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Externals.Tapjoy
 {
-	public class TapjoyManager : MonoBehaviour, IUnitySerializable
+	public class TapjoyManager : MonoBehaviour
 	{
 		private static bool mOpeningFullScreenAd;
 
@@ -113,6 +113,14 @@ namespace StaRTS.Externals.Tapjoy
 			TapjoyPlugin.EnableLogging(true);
 			TapjoyManager.offerWallOpen = false;
 			TapjoyManager.isUserIDSet = false;
+			AndroidJNI.AttachCurrentThread();
+			TapjoyPlugin.RequestTapjoyConnect("64348e6c-f353-41f8-8929-34564747f2d3", "CbTh6tz00S9ugMuDSbE1", new Dictionary<string, object>
+			{
+				{
+					"disable_persistent_ids",
+					true
+				}
+			});
 		}
 
 		private void RegisterCallbacks()
@@ -173,7 +181,7 @@ namespace StaRTS.Externals.Tapjoy
 		public void HandleTapjoyConnectFailed()
 		{
 			TapjoyManager.DidConnectSucceed = false;
-			Service.Get<StaRTSLogger>().Error("Tapjoy Connect Failed");
+			Service.Get<Logger>().Error("Tapjoy Connect Failed");
 		}
 
 		private void HandleGetTapPointsSucceeded(int points)
@@ -282,9 +290,9 @@ namespace StaRTS.Externals.Tapjoy
 
 		public void HandleShowOffersFailed()
 		{
-			if (Service.IsSet<StaRTSLogger>())
+			if (Service.IsSet<Logger>())
 			{
-				Service.Get<StaRTSLogger>().Warn("HandleShowOffersFailed");
+				Service.Get<Logger>().Warn("HandleShowOffersFailed");
 			}
 		}
 
@@ -300,275 +308,6 @@ namespace StaRTS.Externals.Tapjoy
 				TapjoyPlugin.SetUserID(Service.Get<CurrentPlayer>().PlayerId);
 				TapjoyManager.isUserIDSet = true;
 			}
-		}
-
-		public TapjoyManager()
-		{
-		}
-
-		public override void Unity_Serialize(int depth)
-		{
-		}
-
-		public override void Unity_Deserialize(int depth)
-		{
-		}
-
-		public override void Unity_RemapPPtrs(int depth)
-		{
-		}
-
-		public override void Unity_NamedSerialize(int depth)
-		{
-		}
-
-		public override void Unity_NamedDeserialize(int depth)
-		{
-		}
-
-		protected internal TapjoyManager(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).Awake();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).CheckTapjoyRewards();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).DisableTapjoy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).EnableTapjoy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TapjoyManager.DidConnectSucceed);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TapjoyManager.Instance);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TapjoyManager.OpeningFullScreenAd);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleAwardTapPointsFailed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleAwardTapPointsSucceeded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleGetDisplayAdFailed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleGetDisplayAdSucceeded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleGetFullScreenAdFailed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleGetFullScreenAdSucceeded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleGetTapPointsFailed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleGetTapPointsSucceeded(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleOffersClosed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleShowOffersFailed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleSpendTapPointsFailed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleSpendTapPointsSucceeded(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleTapjoyConnectFailed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleTapjoyConnectSuccess();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleTapPointsEarned(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleVideoAdCompleted();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleVideoAdFailed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleVideoAdStarted();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleViewClosed((TapjoyViewType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).HandleViewOpened((TapjoyViewType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TapjoyManager.IsEnabled());
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TapjoyManager.IsOfferWallOpen());
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).OnDisable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).RegisterCallbacks();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			TapjoyManager.DidConnectSucceed = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).SetUserId();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).ShowOffers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((TapjoyManager)GCHandledObjects.GCHandleToObject(instance)).UnRegisterCallbacks();
-			return -1L;
 		}
 	}
 }

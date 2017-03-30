@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/Internal/Draw Call"), ExecuteInEditMode]
-public class UIDrawCall : MonoBehaviour, IUnitySerializable
+public class UIDrawCall : MonoBehaviour
 {
 	public enum Clipping
 	{
@@ -17,57 +15,59 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 
 	public delegate void OnRenderCallback(Material mat);
 
+	private const int maxIndexBufferCache = 10;
+
 	private static BetterList<UIDrawCall> mActiveList = new BetterList<UIDrawCall>();
 
 	private static BetterList<UIDrawCall> mInactiveList = new BetterList<UIDrawCall>();
 
 	[HideInInspector]
-	[System.NonSerialized]
+	[NonSerialized]
 	public int widgetCount;
 
 	[HideInInspector]
-	[System.NonSerialized]
-	public int depthStart;
+	[NonSerialized]
+	public int depthStart = 2147483647;
 
 	[HideInInspector]
-	[System.NonSerialized]
-	public int depthEnd;
+	[NonSerialized]
+	public int depthEnd = -2147483648;
 
 	[HideInInspector]
-	[System.NonSerialized]
+	[NonSerialized]
 	public UIPanel manager;
 
 	[HideInInspector]
-	[System.NonSerialized]
+	[NonSerialized]
 	public UIPanel panel;
 
 	[HideInInspector]
-	[System.NonSerialized]
+	[NonSerialized]
 	public Texture2D clipTexture;
 
 	[HideInInspector]
-	[System.NonSerialized]
+	[NonSerialized]
 	public bool alwaysOnScreen;
 
 	[HideInInspector]
-	[System.NonSerialized]
-	public BetterList<Vector3> verts;
+	[NonSerialized]
+	public BetterList<Vector3> verts = new BetterList<Vector3>();
 
 	[HideInInspector]
-	[System.NonSerialized]
-	public BetterList<Vector3> norms;
+	[NonSerialized]
+	public BetterList<Vector3> norms = new BetterList<Vector3>();
 
 	[HideInInspector]
-	[System.NonSerialized]
-	public BetterList<Vector4> tans;
+	[NonSerialized]
+	public BetterList<Vector4> tans = new BetterList<Vector4>();
 
 	[HideInInspector]
-	[System.NonSerialized]
-	public BetterList<Vector2> uvs;
+	[NonSerialized]
+	public BetterList<Vector2> uvs = new BetterList<Vector2>();
 
 	[HideInInspector]
-	[System.NonSerialized]
-	public BetterList<Color32> cols;
+	[NonSerialized]
+	public BetterList<Color32> cols = new BetterList<Color32>();
 
 	private Material mMaterial;
 
@@ -89,23 +89,21 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 
 	private int[] mIndices;
 
-	private bool mRebuildMat;
+	private bool mRebuildMat = true;
 
 	private bool mLegacyShader;
 
-	private int mRenderQueue;
+	private int mRenderQueue = 3000;
 
 	private int mTriangles;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	public bool isDirty;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mTextureClip;
 
 	public UIDrawCall.OnRenderCallback onRender;
-
-	private const int maxIndexBufferCache = 10;
 
 	private static List<int[]> mCache = new List<int[]>(10);
 
@@ -161,11 +159,7 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mRenderer != null))
-			{
-				return 0;
-			}
-			return this.mRenderer.sortingOrder;
+			return (!(this.mRenderer != null)) ? 0 : this.mRenderer.sortingOrder;
 		}
 		set
 		{
@@ -180,11 +174,7 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mDynamicMat != null))
-			{
-				return this.mRenderQueue;
-			}
-			return this.mDynamicMat.renderQueue;
+			return (!(this.mDynamicMat != null)) ? this.mRenderQueue : this.mDynamicMat.renderQueue;
 		}
 	}
 
@@ -260,11 +250,7 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mMesh != null))
-			{
-				return 0;
-			}
-			return this.mTriangles;
+			return (!(this.mMesh != null)) ? 0 : this.mTriangles;
 		}
 	}
 
@@ -280,23 +266,23 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 	{
 		this.mTextureClip = false;
 		this.mLegacyShader = false;
-		this.mClipCount = ((this.panel != null) ? this.panel.clipCount : 0);
-		string text = (this.mShader != null) ? this.mShader.name : ((this.mMaterial != null) ? this.mMaterial.shader.name : "Unlit/Transparent Colored");
+		this.mClipCount = ((!(this.panel != null)) ? 0 : this.panel.clipCount);
+		string text = (!(this.mShader != null)) ? ((!(this.mMaterial != null)) ? "Unlit/Transparent Colored" : this.mMaterial.shader.name) : this.mShader.name;
 		text = text.Replace("GUI/Text Shader", "Unlit/Text");
-		if (text.get_Length() > 2 && text.get_Chars(text.get_Length() - 2) == ' ')
+		if (text.Length > 2 && text[text.Length - 2] == ' ')
 		{
-			int num = (int)text.get_Chars(text.get_Length() - 1);
+			int num = (int)text[text.Length - 1];
 			if (num > 48 && num <= 57)
 			{
-				text = text.Substring(0, text.get_Length() - 2);
+				text = text.Substring(0, text.Length - 2);
 			}
 		}
 		if (text.StartsWith("Hidden/"))
 		{
 			text = text.Substring(7);
 		}
-		text = text.Replace(" (SoftClip)", "");
-		text = text.Replace(" (TextureClip)", "");
+		text = text.Replace(" (SoftClip)", string.Empty);
+		text = text.Replace(" (TextureClip)", string.Empty);
 		if (this.panel != null && this.panel.clipping == UIDrawCall.Clipping.TextureMask)
 		{
 			this.mTextureClip = true;
@@ -333,7 +319,7 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 		{
 			this.mDynamicMat = new Material(this.mMaterial);
 			this.mDynamicMat.name = "[NGUI] " + this.mMaterial.name;
-			this.mDynamicMat.hideFlags = (HideFlags.DontSaveInEditor | HideFlags.NotEditable | HideFlags.DontSaveInBuild | HideFlags.DontUnloadUnusedAsset);
+			this.mDynamicMat.hideFlags = (HideFlags.DontSaveInEditor | HideFlags.NotEditable | HideFlags.DontUnloadUnusedAsset | HideFlags.DontSaveInBuild);
 			this.mDynamicMat.CopyPropertiesFromMaterial(this.mMaterial);
 			string[] shaderKeywords = this.mMaterial.shaderKeywords;
 			for (int i = 0; i < shaderKeywords.Length; i++)
@@ -343,9 +329,8 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 			if (this.shader != null)
 			{
 				this.mDynamicMat.shader = this.shader;
-				return;
 			}
-			if (this.mClipCount != 0)
+			else if (this.mClipCount != 0)
 			{
 				Debug.LogError(string.Concat(new object[]
 				{
@@ -354,14 +339,13 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 					this.mClipCount,
 					" clip regions"
 				}));
-				return;
 			}
 		}
 		else
 		{
 			this.mDynamicMat = new Material(this.shader);
 			this.mDynamicMat.name = "[NGUI] " + this.shader.name;
-			this.mDynamicMat.hideFlags = (HideFlags.DontSaveInEditor | HideFlags.NotEditable | HideFlags.DontSaveInBuild | HideFlags.DontUnloadUnusedAsset);
+			this.mDynamicMat.hideFlags = (HideFlags.DontSaveInEditor | HideFlags.NotEditable | HideFlags.DontUnloadUnusedAsset | HideFlags.DontSaveInBuild);
 		}
 	}
 
@@ -394,9 +378,8 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 		{
 			this.RebuildMaterial();
 			this.mRebuildMat = false;
-			return;
 		}
-		if (this.mRenderer.sharedMaterial != this.mDynamicMat)
+		else if (this.mRenderer.sharedMaterial != this.mDynamicMat)
 		{
 			this.mRenderer.sharedMaterials = new Material[]
 			{
@@ -427,7 +410,7 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 				{
 					this.mMesh = new Mesh();
 					this.mMesh.hideFlags = HideFlags.DontSave;
-					this.mMesh.name = ((this.mMaterial != null) ? ("[NGUI] " + this.mMaterial.name) : "[NGUI] Mesh");
+					this.mMesh.name = ((!(this.mMaterial != null)) ? "[NGUI] Mesh" : ("[NGUI] " + this.mMaterial.name));
 					this.mMesh.MarkDynamic();
 					flag = true;
 				}
@@ -435,10 +418,6 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 				if (!flag2 && this.panel != null && this.panel.renderQueue != UIPanel.RenderQueue.Automatic)
 				{
 					flag2 = (this.mMesh == null || this.mMesh.vertexCount != this.verts.buffer.Length);
-				}
-				if (!flag2 && this.verts.size << 1 < this.verts.buffer.Length)
-				{
-					flag2 = true;
 				}
 				this.mTriangles = this.verts.size >> 1;
 				if (flag2 || this.verts.buffer.Length > 65000)
@@ -582,9 +561,8 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 			}
 			this.mDynamicMat.SetVector(UIDrawCall.ClipRange[0], new Vector4(-drawCallClipRange.x / drawCallClipRange.z, -drawCallClipRange.y / drawCallClipRange.w, 1f / drawCallClipRange.z, 1f / drawCallClipRange.w));
 			this.mDynamicMat.SetTexture("_ClipTex", this.clipTexture);
-			return;
 		}
-		if (!this.mLegacyShader)
+		else if (!this.mLegacyShader)
 		{
 			UIPanel parentPanel = this.panel;
 			int num = 0;
@@ -615,24 +593,26 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 				}
 				parentPanel = parentPanel.parentPanel;
 			}
-			return;
 		}
-		Vector2 clipSoftness2 = this.panel.clipSoftness;
-		Vector4 drawCallClipRange3 = this.panel.drawCallClipRange;
-		Vector2 mainTextureOffset = new Vector2(-drawCallClipRange3.x / drawCallClipRange3.z, -drawCallClipRange3.y / drawCallClipRange3.w);
-		Vector2 mainTextureScale = new Vector2(1f / drawCallClipRange3.z, 1f / drawCallClipRange3.w);
-		Vector2 v = new Vector2(1000f, 1000f);
-		if (clipSoftness2.x > 0f)
+		else
 		{
-			v.x = drawCallClipRange3.z / clipSoftness2.x;
+			Vector2 clipSoftness2 = this.panel.clipSoftness;
+			Vector4 drawCallClipRange3 = this.panel.drawCallClipRange;
+			Vector2 mainTextureOffset = new Vector2(-drawCallClipRange3.x / drawCallClipRange3.z, -drawCallClipRange3.y / drawCallClipRange3.w);
+			Vector2 mainTextureScale = new Vector2(1f / drawCallClipRange3.z, 1f / drawCallClipRange3.w);
+			Vector2 v = new Vector2(1000f, 1000f);
+			if (clipSoftness2.x > 0f)
+			{
+				v.x = drawCallClipRange3.z / clipSoftness2.x;
+			}
+			if (clipSoftness2.y > 0f)
+			{
+				v.y = drawCallClipRange3.w / clipSoftness2.y;
+			}
+			this.mDynamicMat.mainTextureOffset = mainTextureOffset;
+			this.mDynamicMat.mainTextureScale = mainTextureScale;
+			this.mDynamicMat.SetVector("_ClipSharpness", v);
 		}
-		if (clipSoftness2.y > 0f)
-		{
-			v.y = drawCallClipRange3.w / clipSoftness2.y;
-		}
-		this.mDynamicMat.mainTextureOffset = mainTextureOffset;
-		this.mDynamicMat.mainTextureScale = mainTextureScale;
-		this.mDynamicMat.SetVector("_ClipSharpness", v);
 	}
 
 	private void SetClipping(int index, Vector4 cr, Vector2 soft, float angle)
@@ -810,7 +790,6 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 				{
 					NGUITools.SetActive(dc.gameObject, false);
 					UIDrawCall.mInactiveList.Add(dc);
-					return;
 				}
 			}
 			else
@@ -819,276 +798,5 @@ public class UIDrawCall : MonoBehaviour, IUnitySerializable
 				NGUITools.DestroyImmediate(dc.gameObject);
 			}
 		}
-	}
-
-	public UIDrawCall()
-	{
-		this.depthStart = 2147483647;
-		this.depthEnd = -2147483648;
-		this.verts = new BetterList<Vector3>();
-		this.norms = new BetterList<Vector3>();
-		this.tans = new BetterList<Vector4>();
-		this.uvs = new BetterList<Vector2>();
-		this.cols = new BetterList<Color32>();
-		this.mRebuildMat = true;
-		this.mRenderQueue = 3000;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-	}
-
-	public override void Unity_NamedSerialize(int depth)
-	{
-	}
-
-	public override void Unity_NamedDeserialize(int depth)
-	{
-	}
-
-	protected internal UIDrawCall(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).Awake();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		UIDrawCall.ClearAll();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIDrawCall.Count((UIPanel)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIDrawCall.Create((UIPanel)GCHandledObjects.GCHandleToObject(*args), (Material)GCHandledObjects.GCHandleToObject(args[1]), (Texture)GCHandledObjects.GCHandleToObject(args[2]), (Shader)GCHandledObjects.GCHandleToObject(args[3])));
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIDrawCall.Create(Marshal.PtrToStringUni(*(IntPtr*)args)));
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIDrawCall.Create(Marshal.PtrToStringUni(*(IntPtr*)args), (UIPanel)GCHandledObjects.GCHandleToObject(args[1]), (Material)GCHandledObjects.GCHandleToObject(args[2]), (Texture)GCHandledObjects.GCHandleToObject(args[3]), (Shader)GCHandledObjects.GCHandleToObject(args[4])));
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).CreateMaterial();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		UIDrawCall.Destroy((UIDrawCall)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).GenerateCachedIndexBuffer(*(int*)args, *(int*)(args + 1)));
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIDrawCall.activeList);
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).baseMaterial);
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).cachedTransform);
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).dynamicMaterial);
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).finalRenderQueue);
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIDrawCall.inactiveList);
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).isClipped);
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(UIDrawCall.list);
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).mainTexture);
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).renderQueue);
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).shader);
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).sortingOrder);
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).triangles);
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).OnDestroy();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).OnDisable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).OnEnable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).OnWillRenderObject();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).RebuildMaterial());
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		UIDrawCall.ReleaseAll();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		UIDrawCall.ReleaseInactive();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).baseMaterial = (Material)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).mainTexture = (Texture)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).renderQueue = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke32(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).shader = (Shader)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke33(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).sortingOrder = *(int*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke34(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).SetClipping(*(int*)args, *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)), *(float*)(args + 3));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke35(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke36(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke37(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke38(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke39(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke40(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).UpdateGeometry(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke41(long instance, long* args)
-	{
-		((UIDrawCall)GCHandledObjects.GCHandleToObject(instance)).UpdateMaterials();
-		return -1L;
 	}
 }

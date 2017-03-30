@@ -8,10 +8,8 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Externals.BI
 {
@@ -147,7 +145,7 @@ namespace StaRTS.Externals.BI
 		private void SetupSantardizedData()
 		{
 			this.headers.Clear();
-			this.headers["Authorization"] = "FD B63762CD-C185-4CBF-9798-448A7AE79C7E:CD515CAC9CFE3C0C4FB05F7D7ED514B17AA3B9A0D8184337";
+			this.headers["Authorization"] = "FD B276DCA8-9CD5-4493-85D6-75D2E500BCC9:19042B0A0628EF36039165C24A240F78F6EDBDFB8BD86BA3";
 			this.headers["Expect"] = string.Empty;
 			this.headers["Content-Type"] = "application/json";
 			this.guest = Serializer.Start();
@@ -168,9 +166,9 @@ namespace StaRTS.Externals.BI
 			EnvironmentController environmentController = Service.Get<EnvironmentController>();
 			this.app = new Dictionary<string, string>();
 			this.app.Add("p", environmentController.GetPlatform());
-			this.app.Add("v", "4.7.0.2");
+			this.app.Add("v", "4.8.0.9512");
 			this.app.Add("llv", "2.0");
-			this.app.Add("n", "qa_starts");
+			this.app.Add("n", "starts");
 			this.session = new Dictionary<string, string>();
 			this.session.Add("lo", environmentController.GetLocale());
 			this.session.Add("id", Service.Get<ServerAPI>().SessionId);
@@ -186,16 +184,16 @@ namespace StaRTS.Externals.BI
 
 		private void SetStandardDataForAction(out string tier1, out string tier2, out string tier6)
 		{
+			string arg = "u";
 			string text = "u";
-			string text2 = "u";
-			string text3 = string.Empty;
+			string str = string.Empty;
 			int num = -1;
-			string text4 = string.Empty;
+			string str2 = string.Empty;
 			if (Service.IsSet<CurrentPlayer>())
 			{
 				CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-				text = currentPlayer.Faction.ToString();
-				text2 = currentPlayer.PlanetId;
+				arg = currentPlayer.Faction.ToString();
+				text = currentPlayer.PlanetId;
 				if (currentPlayer.Map != null)
 				{
 					num = currentPlayer.Map.FindHighestHqLevel();
@@ -204,19 +202,19 @@ namespace StaRTS.Externals.BI
 			if (Service.IsSet<SquadController>())
 			{
 				SquadController squadController = Service.Get<SquadController>();
-				text3 = ((squadController.StateManager.GetCurrentSquad() != null) ? squadController.StateManager.GetCurrentSquad().SquadID : string.Empty);
+				str = ((squadController.StateManager.GetCurrentSquad() == null) ? string.Empty : squadController.StateManager.GetCurrentSquad().SquadID);
 			}
 			if (Service.IsSet<BattleController>())
 			{
 				CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
 				if (currentBattle != null)
 				{
-					text4 = currentBattle.BattleUid;
+					str2 = currentBattle.BattleUid;
 				}
 			}
-			tier1 = text + "|" + num;
-			tier2 = text2;
-			tier6 = text3 + "|" + text4;
+			tier1 = arg + "|" + num;
+			tier2 = text;
+			tier6 = str + "|" + str2;
 		}
 
 		private void SerializeActionEventProperties(Serializer eventProperties, string tier1, string tier2, string tier3, string tier4, string tier5, string tier6)
@@ -242,7 +240,7 @@ namespace StaRTS.Externals.BI
 		{
 			uint serverTime = Service.Get<ServerAPI>().ServerTime;
 			this.paramDict = log.GetParamDict();
-			string text = this.paramDict.ContainsKey("tag") ? WWW.UnEscapeURL(this.paramDict["tag"]) : "u";
+			string text = (!this.paramDict.ContainsKey("tag")) ? "u" : WWW.UnEscapeURL(this.paramDict["tag"]);
 			string empty = string.Empty;
 			string tier = string.Empty;
 			string tier2 = string.Empty;
@@ -250,253 +248,214 @@ namespace StaRTS.Externals.BI
 			string tier4 = string.Empty;
 			string tier5 = string.Empty;
 			Serializer serializer = Serializer.Start();
-			uint num = <PrivateImplementationDetails>.ComputeStringHash(text);
-			string val;
-			if (num <= 2139057587u)
+			string text2 = text;
+			if (text2 != null)
 			{
-				if (num <= 1264827581u)
+				if (Event2LogCreator.<>f__switch$map6 == null)
 				{
-					if (num != 168538109u)
+					Event2LogCreator.<>f__switch$map6 = new Dictionary<string, int>(12)
 					{
-						if (num != 563185489u)
 						{
-							if (num == 1264827581u)
-							{
-								if (text == "network_mapping_info")
-								{
-									val = "action";
-									this.SetStandardDataForAction(out empty, out tier, out tier5);
-									tier2 = "network_mapping_info";
-									tier3 = this.GetValueFromLog(log, "secondary_user_id");
-									tier4 = this.GetValueFromLog(log, "action");
-									tier5 = this.GetValueFromLog(log, "secondary_network");
-									this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
-									goto IL_5BC;
-								}
-							}
-						}
-						else if (text == "error")
+							"authorization",
+							0
+						},
 						{
-							val = "action";
-							this.SetStandardDataForAction(out empty, out tier, out tier5);
-							tier2 = "error";
-							tier3 = this.GetValueFromLog(log, "context");
-							tier4 = this.GetValueFromLog(log, "reason");
-							tier5 = this.GetValueFromLog(log, "message");
-							this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
-							goto IL_5BC;
+							"clicked_link",
+							1
+						},
+						{
+							"user_info",
+							2
+						},
+						{
+							"network_mapping_info",
+							3
+						},
+						{
+							"player_info",
+							4
+						},
+						{
+							"device_info",
+							5
+						},
+						{
+							"game_action",
+							6
+						},
+						{
+							"step_timing",
+							7
+						},
+						{
+							"geo",
+							8
+						},
+						{
+							"performance",
+							9
+						},
+						{
+							"error",
+							10
+						},
+						{
+							"send_message",
+							11
 						}
-					}
-					else if (text == "player_info")
-					{
-						this.LogIgnoredEvent("player_info");
-						return null;
-					}
+					};
 				}
-				else if (num != 1561113986u)
+				int num;
+				if (Event2LogCreator.<>f__switch$map6.TryGetValue(text2, out num))
 				{
-					if (num != 1807269074u)
+					string val;
+					switch (num)
 					{
-						if (num == 2139057587u)
-						{
-							if (text == "user_info")
-							{
-								this.LogIgnoredEvent("user_info");
-								return null;
-							}
-						}
-					}
-					else if (text == "game_action")
-					{
-						val = "action";
-						this.SetStandardDataForAction(out empty, out tier, out tier5);
-						tier2 = this.GetValueFromLog(log, "context");
-						tier3 = this.GetValueFromLog(log, "action");
-						tier4 = this.GetValueFromLog(log, "message");
-						this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
-						goto IL_5BC;
-					}
-				}
-				else if (text == "geo")
-				{
-					this.LogIgnoredEvent("geo");
-					return null;
-				}
-			}
-			else if (num <= 2630488359u)
-			{
-				if (num != 2199459864u)
-				{
-					if (num != 2436257726u)
-					{
-						if (num == 2630488359u)
-						{
-							if (text == "clicked_link")
-							{
-								val = "action";
-								this.SetStandardDataForAction(out empty, out tier, out tier5);
-								tier = this.GetValueFromLog(log, "app");
-								tier2 = "clicked_link";
-								tier3 = this.GetValueFromLog(log, "is_new_user");
-								tier4 = this.GetValueFromLog(log, "log_app");
-								tier5 = this.GetValueFromLog(log, "tracking_code");
-								this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
-								goto IL_5BC;
-							}
-						}
-					}
-					else if (text == "authorization")
-					{
+					case 0:
 						val = "action";
 						this.SetStandardDataForAction(out empty, out tier, out tier5);
 						tier2 = "authorization";
 						tier3 = this.GetValueFromLog(log, "type");
 						tier4 = this.GetValueFromLog(log, "step");
 						this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
-						goto IL_5BC;
-					}
-				}
-				else if (text == "device_info")
-				{
-					this.LogIgnoredEvent("device_info");
-					return null;
-				}
-			}
-			else if (num != 2932772005u)
-			{
-				if (num != 3320562554u)
-				{
-					if (num == 3968383111u)
-					{
-						if (text == "send_message")
-						{
-							val = "action";
-							this.SetStandardDataForAction(out empty, out tier, out tier5);
-							tier = this.GetValueFromLog(log, "tracking_code");
-							tier2 = "send_message";
-							tier3 = this.GetValueFromLog(log, "send_timestamp");
-							tier4 = this.GetValueFromLog(log, "target_user_id");
-							tier5 = this.GetValueFromLog(log, "num_sent");
-							this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
-							goto IL_5BC;
-						}
-					}
-				}
-				else if (text == "step_timing")
-				{
-					val = "timing";
-					string valueFromLog = this.GetValueFromLog(log, "context");
-					serializer.AddString("c", valueFromLog);
-					string valueFromLog2 = this.GetValueFromLog(log, "location");
-					serializer.AddString("l", valueFromLog2);
-					string text2 = this.GetValueFromLog(log, "path_name");
-					if (string.IsNullOrEmpty(text2))
-					{
-						text2 = "u";
-					}
-					serializer.AddString("pn", text2);
-					string valueFromLog3 = this.GetValueFromLog(log, "elapsed_time_ms");
-					int num2 = 0;
-					int.TryParse(valueFromLog3, ref num2);
-					if (num2 < 1)
-					{
-						this.LogIgnoredEvent("step_timing Ignoring Step timing event with no elapsed time.");
+						break;
+					case 1:
+						val = "action";
+						this.SetStandardDataForAction(out empty, out tier, out tier5);
+						tier = this.GetValueFromLog(log, "app");
+						tier2 = "clicked_link";
+						tier3 = this.GetValueFromLog(log, "is_new_user");
+						tier4 = this.GetValueFromLog(log, "log_app");
+						tier5 = this.GetValueFromLog(log, "tracking_code");
+						this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
+						break;
+					case 2:
+						this.LogIgnoredEvent("user_info");
 						return null;
+					case 3:
+						val = "action";
+						this.SetStandardDataForAction(out empty, out tier, out tier5);
+						tier2 = "network_mapping_info";
+						tier3 = this.GetValueFromLog(log, "secondary_user_id");
+						tier4 = this.GetValueFromLog(log, "action");
+						tier5 = this.GetValueFromLog(log, "secondary_network");
+						this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
+						break;
+					case 4:
+						this.LogIgnoredEvent("player_info");
+						return null;
+					case 5:
+						this.LogIgnoredEvent("device_info");
+						return null;
+					case 6:
+						val = "action";
+						this.SetStandardDataForAction(out empty, out tier, out tier5);
+						tier2 = this.GetValueFromLog(log, "context");
+						tier3 = this.GetValueFromLog(log, "action");
+						tier4 = this.GetValueFromLog(log, "message");
+						this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
+						break;
+					case 7:
+					{
+						val = "timing";
+						string valueFromLog = this.GetValueFromLog(log, "context");
+						serializer.AddString("c", valueFromLog);
+						string valueFromLog2 = this.GetValueFromLog(log, "location");
+						serializer.AddString("l", valueFromLog2);
+						string text3 = this.GetValueFromLog(log, "path_name");
+						if (string.IsNullOrEmpty(text3))
+						{
+							text3 = "u";
+						}
+						serializer.AddString("pn", text3);
+						string valueFromLog3 = this.GetValueFromLog(log, "elapsed_time_ms");
+						int num2 = 0;
+						int.TryParse(valueFromLog3, out num2);
+						if (num2 < 1)
+						{
+							this.LogIgnoredEvent("step_timing Ignoring Step timing event with no elapsed time.");
+							return null;
+						}
+						serializer.Add<int>("etms", num2);
+						serializer.Add<int>("r", 1);
+						break;
 					}
-					serializer.Add<int>("etms", num2);
-					serializer.Add<int>("r", 1);
-					goto IL_5BC;
+					case 8:
+						this.LogIgnoredEvent("geo");
+						return null;
+					case 9:
+						val = "action";
+						this.SetStandardDataForAction(out empty, out tier, out tier5);
+						tier = this.GetValueFromLog(log, "time_since_start");
+						tier2 = "performance";
+						tier3 = this.GetValueFromLog(log, "fps");
+						tier4 = this.GetValueFromLog(log, "memory_used");
+						tier5 = this.GetValueFromLog(log, "display_state");
+						this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
+						break;
+					case 10:
+						val = "action";
+						this.SetStandardDataForAction(out empty, out tier, out tier5);
+						tier2 = "error";
+						tier3 = this.GetValueFromLog(log, "context");
+						tier4 = this.GetValueFromLog(log, "reason");
+						tier5 = this.GetValueFromLog(log, "message");
+						this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
+						break;
+					case 11:
+						val = "action";
+						this.SetStandardDataForAction(out empty, out tier, out tier5);
+						tier = this.GetValueFromLog(log, "tracking_code");
+						tier2 = "send_message";
+						tier3 = this.GetValueFromLog(log, "send_timestamp");
+						tier4 = this.GetValueFromLog(log, "target_user_id");
+						tier5 = this.GetValueFromLog(log, "num_sent");
+						this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
+						break;
+					default:
+						goto IL_51A;
+					}
+					if (this.app == null)
+					{
+						this.SetupSantardizedData();
+					}
+					Serializer serializer2 = Serializer.Start();
+					serializer2.AddDictionary<string>("app", this.app);
+					serializer2.AddDictionary<string>("session", this.session);
+					serializer2.Add<string>("guest", this.guest.ToString());
+					serializer2.AddDictionary<string>("device", this.device);
+					Serializer serializer3 = Serializer.Start();
+					Serializer serializer4 = Serializer.Start();
+					serializer4.Add<string>("event_prop", serializer.End().ToString());
+					serializer4.AddString("s", "mc");
+					serializer4.AddString("of", "1");
+					serializer4.Add<uint>("lts", serverTime);
+					serializer4.Add<uint>("ts", serverTime);
+					serializer4.AddString("id", Guid.NewGuid().ToString());
+					serializer4.Add<int>("sn", this.logSequenceNumber);
+					this.logSequenceNumber++;
+					serializer4.AddString("n", val);
+					serializer3.Add<string>("event", serializer4.End().ToString());
+					string val2 = "[" + serializer3.End().ToString() + "]";
+					serializer2.Add<string>("events", val2);
+					serializer2.End();
+					byte[] bytes = Encoding.UTF8.GetBytes(serializer2.ToString());
+					string url = (!log.UseSecondaryUrl) ? this.primaryURL : this.secondaryNoProxyURL;
+					return new BILogData
+					{
+						url = url,
+						postData = bytes,
+						headers = this.headers
+					};
 				}
 			}
-			else if (text == "performance")
-			{
-				val = "action";
-				this.SetStandardDataForAction(out empty, out tier, out tier5);
-				tier = this.GetValueFromLog(log, "time_since_start");
-				tier2 = "performance";
-				tier3 = this.GetValueFromLog(log, "fps");
-				tier4 = this.GetValueFromLog(log, "memory_used");
-				tier5 = this.GetValueFromLog(log, "display_state");
-				this.SerializeActionEventProperties(serializer, empty, tier, tier2, tier3, tier4, tier5);
-				goto IL_5BC;
-			}
+			IL_51A:
 			this.LogIgnoredEvent(text);
 			return null;
-			IL_5BC:
-			if (this.app == null)
-			{
-				this.SetupSantardizedData();
-			}
-			Serializer serializer2 = Serializer.Start();
-			serializer2.AddDictionary<string>("app", this.app);
-			serializer2.AddDictionary<string>("session", this.session);
-			serializer2.Add<string>("guest", this.guest.ToString());
-			serializer2.AddDictionary<string>("device", this.device);
-			Serializer serializer3 = Serializer.Start();
-			Serializer serializer4 = Serializer.Start();
-			serializer4.Add<string>("event_prop", serializer.End().ToString());
-			serializer4.AddString("s", "mc");
-			serializer4.AddString("of", "1");
-			serializer4.Add<uint>("lts", serverTime);
-			serializer4.Add<uint>("ts", serverTime);
-			serializer4.AddString("id", Guid.NewGuid().ToString());
-			serializer4.Add<int>("sn", this.logSequenceNumber);
-			this.logSequenceNumber++;
-			serializer4.AddString("n", val);
-			serializer3.Add<string>("event", serializer4.End().ToString());
-			string val2 = "[" + serializer3.End().ToString() + "]";
-			serializer2.Add<string>("events", val2);
-			serializer2.End();
-			byte[] bytes = Encoding.UTF8.GetBytes(serializer2.ToString());
-			string url = log.UseSecondaryUrl ? this.secondaryNoProxyURL : this.primaryURL;
-			return new BILogData
-			{
-				url = url,
-				postData = bytes,
-				headers = this.headers
-			};
 		}
 
 		private void LogIgnoredEvent(string eventType)
 		{
-		}
-
-		protected internal Event2LogCreator(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Event2LogCreator)GCHandledObjects.GCHandleToObject(instance)).CreateWWWDataFromBILog((BILog)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Event2LogCreator)GCHandledObjects.GCHandleToObject(instance)).GetValueFromLog((BILog)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((Event2LogCreator)GCHandledObjects.GCHandleToObject(instance)).LogIgnoredEvent(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((Event2LogCreator)GCHandledObjects.GCHandleToObject(instance)).SerializeActionEventProperties((Serializer)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), Marshal.PtrToStringUni(*(IntPtr*)(args + 6)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((Event2LogCreator)GCHandledObjects.GCHandleToObject(instance)).SetupSantardizedData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((Event2LogCreator)GCHandledObjects.GCHandleToObject(instance)).SetURL(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
 		}
 	}
 }

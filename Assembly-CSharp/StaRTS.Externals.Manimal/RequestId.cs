@@ -19,11 +19,5 @@ namespace StaRTS.Externals.Manimal
 		{
 			return RequestId.Id += 1u;
 		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			RequestId.Reset();
-			return -1L;
-		}
 	}
 }

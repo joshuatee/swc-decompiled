@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Player.Raids
 		public RaidUpdateCommand(RaidUpdateRequest request) : base("player.raids.update", request, new RaidUpdateResponse())
 		{
 		}
-
-		protected internal RaidUpdateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

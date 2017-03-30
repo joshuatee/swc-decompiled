@@ -7,7 +7,6 @@ using StaRTS.Main.Views.UX.Screens.ScreenHelpers;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 {
@@ -48,11 +47,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 
 		protected override void CreateItem()
 		{
-			this.id = string.Format("{0}{1}", new object[]
-			{
-				"facebook_",
-				this.tab.ToString()
-			});
+			this.id = string.Format("{0}{1}", "facebook_", this.tab.ToString());
 			this.item = this.grid.CloneItem(this.id, this.templateItem);
 		}
 
@@ -80,19 +75,13 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				this.label.Text = text;
 				this.buttonLabel.Text = lang.Get("SETTINGS_NOTCONNECTED", new object[0]);
 				this.button.OnClicked = new UXButtonClickedDelegate(this.ConnectToFacebook);
-				return;
 			}
-			if (GameConstants.FACEBOOK_INVITES_ENABLED)
+			else if (GameConstants.FACEBOOK_INVITES_ENABLED)
 			{
 				this.label.Text = lang.Get("INVITE_FB_DESC", new object[0]);
 				this.buttonLabel.Text = lang.Get("INVITE_FRIENDS", new object[0]);
 				this.button.OnClicked = new UXButtonClickedDelegate(this.FacebookInviteFriends);
-				return;
 			}
-			this.label.Visible = false;
-			this.buttonLabel.Visible = false;
-			this.button.Visible = false;
-			this.sprite.Visible = false;
 		}
 
 		public void Hide()
@@ -116,46 +105,6 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 
 		public override void Destroy()
 		{
-		}
-
-		protected internal LeaderboardRowFacebookView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LeaderboardRowFacebookView)GCHandledObjects.GCHandleToObject(instance)).ConnectToFacebook((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((LeaderboardRowFacebookView)GCHandledObjects.GCHandleToObject(instance)).CreateItem();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((LeaderboardRowFacebookView)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((LeaderboardRowFacebookView)GCHandledObjects.GCHandleToObject(instance)).FacebookInviteFriends((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((LeaderboardRowFacebookView)GCHandledObjects.GCHandleToObject(instance)).Hide();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((LeaderboardRowFacebookView)GCHandledObjects.GCHandleToObject(instance)).InitView();
-			return -1L;
 		}
 	}
 }

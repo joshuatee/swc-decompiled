@@ -11,7 +11,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 {
@@ -103,14 +102,12 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 
 		private Lang lang;
 
-		private string tempTimeString;
+		private string tempTimeString = string.Empty;
 
 		private bool tempIsGrace;
 
-		public PlanetDetailsObjectivesViewModule(PlanetDetailsScreen screen)
+		public PlanetDetailsObjectivesViewModule(PlanetDetailsScreen screen) : base(screen)
 		{
-			this.tempTimeString = string.Empty;
-			base..ctor(screen);
 			this.data = new List<ObjectiveViewData>();
 			this.player = Service.Get<CurrentPlayer>();
 			this.lang = Service.Get<Lang>();
@@ -158,7 +155,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				objectiveViewData.BtnSupplyCrate.Tag = objectiveViewData;
 				objectiveViewData.ExpiredLabel = this.screen.GetElement<UXLabel>("LabelObjectiveExpired" + text);
 				objectiveViewData.ObjectiveContainer = this.screen.GetElement<UXElement>("ContainerCrateBgProgress3");
-				objectiveViewData.ObjectiveContainerLEI = ((text == "3") ? this.screen.GetElement<UXElement>("ContainerCrateBgProgressSpecial3") : this.screen.GetElement<UXElement>("ContainerCrateBgProgress3"));
+				objectiveViewData.ObjectiveContainerLEI = ((!(text == "3")) ? this.screen.GetElement<UXElement>("ContainerCrateBgProgress3") : this.screen.GetElement<UXElement>("ContainerCrateBgProgressSpecial3"));
 			}
 			Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
 			this.RefreshScreenForPlanetChange();
@@ -236,7 +233,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			}
 			this.objectiveController.GetTimeData(this.lang, this.player.Objectives[this.screen.viewingPlanetVO.Uid], ref this.tempIsGrace, ref this.tempTimeString);
 			this.labelObjectivesTimer.Text = this.tempTimeString;
-			this.labelObjectivesTimer.TextColor = (this.tempIsGrace ? ObjectiveController.TEXT_YELLOW_COLOR : ObjectiveController.TEXT_RED_COLOR);
+			this.labelObjectivesTimer.TextColor = ((!this.tempIsGrace) ? ObjectiveController.TEXT_RED_COLOR : ObjectiveController.TEXT_YELLOW_COLOR);
 		}
 
 		private void OnPreviewIconClicked(UXButton button)
@@ -246,9 +243,11 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 			if (objective.State == ObjectiveState.Complete)
 			{
 				this.objectiveController.HandleCrateClicked(objective, button);
-				return;
 			}
-			this.OnObjectivesDetailsClicked(button);
+			else
+			{
+				this.OnObjectivesDetailsClicked(button);
+			}
 		}
 
 		private void OnObjectivesDetailsClicked(UXButton button)
@@ -301,57 +300,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Planets
 				objectiveViewData.ObjectiveContainerLEI = null;
 				i++;
 			}
-		}
-
-		protected internal PlanetDetailsObjectivesViewModule(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PlanetDetailsObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).CanRefresh((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PlanetDetailsObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).OnClose();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PlanetDetailsObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).OnObjectivesDetailsClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PlanetDetailsObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).OnPreviewIconClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((PlanetDetailsObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((PlanetDetailsObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((PlanetDetailsObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).RefreshScreenForPlanetChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PlanetDetailsObjectivesViewModule)GCHandledObjects.GCHandleToObject(instance)).SendObjectiveDetailsClickedBiLog((PlanetVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -11,11 +11,8 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -28,8 +25,6 @@ namespace StaRTS.Main.Utils
 		public const string HN_LANG_FILE = "strings-hn_{0}.json.joe";
 
 		private const string LOCAL_STRINGS_FILE = "strings_local_{0}.local.json";
-
-		public static readonly string DESYNC_BATCH_MAX_RETRY = "DESYNC_BATCH_MAX_RETRY";
 
 		public const string CONTEXT_PREFIX = "context_";
 
@@ -157,6 +152,8 @@ namespace StaRTS.Main.Utils
 
 		private const string EQUIPMENT_QUALITY_ELITE = "EQUIPMENT_QUALITY_ELITE";
 
+		public static readonly string DESYNC_BATCH_MAX_RETRY = "DESYNC_BATCH_MAX_RETRY";
+
 		public static void CreateLangService()
 		{
 			new EnvironmentController();
@@ -188,10 +185,7 @@ namespace StaRTS.Main.Utils
 		{
 			if (!string.IsNullOrEmpty(locale))
 			{
-				TextAsset textAsset = Resources.Load(string.Format("strings_local_{0}.local.json", new object[]
-				{
-					Lang.ToDotNetLocale(locale)
-				})) as TextAsset;
+				TextAsset textAsset = Resources.Load(string.Format("strings_local_{0}.local.json", Lang.ToDotNetLocale(locale))) as TextAsset;
 				if (textAsset != null)
 				{
 					json = textAsset.text;
@@ -206,14 +200,8 @@ namespace StaRTS.Main.Utils
 		{
 			Lang lang = Service.Get<Lang>();
 			List<string> list = new List<string>();
-			list.Add(string.Format("strings_{0}.json.joe", new object[]
-			{
-				lang.DotNetLocale
-			}));
-			list.Add(string.Format("strings-hn_{0}.json.joe", new object[]
-			{
-				lang.DotNetLocale
-			}));
+			list.Add(string.Format("strings_{0}.json.joe", lang.DotNetLocale));
+			list.Add(string.Format("strings-hn_{0}.json.joe", lang.DotNetLocale));
 			int i = 0;
 			int count = list.Count;
 			while (i < count)
@@ -232,11 +220,13 @@ namespace StaRTS.Main.Utils
 			if (binaryContents == null)
 			{
 				AlertScreen.ShowModal(true, null, Service.Get<Lang>().Get(LangUtils.DESYNC_BATCH_MAX_RETRY, new object[0]), null, null);
-				return;
 			}
-			JoeFile joe = new JoeFile(binaryContents);
-			Lang lang = Service.Get<Lang>();
-			lang.AddStringData(joe);
+			else
+			{
+				JoeFile joe = new JoeFile(binaryContents);
+				Lang lang = Service.Get<Lang>();
+				lang.AddStringData(joe);
+			}
 		}
 
 		private static void OnLangFailure(object cookie)
@@ -250,9 +240,11 @@ namespace StaRTS.Main.Utils
 				LangUtils.AddLocalStringsData(text);
 				lang.UnloadAssets();
 				LangUtils.LoadStringData((AssetsCompleteDelegate)cookie);
-				return;
 			}
-			LangUtils.OnLangComplete(null, cookie);
+			else
+			{
+				LangUtils.OnLangComplete(null, cookie);
+			}
 		}
 
 		public static string ProcessStringWithNewlines(string str)
@@ -333,7 +325,7 @@ namespace StaRTS.Main.Utils
 					});
 				}
 			}
-			return "";
+			return string.Empty;
 		}
 
 		public static string GetHolonetBattleTransmissionDescText(TransmissionVO vo)
@@ -429,7 +421,15 @@ namespace StaRTS.Main.Utils
 			case BuildingType.Starport:
 			case BuildingType.Wall:
 			case BuildingType.Turret:
-				break;
+				IL_44:
+				switch (buildingType)
+				{
+				case BuildingType.Cantina:
+					return lang.Get("context_Hire", new object[0]);
+				case BuildingType.Armory:
+					return lang.Get("context_Armory", new object[0]);
+				}
+				return null;
 			case BuildingType.Squad:
 				return lang.Get("context_Squad", new object[0]);
 			case BuildingType.DroidHut:
@@ -438,18 +438,8 @@ namespace StaRTS.Main.Utils
 				return lang.Get("context_Upgrade_Troops", new object[0]);
 			case BuildingType.DefenseResearch:
 				return lang.Get("context_Upgrade_Defense", new object[0]);
-			default:
-				if (buildingType == BuildingType.Cantina)
-				{
-					return lang.Get("context_Hire", new object[0]);
-				}
-				if (buildingType == BuildingType.Armory)
-				{
-					return lang.Get("context_Armory", new object[0]);
-				}
-				break;
 			}
-			return null;
+			goto IL_44;
 		}
 
 		public static string GetTroopDisplayName(TroopTypeVO troopInfo)
@@ -565,27 +555,21 @@ namespace StaRTS.Main.Utils
 
 		public static string GetEquipmentDisplayName(EquipmentVO vo)
 		{
-			return Service.Get<Lang>().Get(string.Format("{0}_name", new object[]
-			{
-				vo.EquipmentID
-			}), new object[0]);
+			return Service.Get<Lang>().Get(string.Format("{0}_name", vo.EquipmentID), new object[0]);
 		}
 
 		public static string GetEquipmentDescription(EquipmentVO vo)
 		{
-			return Service.Get<Lang>().Get(string.Format("{0}_description", new object[]
-			{
-				vo.EquipmentID
-			}), new object[0]);
+			return Service.Get<Lang>().Get(string.Format("{0}_description", vo.EquipmentID), new object[0]);
 		}
 
 		public static string FormatTime(long seconds)
 		{
 			TimeSpan timeSpan = TimeSpan.FromSeconds((double)seconds);
-			int days = timeSpan.get_Days();
-			int hours = timeSpan.get_Hours();
-			int minutes = timeSpan.get_Minutes();
-			int seconds2 = timeSpan.get_Seconds();
+			int days = timeSpan.Days;
+			int hours = timeSpan.Hours;
+			int minutes = timeSpan.Minutes;
+			int seconds2 = timeSpan.Seconds;
 			Lang lang = Service.Get<Lang>();
 			string result;
 			if (days > 0)
@@ -681,7 +665,7 @@ namespace StaRTS.Main.Utils
 			{
 				'_'
 			});
-			int num = Convert.ToInt32(array[array.Length - 1], CultureInfo.InvariantCulture);
+			int num = Convert.ToInt32(array[array.Length - 1]);
 			Lang lang = Service.Get<Lang>();
 			switch (num)
 			{
@@ -777,296 +761,6 @@ namespace StaRTS.Main.Utils
 				id = "EQUIPMENT_QUALITY_ADVANCED";
 			}
 			return lang.Get(id, new object[0]);
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			LangUtils.AddLocalStringsData(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.AppendPlayerFactionToKey(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			LangUtils.CreateLangService();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.FormatTime(*args));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetBattleName((BattleTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetBattleOnPlanetName((BattleTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetBuildingDescription((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetBuildingDisplayName((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetBuildingVerb((BuildingType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetCampaignDescription((CampaignVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetCampaignTitle((CampaignVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetClearableDisplayName((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetContextButtonText(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetCrateDisplayName((CrateVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetCrateDisplayName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetCurrencyStringId((CurrencyType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetDeltaString(*(int*)args));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetEnemyFactionName((FactionType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetEquipmentDescription((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetEquipmentDisplayName((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetEquipmentDisplayNameById(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetFactionName((FactionType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetHeroAbilityDescription((TroopAbilityVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetHeroAbilityDisplayName((TroopAbilityVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetHolonetBattleTransmissionDescText((TransmissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetHolonetTransmissionCharacterName((TransmissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetLEIDisplayName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetLevelText(*(int*)args));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetMissionButtonDisplayText((MissionType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetMissionDescription((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetMissionDifficultyLabel(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetMissionFailureMessage((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetMissionGoal((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetMissionTitle((CampaignMissionVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetMultiplierText(*(int*)args));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetPlanetDescription((PlanetVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetPlanetDisplayName((PlanetVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetPlanetDisplayName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetPlanetDisplayNameKey(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetShardLockedDeployableString((IDeployableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetShardLockedEquipmentString((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetShardLockedItemString(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetShardQuality((ShardQuality)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetSkinDisplayName((SkinTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetSquadRoleDisplayName((SquadRole)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetStarshipDescription((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetStarshipDisplayName((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetStarshipDisplayNameFromAttackID(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetTournamentTitle((TournamentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetTroopDescription((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetTroopDisplayName((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.GetTroopDisplayNameFromTroopID(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			LangUtils.LoadStringData((AssetsCompleteDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			LangUtils.OnLangComplete(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			LangUtils.OnLangFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.ProcessStringWithNewlines(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(LangUtils.ShouldPlayVOClips());
 		}
 	}
 }

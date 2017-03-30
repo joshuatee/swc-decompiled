@@ -23,18 +23,14 @@ using StaRTS.Utils.Json;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using WinRTBridge;
 
 namespace StaRTS.Externals.IAP
 {
 	public class InAppPurchaseController : IEventObserver
 	{
-		private const int MAX_NUM_VALIDATIONS_ATTEMPTS = 0;
+		private const int MAX_NUM_VALIDATIONS_ATTEMPTS = 3;
 
-		private const int MAX_STORE_RETRY_ATTEMPTS = 0;
+		private const int MAX_STORE_RETRY_ATTEMPTS = 10;
 
 		private const int SCHEDULED_VALIDATION_DELAY = 10;
 
@@ -65,7 +61,7 @@ namespace StaRTS.Externals.IAP
 			Service.Set<InAppPurchaseController>(this);
 			this.numTimesValidatedItems = 0;
 			this.AreProductIdsReady = false;
-			this.iapManager = new WindowsIAPManager();
+			this.iapManager = new AndroidIAPManager();
 			this.iapManager.Init();
 			this.products = new Dictionary<string, InAppPurchaseProductInfo>();
 			this.validIAPTypes = new Dictionary<string, InAppPurchaseTypeVO>();
@@ -83,78 +79,76 @@ namespace StaRTS.Externals.IAP
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.WorldLoadComplete)
+			switch (id)
 			{
-				if (id != EventId.StoreCategorySelected)
+			case EventId.InitializeGeneralSystemsEnd:
+				this.CheckExpectedIAPCount();
+				this.GetValidProductsFromStore();
+				this.ScheduleValidateIAPItems();
+				this.eventManager.UnregisterObserver(this, EventId.InitializeGeneralSystemsEnd);
+				return EatResponse.NotEaten;
+			case EventId.InitializeWorldStart:
+			case EventId.InitializeWorldEnd:
+			{
+				IL_1E:
+				if (id == EventId.StoreCategorySelected)
 				{
-					if (id != EventId.StoreScreenReady)
+					StoreTab storeTab = (StoreTab)((int)cookie);
+					if (storeTab == StoreTab.Treasure && this.products.Count == 0)
 					{
-						if (id == EventId.WorldLoadComplete)
-						{
-							this.eventManager.UnregisterObserver(this, EventId.WorldLoadComplete);
-							if (!this.AreProductIdsReady)
-							{
-								this.eventManager.RegisterObserver(this, EventId.IAPProductIDsReady, EventPriority.Default);
-							}
-							else
-							{
-								this.RestorePurchases();
-							}
-						}
+						Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_treasure_empty", "no_valid_products", string.Empty);
 					}
-					else if (this.numStoreRetryAttempts < 0)
+					return EatResponse.NotEaten;
+				}
+				if (id == EventId.StoreScreenReady)
+				{
+					if (this.numStoreRetryAttempts < 10)
 					{
 						if (this.products.Count == 0)
 						{
 							this.numStoreRetryAttempts++;
-							Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_store_retry", "", "");
+							Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_store_retry", string.Empty, string.Empty);
 							this.ValidateIAPItems(true);
 						}
 					}
 					else if (this.products.Count == 0)
 					{
-						Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_store_fail", this.numStoreRetryAttempts.ToString(), "");
+						Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_store_fail", this.numStoreRetryAttempts.ToString(), string.Empty);
 					}
+					return EatResponse.NotEaten;
 				}
-				else
+				if (id == EventId.WorldLoadComplete)
 				{
-					StoreTab storeTab = (StoreTab)cookie;
-					if (storeTab == StoreTab.Treasure && this.products.Count == 0)
+					this.eventManager.UnregisterObserver(this, EventId.WorldLoadComplete);
+					if (!this.AreProductIdsReady)
 					{
-						Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_treasure_empty", "no_valid_products", "");
+						this.eventManager.RegisterObserver(this, EventId.IAPProductIDsReady, EventPriority.Default);
 					}
-				}
-			}
-			else if (id <= EventId.SuccessfullyResumed)
-			{
-				if (id != EventId.InitializeGeneralSystemsEnd)
-				{
-					if (id == EventId.SuccessfullyResumed)
+					else
 					{
-						Service.Get<InAppPurchaseController>().OnApplicationResume();
+						this.RestorePurchases();
 					}
+					return EatResponse.NotEaten;
 				}
-				else
+				if (id == EventId.IAPProductIDsReady)
 				{
-					this.CheckExpectedIAPCount();
-					this.GetValidProductsFromStore();
-					this.ScheduleValidateIAPItems();
-					this.eventManager.UnregisterObserver(this, EventId.InitializeGeneralSystemsEnd);
+					this.eventManager.UnregisterObserver(this, EventId.IAPProductIDsReady);
+					this.RestorePurchases();
+					return EatResponse.NotEaten;
 				}
-			}
-			else if (id != EventId.IAPProductIDsReady)
-			{
-				if (id == EventId.TargetedBundleReserve)
+				if (id != EventId.TargetedBundleReserve)
 				{
-					string productId = (string)cookie;
-					this.ReserveTargetBundleOnServer(productId);
+					return EatResponse.NotEaten;
 				}
+				string productId = (string)cookie;
+				this.ReserveTargetBundleOnServer(productId);
+				return EatResponse.NotEaten;
 			}
-			else
-			{
-				this.eventManager.UnregisterObserver(this, EventId.IAPProductIDsReady);
+			case EventId.SuccessfullyResumed:
+				Service.Get<InAppPurchaseController>().OnApplicationResume();
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			goto IL_1E;
 		}
 
 		private void ReserveTargetBundleOnServer(string productId)
@@ -174,7 +168,7 @@ namespace StaRTS.Externals.IAP
 
 		private void OnFailure(uint status, object cookie)
 		{
-			Service.Get<StaRTSLogger>().Error("Failed in reserving targeted bundle offers.  Status = " + status.ToString());
+			Service.Get<Logger>().Error("Failed in reserving targeted bundle offers.  Status = " + status.ToString());
 		}
 
 		private void ScheduleValidateIAPItems()
@@ -190,7 +184,7 @@ namespace StaRTS.Externals.IAP
 		public bool IsIAPForCurrentPlatform(InAppPurchaseTypeVO iapVO)
 		{
 			bool result = false;
-			if (iapVO.Type == "ws")
+			if (iapVO.Type == "a")
 			{
 				result = true;
 			}
@@ -199,6 +193,16 @@ namespace StaRTS.Externals.IAP
 
 		private void CheckExpectedIAPCount()
 		{
+			foreach (InAppPurchaseTypeVO current in this.GetAllIAPTypes())
+			{
+				if (!current.IsPromo)
+				{
+					if (this.IsIAPForCurrentPlatform(current))
+					{
+						this.expectedIAPCount++;
+					}
+				}
+			}
 		}
 
 		public void GetValidProductsFromStore()
@@ -206,64 +210,54 @@ namespace StaRTS.Externals.IAP
 			if (!Service.Get<EnvironmentController>().IsRestrictedProfile())
 			{
 				this.iapManager.GetProducts();
-				return;
 			}
-			Service.Get<BILoggingController>().TrackGameAction("iap", "iap_restricted_account", "restricted_user", "");
+			else
+			{
+				Service.Get<BILoggingController>().TrackGameAction("iap", "iap_restricted_account", "restricted_user", string.Empty);
+			}
 		}
 
-		public void OnGetInfoForProducts(List<InAppPurchaseProductInfo> productsFromNative)
+		public void OnGetInfoForProducts(string value, List<InAppPurchaseProductInfo> productInfoList = null)
 		{
-			Dictionary<string, InAppPurchaseTypeVO> allIAPTypesByProductID = this.GetAllIAPTypesByProductID();
-			int count = productsFromNative.Count;
-			for (int i = 0; i < count; i++)
+			if (productInfoList == null)
 			{
-				InAppPurchaseProductInfo inAppPurchaseProductInfo = productsFromNative[i];
-				Service.Get<StaRTSLogger>().Debug("IAP Product: " + inAppPurchaseProductInfo.ToString());
-				InAppPurchaseTypeVO inAppPurchaseTypeVO = allIAPTypesByProductID[inAppPurchaseProductInfo.AppStoreId];
-				if (!inAppPurchaseTypeVO.IsPromo)
-				{
-					if (!this.products.ContainsKey(inAppPurchaseProductInfo.AppStoreId))
-					{
-						this.products.Add(inAppPurchaseProductInfo.AppStoreId, inAppPurchaseProductInfo);
-					}
-					if (!this.validIAPTypes.ContainsKey(inAppPurchaseTypeVO.ProductId))
-					{
-						this.validIAPTypes.Add(inAppPurchaseTypeVO.ProductId, inAppPurchaseTypeVO);
-					}
-				}
+				this.ParseProductsFromJson(value);
 			}
-			Service.Get<StaRTSLogger>().Debug("Number of valid products: " + count);
+			else
+			{
+				this.ParseProductsFromList(productInfoList);
+			}
 			this.ValidateIAPItems(false);
 			if (this.products.Count == this.expectedIAPCount)
 			{
 				if (this.numStoreRetryAttempts < 1)
 				{
 					int num = this.numStoreRetryAttempts - 1;
-					Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_init_success", num.ToString(), "");
+					Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_init_success", num.ToString(), string.Empty);
 				}
 				else
 				{
-					Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_store_success", this.numStoreRetryAttempts.ToString(), "");
+					Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_store_success", this.numStoreRetryAttempts.ToString(), string.Empty);
 				}
 				this.AreProductIdsReady = true;
 				Service.Get<EventManager>().SendEvent(EventId.IAPProductIDsReady, null);
 			}
 		}
 
-		public void OnGetInfoForProducts(string value)
+		private void ParseProductsFromJson(string value)
 		{
 			Dictionary<string, InAppPurchaseTypeVO> allIAPTypesByProductID = this.GetAllIAPTypesByProductID();
 			IDictionary<string, object> dictionary = new JsonParser(value).Parse() as Dictionary<string, object>;
 			if (dictionary != null && dictionary.ContainsKey("products"))
 			{
-				List<object> list = dictionary.get_Item("products") as List<object>;
+				List<object> list = dictionary["products"] as List<object>;
 				if (list != null)
 				{
 					int count = list.Count;
 					for (int i = 0; i < count; i++)
 					{
 						InAppPurchaseProductInfo inAppPurchaseProductInfo = InAppPurchaseProductInfo.Parse(list[i]);
-						Service.Get<StaRTSLogger>().Debug("IAP Product: " + inAppPurchaseProductInfo.ToString());
+						Service.Get<Logger>().Debug("IAP Product: " + inAppPurchaseProductInfo.ToString());
 						if (allIAPTypesByProductID.ContainsKey(inAppPurchaseProductInfo.AppStoreId))
 						{
 							InAppPurchaseTypeVO inAppPurchaseTypeVO = allIAPTypesByProductID[inAppPurchaseProductInfo.AppStoreId];
@@ -281,27 +275,43 @@ namespace StaRTS.Externals.IAP
 						}
 						else
 						{
-							Service.Get<StaRTSLogger>().Debug("IAP Item no longer supported: " + inAppPurchaseProductInfo.AppStoreId);
+							Service.Get<Logger>().Debug("IAP Item no longer supported: " + inAppPurchaseProductInfo.AppStoreId);
 						}
 					}
-					Service.Get<StaRTSLogger>().Debug("Number of valid products: " + count);
+					Service.Get<Logger>().Debug("Number of valid products: " + count);
 				}
 			}
-			this.ValidateIAPItems(false);
-			if (this.products.Count == this.expectedIAPCount)
+		}
+
+		private void ParseProductsFromList(List<InAppPurchaseProductInfo> productInfoList)
+		{
+			Dictionary<string, InAppPurchaseTypeVO> allIAPTypesByProductID = this.GetAllIAPTypesByProductID();
+			int count = productInfoList.Count;
+			for (int i = 0; i < count; i++)
 			{
-				if (this.numStoreRetryAttempts < 1)
+				InAppPurchaseProductInfo inAppPurchaseProductInfo = productInfoList[i];
+				Service.Get<Logger>().Debug("IAP Product: " + inAppPurchaseProductInfo.ToString());
+				if (allIAPTypesByProductID.ContainsKey(inAppPurchaseProductInfo.AppStoreId))
 				{
-					int num = this.numStoreRetryAttempts - 1;
-					Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_init_success", num.ToString(), "");
+					InAppPurchaseTypeVO inAppPurchaseTypeVO = allIAPTypesByProductID[inAppPurchaseProductInfo.AppStoreId];
+					if (!inAppPurchaseTypeVO.IsPromo)
+					{
+						if (!this.products.ContainsKey(inAppPurchaseProductInfo.AppStoreId))
+						{
+							this.products.Add(inAppPurchaseProductInfo.AppStoreId, inAppPurchaseProductInfo);
+						}
+						if (!this.validIAPTypes.ContainsKey(inAppPurchaseTypeVO.ProductId))
+						{
+							this.validIAPTypes.Add(inAppPurchaseTypeVO.ProductId, inAppPurchaseTypeVO);
+						}
+					}
 				}
 				else
 				{
-					Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_store_success", this.numStoreRetryAttempts.ToString(), "");
+					Service.Get<Logger>().Debug("IAP Item no longer supported: " + inAppPurchaseProductInfo.AppStoreId);
 				}
-				this.AreProductIdsReady = true;
-				Service.Get<EventManager>().SendEvent(EventId.IAPProductIDsReady, null);
 			}
+			Service.Get<Logger>().Debug("Number of valid products: " + count);
 		}
 
 		public void Consume(string consumeId)
@@ -320,19 +330,48 @@ namespace StaRTS.Externals.IAP
 			this.iapManager.Purchase(productID);
 		}
 
-		public void OnPurchaseProductResponse(string bulkReceipt, bool gameIdleControllerEnabled = true)
+		public void OnPurchaseProductResponse(string jsonString, bool gameIdleControllerEnabled)
 		{
-			Service.Get<GameIdleController>().Enabled = gameIdleControllerEnabled;
+			InAppPurchaseReceipt receipt = InAppPurchaseReceipt.Parse(jsonString);
+			this.OnPurchaseProductResponse(receipt, gameIdleControllerEnabled);
+		}
+
+		public void OnPurchaseProductResponse(InAppPurchaseReceipt receipt, bool gameIdleControllerEnabled)
+		{
+			if (Service.IsSet<GameIdleController>())
+			{
+				Service.Get<GameIdleController>().Enabled = gameIdleControllerEnabled;
+			}
+			if (receipt.errorCode != 0u)
+			{
+				return;
+			}
 			MoneyReceiptVerifyRequest moneyReceiptVerifyRequest = new MoneyReceiptVerifyRequest();
-			string text = Regex.Unescape(bulkReceipt);
-			text = Regex.Unescape(text);
-			byte[] bytes = Encoding.UTF8.GetBytes(text);
-			string receipt = Convert.ToBase64String(bytes);
-			moneyReceiptVerifyRequest.Receipt = receipt;
-			moneyReceiptVerifyRequest.VendorKey = "Windows";
+			moneyReceiptVerifyRequest.Receipt = receipt.GetManimalReceiptString();
+			moneyReceiptVerifyRequest.VendorKey = "googleV3";
+			if (!string.IsNullOrEmpty(receipt.userId))
+			{
+				if (moneyReceiptVerifyRequest.ExtraParams == null)
+				{
+					moneyReceiptVerifyRequest.ExtraParams = new Dictionary<string, string>();
+				}
+				moneyReceiptVerifyRequest.ExtraParams.Add("userId", receipt.userId);
+			}
 			moneyReceiptVerifyRequest.PlayerId = Service.Get<CurrentPlayer>().PlayerId;
-			MoneyReceiptVerifyCommand command = new MoneyReceiptVerifyCommand(moneyReceiptVerifyRequest);
-			Service.Get<ServerAPI>().Async(command);
+			ServerAPI serverAPI = Service.Get<ServerAPI>();
+			MoneyReceiptVerifyCommand moneyReceiptVerifyCommand = new MoneyReceiptVerifyCommand(moneyReceiptVerifyRequest);
+			moneyReceiptVerifyCommand.ProductId = receipt.productId;
+			moneyReceiptVerifyCommand.SetTransactionId(receipt.transactionId);
+			if (!serverAPI.Enabled && Service.Get<CurrentPlayer>().CampaignProgress.FueInProgress)
+			{
+				serverAPI.Enabled = true;
+				serverAPI.Sync(moneyReceiptVerifyCommand);
+				serverAPI.Enabled = false;
+			}
+			else
+			{
+				serverAPI.Sync(moneyReceiptVerifyCommand);
+			}
 		}
 
 		public void HandleReceiptVerificationResponse(string uid, string transactionId, string currencyCode, double price, double bonusMultiplier, bool isPromo, string offerUid, CrateData crateData)
@@ -352,7 +391,7 @@ namespace StaRTS.Externals.IAP
 			}
 			if (string.IsNullOrEmpty(text) && !flag)
 			{
-				Service.Get<StaRTSLogger>().Error("MoneyReceiptVerifyResponse:" + inAppPurchaseTypeVO.Uid + " faction specific reward uids do not exist");
+				Service.Get<Logger>().Error("MoneyReceiptVerifyResponse:" + inAppPurchaseTypeVO.Uid + " faction specific reward uids do not exist");
 				return;
 			}
 			bool flag2 = false;
@@ -367,7 +406,7 @@ namespace StaRTS.Externals.IAP
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().Error("MoneyReceiptVerifyResponse: targeted offer " + offerUid + " does not exist");
+					Service.Get<Logger>().Error("MoneyReceiptVerifyResponse: targeted offer " + offerUid + " does not exist");
 				}
 			}
 			else
@@ -375,7 +414,7 @@ namespace StaRTS.Externals.IAP
 				RewardVO optional = dataController.GetOptional<RewardVO>(text);
 				if (optional == null)
 				{
-					Service.Get<StaRTSLogger>().Error("MoneyReceiptVerifyResponse:" + text + " does not exist");
+					Service.Get<Logger>().Error("MoneyReceiptVerifyResponse:" + text + " does not exist");
 				}
 				else if (inAppPurchaseTypeVO.CurrencyType.Equals("hard"))
 				{
@@ -439,7 +478,7 @@ namespace StaRTS.Externals.IAP
 		{
 			IDataController dataController = Service.Get<IDataController>();
 			InAppPurchaseTypeVO inAppPurchaseTypeVO = dataController.Get<InAppPurchaseTypeVO>(uid);
-			string rewardUid;
+			string rewardUid = string.Empty;
 			if (Service.Get<CurrentPlayer>().Faction == FactionType.Empire)
 			{
 				rewardUid = inAppPurchaseTypeVO.RewardEmpire;
@@ -451,12 +490,14 @@ namespace StaRTS.Externals.IAP
 			if (inAppPurchaseTypeVO.CurrencyType.Equals("hard") || inAppPurchaseTypeVO.CurrencyType.Equals("pack"))
 			{
 				UXUtils.SetupGeometryForIcon(iconSprite, inAppPurchaseTypeVO.CurrencyIconId);
-				return;
 			}
-			RewardType rewardType = RewardType.Invalid;
-			IGeometryVO config;
-			Service.Get<RewardManager>().GetFirstRewardAssetName(rewardUid, ref rewardType, out config);
-			RewardUtils.SetRewardIcon(iconSprite, config, AnimationPreference.NoAnimation);
+			else
+			{
+				RewardType rewardType = RewardType.Invalid;
+				IGeometryVO config;
+				Service.Get<RewardManager>().GetFirstRewardAssetName(rewardUid, ref rewardType, out config);
+				RewardUtils.SetRewardIcon(iconSprite, config, AnimationPreference.NoAnimation);
+			}
 		}
 
 		public void OnApplicationResume()
@@ -469,9 +510,9 @@ namespace StaRTS.Externals.IAP
 			List<InAppPurchaseTypeVO> list = new List<InAppPurchaseTypeVO>();
 			foreach (KeyValuePair<string, InAppPurchaseTypeVO> current in this.validIAPTypes)
 			{
-				if (!current.get_Value().HideFromStore)
+				if (!current.Value.HideFromStore)
 				{
-					list.Add(current.get_Value());
+					list.Add(current.Value);
 				}
 			}
 			list.Sort(new Comparison<InAppPurchaseTypeVO>(InAppPurchaseController.CompareIAPs));
@@ -486,15 +527,20 @@ namespace StaRTS.Externals.IAP
 			}
 			if (!bypassCheck)
 			{
-				if (this.numTimesValidatedItems >= 0)
+				if (this.numTimesValidatedItems >= 3)
 				{
-					Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_init_fail", this.numTimesValidatedItems.ToString(), "");
+					Service.Get<BILoggingController>().TrackGameAction("iap", "get_products_init_fail", this.numTimesValidatedItems.ToString(), string.Empty);
 					return;
 				}
 				this.numTimesValidatedItems++;
 			}
 			if (this.validIAPTypes.Count < this.expectedIAPCount)
 			{
+				Service.Get<Logger>().ErrorFormat("Unexpected number of IAP store items. Expected {0}, got {1}.", new object[]
+				{
+					this.expectedIAPCount,
+					this.validIAPTypes.Count
+				});
 				this.GetValidProductsFromStore();
 			}
 		}
@@ -505,11 +551,7 @@ namespace StaRTS.Externals.IAP
 			{
 				return 0;
 			}
-			if (a.Order >= b.Order)
-			{
-				return -1;
-			}
-			return 1;
+			return (a.Order >= b.Order) ? -1 : 1;
 		}
 
 		public InAppPurchaseProductInfo GetIAPProduct(string productID)
@@ -540,146 +582,6 @@ namespace StaRTS.Externals.IAP
 				}
 			}
 			return dictionary;
-		}
-
-		protected internal InAppPurchaseController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).CheckExpectedIAPCount();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(InAppPurchaseController.CompareIAPs((InAppPurchaseTypeVO)GCHandledObjects.GCHandleToObject(*args), (InAppPurchaseTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).Consume(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).AreProductIdsReady);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).GetAllIAPTypes());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).GetAllIAPTypesByProductID());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).GetIAPProduct(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).GetValidIAPTypes());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).GetValidProductsFromStore();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).HandleReceiptVerificationResponse(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(double*)(args + 3), *(double*)(args + 4), *(sbyte*)(args + 5) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 6)), (CrateData)GCHandledObjects.GCHandleToObject(args[7]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).IsIAPForCurrentPlatform((InAppPurchaseTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).OnApplicationResume();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).OnGetInfoForProducts((List<InAppPurchaseProductInfo>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).OnGetInfoForProducts(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).OnPurchaseProductResponse(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).PurchaseProduct(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).ReserveTargetBundleOnServer(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).RestorePurchases();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).ScheduleValidateIAPItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).AreProductIdsReady = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).SetIAPRewardIcon((UXSprite)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).ShowRedemptionScreen(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((InAppPurchaseController)GCHandledObjects.GCHandleToObject(instance)).ValidateIAPItems(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

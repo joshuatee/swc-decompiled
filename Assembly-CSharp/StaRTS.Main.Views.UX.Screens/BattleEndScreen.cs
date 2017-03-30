@@ -9,9 +9,7 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -394,23 +392,23 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			if (battleEntry == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Last battle is null");
+				Service.Get<Logger>().Error("Last battle is null");
 				return;
 			}
-			this.resultLabel.Text = (battleEntry.Won ? this.lang.Get("VICTORY", new object[0]) : this.lang.Get("DEFEAT", new object[0]));
+			this.resultLabel.Text = ((!battleEntry.Won) ? this.lang.Get("DEFEAT", new object[0]) : this.lang.Get("VICTORY", new object[0]));
 			this.resultLabel.Visible = !this.isNonAttackerReplayView;
 			UXLabel element = base.GetElement<UXLabel>("LabelMissionResult");
 			if (battleEntry.FailedConditionUid != null)
 			{
-				this.resultLabel.Text = "";
+				this.resultLabel.Text = string.Empty;
 				this.resultFailureTitleLabel.Text = this.lang.Get("DEFEAT", new object[0]);
 				CampaignMissionVO mission = Service.Get<IDataController>().Get<CampaignMissionVO>(battleEntry.MissionId);
 				element.Text = LangUtils.GetMissionFailureMessage(mission);
 			}
 			else
 			{
-				this.resultFailureTitleLabel.Text = "";
-				element.Text = "";
+				this.resultFailureTitleLabel.Text = string.Empty;
+				element.Text = string.Empty;
 			}
 			this.percentLabel.Text = this.lang.Get("PERCENTAGE", new object[]
 			{
@@ -435,7 +433,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.attackMedalsLabel.Text = this.CalculateMedalsGained(attacker).ToString();
 				this.defendMedalsLabel.Text = this.CalculateMedalsGained(defender).ToString();
 				bool flag4 = currentPlayer.PlayerId == attacker.PlayerId || battleEntry.SharerPlayerId == attacker.PlayerId;
-				this.AddSeizedItem("icoMedal", flag4 ? this.attackMedalsLabel.Text : this.defendMedalsLabel.Text, 6);
+				this.AddSeizedItem("icoMedal", (!flag4) ? this.defendMedalsLabel.Text : this.attackMedalsLabel.Text, 6);
 				if (flag3)
 				{
 					this.AddSeizedItem(GameUtils.GetTournamentPointIconName(battleEntry.PlanetId), attacker.TournamentRatingDelta.ToString(), 7);
@@ -496,20 +494,14 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void SetupNonAttackerReplayView(BattleEntry lastBattle, BattleParticipant attacker, BattleParticipant defender, bool isConflictBattle)
 		{
-			this.replayTitleBarResultLabel.Text = (lastBattle.Won ? this.lang.Get("VICTORY", new object[0]) : this.lang.Get("DEFEAT", new object[0]));
-			this.replayTitleBarResultLabel.TextColor = (lastBattle.Won ? UXUtils.COLOR_REPLAY_VICTORY : UXUtils.COLOR_REPLAY_DEFEAT);
+			this.replayTitleBarResultLabel.Text = ((!lastBattle.Won) ? this.lang.Get("DEFEAT", new object[0]) : this.lang.Get("VICTORY", new object[0]));
+			this.replayTitleBarResultLabel.TextColor = ((!lastBattle.Won) ? UXUtils.COLOR_REPLAY_DEFEAT : UXUtils.COLOR_REPLAY_VICTORY);
 			for (int i = 1; i <= 3; i++)
 			{
-				base.GetElement<UXSprite>(string.Format("TitleBarSpriteStar{0}", new object[]
-				{
-					i
-				})).Visible = true;
+				base.GetElement<UXSprite>(string.Format("TitleBarSpriteStar{0}", i)).Visible = true;
 				if (i <= lastBattle.EarnedStars)
 				{
-					base.GetElement<UXSprite>(string.Format("TitleBarSpriteStar{0}", new object[]
-					{
-						i
-					})).Color = Color.white;
+					base.GetElement<UXSprite>(string.Format("TitleBarSpriteStar{0}", i)).Color = Color.white;
 				}
 			}
 			this.creditsLabel.Text = this.lang.ThousandsSeparated(lastBattle.LootCreditsEarned);
@@ -605,124 +597,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				return 4;
 			}
 			return 0;
-		}
-
-		protected internal BattleEndScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).AddSeizedItem(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).CalculateMedalsGained((BattleParticipant)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).ReplayPrefix);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).StarsPlaceHolderName);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardAmountName);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardDefaultName);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardIconName);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardLevelName);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardName);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardQualityName);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopHeroDecalName);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).GetBonusCurrencyOrder(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnSeizedRepositioned((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).SetupNonAttackerReplayView((BattleEntry)GCHandledObjects.GCHandleToObject(*args), (BattleParticipant)GCHandledObjects.GCHandleToObject(args[1]), (BattleParticipant)GCHandledObjects.GCHandleToObject(args[2]), *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).SetupSeizedIcon(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).SetupView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).ShouldShowContrabandLoot((GamePlayer)GCHandledObjects.GCHandleToObject(*args), (BattleType)(*(int*)(args + 1)), (BattleEntry)GCHandledObjects.GCHandleToObject(args[2])));
 		}
 	}
 }

@@ -4,8 +4,6 @@ using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Utils.MetaData
 {
@@ -79,7 +77,7 @@ namespace StaRTS.Utils.MetaData
 
 		public void SetupComplete()
 		{
-			this.rowCount = ((this.columnCount == 0) ? 0 : (this.cellCount / this.columnCount));
+			this.rowCount = ((this.columnCount != 0) ? (this.cellCount / this.columnCount) : 0);
 			this.rows = new Dictionary<string, Row>(this.rowCount);
 			for (int i = 0; i < this.rowCount; i++)
 			{
@@ -87,7 +85,7 @@ namespace StaRTS.Utils.MetaData
 				string text;
 				if (!this.InternalGetString(num, 0, out text))
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Unable to get uid for row {0} in sheet {1}", new object[]
+					Service.Get<Logger>().WarnFormat("Unable to get uid for row {0} in sheet {1}", new object[]
 					{
 						num,
 						this.SheetName
@@ -95,7 +93,7 @@ namespace StaRTS.Utils.MetaData
 				}
 				else if (string.IsNullOrEmpty(text))
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Ignoring empty row {0} uid in sheet {1}", new object[]
+					Service.Get<Logger>().WarnFormat("Ignoring empty row {0} uid in sheet {1}", new object[]
 					{
 						num,
 						this.SheetName
@@ -103,7 +101,7 @@ namespace StaRTS.Utils.MetaData
 				}
 				else if (this.rows.ContainsKey(text))
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Ignoring duplicate row {0} uid {1} in sheet {2}", new object[]
+					Service.Get<Logger>().WarnFormat("Ignoring duplicate row {0} uid {1} in sheet {2}", new object[]
 					{
 						num,
 						text,
@@ -129,8 +127,8 @@ namespace StaRTS.Utils.MetaData
 			{
 				foreach (KeyValuePair<string, Row> current in allRows)
 				{
-					string key = current.get_Key();
-					Row value = current.get_Value();
+					string key = current.Key;
+					Row value = current.Value;
 					value.InternalSetMasterSheet(this);
 					if (this.rows.ContainsKey(key))
 					{
@@ -160,7 +158,7 @@ namespace StaRTS.Utils.MetaData
 		{
 			if (this.rows == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Sheet {0} is invalid", new object[]
+				Service.Get<Logger>().ErrorFormat("Sheet {0} is invalid", new object[]
 				{
 					this.SheetName
 				});
@@ -205,11 +203,7 @@ namespace StaRTS.Utils.MetaData
 
 		public int GetColumnIndex(string columnName)
 		{
-			if (columnName == null || !this.columnIndexes.ContainsKey(columnName))
-			{
-				return -1;
-			}
-			return this.columnIndexes[columnName];
+			return (columnName == null || !this.columnIndexes.ContainsKey(columnName)) ? -1 : this.columnIndexes[columnName];
 		}
 
 		public void SetupColumnIndexes<T>() where T : IValueObject
@@ -218,8 +212,8 @@ namespace StaRTS.Utils.MetaData
 			{
 				return;
 			}
-			global::BindingFlags bindingFlags = (global::BindingFlags)33;
-			PropertyInfo[] properties = typeof(T).GetProperties(bindingFlags);
+			BindingFlags bindingAttr = BindingFlags.Static | BindingFlags.Public;
+			PropertyInfo[] properties = typeof(T).GetProperties(bindingAttr);
 			int i = 0;
 			int num = properties.Length;
 			while (i < num)
@@ -230,7 +224,7 @@ namespace StaRTS.Utils.MetaData
 					string name = propertyInfo.Name;
 					if (name.StartsWith("COLUMN_"))
 					{
-						string text = name.Substring("COLUMN_".get_Length());
+						string text = name.Substring("COLUMN_".Length);
 						int num2;
 						if (this.columnIndexes.ContainsKey(text))
 						{
@@ -286,12 +280,12 @@ namespace StaRTS.Utils.MetaData
 			case ColumnType.Boolean:
 			{
 				uint num4 = num2 - 1u;
-				value = (num4 > 0u).ToString();
+				value = (num4 != 0u).ToString();
 				return true;
 			}
 			case ColumnType.NonNegativeInt:
 			case ColumnType.RawInt:
-				value = ((int)(((num2 & 2147483648u) == 0u) ? (num2 - 1u) : num2)).ToString();
+				value = ((int)(((num2 & 2147483648u) != 0u) ? num2 : (num2 - 1u))).ToString();
 				return true;
 			case ColumnType.Float:
 			{
@@ -370,11 +364,11 @@ namespace StaRTS.Utils.MetaData
 			case ColumnType.NonNegativeInt:
 			{
 				uint num3 = num2 - 1u;
-				value = (num3 > 0u);
+				value = (num3 != 0u);
 				return true;
 			}
 			case ColumnType.RawInt:
-				value = ((((num2 & 2147483648u) == 0u) ? (num2 - 1u) : num2) > 0u);
+				value = ((((num2 & 2147483648u) != 0u) ? num2 : (num2 - 1u)) != 0u);
 				return true;
 			case ColumnType.Float:
 			{
@@ -414,12 +408,12 @@ namespace StaRTS.Utils.MetaData
 			case ColumnType.String:
 			{
 				int num3 = (int)(num2 - 1u);
-				return num3 >= 0 && num3 < this.stringCount && int.TryParse(this.strings[num3], ref value);
+				return num3 >= 0 && num3 < this.stringCount && int.TryParse(this.strings[num3], out value);
 			}
 			case ColumnType.Boolean:
 			case ColumnType.NonNegativeInt:
 			case ColumnType.RawInt:
-				value = (int)(((num2 & 2147483648u) == 0u) ? (num2 - 1u) : num2);
+				value = (int)(((num2 & 2147483648u) != 0u) ? num2 : (num2 - 1u));
 				return true;
 			case ColumnType.Float:
 			{
@@ -461,12 +455,12 @@ namespace StaRTS.Utils.MetaData
 			case ColumnType.String:
 			{
 				int num3 = (int)(num2 - 1u);
-				return num3 >= 0 && num3 < this.stringCount && uint.TryParse(this.strings[num3], ref value);
+				return num3 >= 0 && num3 < this.stringCount && uint.TryParse(this.strings[num3], out value);
 			}
 			case ColumnType.Boolean:
 			case ColumnType.NonNegativeInt:
 			case ColumnType.RawInt:
-				value = (((num2 & 2147483648u) == 0u) ? (num2 - 1u) : num2);
+				value = (((num2 & 2147483648u) != 0u) ? num2 : (num2 - 1u));
 				return true;
 			case ColumnType.Float:
 			{
@@ -508,13 +502,13 @@ namespace StaRTS.Utils.MetaData
 			case ColumnType.String:
 			{
 				int num3 = (int)(num2 - 1u);
-				return num3 >= 0 && num3 < this.stringCount && float.TryParse(this.strings[num3], ref value);
+				return num3 >= 0 && num3 < this.stringCount && float.TryParse(this.strings[num3], out value);
 			}
 			case ColumnType.Boolean:
 			case ColumnType.NonNegativeInt:
 			case ColumnType.RawInt:
 			{
-				int num4 = (int)(((num2 & 2147483648u) == 0u) ? (num2 - 1u) : num2);
+				int num4 = (int)(((num2 & 2147483648u) != 0u) ? num2 : (num2 - 1u));
 				value = (float)num4;
 				return true;
 			}
@@ -533,70 +527,6 @@ namespace StaRTS.Utils.MetaData
 			default:
 				return false;
 			}
-		}
-
-		protected internal Sheet(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Sheet)GCHandledObjects.GCHandleToObject(instance)).SheetName);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Sheet)GCHandledObjects.GCHandleToObject(instance)).GetAllRows());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Sheet)GCHandledObjects.GCHandleToObject(instance)).GetColumnIndex(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Sheet)GCHandledObjects.GCHandleToObject(instance)).GetColumnName(*(int*)args));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Sheet)GCHandledObjects.GCHandleToObject(instance)).InternalGetAllColumns());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((Sheet)GCHandledObjects.GCHandleToObject(instance)).Invalidate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((Sheet)GCHandledObjects.GCHandleToObject(instance)).PatchRows((Sheet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((Sheet)GCHandledObjects.GCHandleToObject(instance)).SheetName = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((Sheet)GCHandledObjects.GCHandleToObject(instance)).SetupColumns((Column[])GCHandledObjects.GCHandleToPinnedArrayObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((Sheet)GCHandledObjects.GCHandleToObject(instance)).SetupComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Sheet)GCHandledObjects.GCHandleToObject(instance)).VerifyValid());
 		}
 	}
 }

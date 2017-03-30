@@ -1,16 +1,13 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/Interaction/Center Scroll View on Child")]
-public class UICenterOnChild : MonoBehaviour, IUnitySerializable
+public class UICenterOnChild : MonoBehaviour
 {
 	public delegate void OnCenterCallback(GameObject centeredObject);
 
-	public float springStrength;
+	public float springStrength = 8f;
 
 	public float nextPageThreshold;
 
@@ -86,18 +83,18 @@ public class UICenterOnChild : MonoBehaviour, IUnitySerializable
 			if (this.mScrollView)
 			{
 				this.mScrollView.centerOnChild = this;
-				UIScrollView expr_8E = this.mScrollView;
-				expr_8E.onDragFinished = (UIScrollView.OnDragNotification)Delegate.Combine(expr_8E.onDragFinished, new UIScrollView.OnDragNotification(this.OnDragFinished));
+				UIScrollView expr_94 = this.mScrollView;
+				expr_94.onDragFinished = (UIScrollView.OnDragNotification)Delegate.Combine(expr_94.onDragFinished, new UIScrollView.OnDragNotification(this.OnDragFinished));
 			}
 			if (this.mScrollView.horizontalScrollBar != null)
 			{
-				UIProgressBar expr_CD = this.mScrollView.horizontalScrollBar;
-				expr_CD.onDragFinished = (UIProgressBar.OnDragFinished)Delegate.Combine(expr_CD.onDragFinished, new UIProgressBar.OnDragFinished(this.OnDragFinished));
+				UIProgressBar expr_D6 = this.mScrollView.horizontalScrollBar;
+				expr_D6.onDragFinished = (UIProgressBar.OnDragFinished)Delegate.Combine(expr_D6.onDragFinished, new UIProgressBar.OnDragFinished(this.OnDragFinished));
 			}
 			if (this.mScrollView.verticalScrollBar != null)
 			{
-				UIProgressBar expr_10C = this.mScrollView.verticalScrollBar;
-				expr_10C.onDragFinished = (UIProgressBar.OnDragFinished)Delegate.Combine(expr_10C.onDragFinished, new UIProgressBar.OnDragFinished(this.OnDragFinished));
+				UIProgressBar expr_118 = this.mScrollView.verticalScrollBar;
+				expr_118.onDragFinished = (UIProgressBar.OnDragFinished)Delegate.Combine(expr_118.onDragFinished, new UIProgressBar.OnDragFinished(this.OnDragFinished));
 			}
 		}
 		if (this.mScrollView.panel == null)
@@ -167,26 +164,26 @@ public class UICenterOnChild : MonoBehaviour, IUnitySerializable
 				j++;
 			}
 		}
-		if (this.nextPageThreshold > 0f && UICamera.currentTouch != null && this.mCenteredObject != null && this.mCenteredObject.transform == ((list != null) ? list[index] : transform.GetChild(index)))
+		if (this.nextPageThreshold > 0f && UICamera.currentTouch != null && this.mCenteredObject != null && this.mCenteredObject.transform == ((list == null) ? transform.GetChild(index) : list[index]))
 		{
-			Vector3 vector3 = UICamera.currentTouch.totalDelta;
-			vector3 = base.transform.rotation * vector3;
+			Vector3 point = UICamera.currentTouch.totalDelta;
+			point = base.transform.rotation * point;
 			UIScrollView.Movement movement = this.mScrollView.movement;
 			float num7;
 			if (movement != UIScrollView.Movement.Horizontal)
 			{
 				if (movement != UIScrollView.Movement.Vertical)
 				{
-					num7 = vector3.magnitude;
+					num7 = point.magnitude;
 				}
 				else
 				{
-					num7 = vector3.y;
+					num7 = point.y;
 				}
 			}
 			else
 			{
-				num7 = vector3.x;
+				num7 = point.x;
 			}
 			if (Mathf.Abs(num7) > this.nextPageThreshold)
 			{
@@ -200,7 +197,7 @@ public class UICenterOnChild : MonoBehaviour, IUnitySerializable
 						}
 						else
 						{
-							target = ((base.GetComponent<UIWrapContent>() == null) ? list[0] : list[list.Count - 1]);
+							target = ((!(base.GetComponent<UIWrapContent>() == null)) ? list[list.Count - 1] : list[0]);
 						}
 					}
 					else if (num2 > 0)
@@ -209,7 +206,7 @@ public class UICenterOnChild : MonoBehaviour, IUnitySerializable
 					}
 					else
 					{
-						target = ((base.GetComponent<UIWrapContent>() == null) ? transform.GetChild(0) : transform.GetChild(transform.childCount - 1));
+						target = ((!(base.GetComponent<UIWrapContent>() == null)) ? transform.GetChild(transform.childCount - 1) : transform.GetChild(0));
 					}
 				}
 				else if (num7 < -this.nextPageThreshold)
@@ -222,7 +219,7 @@ public class UICenterOnChild : MonoBehaviour, IUnitySerializable
 						}
 						else
 						{
-							target = ((base.GetComponent<UIWrapContent>() == null) ? list[list.Count - 1] : list[0]);
+							target = ((!(base.GetComponent<UIWrapContent>() == null)) ? list[0] : list[list.Count - 1]);
 						}
 					}
 					else if (num2 < transform.childCount - 1)
@@ -231,7 +228,7 @@ public class UICenterOnChild : MonoBehaviour, IUnitySerializable
 					}
 					else
 					{
-						target = ((base.GetComponent<UIWrapContent>() == null) ? transform.GetChild(transform.childCount - 1) : transform.GetChild(0));
+						target = ((!(base.GetComponent<UIWrapContent>() == null)) ? transform.GetChild(0) : transform.GetChild(transform.childCount - 1));
 					}
 				}
 			}
@@ -277,153 +274,5 @@ public class UICenterOnChild : MonoBehaviour, IUnitySerializable
 			Vector3 panelCenter = (worldCorners[2] + worldCorners[0]) * 0.5f;
 			this.CenterOn(target, panelCenter);
 		}
-	}
-
-	public UICenterOnChild()
-	{
-		this.springStrength = 8f;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		SerializedStateWriter.Instance.WriteSingle(this.springStrength);
-		SerializedStateWriter.Instance.WriteSingle(this.nextPageThreshold);
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		this.springStrength = SerializedStateReader.Instance.ReadSingle();
-		this.nextPageThreshold = SerializedStateReader.Instance.ReadSingle();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		ISerializedNamedStateWriter arg_1F_0 = SerializedNamedStateWriter.Instance;
-		float arg_1F_1 = this.springStrength;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		arg_1F_0.WriteSingle(arg_1F_1, &var_0_cp_0[var_0_cp_1] + 439);
-		SerializedNamedStateWriter.Instance.WriteSingle(this.nextPageThreshold, &var_0_cp_0[var_0_cp_1] + 454);
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		ISerializedNamedStateReader arg_1A_0 = SerializedNamedStateReader.Instance;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		this.springStrength = arg_1A_0.ReadSingle(&var_0_cp_0[var_0_cp_1] + 439);
-		this.nextPageThreshold = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 454);
-	}
-
-	protected internal UICenterOnChild(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static float $Get0(object instance)
-	{
-		return ((UICenterOnChild)instance).springStrength;
-	}
-
-	public static void $Set0(object instance, float value)
-	{
-		((UICenterOnChild)instance).springStrength = value;
-	}
-
-	public static float $Get1(object instance)
-	{
-		return ((UICenterOnChild)instance).nextPageThreshold;
-	}
-
-	public static void $Set1(object instance, float value)
-	{
-		((UICenterOnChild)instance).nextPageThreshold = value;
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).CenterOn((Transform)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).CenterOn((Transform)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).centeredObject);
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).OnDisable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).OnDragFinished();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).OnEnable();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).OnValidate();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).Recenter();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UICenterOnChild)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
 	}
 }

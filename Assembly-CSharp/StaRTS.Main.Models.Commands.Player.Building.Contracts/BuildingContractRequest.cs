@@ -1,6 +1,5 @@
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player.Building.Contracts
 {
@@ -39,20 +38,6 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Contracts
 				startedSerializer.AddString("tag", this.tag);
 			}
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal BuildingContractRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingContractRequest)GCHandledObjects.GCHandleToObject(instance)).CalculateChecksumManually);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingContractRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

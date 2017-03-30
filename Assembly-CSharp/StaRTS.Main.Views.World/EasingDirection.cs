@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -46,21 +45,6 @@ namespace StaRTS.Main.Views.World
 			this.easingCount = 0;
 			this.easingIndex = -1;
 			return vector;
-		}
-
-		protected internal EasingDirection(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EasingDirection)GCHandledObjects.GCHandleToObject(instance)).CalculateAndReset());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((EasingDirection)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(*(IntPtr*)args));
-			return -1L;
 		}
 	}
 }

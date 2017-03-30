@@ -6,9 +6,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Externals.Maker.Player
 {
@@ -26,11 +24,11 @@ namespace StaRTS.Externals.Maker.Player
 
 		private const int VIDEO_QUALITY_LIMIT = 1024;
 
-		private static IVideoPlayerHelper helper = null;
+		private static IVideoPlayerHelper helper;
 
-		private static string action = "";
+		private static string action = string.Empty;
 
-		private static string videoId = "";
+		private static string videoId = string.Empty;
 
 		public static void EnableAds(bool enable)
 		{
@@ -48,10 +46,6 @@ namespace StaRTS.Externals.Maker.Player
 				return;
 			}
 			if (VideoPlayer.helper == null)
-			{
-				return;
-			}
-			if (!GameConstants.IsMakerVideoEnabled())
 			{
 				return;
 			}
@@ -73,13 +67,15 @@ namespace StaRTS.Externals.Maker.Player
 			if (videoGuidList.Contains(guid))
 			{
 				Service.Get<VideoDataManager>().GetVideoDetails(guid, new VideoDataManager.DataQueryCompleteDelegate(VideoPlayer.OnVideoDetails));
-				return;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("Could not play non-production video {0}", new object[]
+			else
 			{
-				guid
-			});
-			VideoPlayer.AbandonPlayback();
+				Service.Get<Logger>().ErrorFormat("Could not play non-production video {0}", new object[]
+				{
+					guid
+				});
+				VideoPlayer.AbandonPlayback();
+			}
 		}
 
 		private static void OnVideoDetails(string guid)
@@ -115,10 +111,6 @@ namespace StaRTS.Externals.Maker.Player
 
 		private static void OnOfficialVideoList(List<string> videos)
 		{
-			if (!GameConstants.IsMakerVideoEnabled())
-			{
-				return;
-			}
 			string guid = VideoPlayerKeepAlive.Instance.Guid;
 			VideoData videoData;
 			if (!Service.Get<VideoDataManager>().VideoDatas.TryGetValue(guid, out videoData))
@@ -127,7 +119,7 @@ namespace StaRTS.Externals.Maker.Player
 				return;
 			}
 			int num = Math.Max(Screen.currentResolution.width, Screen.currentResolution.height);
-			VideoQuality quality = (num <= 1024) ? VideoQuality.LOW : VideoQuality.HIGH;
+			VideoQuality quality = (num > 1024) ? VideoQuality.HIGH : VideoQuality.LOW;
 			string videoURL = videoData.GetVideoURL(quality);
 			bool isOfficial = videos != null && videos.Contains(guid);
 			VideoPlayer.helper.Play(videoURL, isOfficial, VideoPlayer.videoId, VideoPlayer.action);
@@ -139,66 +131,12 @@ namespace StaRTS.Externals.Maker.Player
 			{
 				return true;
 			}
+			VideoPlayer.helper = new VideoPlayerHelperAndroid();
 			VideoPlayer.helper.SetAdLanguage("en");
 			VideoPlayer.helper.SetLoadingText(Service.Get<Lang>().Get("hn_makerloading_title", new object[0]) + "\\n\\n" + Service.Get<Lang>().Get("hn_makerloading_makernote", new object[0]));
 			VideoPlayer.helper.SetLoadingTextTime(GameConstants.MIN_MAKER_VID_LOAD);
 			VideoPlayer.helper.SetDoneButtonText(Service.Get<Lang>().Get("hn_done", new object[0]));
 			return true;
-		}
-
-		public VideoPlayer()
-		{
-		}
-
-		protected internal VideoPlayer(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			VideoPlayer.AbandonPlayback();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			VideoPlayer.CleanupPlayback();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			VideoPlayer.EnableAds(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(VideoPlayer.Init());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			VideoPlayer.OnEnvironmentVideos((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			VideoPlayer.OnOfficialVideoList((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			VideoPlayer.OnVideoDetails(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			VideoPlayer.Play(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
 		}
 	}
 }

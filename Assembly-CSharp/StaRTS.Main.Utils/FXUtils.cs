@@ -8,16 +8,13 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.Globalization;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
 	public static class FXUtils
 	{
-		public static readonly Color SELECTION_OUTLINE_COLOR = new Color(0.482f, 0.831f, 0.996f, 1f);
-
 		public const float SELECTION_OUTLINE_WIDTH = 0.00125f;
 
 		public const string ATTACHMENT_RUBBLE = "rubble";
@@ -40,6 +37,8 @@ namespace StaRTS.Main.Utils
 
 		private const string KEY_DELIMITER = "|";
 
+		public static readonly Color SELECTION_OUTLINE_COLOR = new Color(0.482f, 0.831f, 0.996f, 1f);
+
 		public static string MakeAssetKey(string attachmentKey, Entity entity)
 		{
 			return attachmentKey + "|" + entity.ID;
@@ -58,19 +57,11 @@ namespace StaRTS.Main.Utils
 			string uid;
 			if (entity.BuildingComp.BuildingType.Type == BuildingType.Wall)
 			{
-				uid = string.Format("rebelRubbleWall1", new object[]
-				{
-					num,
-					num2
-				});
+				uid = string.Format("rebelRubbleWall1", num, num2);
 			}
 			else
 			{
-				uid = string.Format("rebelRubble{0}", new object[]
-				{
-					num,
-					num2
-				});
+				uid = string.Format("rebelRubble{0}", num, num2);
 			}
 			BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(uid);
 			return buildingTypeVO.AssetName;
@@ -86,7 +77,7 @@ namespace StaRTS.Main.Utils
 			if (isBuilding)
 			{
 				BuildingTypeVO buildingType = entity.BuildingComp.BuildingType;
-				string text = string.IsNullOrEmpty(buildingType.DestructFX) ? "fx_debris_{0}x{1}" : buildingType.DestructFX;
+				string format = (!string.IsNullOrEmpty(buildingType.DestructFX)) ? buildingType.DestructFX : "fx_debris_{0}x{1}";
 				BuildingType type = buildingType.Type;
 				if (type != BuildingType.Wall)
 				{
@@ -94,11 +85,7 @@ namespace StaRTS.Main.Utils
 					{
 						if (type != BuildingType.ShieldGenerator)
 						{
-							uid = string.Format(text, new object[]
-							{
-								num,
-								num
-							});
+							uid = string.Format(format, num, num);
 						}
 						else
 						{
@@ -107,11 +94,7 @@ namespace StaRTS.Main.Utils
 					}
 					else
 					{
-						uid = ((buildingType.Faction == FactionType.Tusken) ? "effect176" : string.Format(text, new object[]
-						{
-							num,
-							num
-						}));
+						uid = ((buildingType.Faction != FactionType.Tusken) ? string.Format(format, num, num) : "effect176");
 					}
 				}
 				else
@@ -121,11 +104,7 @@ namespace StaRTS.Main.Utils
 			}
 			else
 			{
-				uid = string.Format("fx_vehdebris_{0}x{1}", new object[]
-				{
-					num,
-					num
-				});
+				uid = string.Format("fx_vehdebris_{0}x{1}", num, num);
 			}
 			EffectsTypeVO effectsTypeVO = Service.Get<IDataController>().Get<EffectsTypeVO>(uid);
 			return effectsTypeVO.AssetName;
@@ -138,16 +117,9 @@ namespace StaRTS.Main.Utils
 			list.Add(FXUtils.GetAssetType<EffectsTypeVO>("effect176"));
 			for (int i = 1; i < 6; i++)
 			{
-				string uid = string.Format("fx_debris_{0}x{1}", new object[]
-				{
-					i,
-					i
-				});
+				string uid = string.Format("fx_debris_{0}x{1}", i, i);
 				list.Add(FXUtils.GetAssetType<EffectsTypeVO>(uid));
-				string uid2 = string.Format("rebelRubble{0}", new object[]
-				{
-					i
-				});
+				string uid2 = string.Format("rebelRubble{0}", i);
 				list.Add(FXUtils.GetAssetType<BuildingTypeVO>(uid2));
 			}
 			return list;
@@ -162,47 +134,17 @@ namespace StaRTS.Main.Utils
 		{
 			Color grey = Color.grey;
 			grey.a = 1f;
-			if (!string.IsNullOrEmpty(hexColor) && hexColor.get_Length() == 6)
+			if (!string.IsNullOrEmpty(hexColor) && hexColor.Length == 6)
 			{
-				grey.r = (float)int.Parse(hexColor.Substring(0, 2), 512) / 255f;
-				grey.g = (float)int.Parse(hexColor.Substring(2, 2), 512) / 255f;
-				grey.b = (float)int.Parse(hexColor.Substring(4, 2), 512) / 255f;
+				grey.r = (float)int.Parse(hexColor.Substring(0, 2), NumberStyles.AllowHexSpecifier) / 255f;
+				grey.g = (float)int.Parse(hexColor.Substring(2, 2), NumberStyles.AllowHexSpecifier) / 255f;
+				grey.b = (float)int.Parse(hexColor.Substring(4, 2), NumberStyles.AllowHexSpecifier) / 255f;
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Warn("FXUtils: Invalid hex color: " + hexColor);
+				Service.Get<Logger>().Warn("FXUtils: Invalid hex color: " + hexColor);
 			}
 			return grey;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(FXUtils.ConvertHexStringToColorObject(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(FXUtils.GetDebrisAssetNameForEntity((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(FXUtils.GetEffectAssetTypes());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(FXUtils.GetRubbleAssetNameForEntity((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(FXUtils.MakeAssetKey(Marshal.PtrToStringUni(*(IntPtr*)args), (Entity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(FXUtils.MakeAssetKey(Marshal.PtrToStringUni(*(IntPtr*)args), *(*(IntPtr*)(args + 1))));
 		}
 	}
 }

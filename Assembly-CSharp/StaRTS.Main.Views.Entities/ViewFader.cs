@@ -4,7 +4,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -77,40 +76,6 @@ namespace StaRTS.Main.Views.Entities
 					this.completedFaders.Clear();
 				}
 			}
-		}
-
-		protected internal ViewFader(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ViewFader)GCHandledObjects.GCHandleToObject(instance)).FadeOut((Entity)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2), (FadingDelegate)GCHandledObjects.GCHandleToObject(args[3]), (FadingDelegate)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ViewFader)GCHandledObjects.GCHandleToObject(instance)).FadeOut((GameObject)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2), (FadingDelegate)GCHandledObjects.GCHandleToObject(args[3]), (FadingDelegate)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ViewFader)GCHandledObjects.GCHandleToObject(instance)).MaybeRegisterForViewTime();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ViewFader)GCHandledObjects.GCHandleToObject(instance)).MaybeUnregisterFromViewTime();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ViewFader)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Campaign
 		public ShowCampaignIntroCommand(CampaignIdRequest request) : base("player.missions.showIntro", request, new DefaultResponse())
 		{
 		}
-
-		protected internal ShowCampaignIntroCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

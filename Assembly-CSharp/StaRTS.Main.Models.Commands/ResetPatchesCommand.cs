@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands
 		public ResetPatchesCommand(PlayerIdRequest request) : base("test.player.content.reset", request, new DefaultResponse())
 		{
 		}
-
-		protected internal ResetPatchesCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

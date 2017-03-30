@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public RemoveSquadMemberCommand(MemberIdRequest request) : base("guild.eject", request, new DefaultResponse())
 		{
 		}
-
-		protected internal RemoveSquadMemberCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

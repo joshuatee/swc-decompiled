@@ -7,7 +7,6 @@ using StaRTS.Main.Views.UserInput;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -61,34 +60,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			base.OnDestroyElement();
 			this.Visible = false;
-		}
-
-		protected internal PromoRedemptionScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((PromoRedemptionScreen)GCHandledObjects.GCHandleToObject(instance)).OnButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((PromoRedemptionScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PromoRedemptionScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PromoRedemptionScreen)GCHandledObjects.GCHandleToObject(instance)).SetupControls();
-			return -1L;
 		}
 	}
 }

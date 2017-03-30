@@ -7,15 +7,11 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
 	public class SquadWarPlayerDetailsScreen : ClosableScreen
 	{
-		private SquadWarParticipantState participantState;
-
 		private const string BUTTON_PLAYER_NEXT = "BtnPlayerNext";
 
 		private const string BUTTON_PLAYER_PREV = "BtnPlayerPrev";
@@ -61,6 +57,8 @@ namespace StaRTS.Main.Views.UX.Screens
 		private const string WAR_PLAYER_DETAILS_REQ_COMPLETE = "WAR_PLAYER_DETAILS_REQ_COMPLETE";
 
 		private const string SCOUT = "SCOUT";
+
+		private SquadWarParticipantState participantState;
 
 		private UXButton playerNextButton;
 
@@ -116,22 +114,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			for (int i = 1; i <= 3; i++)
 			{
-				this.requirements.Add(base.GetElement<UXLabel>(string.Format("LabelStarRequirement{0}", new object[]
-				{
-					i
-				})));
-				this.uplinks.Add(base.GetElement<UXSprite>(string.Format("SpriteUplink{0}", new object[]
-				{
-					i
-				})));
-				this.checks.Add(base.GetElement<UXSprite>(string.Format("SpriteCheck{0}", new object[]
-				{
-					i
-				})));
-				this.stars.Add(base.GetElement<UXElement>(string.Format("DamageStars{0}", new object[]
-				{
-					i
-				})));
+				this.requirements.Add(base.GetElement<UXLabel>(string.Format("LabelStarRequirement{0}", i)));
+				this.uplinks.Add(base.GetElement<UXSprite>(string.Format("SpriteUplink{0}", i)));
+				this.checks.Add(base.GetElement<UXSprite>(string.Format("SpriteCheck{0}", i)));
+				this.stars.Add(base.GetElement<UXElement>(string.Format("DamageStars{0}", i)));
 			}
 			this.RefreshView();
 		}
@@ -170,7 +156,6 @@ namespace StaRTS.Main.Views.UX.Screens
 					if (warManager.ScoutWarMember(squadMemberId))
 					{
 						this.Close(null);
-						return;
 					}
 				}
 				else
@@ -285,57 +270,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			this.checks[index].Visible = !active;
 			this.stars[index].Visible = active;
-		}
-
-		protected internal SquadWarPlayerDetailsScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarPlayerDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).GetAdjacentParticipant((SquadWarParticipantState)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadWarPlayerDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadWarPlayerDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadWarPlayerDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).OnPlayerChangeClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadWarPlayerDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).OnScoutClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadWarPlayerDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadWarPlayerDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadWarPlayerDetailsScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateUplinkHelper(*(int*)args, *(sbyte*)(args + 1) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
 		}
 	}
 }

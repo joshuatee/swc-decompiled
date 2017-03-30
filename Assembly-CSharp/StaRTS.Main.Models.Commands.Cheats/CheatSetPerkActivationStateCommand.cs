@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSetPerkActivationStateCommand(CheatSetPerkActivationStateRequest request) : base("cheats.perks.setPerkActivationState", request, new CheatSetPerkActivationStateResponse())
 		{
 		}
-
-		protected internal CheatSetPerkActivationStateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

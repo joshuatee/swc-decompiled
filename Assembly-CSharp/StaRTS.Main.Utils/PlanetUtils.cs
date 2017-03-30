@@ -5,7 +5,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -45,21 +44,6 @@ namespace StaRTS.Main.Utils
 				return UnityUtils.EnsureMaterialCopy(componentInChildren);
 			}
 			return null;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlanetUtils.GetAllPlayerFacingPlanets());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlanetUtils.GetPlanetMaterial((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(PlanetUtils.StopPlanetSpinning((GameObject)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

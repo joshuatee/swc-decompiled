@@ -15,9 +15,5 @@ namespace StaRTS.Main.Models.Entities.Components
 		{
 			this.RangeSquared = range * range;
 		}
-
-		protected internal AreaTriggerComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

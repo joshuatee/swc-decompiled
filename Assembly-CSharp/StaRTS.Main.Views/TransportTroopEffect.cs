@@ -17,7 +17,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views
 {
@@ -99,7 +98,7 @@ namespace StaRTS.Main.Views
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Transport troop effect error: {0} not found in TextureData", new object[]
+					Service.Get<Logger>().WarnFormat("Transport troop effect error: {0} not found in TextureData", new object[]
 					{
 						"unittransport_event_troop_" + troopVO.TroopID
 					});
@@ -141,7 +140,7 @@ namespace StaRTS.Main.Views
 			this.effectObj.SetActive(false);
 			if (this.troopCardPS == null || !UnityUtils.HasRendererMaterial(this.troopCardPS.GetComponent<Renderer>()))
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Transport troop effect error: Particle system {0} not found in {1}", new object[]
+				Service.Get<Logger>().WarnFormat("Transport troop effect error: Particle system {0} not found in {1}", new object[]
 				{
 					"CardFX",
 					"troop_card_spawn"
@@ -150,7 +149,7 @@ namespace StaRTS.Main.Views
 			}
 			if (this.shuttleGlowPS == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Transport troop effect error: Particle system {0} not found in {1}", new object[]
+				Service.Get<Logger>().WarnFormat("Transport troop effect error: Particle system {0} not found in {1}", new object[]
 				{
 					"UnderGlow",
 					"troop_card_spawn"
@@ -182,7 +181,7 @@ namespace StaRTS.Main.Views
 		{
 			if (this.troopEntity == null)
 			{
-				Service.Get<StaRTSLogger>().Error("TryShowEffect with Null troopEntity");
+				Service.Get<Logger>().Error("TryShowEffect with Null troopEntity");
 				return;
 			}
 			bool flag = !this.showFullEffect || (this.troopCardTexture != null && this.effectObj != null && this.effectObj.transform != null);
@@ -319,121 +318,53 @@ namespace StaRTS.Main.Views
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.TroopViewReady)
+			if (id != EventId.BuildingMovedOnBoard)
 			{
-				if (id != EventId.BuildingMovedOnBoard)
+				if (id != EventId.TroopViewReady)
 				{
-					if (id == EventId.TroopViewReady)
+					if (id != EventId.BuildingReplaced)
 					{
-						EntityViewParams entityViewParams = (EntityViewParams)cookie;
-						if (entityViewParams.Entity == this.troopEntity)
+						if (id == EventId.ShuttleAnimStateChanged)
 						{
-							Service.Get<EventManager>().UnregisterObserver(this, EventId.TroopViewReady);
-							this.TryShowEffect();
+							ShuttleAnim shuttleAnim = (ShuttleAnim)cookie;
+							if (shuttleAnim.State == ShuttleState.Idle && shuttleAnim.Starport == this.starportEntity)
+							{
+								this.shuttle = shuttleAnim;
+								Service.Get<EventManager>().UnregisterObserver(this, EventId.ShuttleAnimStateChanged);
+								this.TryShowEffect();
+							}
+						}
+					}
+					else
+					{
+						Entity entity = (Entity)cookie;
+						if (this.starportEntity.Get<StarportComponent>() == null)
+						{
+							StarportComponent starportComponent = entity.Get<StarportComponent>();
+							if (starportComponent != null)
+							{
+								this.starportEntity = entity;
+								this.shuttle = Service.Get<ShuttleController>().GetShuttleForStarport(this.starportEntity);
+							}
 						}
 					}
 				}
-				else if (this.starportEntity == cookie)
+				else
 				{
-					this.shuttle = null;
-					Service.Get<EventManager>().RegisterObserver(this, EventId.ShuttleAnimStateChanged, EventPriority.Default);
-				}
-			}
-			else if (id != EventId.BuildingReplaced)
-			{
-				if (id == EventId.ShuttleAnimStateChanged)
-				{
-					ShuttleAnim shuttleAnim = (ShuttleAnim)cookie;
-					if (shuttleAnim.State == ShuttleState.Idle && shuttleAnim.Starport == this.starportEntity)
+					EntityViewParams entityViewParams = (EntityViewParams)cookie;
+					if (entityViewParams.Entity == this.troopEntity)
 					{
-						this.shuttle = shuttleAnim;
-						Service.Get<EventManager>().UnregisterObserver(this, EventId.ShuttleAnimStateChanged);
+						Service.Get<EventManager>().UnregisterObserver(this, EventId.TroopViewReady);
 						this.TryShowEffect();
 					}
 				}
 			}
-			else
+			else if (this.starportEntity == cookie)
 			{
-				Entity entity = (Entity)cookie;
-				if (this.starportEntity.Get<StarportComponent>() == null)
-				{
-					StarportComponent starportComponent = entity.Get<StarportComponent>();
-					if (starportComponent != null)
-					{
-						this.starportEntity = entity;
-						this.shuttle = Service.Get<ShuttleController>().GetShuttleForStarport(this.starportEntity);
-					}
-				}
+				this.shuttle = null;
+				Service.Get<EventManager>().RegisterObserver(this, EventId.ShuttleAnimStateChanged, EventPriority.Default);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal TransportTroopEffect(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).Finish();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).OnEffectLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).OnEffectLoadFailed(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).OnFadeOutComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).OnTroopCardLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).OnTroopCardLoadFailed(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).OnTroopReachedPathEnd();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).ShuttleReadyForShowEffect());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TransportTroopEffect)GCHandledObjects.GCHandleToObject(instance)).TryShowEffect();
-			return -1L;
 		}
 	}
 }

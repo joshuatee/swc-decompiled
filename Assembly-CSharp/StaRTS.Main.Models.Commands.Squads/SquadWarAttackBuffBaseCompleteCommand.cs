@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public SquadWarAttackBuffBaseCompleteCommand(BattleEndRequest request) : base("guild.war.attackBase.complete", request, new DefaultResponse())
 		{
 		}
-
-		protected internal SquadWarAttackBuffBaseCompleteCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

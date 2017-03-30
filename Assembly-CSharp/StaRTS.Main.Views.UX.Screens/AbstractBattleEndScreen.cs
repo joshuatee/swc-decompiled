@@ -18,9 +18,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -282,23 +280,14 @@ namespace StaRTS.Main.Views.UX.Screens
 			bool flag = this.faction == FactionType.Empire;
 			bool flag2 = this.faction == FactionType.Rebel;
 			bool visible = !flag && !flag2;
-			string text = this.isNonAttackerReplayView ? (this.ReplayPrefix + "StarAnim{0}") : "StarAnim{0}";
-			string text2 = this.isNonAttackerReplayView ? (this.ReplayPrefix + "StarAnim{0}_Empire") : "StarAnim{0}_Empire";
-			string text3 = this.isNonAttackerReplayView ? (this.ReplayPrefix + "StarAnim{0}_Rebel") : "StarAnim{0}_Rebel";
+			string format = (!this.isNonAttackerReplayView) ? "StarAnim{0}" : (this.ReplayPrefix + "StarAnim{0}");
+			string format2 = (!this.isNonAttackerReplayView) ? "StarAnim{0}_Empire" : (this.ReplayPrefix + "StarAnim{0}_Empire");
+			string format3 = (!this.isNonAttackerReplayView) ? "StarAnim{0}_Rebel" : (this.ReplayPrefix + "StarAnim{0}_Rebel");
 			for (int i = 1; i <= 3; i++)
 			{
-				base.GetElement<UXElement>(string.Format(text, new object[]
-				{
-					i
-				})).Visible = visible;
-				base.GetElement<UXElement>(string.Format(text2, new object[]
-				{
-					i
-				})).Visible = flag;
-				base.GetElement<UXElement>(string.Format(text3, new object[]
-				{
-					i
-				})).Visible = flag2;
+				base.GetElement<UXElement>(string.Format(format, i)).Visible = visible;
+				base.GetElement<UXElement>(string.Format(format2, i)).Visible = flag;
+				base.GetElement<UXElement>(string.Format(format3, i)).Visible = flag2;
 			}
 		}
 
@@ -350,27 +339,26 @@ namespace StaRTS.Main.Views.UX.Screens
 			IDataController dataController = Service.Get<IDataController>();
 			foreach (KeyValuePair<string, int> current in troops)
 			{
-				if (current.get_Value() >= 1)
+				if (current.Value >= 1)
 				{
 					int num = 0;
-					if (squadTroops != null && squadTroops.ContainsKey(current.get_Key()))
+					if (squadTroops != null && squadTroops.ContainsKey(current.Key))
 					{
-						num = squadTroops[current.get_Key()];
-						squadTroops.Remove(current.get_Key());
+						num = squadTroops[current.Key];
+						squadTroops.Remove(current.Key);
 					}
-					IDeployableVO arg_82_0;
-					if (!isSpecialAttack)
+					IDeployableVO arg_92_0;
+					if (isSpecialAttack)
 					{
-						IDeployableVO deployableVO = dataController.Get<TroopTypeVO>(current.get_Key());
-						arg_82_0 = deployableVO;
+						IDeployableVO deployableVO = dataController.Get<SpecialAttackTypeVO>(current.Key);
+						arg_92_0 = deployableVO;
 					}
 					else
 					{
-						IDeployableVO deployableVO = dataController.Get<SpecialAttackTypeVO>(current.get_Key());
-						arg_82_0 = deployableVO;
+						arg_92_0 = dataController.Get<TroopTypeVO>(current.Key);
 					}
-					IDeployableVO deployableVO2 = arg_82_0;
-					UXElement item = this.CreateDeployableUXElement(this.troopGrid, current.get_Key(), deployableVO2.AssetName, current.get_Value() + num, deployableVO2, battle);
+					IDeployableVO deployableVO2 = arg_92_0;
+					UXElement item = this.CreateDeployableUXElement(this.troopGrid, current.Key, deployableVO2.AssetName, current.Value + num, deployableVO2, battle);
 					this.troopGrid.AddItem(item, deployableVO2.Order);
 				}
 			}
@@ -401,30 +389,27 @@ namespace StaRTS.Main.Views.UX.Screens
 			for (int i = 1; i <= stars; i++)
 			{
 				FactionType factionType = this.faction;
-				string text;
+				string format;
 				if (factionType != FactionType.Empire)
 				{
 					if (factionType != FactionType.Rebel)
 					{
-						text = (this.isNonAttackerReplayView ? (this.ReplayPrefix + "StarAnim{0}") : "StarAnim{0}");
+						format = ((!this.isNonAttackerReplayView) ? "StarAnim{0}" : (this.ReplayPrefix + "StarAnim{0}"));
 					}
 					else
 					{
-						text = (this.isNonAttackerReplayView ? (this.ReplayPrefix + "StarAnim{0}_Rebel") : "StarAnim{0}_Rebel");
+						format = ((!this.isNonAttackerReplayView) ? "StarAnim{0}_Rebel" : (this.ReplayPrefix + "StarAnim{0}_Rebel"));
 					}
 				}
 				else
 				{
-					text = (this.isNonAttackerReplayView ? (this.ReplayPrefix + "StarAnim{0}_Empire") : "StarAnim{0}_Empire");
+					format = ((!this.isNonAttackerReplayView) ? "StarAnim{0}_Empire" : (this.ReplayPrefix + "StarAnim{0}_Empire"));
 				}
-				UXElement element = base.GetElement<UXElement>(string.Format(text, new object[]
-				{
-					i
-				}));
+				UXElement element = base.GetElement<UXElement>(string.Format(format, i));
 				Animator component = element.Root.GetComponent<Animator>();
 				if (component == null)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Unable to play end star anim #{0}", new object[]
+					Service.Get<Logger>().WarnFormat("Unable to play end star anim #{0}", new object[]
 					{
 						i
 					});
@@ -444,12 +429,12 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void OnAnimateStarTimer(uint id, object cookie)
 		{
 			KeyValuePair<int, Animator> keyValuePair = (KeyValuePair<int, Animator>)cookie;
-			Animator value = keyValuePair.get_Value();
+			Animator value = keyValuePair.Value;
 			value.enabled = true;
 			value.SetTrigger("Show");
 			uint item = Service.Get<ViewTimerManager>().CreateViewTimer(0.35f, false, new TimerDelegate(this.OnStarAnimationComplete), null);
 			this.viewTimers.Add(item);
-			int key = keyValuePair.get_Key();
+			int key = keyValuePair.Key;
 			Service.Get<EventManager>().SendEvent(EventId.BattleEndVictoryStarDisplayed, key);
 		}
 
@@ -487,178 +472,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			button.Enabled = false;
 			this.primaryActionButton.Enabled = false;
 			Service.Get<EventManager>().SendEvent(EventId.BattleReplayRequested, null);
-		}
-
-		protected internal AbstractBattleEndScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).AnimateStars(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).CreateDeployableUXElement((UXGrid)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), (IDeployableVO)GCHandledObjects.GCHandleToObject(args[4]), (BattleEntry)GCHandledObjects.GCHandleToObject(args[5])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).AllowGarbageCollection);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).ReplayPrefix);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).StarsPlaceHolderName);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardAmountName);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardDefaultName);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardIconName);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardLevelName);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardName);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopCardQualityName);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TroopHeroDecalName);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).Init();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitStars();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).InitTroopGrid(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (BattleEntry)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnAssetLoadFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnPrimaryActionButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnReplayBattleButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).OnStarsLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).PopulateExpendedTroops((Dictionary<string, int>)GCHandledObjects.GCHandleToObject(*args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, (BattleEntry)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).SetupRootCollider();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).SetupView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((AbstractBattleEndScreen)GCHandledObjects.GCHandleToObject(instance)).TryInit();
-			return -1L;
 		}
 	}
 }

@@ -5,7 +5,6 @@ using StaRTS.Main.Views.UserInput;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -32,7 +31,7 @@ namespace StaRTS.Main.Story.Actions
 			BuildingTypeVO buildingTypeVO = Service.Get<IDataController>().Get<BuildingTypeVO>(this.buildingUid);
 			if (buildingTypeVO == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("buildingUiD {0} does not exist", new object[]
+				Service.Get<Logger>().WarnFormat("buildingUiD {0} does not exist", new object[]
 				{
 					this.buildingUid
 				});
@@ -45,22 +44,6 @@ namespace StaRTS.Main.Story.Actions
 				Service.Get<UXController>().MiscElementsManager.EnableConfirmGroupAcceptButton(true);
 			}
 			this.parent.ChildComplete(this);
-		}
-
-		protected internal StartPlaceBuildingStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StartPlaceBuildingStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((StartPlaceBuildingStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
 		}
 	}
 }

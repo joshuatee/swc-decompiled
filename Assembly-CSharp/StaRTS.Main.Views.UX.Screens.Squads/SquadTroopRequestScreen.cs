@@ -19,11 +19,10 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
-	public class SquadTroopRequestScreen : AbstractSquadRequestScreen, IViewClockTimeObserver, IEventObserver
+	public class SquadTroopRequestScreen : AbstractSquadRequestScreen, IEventObserver, IViewClockTimeObserver
 	{
 		private const string REQUEST_NOW_COST_LABEL = "FinishCostLabel";
 
@@ -77,15 +76,12 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private bool isWarRequest;
 
-		private bool canSendFreeRequest;
+		private bool canSendFreeRequest = true;
 
-		private bool canRequestTroops;
+		private bool canRequestTroops = true;
 
 		public SquadTroopRequestScreen(string defaultText, bool warMode)
 		{
-			this.canSendFreeRequest = true;
-			this.canRequestTroops = true;
-			base..ctor();
 			this.defaultRequestText = defaultText;
 			this.isWarRequest = warMode;
 		}
@@ -134,9 +130,12 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		public override EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id == EventId.CurrentPlayerMemberDataUpdated && this.isWarRequest)
+			if (id == EventId.CurrentPlayerMemberDataUpdated)
 			{
-				this.InitTroopGrid();
+				if (this.isWarRequest)
+				{
+					this.InitTroopGrid();
+				}
 			}
 			return base.OnEvent(id, cookie);
 		}
@@ -292,7 +291,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 					this.instructionsLabel.Text = this.lang.Get("REQUEST_WAR_TROOPS_FULL_MESSAGE", new object[0]);
 					base.GetElement<UXElement>("InputFieldRequestMessageWar").Visible = false;
 					this.instructionsPerksLabel.Text = this.instructionsLabel.Text;
-					return;
 				}
 			}
 			else
@@ -300,69 +298,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				this.costButton.Visible = !this.canSendFreeRequest;
 				this.button.Visible = this.canSendFreeRequest;
 			}
-		}
-
-		protected internal SquadTroopRequestScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).AddTroopItem((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).InitTroopGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).OnClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateRequestState();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadTroopRequestScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateScreenElementVisibility();
-			return -1L;
 		}
 	}
 }

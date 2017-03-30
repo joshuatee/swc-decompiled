@@ -5,9 +5,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player.World
 {
@@ -33,16 +31,16 @@ namespace StaRTS.Main.Models.Player.World
 		{
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			this.Key = (dictionary["key"] as string);
-			this.X = Convert.ToInt32(dictionary["x"], CultureInfo.InvariantCulture);
-			this.Z = Convert.ToInt32(dictionary["z"], CultureInfo.InvariantCulture);
+			this.X = Convert.ToInt32(dictionary["x"]);
+			this.Z = Convert.ToInt32(dictionary["z"]);
 			this.Uid = (dictionary["uid"] as string);
 			if (dictionary.ContainsKey("lastCollectTime"))
 			{
-				this.LastCollectTime = Convert.ToUInt32(dictionary["lastCollectTime"], CultureInfo.InvariantCulture);
+				this.LastCollectTime = Convert.ToUInt32(dictionary["lastCollectTime"]);
 			}
 			if (dictionary.ContainsKey("currentStorage"))
 			{
-				this.CurrentStorage = Convert.ToInt32(dictionary["currentStorage"], CultureInfo.InvariantCulture);
+				this.CurrentStorage = Convert.ToInt32(dictionary["currentStorage"]);
 			}
 			return this;
 		}
@@ -80,48 +78,14 @@ namespace StaRTS.Main.Models.Player.World
 
 		public void AddString(StringBuilder sb, string uidOverride, uint timeOverride, int manualX, int manualZ)
 		{
-			string text = (uidOverride != null) ? uidOverride : this.Uid;
-			uint num = (timeOverride != 0u) ? timeOverride : this.LastCollectTime;
-			sb.Append(this.Key).Append("|").Append(manualX).Append("|").Append(manualZ).Append("|").Append(text).Append("|").Append(num).Append("|").Append(this.CurrentStorage).Append("|").Append("\n");
+			string value = (uidOverride == null) ? this.Uid : uidOverride;
+			uint value2 = (timeOverride == 0u) ? this.LastCollectTime : timeOverride;
+			sb.Append(this.Key).Append("|").Append(manualX).Append("|").Append(manualZ).Append("|").Append(value).Append("|").Append(value2).Append("|").Append(this.CurrentStorage).Append("|").Append("\n");
 		}
 
 		public Building Clone()
 		{
 			return (Building)base.MemberwiseClone();
-		}
-
-		public Building()
-		{
-		}
-
-		protected internal Building(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Building)GCHandledObjects.GCHandleToObject(instance)).Clone());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Building.FromBuildingTypeVO((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Building)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((Building)GCHandledObjects.GCHandleToObject(instance)).SyncWithTransform((TransformComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Building)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

@@ -25,7 +25,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 
 		public GridDataCookie(SocialTabs socialTab, FactionToggle factionToggle, string selectedPlanet)
 		{
-			this = default(GridDataCookie);
 			this.SelectedFaction = factionToggle;
 			this.SelectedTab = socialTab;
 			this.SelectedPlanet = selectedPlanet;

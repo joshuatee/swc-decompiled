@@ -8,7 +8,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.SquadWar
 {
@@ -28,39 +27,35 @@ namespace StaRTS.Main.Controllers.SquadWar
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.BattleEndFullyProcessed)
+			switch (id)
 			{
-				if (id != EventId.BattleLoadStart)
-				{
-					if (id != EventId.BattleEndFullyProcessed)
-					{
-						return EatResponse.NotEaten;
-					}
-				}
-				else
+			case EventId.BattleReplaySetup:
+			{
+				BattleRecord battleRecord = (BattleRecord)cookie;
+				SquadWarBuffManager.AddWarBuffs(battleRecord.BattleType, battleRecord.AttackerWarBuffs, battleRecord.DefenderWarBuffs);
+				return EatResponse.NotEaten;
+			}
+			case EventId.BattleRecordRetrieved:
+				IL_1A:
+				if (id == EventId.BattleLoadStart)
 				{
 					if (this.controller.WarManager.CurrentSquadWar != null)
 					{
 						CurrentBattle currentBattle = Service.Get<BattleController>().GetCurrentBattle();
 						SquadWarBuffManager.AddWarBuffs(currentBattle.Type, currentBattle.AttackerWarBuffs, currentBattle.DefenderWarBuffs);
-						return EatResponse.NotEaten;
 					}
 					return EatResponse.NotEaten;
 				}
-			}
-			else
-			{
-				if (id == EventId.BattleReplaySetup)
-				{
-					BattleRecord battleRecord = (BattleRecord)cookie;
-					SquadWarBuffManager.AddWarBuffs(battleRecord.BattleType, battleRecord.AttackerWarBuffs, battleRecord.DefenderWarBuffs);
-					return EatResponse.NotEaten;
-				}
-				if (id != EventId.BattleLeftBeforeStarting)
+				if (id != EventId.BattleEndFullyProcessed)
 				{
 					return EatResponse.NotEaten;
 				}
+				goto IL_94;
+			case EventId.BattleLeftBeforeStarting:
+				goto IL_94;
 			}
+			goto IL_1A;
+			IL_94:
 			Service.Get<BuffController>().ClearWarBuffs();
 			return EatResponse.NotEaten;
 		}
@@ -96,21 +91,6 @@ namespace StaRTS.Main.Controllers.SquadWar
 					j++;
 				}
 			}
-		}
-
-		protected internal SquadWarBuffManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			SquadWarBuffManager.AddWarBuffs((BattleType)(*(int*)args), (List<string>)GCHandledObjects.GCHandleToObject(args[1]), (List<string>)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBuffManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

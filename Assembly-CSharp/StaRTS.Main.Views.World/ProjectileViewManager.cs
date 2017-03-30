@@ -13,19 +13,24 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
-	public class ProjectileViewManager : IViewFrameTimeObserver, IEventObserver
+	public class ProjectileViewManager : IEventObserver, IViewFrameTimeObserver
 	{
 		private const float DEFLECT_VARIANCE = 6f;
 
 		private const float DEFLECT_TROOP_SIZE_ADJUST = 1.33f;
+
+		public const float BULLET_HEIGHT = 2f;
+
+		public const int INITIAL_POOL_SIZE = 50;
+
+		public const int INITIAL_FINISHED_POOL_SIZE = 10;
+
+		private const float HIT_FX_POSITION_FUDGE = 0.2f;
 
 		private Stack<ProjectileView> projectilePool;
 
@@ -46,14 +51,6 @@ namespace StaRTS.Main.Views.World
 		private MutableIterator miter;
 
 		private float speed;
-
-		public const float BULLET_HEIGHT = 2f;
-
-		public const int INITIAL_POOL_SIZE = 50;
-
-		public const int INITIAL_FINISHED_POOL_SIZE = 10;
-
-		private const float HIT_FX_POSITION_FUDGE = 0.2f;
 
 		public ProjectileViewManager()
 		{
@@ -94,21 +91,17 @@ namespace StaRTS.Main.Views.World
 			ParticleSystem particleSystem = gameObject.GetComponent<ParticleSystem>();
 			if (gameObject2 == null && particleSystem == null)
 			{
-				using (IEnumerator enumerator = gameObject.transform.GetEnumerator())
+				foreach (Transform transform in gameObject.transform)
 				{
-					while (enumerator.MoveNext())
+					GameObject gameObject3 = transform.gameObject;
+					ParticleSystem component2 = gameObject3.GetComponent<ParticleSystem>();
+					if (component2 != null)
 					{
-						Transform transform = (Transform)enumerator.get_Current();
-						GameObject gameObject3 = transform.gameObject;
-						ParticleSystem component2 = gameObject3.GetComponent<ParticleSystem>();
-						if (component2 != null)
-						{
-							particleSystem = component2;
-						}
-						if (gameObject3.GetComponent<MeshRenderer>())
-						{
-							gameObject2 = gameObject3;
-						}
+						particleSystem = component2;
+					}
+					if (gameObject3.GetComponent<MeshRenderer>())
+					{
+						gameObject2 = gameObject3;
 					}
 				}
 			}
@@ -133,27 +126,28 @@ namespace StaRTS.Main.Views.World
 				if (emitterObj is GameObject)
 				{
 					GameObject gameObject = (GameObject)emitterObj;
-					if (!(gameObject != null))
+					if (gameObject != null)
 					{
-						Service.Get<StaRTSLogger>().Error("Emitter pool game object is being destroyed.");
-						return;
-					}
-					SmartEntity smartEntity;
-					if (this.emitterGameObjectToEntity.TryGetValue(gameObject, out smartEntity))
-					{
-						this.emitterGameObjectToEntity.Remove(gameObject);
-						if (!this.emitterGameObjectToEntity.ContainsValue(smartEntity))
+						SmartEntity smartEntity;
+						if (this.emitterGameObjectToEntity.TryGetValue(gameObject, out smartEntity))
 						{
-							this.associatedEmitterEntitySet.Remove(smartEntity);
+							this.emitterGameObjectToEntity.Remove(gameObject);
+							if (!this.emitterGameObjectToEntity.ContainsValue(smartEntity))
+							{
+								this.associatedEmitterEntitySet.Remove(smartEntity);
+							}
+							Service.Get<DerivedTransformationManager>().RemoveDerivedTransformation(gameObject);
 						}
-						Service.Get<DerivedTransformationManager>().RemoveDerivedTransformation(gameObject);
-						return;
+					}
+					else
+					{
+						Service.Get<Logger>().Error("Emitter pool game object is being destroyed.");
 					}
 				}
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("Null emitterObject is being returned.");
+				Service.Get<Logger>().Error("Null emitterObject is being returned.");
 			}
 		}
 
@@ -164,9 +158,9 @@ namespace StaRTS.Main.Views.World
 				List<GameObject> list = new List<GameObject>();
 				foreach (KeyValuePair<GameObject, SmartEntity> current in this.emitterGameObjectToEntity)
 				{
-					if (current.get_Value() == smartEntity)
+					if (current.Value == smartEntity)
 					{
-						GameObject key = current.get_Key();
+						GameObject key = current.Key;
 						if (key != null)
 						{
 							Service.Get<DerivedTransformationManager>().RemoveDerivedTransformation(key);
@@ -175,7 +169,7 @@ namespace StaRTS.Main.Views.World
 						}
 						else
 						{
-							Service.Get<StaRTSLogger>().Error("ProjectileViewManager: Emitter objects are being destroyed");
+							Service.Get<Logger>().Error("ProjectileViewManager: Emitter objects are being destroyed");
 						}
 					}
 				}
@@ -265,7 +259,7 @@ namespace StaRTS.Main.Views.World
 			AssetManager assetManager = Service.Get<AssetManager>();
 			foreach (KeyValuePair<string, AssetHandle> current in this.loadedAssetNames)
 			{
-				assetManager.Unload(current.get_Value());
+				assetManager.Unload(current.Value);
 			}
 			this.CleanupAssetsAndPools();
 		}
@@ -276,12 +270,12 @@ namespace StaRTS.Main.Views.World
 			this.loadedAssetNames.Clear();
 			foreach (KeyValuePair<string, MeshPool> current in this.meshes)
 			{
-				current.get_Value().Destroy();
+				current.Value.Destroy();
 			}
 			this.meshes.Clear();
 			foreach (KeyValuePair<string, EmitterPool> current2 in this.emitters)
 			{
-				current2.get_Value().Destroy();
+				current2.Value.Destroy();
 			}
 			this.emitters.Clear();
 			this.emitterGameObjectToEntity.Clear();
@@ -327,7 +321,7 @@ namespace StaRTS.Main.Views.World
 				this.LoadBulletAssets(bullet);
 				if (bullet.ProjectileType != null)
 				{
-					Service.Get<StaRTSLogger>().Warn("Loading assets on demand for projectile " + bullet.ProjectileType.Uid);
+					Service.Get<Logger>().Warn("Loading assets on demand for projectile " + bullet.ProjectileType.Uid);
 				}
 			}
 			bool isDeflection = bullet.IsDeflection;
@@ -352,7 +346,7 @@ namespace StaRTS.Main.Views.World
 			{
 				targetWorldLocation.y = vector.y;
 			}
-			ProjectileView projectileView = (this.projectilePool.Count > 0) ? this.projectilePool.Pop() : new ProjectileView();
+			ProjectileView projectileView = (this.projectilePool.Count <= 0) ? new ProjectileView() : this.projectilePool.Pop();
 			projectileView.Init(projectileType, bullet, isOnGround);
 			if (!isDeflection && !string.IsNullOrEmpty(projectileType.MuzzleFlashAssetName))
 			{
@@ -517,7 +511,6 @@ namespace StaRTS.Main.Views.World
 							}
 						}
 						multipleEmittersPool.StopEmissionAndReturnToPool(emitterRoot, num, fadeTime);
-						return;
 					}
 				}
 				else if (emitter is SingleEmitterPool)
@@ -544,7 +537,7 @@ namespace StaRTS.Main.Views.World
 					if (gameObjectViewComp.HitLocators.Count > 0)
 					{
 						Vector3 vector = startLocation - endLocation;
-						int num = (int)(Mathf.Atan2(vector.z, vector.x) * 57.2957764f);
+						int num = (int)(Mathf.Atan2(vector.z, vector.x) * 57.29578f);
 						int num2 = 4 - num / 45;
 						if (gameObjectViewComp.HitLocators != null && num2 < gameObjectViewComp.HitLocators.Count && gameObjectViewComp.HitLocators[num2] != null)
 						{
@@ -576,35 +569,30 @@ namespace StaRTS.Main.Views.World
 					Bullet bullet = projectileView.Bullet;
 					if (bullet.Owner == owner && bullet.Target == target)
 					{
-						if (bullet.AppliedBeamHitFXThisSegment)
+						if (!bullet.AppliedBeamHitFXThisSegment)
 						{
-							break;
-						}
-						bullet.AppliedBeamHitFXThisSegment = true;
-						GameObjectViewComponent gameObjectViewComp = target.GameObjectViewComp;
-						if (gameObjectViewComp != null)
-						{
-							GameObject centerOfMass = gameObjectViewComp.CenterOfMass;
-							Vector3 position;
-							if (centerOfMass == null)
+							bullet.AppliedBeamHitFXThisSegment = true;
+							GameObjectViewComponent gameObjectViewComp = target.GameObjectViewComp;
+							if (gameObjectViewComp != null)
 							{
-								position = gameObjectViewComp.MainTransform.position;
-								position.y = projectileView.TargetLocation.y;
+								GameObject centerOfMass = gameObjectViewComp.CenterOfMass;
+								Vector3 position;
+								if (centerOfMass == null)
+								{
+									position = gameObjectViewComp.MainTransform.position;
+									position.y = projectileView.TargetLocation.y;
+								}
+								else
+								{
+									position = centerOfMass.transform.position;
+								}
+								projectileView.SetTargetLocation(position);
+								this.ShowImpactFXForBulletOwner(projectileView, owner);
 							}
-							else
-							{
-								position = centerOfMass.transform.position;
-							}
-							projectileView.SetTargetLocation(position);
-							this.ShowImpactFXForBulletOwner(projectileView, owner);
-							return;
 						}
 						break;
 					}
-					else
-					{
-						i++;
-					}
+					i++;
 				}
 			}
 		}
@@ -614,7 +602,7 @@ namespace StaRTS.Main.Views.World
 			this.ShowImpactFXForView(view);
 			Bullet bullet = view.Bullet;
 			List<Buff> appliedBuffs = bullet.AppliedBuffs;
-			int num = (appliedBuffs != null) ? appliedBuffs.Count : 0;
+			int num = (appliedBuffs == null) ? 0 : appliedBuffs.Count;
 			FactionType ownerFaction = bullet.OwnerFaction;
 			for (int i = 0; i < num; i++)
 			{
@@ -690,7 +678,6 @@ namespace StaRTS.Main.Views.World
 						this.AssociateEntityWithEmitterObject(target, emitterRoot);
 					}
 					multipleEmittersPool.StopEmissionAndReturnToPool(emitterRoot, num, 0f);
-					return;
 				}
 			}
 			else if (emitter is SingleEmitterPool)
@@ -805,7 +792,7 @@ namespace StaRTS.Main.Views.World
 				bool flag = projectileView.Update(dt * this.speed, out distSquared);
 				BuffTypeVO buffTypeVO = this.ShouldDeflectProjectile(projectileView, distSquared);
 				bool flag2 = buffTypeVO != null && buffTypeVO.IsDeflector;
-				if (flag | flag2)
+				if (flag || flag2)
 				{
 					Bullet bullet = projectileView.Bullet;
 					if (flag2)
@@ -838,31 +825,31 @@ namespace StaRTS.Main.Views.World
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.EntityHitByBeam)
+			switch (id)
 			{
-				if (id != EventId.EntityKilled)
-				{
-					if (id != EventId.EntityHitByBeam)
-					{
-						return EatResponse.NotEaten;
-					}
-					Bullet bullet = (Bullet)cookie;
-					this.ShowImpactFXForBeam(bullet.Owner, bullet.Target);
-					return EatResponse.NotEaten;
-				}
-			}
-			else
+			case EventId.ShooterWarmingUp:
+				this.SpawnChargeEmitter((SmartEntity)cookie);
+				return EatResponse.NotEaten;
+			case EventId.ShooterClipUsed:
 			{
-				if (id == EventId.ShooterWarmingUp)
+				IL_1A:
+				if (id == EventId.EntityKilled)
 				{
-					this.SpawnChargeEmitter((SmartEntity)cookie);
+					goto IL_5E;
+				}
+				if (id != EventId.EntityHitByBeam)
+				{
 					return EatResponse.NotEaten;
 				}
-				if (id != EventId.ShooterStoppedAttacking)
-				{
-					return EatResponse.NotEaten;
-				}
+				Bullet bullet = (Bullet)cookie;
+				this.ShowImpactFXForBeam(bullet.Owner, bullet.Target);
+				return EatResponse.NotEaten;
 			}
+			case EventId.ShooterStoppedAttacking:
+				goto IL_5E;
+			}
+			goto IL_1A;
+			IL_5E:
 			this.RemoveEmittersForEntity((SmartEntity)cookie);
 			return EatResponse.NotEaten;
 		}
@@ -880,171 +867,6 @@ namespace StaRTS.Main.Views.World
 			this.emitters = null;
 			this.emitterGameObjectToEntity = null;
 			this.associatedEmitterEntitySet = null;
-		}
-
-		protected internal ProjectileViewManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).AssociateEntityWithEmitterObject((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).ChooseDeflectionTarget(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).CleanupAssetsAndPools();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).EmitterReturnedToPool(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).GetEmitter(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).GetTargetTransform((Bullet)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).LoadBulletAssets((Bullet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).LoadProjectileAssetsAndCreatePools((List<IAssetVO>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).OnProjectileLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).PlayParticle((ParticleSystem)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).PlayParticleAt((ParticleSystem)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).PlayParticleLookingAt((ParticleSystem)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)), *(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).RemoveEmittersForEntity((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).ReturnProjectileViewToPool((ProjectileView)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).SetSpeed(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).ShouldDeflectProjectile((ProjectileView)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).ShowImpactFXForBeam((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).ShowImpactFXForBulletOwner((ProjectileView)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).ShowImpactFXForView((ProjectileView)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).ShowImpactFXForView((ProjectileView)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).SpawnChargeEmitter((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).SpawnProjectile((Bullet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).SpawnProjectile((Bullet)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).StartDirectionalEmitter((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3)), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), *(float*)(args + 5));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((ProjectileViewManager)GCHandledObjects.GCHandleToObject(instance)).UnloadProjectileAssetsAndPools();
-			return -1L;
 		}
 	}
 }

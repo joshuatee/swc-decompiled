@@ -4,8 +4,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -13,66 +11,65 @@ namespace StaRTS.Main.Views.UX.Screens
 	{
 		private bool textOnRight;
 
-		private bool bUseCustomKoreanFont;
+		private static string yesString = string.Empty;
 
-		private static string yesString = "";
+		private static string noString = string.Empty;
 
-		private static string noString = "";
+		public bool useKoreanFont;
+
+		private YesNoScreen(string title, string message, bool textOnRight, bool alwaysOnTop) : base(false, title, message, null, false)
+		{
+			this.textOnRight = textOnRight;
+			base.IsAlwaysOnTop = alwaysOnTop;
+		}
 
 		public static void StaticReset()
 		{
-			YesNoScreen.yesString = "";
-			YesNoScreen.noString = "";
+			YesNoScreen.yesString = string.Empty;
+			YesNoScreen.noString = string.Empty;
 		}
 
-		public static void ShowModal(string title, string message, bool textOnRight, OnScreenModalResult onModalResult, object modalResultCookie, bool useCustomKoreanFont = false)
+		public static void ShowModal(string title, string message, bool textOnRight, OnScreenModalResult onModalResult, object modalResultCookie)
 		{
-			YesNoScreen.ShowModal(title, message, textOnRight, false, false, onModalResult, modalResultCookie, useCustomKoreanFont);
+			YesNoScreen.ShowModal(title, message, textOnRight, false, false, onModalResult, modalResultCookie);
 		}
 
-		public static void ShowModal(string title, string message, bool textOnRight, bool allowFUEBackButton, OnScreenModalResult onModalResult, object modalResultCookie, bool useCustomKoreanFont = false)
+		public static void ShowModal(string title, string message, bool textOnRight, bool allowFUEBackButton, OnScreenModalResult onModalResult, object modalResultCookie)
 		{
-			YesNoScreen.yesString = "";
-			YesNoScreen.noString = "";
-			YesNoScreen.CommonShowModal(title, message, textOnRight, false, allowFUEBackButton, false, onModalResult, modalResultCookie, useCustomKoreanFont);
+			YesNoScreen.yesString = string.Empty;
+			YesNoScreen.noString = string.Empty;
+			YesNoScreen.CommonShowModal(title, message, textOnRight, false, allowFUEBackButton, false, onModalResult, modalResultCookie);
 		}
 
-		public static void ShowModal(string title, string message, bool textOnRight, bool centerTitle, bool allowFUEBackButton, OnScreenModalResult onModalResult, object modalResultCookie, bool useCustomKoreanFont = false)
+		public static void ShowModal(string title, string message, bool textOnRight, bool centerTitle, bool allowFUEBackButton, OnScreenModalResult onModalResult, object modalResultCookie)
 		{
-			YesNoScreen.yesString = "";
-			YesNoScreen.noString = "";
-			YesNoScreen.CommonShowModal(title, message, textOnRight, centerTitle, allowFUEBackButton, false, onModalResult, modalResultCookie, useCustomKoreanFont);
+			YesNoScreen.yesString = string.Empty;
+			YesNoScreen.noString = string.Empty;
+			YesNoScreen.CommonShowModal(title, message, textOnRight, centerTitle, allowFUEBackButton, false, onModalResult, modalResultCookie);
 		}
 
-		public static void ShowModal(string title, string message, bool textOnRight, bool centerTitle, bool allowFUEBackButton, bool alwaysOnTop, OnScreenModalResult onModalResult, object modalResultCookie, bool useCustomKoreanFont = false)
+		public static void ShowModal(string title, string message, bool textOnRight, bool centerTitle, bool allowFUEBackButton, bool alwaysOnTop, OnScreenModalResult onModalResult, object modalResultCookie)
 		{
-			YesNoScreen.yesString = "";
-			YesNoScreen.noString = "";
-			YesNoScreen.CommonShowModal(title, message, textOnRight, centerTitle, allowFUEBackButton, alwaysOnTop, onModalResult, modalResultCookie, useCustomKoreanFont);
+			YesNoScreen.yesString = string.Empty;
+			YesNoScreen.noString = string.Empty;
+			YesNoScreen.CommonShowModal(title, message, textOnRight, centerTitle, allowFUEBackButton, alwaysOnTop, onModalResult, modalResultCookie);
 		}
 
-		public static void ShowModal(string title, string message, bool textOnRight, string confirmString, string gobackString, OnScreenModalResult onModalResult, object modalResultCookie, bool useCustomKoreanFont = false)
+		public static void ShowModal(string title, string message, bool textOnRight, string confirmString, string gobackString, OnScreenModalResult onModalResult, object modalResultCookie)
 		{
 			YesNoScreen.yesString = confirmString;
 			YesNoScreen.noString = gobackString;
-			YesNoScreen.CommonShowModal(title, message, textOnRight, false, false, false, onModalResult, modalResultCookie, useCustomKoreanFont);
+			YesNoScreen.CommonShowModal(title, message, textOnRight, false, false, false, onModalResult, modalResultCookie);
 		}
 
-		private static void CommonShowModal(string title, string message, bool textOnRight, bool centerTitle, bool allowFUEBackButton, bool alwaysOnTop, OnScreenModalResult onModalResult, object modalResultCookie, bool useCustomKoreanFont = false)
+		private static void CommonShowModal(string title, string message, bool textOnRight, bool centerTitle, bool allowFUEBackButton, bool alwaysOnTop, OnScreenModalResult onModalResult, object modalResultCookie)
 		{
-			YesNoScreen yesNoScreen = new YesNoScreen(title, message, textOnRight, alwaysOnTop, useCustomKoreanFont);
+			YesNoScreen yesNoScreen = new YesNoScreen(title, message, textOnRight, alwaysOnTop);
 			yesNoScreen.centerTitle = centerTitle;
 			yesNoScreen.OnModalResult = onModalResult;
 			yesNoScreen.ModalResultCookie = modalResultCookie;
 			yesNoScreen.AllowFUEBackButton = allowFUEBackButton;
 			Service.Get<ScreenController>().AddScreen(yesNoScreen);
-		}
-
-		private YesNoScreen(string title, string message, bool textOnRight, bool alwaysOnTop, bool useCustomKoreanFont = false) : base(false, title, message, null, false)
-		{
-			this.textOnRight = textOnRight;
-			base.IsAlwaysOnTop = alwaysOnTop;
-			this.bUseCustomKoreanFont = useCustomKoreanFont;
 		}
 
 		protected override void SetupControls()
@@ -104,7 +101,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.textOnRight)
 			{
 				this.rightLabel.Text = this.message;
-				if (this.bUseCustomKoreanFont)
+				if (this.useKoreanFont)
 				{
 					this.rightLabel.Font = Service.Get<Lang>().CustomKoreanFont;
 				}
@@ -112,7 +109,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			else
 			{
 				this.centerLabel.Text = this.message;
-				if (this.bUseCustomKoreanFont)
+				if (this.useKoreanFont)
 				{
 					this.centerLabel.Font = Service.Get<Lang>().CustomKoreanFont;
 				}
@@ -128,64 +125,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			button.Enabled = false;
 			this.Close(button.Tag);
-		}
-
-		protected internal YesNoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			YesNoScreen.CommonShowModal(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0, *(sbyte*)(args + 5) != 0, (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[6]), GCHandledObjects.GCHandleToObject(args[7]), *(sbyte*)(args + 8) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((YesNoScreen)GCHandledObjects.GCHandleToObject(instance)).OnYesOrNoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((YesNoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupControls();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			YesNoScreen.ShowModal(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0, (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[3]), GCHandledObjects.GCHandleToObject(args[4]), *(sbyte*)(args + 5) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			YesNoScreen.ShowModal(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[4]), GCHandledObjects.GCHandleToObject(args[5]), *(sbyte*)(args + 6) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			YesNoScreen.ShowModal(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0, (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[5]), GCHandledObjects.GCHandleToObject(args[6]), *(sbyte*)(args + 7) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			YesNoScreen.ShowModal(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[5]), GCHandledObjects.GCHandleToObject(args[6]), *(sbyte*)(args + 7) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			YesNoScreen.ShowModal(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, *(sbyte*)(args + 4) != 0, *(sbyte*)(args + 5) != 0, (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[6]), GCHandledObjects.GCHandleToObject(args[7]), *(sbyte*)(args + 8) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			YesNoScreen.StaticReset();
-			return -1L;
 		}
 	}
 }

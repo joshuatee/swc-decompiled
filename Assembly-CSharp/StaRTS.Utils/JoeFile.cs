@@ -2,9 +2,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.MetaData;
 using System;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -20,7 +18,7 @@ namespace StaRTS.Utils
 
 		private int rem;
 
-		private int ver;
+		private int ver = -1;
 
 		private string[] strings;
 
@@ -40,8 +38,6 @@ namespace StaRTS.Utils
 
 		public JoeFile(byte[] rawFileBytes)
 		{
-			this.ver = -1;
-			base..ctor();
 			this.bytes = rawFileBytes;
 			if (this.bytes != null)
 			{
@@ -52,11 +48,7 @@ namespace StaRTS.Utils
 
 		public Sheet GetSheet(int i)
 		{
-			if (this.sheets != null && i >= 0 && i < this.sheets.Length)
-			{
-				return this.sheets[i];
-			}
-			return null;
+			return (this.sheets != null && i >= 0 && i < this.sheets.Length) ? this.sheets[i] : null;
 		}
 
 		public Sheet[] GetAllSheets()
@@ -72,18 +64,13 @@ namespace StaRTS.Utils
 			this.ints = null;
 			this.floats = null;
 			this.arrays = null;
-			Service.Get<StaRTSLogger>().Error("JoeFile: " + error);
+			Service.Get<Logger>().Error("JoeFile: " + error);
 			return false;
 		}
 
 		private bool RangeError(string kind, int index, int count)
 		{
-			return this.FatalError(string.Format("invalid {0} index: {1}:{2}", new object[]
-			{
-				kind,
-				index,
-				count
-			}));
+			return this.FatalError(string.Format("invalid {0} index: {1}:{2}", kind, index, count));
 		}
 
 		private bool Parse()
@@ -138,16 +125,11 @@ namespace StaRTS.Utils
 			}
 			if (!this.ParseFinalByte())
 			{
-				return this.FatalError(string.Format("unable to parse final byte {0},{1},{2}", new object[]
-				{
-					this.rem,
-					this.pos,
-					num
-				}));
+				return this.FatalError(string.Format("unable to parse final byte {0},{1},{2}", this.rem, this.pos, num));
 			}
 			if (this.rem != 0 || this.pos != num)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("JoeFile: trailing bytes found {0},{1},{2}", new object[]
+				Service.Get<Logger>().WarnFormat("JoeFile: trailing bytes found {0},{1},{2}", new object[]
 				{
 					this.rem,
 					this.pos,
@@ -163,43 +145,25 @@ namespace StaRTS.Utils
 			{
 				return this.FatalError("not enough bytes for signature");
 			}
-			byte[] arg_37_0 = this.bytes;
-			int num = this.pos;
-			this.pos = num + 1;
-			if (arg_37_0[num] != 74)
+			if (this.bytes[this.pos++] != 74)
 			{
 				return this.FatalError("invalid first signature byte");
 			}
-			byte[] arg_5F_0 = this.bytes;
-			num = this.pos;
-			this.pos = num + 1;
-			if (arg_5F_0[num] != 79)
+			if (this.bytes[this.pos++] != 79)
 			{
 				return this.FatalError("invalid second signature byte");
 			}
-			byte[] arg_87_0 = this.bytes;
-			num = this.pos;
-			this.pos = num + 1;
-			return arg_87_0[num] == 69 || this.FatalError("invalid third signature byte");
+			return this.bytes[this.pos++] == 69 || this.FatalError("invalid third signature byte");
 		}
 
 		private bool ParseVersion()
 		{
-			int num = this.rem - 1;
-			this.rem = num;
-			if (num < 0)
+			if (--this.rem < 0)
 			{
 				return this.FatalError("not enough bytes for version");
 			}
-			byte[] arg_38_0 = this.bytes;
-			num = this.pos;
-			this.pos = num + 1;
-			this.ver = arg_38_0[num];
-			return this.ver <= 0 || this.FatalError(string.Format("unsupported version {0} > {1}", new object[]
-			{
-				this.ver,
-				0
-			}));
+			this.ver = (int)this.bytes[this.pos++];
+			return this.ver <= 0 || this.FatalError(string.Format("unsupported version {0} > {1}", this.ver, 0));
 		}
 
 		private bool ParseStringTable()
@@ -353,26 +317,21 @@ namespace StaRTS.Utils
 			Column[] array = new Column[num2];
 			for (int i = 0; i < num2; i++)
 			{
-				int num3 = this.rem - 1;
-				this.rem = num3;
-				if (num3 < 0)
+				if (--this.rem < 0)
 				{
 					return this.FatalError("not enough bytes for column type");
 				}
-				byte[] arg_73_0 = this.bytes;
-				num3 = this.pos;
-				this.pos = num3 + 1;
-				ColumnType colType = arg_73_0[num3];
+				ColumnType colType = (ColumnType)this.bytes[this.pos++];
 				if (!this.DecodeVariableLength(out num))
 				{
 					return this.FatalError("unable to decode column string index");
 				}
-				int num4 = (int)num;
-				if (num4 < 0 || num4 > this.stringCount)
+				int num3 = (int)num;
+				if (num3 < 0 || num3 > this.stringCount)
 				{
-					return this.RangeError("column string", num4, this.stringCount);
+					return this.RangeError("column string", num3, this.stringCount);
 				}
-				string colName = this.strings[num4];
+				string colName = this.strings[num3];
 				array[i] = new Column(colName, colType);
 			}
 			sheet.SetupColumns(array);
@@ -397,11 +356,7 @@ namespace StaRTS.Utils
 			int num4 = 0;
 			if (num3 == 0 || num2 % num3 != 0)
 			{
-				return this.FatalError(string.Format("cell count {0} is not a multiple of column count {1}", new object[]
-				{
-					num2,
-					num3
-				}));
+				return this.FatalError(string.Format("cell count {0} is not a multiple of column count {1}", num2, num3));
 			}
 			for (int i = 0; i < num2; i++)
 			{
@@ -434,19 +389,12 @@ namespace StaRTS.Utils
 						break;
 					}
 					case ColumnType.Boolean:
-					{
-						int num7 = this.rem - 1;
-						this.rem = num7;
-						if (num7 < 0)
+						if (--this.rem < 0)
 						{
 							return this.FatalError("not enough bytes for bool cell");
 						}
-						byte[] arg_16F_0 = this.bytes;
-						num7 = this.pos;
-						this.pos = num7 + 1;
-						num5 = arg_16F_0[num7];
+						num5 = (uint)this.bytes[this.pos++];
 						break;
-					}
 					case ColumnType.NonNegativeInt:
 						if (!this.DecodeVariableLength(out num5))
 						{
@@ -459,12 +407,12 @@ namespace StaRTS.Utils
 						{
 							return this.FatalError("unable to decode raw int index");
 						}
-						int num8 = (int)num5;
-						if (num8 <= 0 || num8 > this.intCount)
+						int num7 = (int)num5;
+						if (num7 <= 0 || num7 > this.intCount)
 						{
-							return this.RangeError("raw int", num8, this.intCount);
+							return this.RangeError("raw int", num7, this.intCount);
 						}
-						num5 = (uint)this.ints[num8 - 1];
+						num5 = (uint)this.ints[num7 - 1];
 						if ((num5 & 2147483648u) == 0u)
 						{
 							num5 += 1u;
@@ -477,10 +425,10 @@ namespace StaRTS.Utils
 						{
 							return this.FatalError("unable to decode float index");
 						}
-						int num9 = (int)num5;
-						if (num9 <= 0 || num9 > this.floatCount)
+						int num8 = (int)num5;
+						if (num8 <= 0 || num8 > this.floatCount)
 						{
-							return this.RangeError("float", num9, this.floatCount);
+							return this.RangeError("float", num8, this.floatCount);
 						}
 						break;
 					}
@@ -490,10 +438,10 @@ namespace StaRTS.Utils
 						{
 							return this.FatalError("unable to decode array index");
 						}
-						int num10 = (int)num5;
-						if (num10 <= 0 || num10 > this.arrayCount)
+						int num9 = (int)num5;
+						if (num9 <= 0 || num9 > this.arrayCount)
 						{
-							return this.RangeError("array", num10, this.arrayCount);
+							return this.RangeError("array", num9, this.arrayCount);
 						}
 						break;
 					}
@@ -513,16 +461,11 @@ namespace StaRTS.Utils
 
 		private bool ParseFinalByte()
 		{
-			int num = this.rem - 1;
-			this.rem = num;
-			if (num < 0)
+			if (--this.rem < 0)
 			{
 				return this.FatalError("not enough bytes for final byte");
 			}
-			byte[] arg_37_0 = this.bytes;
-			num = this.pos;
-			this.pos = num + 1;
-			byte b = arg_37_0[num];
+			byte b = this.bytes[this.pos++];
 			return b == 0 || this.FatalError("invalid final byte");
 		}
 
@@ -541,108 +484,17 @@ namespace StaRTS.Utils
 		private bool DecodeVariableLength(out uint val)
 		{
 			val = 0u;
-			uint num2;
-			while (true)
+			while (--this.rem >= 0)
 			{
-				int num = this.rem - 1;
-				this.rem = num;
-				if (num < 0)
+				uint num = (uint)this.bytes[this.pos++];
+				if ((num & 128u) == 0u)
 				{
-					break;
+					val = (val << 7 | num);
+					return true;
 				}
-				byte[] arg_3A_0 = this.bytes;
-				num = this.pos;
-				this.pos = num + 1;
-				num2 = arg_3A_0[num];
-				if ((num2 & 128u) == 0u)
-				{
-					goto Block_2;
-				}
-				val = (val << 7 | (num2 & 127u));
+				val = (val << 7 | (num & 127u));
 			}
 			return this.FatalError("not enough bytes for variable-length");
-			Block_2:
-			val = (val << 7 | num2);
-			return true;
-		}
-
-		protected internal JoeFile(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).FatalError(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).GetAllSheets());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).GetSheet(*(int*)args));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).Parse());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseFinalByte());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseFloatTable());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseIntegerTable());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseSheetCells((Sheet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseSheetColumns((Sheet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseSheetNames());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseSignature());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseStringArrayTable());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseStringTable());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).ParseVersion());
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((JoeFile)GCHandledObjects.GCHandleToObject(instance)).RangeError(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2)));
 		}
 	}
 }

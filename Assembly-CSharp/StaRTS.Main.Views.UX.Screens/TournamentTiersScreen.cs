@@ -16,27 +16,13 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
-	public class TournamentTiersScreen : ClosableScreen, IViewClockTimeObserver, IEventObserver
+	public class TournamentTiersScreen : ClosableScreen, IEventObserver, IViewClockTimeObserver
 	{
-		private TournamentVO currentTournamentVO;
-
-		private List<TournamentTierVO> tiers;
-
-		private TournamentRank currentPlayerRank;
-
-		private List<string> particleElements;
-
-		private UXGrid tierGrid;
-
-		private UXLabel countdownLabel;
-
 		private const string GRID = "LeagueGrid";
 
 		private const string GRID_TEMPLATE = "LeagueTemplate";
@@ -135,7 +121,21 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private const int REWARD_DISPLAY_COUNT_MAX = 5;
 
+		private TournamentVO currentTournamentVO;
+
+		private List<TournamentTierVO> tiers;
+
+		private TournamentRank currentPlayerRank;
+
+		private List<string> particleElements;
+
+		private UXGrid tierGrid;
+
+		private UXLabel countdownLabel;
+
 		private uint scrollCallbackTimerId;
+
+		private uint showParticlesTimerId;
 
 		protected override bool WantTransitions
 		{
@@ -156,7 +156,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.tiers.Sort(new Comparison<TournamentTierVO>(this.CompareTiers));
 			this.particleElements = new List<string>();
 			this.currentTournamentVO = tournamentVO;
-			this.currentPlayerRank = ((tournament != null) ? tournament.CurrentRank : null);
+			this.currentPlayerRank = ((tournament == null) ? null : tournament.CurrentRank);
 			EventManager eventManager = Service.Get<EventManager>();
 			eventManager.RegisterObserver(this, EventId.ScreenLoaded, EventPriority.Default);
 			eventManager.RegisterObserver(this, EventId.ScreenClosing, EventPriority.Default);
@@ -196,7 +196,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			this.tierGrid.RepositionItemsFrameDelayed(new UXDragDelegate(this.ScrollCallback));
 			Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
-			Service.Get<ViewTimerManager>().CreateViewTimer(1f, false, new TimerDelegate(this.OnParticleShowDelay), null);
+			this.showParticlesTimerId = Service.Get<ViewTimerManager>().CreateViewTimer(1f, false, new TimerDelegate(this.OnParticleShowDelay), null);
 		}
 
 		public void ScrollCallback(AbstractUXList list)
@@ -234,7 +234,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			if (!tierRewardMap.ContainsKey(tierVO.Uid))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("There is no reward found for tier {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("There is no reward found for tier {0}", new object[]
 				{
 					tierVO.Uid
 				});
@@ -246,7 +246,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			subElement.Visible = isCurrent;
 			if (isCurrent && this.currentPlayerRank != null)
 			{
-				string id = (TimedEventUtils.GetState(this.currentTournamentVO) == TimedEventState.Live) ? "CONFLICT_CURRENT_PERCENTILE" : "CONFLICT_FINAL_PERCENTILE";
+				bool flag = TimedEventUtils.GetState(this.currentTournamentVO) == TimedEventState.Live;
+				string id = (!flag) ? "CONFLICT_FINAL_PERCENTILE" : "CONFLICT_CURRENT_PERCENTILE";
 				UXLabel subElement2 = this.tierGrid.GetSubElement<UXLabel>(uid, "LabelCurrentLeague");
 				subElement2.Text = this.lang.Get(id, new object[]
 				{
@@ -271,10 +272,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (tierVO.Division != null)
 			{
 				string text = this.lang.Get(tierVO.Division, new object[0]);
-				if (!string.IsNullOrEmpty(text) && text.Trim().get_Length() != 0)
+				if (!string.IsNullOrEmpty(text) && text.Trim().Length != 0)
 				{
-					UXLabel expr_1A0 = subElement4;
-					expr_1A0.Text = expr_1A0.Text + " - " + text;
+					UXLabel expr_1BF = subElement4;
+					expr_1BF.Text = expr_1BF.Text + " - " + text;
 				}
 			}
 			UXSprite subElement5 = this.tierGrid.GetSubElement<UXSprite>(uid, "SpriteLeagueIcon");
@@ -292,7 +293,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				IDataController dataController = Service.Get<IDataController>();
 				List<CrateFlyoutItemVO> list = new List<CrateFlyoutItemVO>();
 				CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-				string[] array = (currentPlayer.Faction == FactionType.Empire) ? optional.FlyoutEmpireItems : optional.FlyoutRebelItems;
+				string[] array = (currentPlayer.Faction != FactionType.Empire) ? optional.FlyoutRebelItems : optional.FlyoutEmpireItems;
 				if (array != null)
 				{
 					int i = 0;
@@ -303,26 +304,28 @@ namespace StaRTS.Main.Views.UX.Screens
 						CrateFlyoutItemVO optional2 = dataController.GetOptional<CrateFlyoutItemVO>(text3);
 						if (optional2 == null)
 						{
-							Service.Get<StaRTSLogger>().ErrorFormat("CrateInfoModalScreen: FlyoutItemVO Uid {0} not found", new object[]
+							Service.Get<Logger>().ErrorFormat("CrateInfoModalScreen: FlyoutItemVO Uid {0} not found", new object[]
 							{
 								text3
 							});
 						}
-						else
+						else if (UXUtils.ShouldDisplayCrateFlyoutItem(optional2, CrateFlyoutDisplayType.TournamentTier))
 						{
-							bool flag = UXUtils.ShouldDisplayCrateFlyoutItem(optional2, CrateFlyoutDisplayType.TournamentTier);
-							if (flag)
+							PlanetVO optional3 = dataController.GetOptional<PlanetVO>(this.currentTournamentVO.PlanetId);
+							int currentHqLevel = currentPlayer.Map.FindHighestHqLevel();
+							if (UXUtils.IsValidRewardItem(optional2, optional3, currentHqLevel))
 							{
-								PlanetVO optional3 = dataController.GetOptional<PlanetVO>(this.currentTournamentVO.PlanetId);
-								int currentHqLevel = currentPlayer.Map.FindHighestHqLevel();
-								bool flag2 = UXUtils.IsValidRewardItem(optional2, optional3, currentHqLevel);
-								if (flag2 && (!optional2.ReqArmory || ArmoryUtils.PlayerHasArmory()) && list.Count <= 5)
+								bool flag2 = optional2.ReqArmory && !ArmoryUtils.PlayerHasArmory();
+								if (!flag2)
 								{
-									list.Add(optional2);
-									string uid2 = optional2.Uid;
-									UXElement uXElement = subElement6.CloneTemplateItem(uid2);
-									this.SetupCrateReward(uid2, tournamentRewardsVO, subElement6, uXElement, text2, optional2);
-									subElement6.AddItem(uXElement, i);
+									if (list.Count <= 5)
+									{
+										list.Add(optional2);
+										string uid2 = optional2.Uid;
+										UXElement uXElement = subElement6.CloneTemplateItem(uid2);
+										this.SetupCrateReward(uid2, tournamentRewardsVO, subElement6, uXElement, text2, optional2);
+										subElement6.AddItem(uXElement, i);
+									}
 								}
 							}
 						}
@@ -331,7 +334,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("There is no crate data for {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("There is no crate data for {0}", new object[]
 					{
 						tournamentRewardsVO.CrateRewardIds[0]
 					});
@@ -377,7 +380,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			CrateSupplyVO optional = dataController.GetOptional<CrateSupplyVO>(crateFlyoutItemVO.CrateSupplyUid);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find crate supply {0} for faction {1}", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find crate supply {0} for faction {1}", new object[]
 				{
 					crateFlyoutItemVO.CrateSupplyUid,
 					currentPlayer.Faction
@@ -404,7 +407,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Could not generate geometry for crate supply {0}", new object[]
+					Service.Get<Logger>().ErrorFormat("Could not generate geometry for crate supply {0}", new object[]
 					{
 						optional.Uid
 					});
@@ -469,18 +472,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				num4 = Service.Get<DeployableShardUnlockController>().GetUpgradeQualityForDeployableUID(optional.RewardUid);
 			}
-			if (num4 > 0 & flag)
+			if (num4 > 0 && flag)
 			{
 				subElement.Visible = true;
-				subElement.SpriteName = string.Format("icoDataFragQ{0}", new object[]
-				{
-					num4
-				});
-				string text2 = string.Format("SpriteEquipmentImageBkgGridQ{0}", new object[]
-				{
-					num4
-				});
-				rewardGrid.GetSubElement<UXElement>(itemUid, text2 + rewardSuffix).Visible = visible;
+				subElement.SpriteName = string.Format("icoDataFragQ{0}", num4);
+				string str = string.Format("SpriteEquipmentImageBkgGridQ{0}", num4);
+				rewardGrid.GetSubElement<UXElement>(itemUid, str + rewardSuffix).Visible = visible;
 				UXUtils.SetCardQuality(this, rewardGrid, itemUid, num4, "EquipmentItemCardQ{0}" + rewardSuffix);
 			}
 		}
@@ -528,6 +525,10 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void HideAllParticleElements()
 		{
+			if (this.particleElements == null)
+			{
+				return;
+			}
 			int i = 0;
 			int count = this.particleElements.Count;
 			while (i < count)
@@ -540,6 +541,10 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void ShowAllParticleElements()
 		{
+			if (this.particleElements == null)
+			{
+				return;
+			}
 			int i = 0;
 			int count = this.particleElements.Count;
 			while (i < count)
@@ -555,9 +560,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			int num = 0;
 			string text = null;
 			TimedEventState state = TimedEventUtils.GetState(this.currentTournamentVO);
-			if (state != TimedEventState.Upcoming)
+			TimedEventState timedEventState = state;
+			if (timedEventState != TimedEventState.Upcoming)
 			{
-				if (state == TimedEventState.Live)
+				if (timedEventState == TimedEventState.Live)
 				{
 					text = "CAMPAIGN_ENDS_IN";
 					num = TimedEventUtils.GetSecondsRemaining(this.currentTournamentVO);
@@ -574,9 +580,8 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					LangUtils.FormatTime((long)num)
 				});
-				return;
 			}
-			if (this.countdownLabel.Visible)
+			else if (this.countdownLabel.Visible)
 			{
 				this.countdownLabel.Visible = false;
 			}
@@ -587,6 +592,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.scrollCallbackTimerId != 0u)
 			{
 				Service.Get<ViewTimerManager>().KillViewTimer(this.scrollCallbackTimerId);
+			}
+			if (this.showParticlesTimerId != 0u)
+			{
+				Service.Get<ViewTimerManager>().KillViewTimer(this.showParticlesTimerId);
 			}
 			EventManager eventManager = Service.Get<EventManager>();
 			eventManager.UnregisterObserver(this, EventId.ScreenLoaded);
@@ -647,121 +656,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 			}
 			return base.OnEvent(id, cookie);
-		}
-
-		protected internal TournamentTiersScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).AddTier((TournamentTierVO)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(int*)(args + 2), (Dictionary<string, TournamentRewardsVO>)GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).CompareTiers((TournamentTierVO)GCHandledObjects.GCHandleToObject(*args), (TournamentTierVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).HideAllParticleElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).HideHeaderFooter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).HideParentPlayScreenCloseButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).OnCrateClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).OnGuaranteedRewardClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).ScrollCallback((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).SetupCrateReward(Marshal.PtrToStringUni(*(IntPtr*)args), (TournamentRewardsVO)GCHandledObjects.GCHandleToObject(args[1]), (UXGrid)GCHandledObjects.GCHandleToObject(args[2]), (UXElement)GCHandledObjects.GCHandleToObject(args[3]), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), (CrateFlyoutItemVO)GCHandledObjects.GCHandleToObject(args[5]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).ShowAllParticleElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).ShowHeaderFooter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TournamentTiersScreen)GCHandledObjects.GCHandleToObject(instance)).Update();
-			return -1L;
 		}
 	}
 }

@@ -1,7 +1,6 @@
 using StaRTS.Main.Models;
 using StaRTS.Main.Views.UX.Elements;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -84,7 +83,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.useFaction = forFactionChoice;
 			if (this.useFaction)
 			{
-				this.faction = (FactionType)modalResultCookie;
+				this.faction = (FactionType)((int)modalResultCookie);
 			}
 			base.AllowFUEBackButton = true;
 			base.OnModalResult = onModalResult;
@@ -96,13 +95,13 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.InitButtons();
 			base.GetElement<UXElement>("FactionChoice").Visible = this.useFaction;
 			base.GetElement<UXElement>("Generic").Visible = !this.useFaction;
-			this.image = base.GetElement<UXTexture>(this.useFaction ? "TextureCharacterFaction" : "TextureCharacter");
-			this.title = base.GetElement<UXLabel>(this.useFaction ? "LabelTitleFaction" : "LabelTitle");
-			this.desc = base.GetElement<UXLabel>(this.useFaction ? "TextFaction" : "TextGeneric");
-			this.buttonYes = base.GetElement<UXButton>(this.useFaction ? "BtnPrimary_2optionFaction" : "BtnPrimary_2option");
-			this.buttonNo = base.GetElement<UXButton>(this.useFaction ? "BtnSecondaryFaction" : "BtnSecondary");
-			this.buttonYesLabel = base.GetElement<UXLabel>(this.useFaction ? "LabelBtnPrimary_2optionFaction" : "LabelBtnPrimary_2option");
-			this.buttonNoLabel = base.GetElement<UXLabel>(this.useFaction ? "LabelBtnSecondaryFaction" : "LabelBtnSecondary");
+			this.image = base.GetElement<UXTexture>((!this.useFaction) ? "TextureCharacter" : "TextureCharacterFaction");
+			this.title = base.GetElement<UXLabel>((!this.useFaction) ? "LabelTitle" : "LabelTitleFaction");
+			this.desc = base.GetElement<UXLabel>((!this.useFaction) ? "TextGeneric" : "TextFaction");
+			this.buttonYes = base.GetElement<UXButton>((!this.useFaction) ? "BtnPrimary_2option" : "BtnPrimary_2optionFaction");
+			this.buttonNo = base.GetElement<UXButton>((!this.useFaction) ? "BtnSecondary" : "BtnSecondaryFaction");
+			this.buttonYesLabel = base.GetElement<UXLabel>((!this.useFaction) ? "LabelBtnPrimary_2option" : "LabelBtnPrimary_2optionFaction");
+			this.buttonNoLabel = base.GetElement<UXLabel>((!this.useFaction) ? "LabelBtnSecondary" : "LabelBtnSecondaryFaction");
 			this.buttonYes.OnClicked = new UXButtonClickedDelegate(this.OnButton);
 			this.buttonNo.OnClicked = new UXButtonClickedDelegate(this.OnButton);
 			base.GetElement<UXButton>("BtnCloseFaction").OnClicked = new UXButtonClickedDelegate(this.OnButton);
@@ -125,9 +124,8 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.desc.Text = this.lang.Get(this.descriptionText, new object[0]);
 				this.buttonYesLabel.Text = this.lang.Get("notif_auth_alert_yes", new object[0]);
 				this.buttonNoLabel.Text = this.lang.Get("notif_auth_alert_no", new object[0]);
-				return;
 			}
-			if (this.faction == FactionType.Empire)
+			else if (this.faction == FactionType.Empire)
 			{
 				this.image.LoadTexture("CharacterPopUp_Vader");
 				this.title.Text = this.lang.Get("FACTION_CONFIRMATION_TITLE", new object[0]);
@@ -137,9 +135,8 @@ namespace StaRTS.Main.Views.UX.Screens
 				});
 				this.buttonYesLabel.Text = this.lang.Get("FACTION_CONFIRMATION_JOIN_EMPIRE", new object[0]);
 				this.buttonNoLabel.Text = this.lang.Get("ACCOUNT_CONFLICT_CONFIRM_CANCEL", new object[0]);
-				return;
 			}
-			if (this.faction == FactionType.Rebel)
+			else if (this.faction == FactionType.Rebel)
 			{
 				this.image.LoadTexture("CharacterPopUp_Leia");
 				this.title.Text = this.lang.Get("FACTION_CONFIRMATION_TITLE", new object[0]);
@@ -157,25 +154,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (button == this.buttonYes)
 			{
 				this.Close(true);
-				return;
 			}
-			this.Close(null);
-		}
-
-		protected internal TwoButtonFueScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TwoButtonFueScreen)GCHandledObjects.GCHandleToObject(instance)).OnButton((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TwoButtonFueScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
+			else
+			{
+				this.Close(null);
+			}
 		}
 	}
 }

@@ -13,7 +13,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Main.Views.UX.Tags;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -163,15 +162,17 @@ namespace StaRTS.Main.Views.UX.Screens
 					LangUtils.GetBuildingDisplayName(this.buildingInfo),
 					this.buildingInfo.Lvl
 				});
-				return;
 			}
-			element.Text = this.lang.Get("BUILDING_UPGRADE", new object[]
+			else
 			{
-				LangUtils.GetBuildingDisplayName(this.nextBuildingInfo),
-				this.nextBuildingInfo.Lvl
-			});
-			UXLabel element3 = base.GetElement<UXLabel>("LabelUpgradeTime");
-			element3.Text = GameUtils.GetTimeLabelFromSeconds(this.nextBuildingInfo.UpgradeTime);
+				element.Text = this.lang.Get("BUILDING_UPGRADE", new object[]
+				{
+					LangUtils.GetBuildingDisplayName(this.nextBuildingInfo),
+					this.nextBuildingInfo.Lvl
+				});
+				UXLabel element3 = base.GetElement<UXLabel>("LabelUpgradeTime");
+				element3.Text = GameUtils.GetTimeLabelFromSeconds(this.nextBuildingInfo.UpgradeTime);
+			}
 		}
 
 		private void SetupProjectorWithUpdatedConfig(IGeometryVO geometryVO)
@@ -187,17 +188,17 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.swapLabel.Visible = showSwapPage;
 			this.swapTypeGroup.Visible = showSwapPage;
 			this.infoTurretGroup.Visible = !showSwapPage;
-			IGeometryVO arg_3A_0;
-			if (!showSwapPage)
+			IGeometryVO arg_40_0;
+			if (showSwapPage)
 			{
-				arg_3A_0 = this.GetImageGeometryConfig();
+				IGeometryVO buildingInfo = this.buildingInfo;
+				arg_40_0 = buildingInfo;
 			}
 			else
 			{
-				IGeometryVO buildingInfo = this.buildingInfo;
-				arg_3A_0 = buildingInfo;
+				arg_40_0 = this.GetImageGeometryConfig();
 			}
-			IGeometryVO geometryVO = arg_3A_0;
+			IGeometryVO geometryVO = arg_40_0;
 			this.SetupProjectorWithUpdatedConfig(geometryVO);
 			if (showSwapPage)
 			{
@@ -205,11 +206,13 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.SetupGrid();
 				this.UpdateTitleText(true);
 				this.UpdateHQUpgradeDesc(false);
-				return;
 			}
-			this.ShowSwapAndUpgradeButtons();
-			this.UpdateTitleText(false);
-			this.UpdateHQUpgradeDesc(true);
+			else
+			{
+				this.ShowSwapAndUpgradeButtons();
+				this.UpdateTitleText(false);
+				this.UpdateHQUpgradeDesc(true);
+			}
 		}
 
 		private void UpdateHQUpgradeDesc(bool showText)
@@ -217,9 +220,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (!showText || !this.useUpgradeGroup || this.reqMet || this.reqBuildingInfo == null)
 			{
 				this.labelHQUpgradeDesc.Visible = false;
-				return;
 			}
-			this.labelHQUpgradeDesc.Visible = true;
+			else
+			{
+				this.labelHQUpgradeDesc.Visible = true;
+			}
 		}
 
 		private void ShowSwapAndUpgradeButtons()
@@ -236,15 +241,17 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.upgradeButton.OnClicked = new UXButtonClickedDelegate(this.OnUpgradeButtonClicked);
 				this.swapCancelButton.Visible = false;
 				this.buttonInstantBuy.Visible = GameConstants.ENABLE_INSTANT_BUY;
-				return;
 			}
-			this.buttonPrimaryAction.Visible = true;
-			this.buttonPrimaryAction.OnClicked = new UXButtonClickedDelegate(this.OnUpgradeButtonClicked);
-			this.buttonInstantBuy.Visible = GameConstants.ENABLE_INSTANT_BUY;
-			this.upgradeButton.Visible = false;
-			this.buttonSwap.Visible = false;
-			this.swapConfirmButton.Visible = false;
-			this.swapCancelButton.Visible = false;
+			else
+			{
+				this.buttonPrimaryAction.Visible = true;
+				this.buttonPrimaryAction.OnClicked = new UXButtonClickedDelegate(this.OnUpgradeButtonClicked);
+				this.buttonInstantBuy.Visible = GameConstants.ENABLE_INSTANT_BUY;
+				this.upgradeButton.Visible = false;
+				this.buttonSwap.Visible = false;
+				this.swapConfirmButton.Visible = false;
+				this.swapCancelButton.Visible = false;
+			}
 		}
 
 		private void ShowSwapConfirmAndCancelButtons()
@@ -310,7 +317,7 @@ namespace StaRTS.Main.Views.UX.Screens
 							UXLabel subElement6 = this.itemGrid.GetSubElement<UXLabel>(uid, "LabelBuildTime");
 							subElement6.Text = GameUtils.GetTimeLabelFromSeconds(byLevel.SwapTime);
 							UXLabel subElement7 = this.itemGrid.GetSubElement<UXLabel>(uid, "LabelSwapItemCount");
-							subElement7.Text = "";
+							subElement7.Text = string.Empty;
 						}
 						else if (buildingTypeVO != null)
 						{
@@ -361,10 +368,10 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.selectedTurret = (checkbox.Tag as StoreItemTag);
 			BuildingTypeVO buildingInfo = this.selectedTurret.BuildingInfo;
 			bool flag = buildingInfo.Uid != this.buildingInfo.Uid;
-			this.swapLabel.Text = (flag ? this.lang.Get("CHANGE_TURRET_TO", new object[]
+			this.swapLabel.Text = ((!flag) ? this.lang.Get("CHANGE_TURRET", new object[0]) : this.lang.Get("CHANGE_TURRET_TO", new object[]
 			{
 				LangUtils.GetBuildingDisplayName(buildingInfo)
-			}) : this.lang.Get("CHANGE_TURRET", new object[0]));
+			}));
 			this.swapConfirmButton.Visible = flag;
 		}
 
@@ -422,144 +429,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.showSwapPageOnly)
 			{
 				this.Close(null);
-				return;
 			}
-			this.UpdatePage(false);
-		}
-
-		protected internal TurretUpgradeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).GetImageGeometryConfig());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitGroups();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapCancelButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapConfirmButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapInfoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapInfoLabelButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapItemCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapPayMeForDroidResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapStartContractSuccess();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).SetupGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).SetupProjectorWithUpdatedConfig((IGeometryVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).ShowSwapAndUpgradeButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).ShowSwapConfirmAndCancelButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateHQUpgradeDesc(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdatePage(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((TurretUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateTitleText(*(sbyte*)args != 0);
-			return -1L;
+			else
+			{
+				this.UpdatePage(false);
+			}
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.TargetedBundleOffers
 		public GetTargetedOffersCommand(PlayerIdRequest request) : base("player.store.offers.get", request, new GetTargetedOffersResponse())
 		{
 		}
-
-		protected internal GetTargetedOffersCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

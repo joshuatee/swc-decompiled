@@ -8,9 +8,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -94,11 +92,8 @@ namespace StaRTS.Main.Utils
 			if (equipment.PlanetIDs == null)
 			{
 				StringBuilder stringBuilder = new StringBuilder("CMS ERROR: ");
-				stringBuilder.AppendFormat("{0} has no valid planets", new object[]
-				{
-					equipment.Uid
-				});
-				Service.Get<StaRTSLogger>().Error(stringBuilder.ToString());
+				stringBuilder.AppendFormat("{0} has no valid planets", equipment.Uid);
+				Service.Get<Logger>().Error(stringBuilder.ToString());
 				return false;
 			}
 			int i = 0;
@@ -135,7 +130,7 @@ namespace StaRTS.Main.Utils
 		{
 			string equipmentID = equipment.EquipmentID;
 			Dictionary<string, int> shards = currentPlayer.Shards;
-			int num = shards.ContainsKey(equipmentID) ? shards[equipmentID] : 0;
+			int num = (!shards.ContainsKey(equipmentID)) ? 0 : shards[equipmentID];
 			return num >= equipment.UpgradeShards;
 		}
 
@@ -153,7 +148,7 @@ namespace StaRTS.Main.Utils
 		{
 			int level = player.UnlockedLevels.Equipment.GetLevel(equipmentID);
 			EquipmentVO maxLevel = catalog.GetMaxLevel(equipmentID);
-			int num = (maxLevel != null) ? maxLevel.Lvl : 0;
+			int num = (maxLevel == null) ? 0 : maxLevel.Lvl;
 			if (level >= num)
 			{
 				return true;
@@ -199,96 +194,6 @@ namespace StaRTS.Main.Utils
 		{
 			EquipmentVO maxLevel = equipmentUpgradeCatalog.GetMaxLevel(equipmentVO.EquipmentID);
 			return maxLevel.Lvl == equipmentVO.Lvl;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.CanAffordEquipment((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.GetCurrentActiveEquipmentCapacity((ActiveArmory)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.GetCurrentEquipmentDataByID(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.GetEquipmentDataByID(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.GetShardsRequiredForNextUpgrade((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentUpgradeCatalog)GCHandledObjects.GCHandleToObject(args[1]), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.GetValidEquipment((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (IDataController)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.HasEnoughCapacityToActivateEquipment((ActiveArmory)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.HasReachedMaxEquipmentShards((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentUpgradeCatalog)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.IsAnyEquipmentActive((ActiveArmory)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.IsArmoryEmpty((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.IsArmoryFull((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.IsAtMaxLevel((EquipmentUpgradeCatalog)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.IsBuildingRequirementMet((EquipmentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.IsEquipmentActive((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.IsEquipmentOnValidPlanet((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.IsEquipmentOwned((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (EquipmentVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.IsEquipmentValidForPlanet((EquipmentVO)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ArmoryUtils.PlayerHasArmory());
 		}
 	}
 }

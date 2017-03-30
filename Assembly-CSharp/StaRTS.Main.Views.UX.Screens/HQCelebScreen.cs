@@ -20,7 +20,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -70,7 +69,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private bool fadingOutBuilding;
 
-		private List<Material> outLineMatList;
+		private List<Material> outLineMatList = new List<Material>();
 
 		protected BuildingLookupController buildingLookUpController;
 
@@ -80,10 +79,8 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private UXGrid itemGrid;
 
-		public HQCelebScreen()
+		public HQCelebScreen() : base("gui_building_complete")
 		{
-			this.outLineMatList = new List<Material>();
-			base..ctor("gui_building_complete");
 			Service.Get<GalaxyViewController>().GoToHome();
 			this.buildingLookUpController = Service.Get<BuildingLookupController>();
 			Entity currentHQ = this.buildingLookUpController.GetCurrentHQ();
@@ -246,8 +243,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			int num = 0;
 			foreach (KeyValuePair<BuildingTypeVO, int> current in buildingsUnlockedBy)
 			{
-				BuildingTypeVO key = current.get_Key();
-				int value = current.get_Value();
+				BuildingTypeVO key = current.Key;
+				int value = current.Value;
 				if (key.Type == BuildingType.Turret && key.BuildingRequirement != this.headQuarter.Uid)
 				{
 					if (num == 0)
@@ -291,7 +288,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			});
 			this.itemGrid.AddItem(item2, 99999999);
 			this.itemGrid.RepositionItems();
-			this.itemGrid.Scroll((this.itemGrid.Count > 7) ? 0f : 0.5f);
+			this.itemGrid.Scroll((this.itemGrid.Count <= 7) ? 0.5f : 0f);
 		}
 
 		private void OnButtonContinueClicked(UXButton button)
@@ -355,86 +352,12 @@ namespace StaRTS.Main.Views.UX.Screens
 					}
 					i++;
 				}
-				return;
 			}
-			this.fadingOutBuilding = false;
-			Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
-		}
-
-		protected internal HQCelebScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).ArrangeRig(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).FadeOutBuilding();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).LoadFx();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).OnButtonContinueClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).SetUIText();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).SetupItemGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((HQCelebScreen)GCHandledObjects.GCHandleToObject(instance)).ShowFx(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
+			else
+			{
+				this.fadingOutBuilding = false;
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
+			}
 		}
 	}
 }

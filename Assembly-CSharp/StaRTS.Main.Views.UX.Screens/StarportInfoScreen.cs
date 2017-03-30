@@ -7,7 +7,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -58,7 +57,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.lang.ThousandsSeparated(num2)
 			});
 			UXSlider currentSlider = this.sliders[1].CurrentSlider;
-			float num3 = (num2 == 0) ? 0f : ((float)num / (float)num2);
+			float num3 = (num2 != 0) ? ((float)num / (float)num2) : 0f;
 			currentSlider.Value = num3;
 			this.projector.Config.MeterValue = num3;
 		}
@@ -86,45 +85,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.SetupTroopItemGrid();
 			}
 			return base.OnEvent(id, cookie);
-		}
-
-		protected internal StarportInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((StarportInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((StarportInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((StarportInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((StarportInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((StarportInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTroopItemGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((StarportInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateHousingSpace();
-			return -1L;
 		}
 	}
 }

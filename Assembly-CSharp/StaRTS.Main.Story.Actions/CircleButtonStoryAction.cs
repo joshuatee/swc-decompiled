@@ -7,7 +7,6 @@ using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Actions
 {
@@ -51,7 +50,7 @@ namespace StaRTS.Main.Story.Actions
 		{
 			base.Execute();
 			string elementName = this.prepareArgs[0];
-			string arrowPosition = "";
+			string arrowPosition = string.Empty;
 			if (this.prepareArgs.Length > 1)
 			{
 				arrowPosition = this.prepareArgs[1].ToLower();
@@ -78,7 +77,7 @@ namespace StaRTS.Main.Story.Actions
 				eventManager.RegisterObserver(this, EventId.StoreScreenReady, EventPriority.Default);
 				return;
 			}
-			if (this.prepareArgs.Length == 3 && "persist".Equals(this.prepareArgs[2], 5))
+			if (this.prepareArgs.Length == 3 && "persist".Equals(this.prepareArgs[2], StringComparison.InvariantCultureIgnoreCase))
 			{
 				this.parent.ChildComplete(this);
 			}
@@ -139,14 +138,7 @@ namespace StaRTS.Main.Story.Actions
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ScreenRefreshed)
-			{
-				if (id != EventId.StoreScreenReady && id != EventId.ScreenRefreshed)
-				{
-					return EatResponse.NotEaten;
-				}
-			}
-			else if (id != EventId.ScreenTransitionInComplete)
+			if (id != EventId.StoreScreenReady && id != EventId.ScreenRefreshed && id != EventId.ScreenTransitionInComplete)
 			{
 				if (id == EventId.ButtonHighlightHidden)
 				{
@@ -160,11 +152,12 @@ namespace StaRTS.Main.Story.Actions
 						this.highlightedCheckbox.OnSelected = this.originalCheckboxSelected;
 					}
 					this.parent.ChildComplete(this);
-					return EatResponse.NotEaten;
 				}
-				return EatResponse.NotEaten;
 			}
-			this.Execute();
+			else
+			{
+				this.Execute();
+			}
 			return EatResponse.NotEaten;
 		}
 
@@ -187,57 +180,6 @@ namespace StaRTS.Main.Story.Actions
 		{
 			Service.Get<UXController>().MiscElementsManager.HideHighlight();
 			base.Destroy();
-		}
-
-		protected internal CircleButtonStoryAction(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CircleButtonStoryAction)GCHandledObjects.GCHandleToObject(instance)).AddHighlightListeners();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CircleButtonStoryAction)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CircleButtonStoryAction)GCHandledObjects.GCHandleToObject(instance)).Execute();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CircleButtonStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnClickedHighlighted((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CircleButtonStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((CircleButtonStoryAction)GCHandledObjects.GCHandleToObject(instance)).OnSelectedHighlighted((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((CircleButtonStoryAction)GCHandledObjects.GCHandleToObject(instance)).Prepare();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((CircleButtonStoryAction)GCHandledObjects.GCHandleToObject(instance)).RemoveListeners();
-			return -1L;
 		}
 	}
 }

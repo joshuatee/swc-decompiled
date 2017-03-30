@@ -9,7 +9,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -18,14 +17,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		private Entity building;
 
 		private Contract contract;
-
-		public static void ShowModal(Entity building, OnScreenModalResult onModalResult, object modalResultCookie)
-		{
-			CancelScreen cancelScreen = new CancelScreen(building);
-			cancelScreen.OnModalResult = onModalResult;
-			cancelScreen.ModalResultCookie = modalResultCookie;
-			Service.Get<ScreenController>().AddScreen(cancelScreen);
-		}
 
 		private CancelScreen(Entity building) : base(false, null, null, null, false)
 		{
@@ -72,12 +63,20 @@ namespace StaRTS.Main.Views.UX.Screens
 					break;
 				}
 				}
-				this.title = ((text == null) ? "" : this.lang.Get(id, new object[]
+				this.title = ((text != null) ? this.lang.Get(id, new object[]
 				{
 					text
-				}));
+				}) : string.Empty);
 				this.message = this.lang.Get(id2, new object[0]);
 			}
+		}
+
+		public static void ShowModal(Entity building, OnScreenModalResult onModalResult, object modalResultCookie)
+		{
+			CancelScreen cancelScreen = new CancelScreen(building);
+			cancelScreen.OnModalResult = onModalResult;
+			cancelScreen.ModalResultCookie = modalResultCookie;
+			Service.Get<ScreenController>().AddScreen(cancelScreen);
 		}
 
 		public override EatResponse OnEvent(EventId id, object cookie)
@@ -117,39 +116,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			button.Enabled = false;
 			this.Close(button.Tag);
-		}
-
-		protected internal CancelScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CancelScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CancelScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CancelScreen)GCHandledObjects.GCHandleToObject(instance)).OnYesOrNoButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CancelScreen)GCHandledObjects.GCHandleToObject(instance)).SetupControls();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			CancelScreen.ShowModal((Entity)GCHandledObjects.GCHandleToObject(*args), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[1]), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
 		}
 	}
 }

@@ -912,13 +912,5 @@ namespace StaRTS.Main.Models.Commands
 		public const string REWARD_HOUR = "rewardHour";
 
 		public const string REWARD_MINUTE = "rewardMinute";
-
-		public GameProperties()
-		{
-		}
-
-		protected internal GameProperties(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

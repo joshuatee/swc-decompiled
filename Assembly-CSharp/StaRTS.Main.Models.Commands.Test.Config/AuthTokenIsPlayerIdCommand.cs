@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Test.Config
 		public AuthTokenIsPlayerIdCommand(AuthTokenIsPlayerIdResponse response) : base("test.authtoken.isPlayerId", new DefaultRequest(), response)
 		{
 		}
-
-		protected internal AuthTokenIsPlayerIdCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

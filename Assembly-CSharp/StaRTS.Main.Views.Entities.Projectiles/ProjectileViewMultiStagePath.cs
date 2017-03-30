@@ -2,7 +2,6 @@ using StaRTS.Main.Views.World;
 using StaRTS.Utils;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities.Projectiles
 {
@@ -62,9 +61,8 @@ namespace StaRTS.Main.Views.Entities.Projectiles
 					this.view.DefaultTracker.position = zero;
 				}
 				base.CurrentLocation = zero;
-				return;
 			}
-			if (this.AgeSeconds >= this.stage2KeyFrameS)
+			else if (this.AgeSeconds >= this.stage2KeyFrameS)
 			{
 				Vector3 vector = this.stage1EndPos;
 				float t = this.AgeSeconds - this.stage2KeyFrameS;
@@ -85,16 +83,6 @@ namespace StaRTS.Main.Views.Entities.Projectiles
 				}
 				base.CurrentLocation = vector;
 			}
-		}
-
-		protected internal ProjectileViewMultiStagePath(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ProjectileViewMultiStagePath)GCHandledObjects.GCHandleToObject(instance)).OnUpdate(*(float*)args);
-			return -1L;
 		}
 	}
 }

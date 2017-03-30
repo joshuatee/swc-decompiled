@@ -4,7 +4,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -30,7 +29,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private UXCheckbox checkbox;
 
-		public AlertWithCheckBoxScreen(string title, string message, string checkBoxTextID, string timerTextID, int timerLeftSeconds, Color timerColor, AlertWithCheckBoxScreen.OnCheckBoxScreenModalResult callback) : base(false, title, message, "", false)
+		public AlertWithCheckBoxScreen(string title, string message, string checkBoxTextID, string timerTextID, int timerLeftSeconds, Color timerColor, AlertWithCheckBoxScreen.OnCheckBoxScreenModalResult callback) : base(false, title, message, string.Empty, false)
 		{
 			this.timerEndSeconds = timerLeftSeconds;
 			this.timerColor = timerColor;
@@ -40,7 +39,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.checkboxTextID = checkBoxTextID;
 		}
 
-		public AlertWithCheckBoxScreen(string title, string message, string checkBoxTextID, AlertWithCheckBoxScreen.OnCheckBoxScreenModalResult callback) : this(title, message, checkBoxTextID, "", 0, Color.white, callback)
+		public AlertWithCheckBoxScreen(string title, string message, string checkBoxTextID, AlertWithCheckBoxScreen.OnCheckBoxScreenModalResult callback) : this(title, message, checkBoxTextID, string.Empty, 0, Color.white, callback)
 		{
 		}
 
@@ -73,10 +72,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.timerEndSeconds > 0)
 			{
 				this.UpdateTimer();
-				return;
 			}
-			this.labelTimer.Visible = false;
-			Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
+			else
+			{
+				this.labelTimer.Visible = false;
+				Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
+			}
 		}
 
 		private void OnOKClicked(UXButton btn)
@@ -91,7 +92,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void UpdateTimer()
 		{
-			string text;
+			string text = string.Empty;
 			if (!string.IsNullOrEmpty(this.timerTextID))
 			{
 				text = this.lang.Get(this.timerTextID, new object[]
@@ -126,58 +127,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		public void Set2ButtonGroupEnabledState(bool enabled)
 		{
 			this.buttonOption2Enabled = enabled;
-		}
-
-		protected internal AlertWithCheckBoxScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AlertWithCheckBoxScreen)GCHandledObjects.GCHandleToObject(instance)).OnCancelClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AlertWithCheckBoxScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AlertWithCheckBoxScreen)GCHandledObjects.GCHandleToObject(instance)).OnOKClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AlertWithCheckBoxScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AlertWithCheckBoxScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AlertWithCheckBoxScreen)GCHandledObjects.GCHandleToObject(instance)).Set2ButtonGroupEnabledState(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AlertWithCheckBoxScreen)GCHandledObjects.GCHandleToObject(instance)).SetupControls();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AlertWithCheckBoxScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateTimer();
-			return -1L;
 		}
 	}
 }

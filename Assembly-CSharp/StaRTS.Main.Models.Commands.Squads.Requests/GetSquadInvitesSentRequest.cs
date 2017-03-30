@@ -4,7 +4,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Squads.Requests
 {
@@ -24,15 +23,6 @@ namespace StaRTS.Main.Models.Commands.Squads.Requests
 			serializer.AddString("playerId", base.PlayerId);
 			serializer.AddArrayOfPrimitives<string>("friendIds", this.friendIds);
 			return serializer.End().ToString();
-		}
-
-		protected internal GetSquadInvitesSentRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GetSquadInvitesSentRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

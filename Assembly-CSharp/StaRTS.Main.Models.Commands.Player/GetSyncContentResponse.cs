@@ -6,7 +6,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player
 {
@@ -25,19 +24,6 @@ namespace StaRTS.Main.Models.Commands.Player
 			}
 			playerValuesController.RecalculateAll();
 			return this;
-		}
-
-		public GetSyncContentResponse()
-		{
-		}
-
-		protected internal GetSyncContentResponse(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GetSyncContentResponse)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

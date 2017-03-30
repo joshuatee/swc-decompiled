@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public CreateSquadCommand(CreateSquadRequest request) : base("guild.create", request, new SquadResponse())
 		{
 		}
-
-		protected internal CreateSquadCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

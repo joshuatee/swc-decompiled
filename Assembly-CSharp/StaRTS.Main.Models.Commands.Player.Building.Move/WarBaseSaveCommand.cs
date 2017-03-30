@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Move
 		public WarBaseSaveCommand(WarBaseSaveRequest request) : base("guild.war.base.save", request, new DefaultResponse())
 		{
 		}
-
-		protected internal WarBaseSaveCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

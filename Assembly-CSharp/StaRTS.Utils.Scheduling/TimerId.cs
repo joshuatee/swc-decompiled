@@ -8,21 +8,11 @@ namespace StaRTS.Utils.Scheduling
 
 		public static uint GetNext(ref uint idLast)
 		{
-			uint num = idLast + 1u;
-			idLast = num;
-			if (num == 0u)
+			if ((idLast += 1u) == 0u)
 			{
 				throw new Exception("Timer id rollover has occurred");
 			}
 			return idLast;
-		}
-
-		public TimerId()
-		{
-		}
-
-		protected internal TimerId(UIntPtr dummy)
-		{
 		}
 	}
 }

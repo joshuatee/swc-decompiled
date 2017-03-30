@@ -7,7 +7,6 @@ using StaRTS.Main.Views.UX.Screens.Squads;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -55,22 +54,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			SquadController squadController = Service.Get<SquadController>();
 			squadController.TakeAction(message);
 			this.Close(null);
-		}
-
-		protected internal BattleReplayShareScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BattleReplayShareScreen)GCHandledObjects.GCHandleToObject(instance)).OnClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BattleReplayShareScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
 		}
 	}
 }

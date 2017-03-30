@@ -3,7 +3,6 @@ using StaRTS.Main.Models;
 using StaRTS.Main.Models.Entities.Nodes;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities.Systems
 {
@@ -81,36 +80,10 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 				}
 				supportViewNode.SupportView.UpdateLocation();
 			}
-			if (this.requireViewRefresh & flag)
+			if (this.requireViewRefresh && flag)
 			{
 				this.requireViewRefresh = false;
 			}
-		}
-
-		public SupportViewSystem()
-		{
-		}
-
-		protected internal SupportViewSystem(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SupportViewSystem)GCHandledObjects.GCHandleToObject(instance)).AddToGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SupportViewSystem)GCHandledObjects.GCHandleToObject(instance)).RemoveFromGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SupportViewSystem)GCHandledObjects.GCHandleToObject(instance)).Update(*(float*)args);
-			return -1L;
 		}
 	}
 }

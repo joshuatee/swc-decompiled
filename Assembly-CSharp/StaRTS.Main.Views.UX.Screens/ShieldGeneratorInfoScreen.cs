@@ -4,7 +4,6 @@ using StaRTS.Main.Models.Static;
 using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -39,7 +38,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			BuildingTypeVO maxLevel = buildingUpgradeCatalog.GetMaxLevel(this.buildingInfo.UpgradeGroup);
 			int num = shieldController.PointsToHealth[this.buildingInfo.ShieldHealthPoints];
 			int num2 = shieldController.PointsToHealth[maxLevel.ShieldHealthPoints];
-			this.sliders[sliderIndex].CurrentSlider.Value = ((num2 == 0) ? 0f : ((float)num / (float)num2));
+			this.sliders[sliderIndex].CurrentSlider.Value = ((num2 != 0) ? ((float)num / (float)num2) : 0f);
 			if (this.useUpgradeGroup)
 			{
 				BuildingTypeVO nextLevel = buildingUpgradeCatalog.GetNextLevel(this.buildingInfo);
@@ -49,14 +48,16 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.lang.ThousandsSeparated(num3 - num)
 				});
-				this.sliders[sliderIndex].NextSlider.Value = ((num2 == 0) ? 0f : ((float)num3 / (float)num2));
-				return;
+				this.sliders[sliderIndex].NextSlider.Value = ((num2 != 0) ? ((float)num3 / (float)num2) : 0f);
 			}
-			this.sliders[sliderIndex].CurrentLabel.Text = this.lang.Get("FRACTION", new object[]
+			else
 			{
-				this.lang.ThousandsSeparated(num),
-				this.lang.ThousandsSeparated(num2)
-			});
+				this.sliders[sliderIndex].CurrentLabel.Text = this.lang.Get("FRACTION", new object[]
+				{
+					this.lang.ThousandsSeparated(num),
+					this.lang.ThousandsSeparated(num2)
+				});
+			}
 		}
 
 		private void UpdateShieldRange(int sliderIndex)
@@ -66,7 +67,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			BuildingTypeVO maxLevel = buildingUpgradeCatalog.GetMaxLevel(this.buildingInfo.UpgradeGroup);
 			int num = shieldController.PointsToRange[this.buildingInfo.ShieldRangePoints];
 			int num2 = shieldController.PointsToRange[maxLevel.ShieldRangePoints];
-			this.sliders[sliderIndex].CurrentSlider.Value = ((num2 == 0) ? 0f : ((float)num / (float)num2));
+			this.sliders[sliderIndex].CurrentSlider.Value = ((num2 != 0) ? ((float)num / (float)num2) : 0f);
 			if (this.useUpgradeGroup)
 			{
 				BuildingTypeVO nextLevel = buildingUpgradeCatalog.GetNextLevel(this.buildingInfo);
@@ -76,36 +77,16 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.lang.ThousandsSeparated(num3 - num)
 				});
-				this.sliders[sliderIndex].NextSlider.Value = ((num2 == 0) ? 0f : ((float)num3 / (float)num2));
-				return;
+				this.sliders[sliderIndex].NextSlider.Value = ((num2 != 0) ? ((float)num3 / (float)num2) : 0f);
 			}
-			this.sliders[sliderIndex].CurrentLabel.Text = this.lang.Get("FRACTION", new object[]
+			else
 			{
-				this.lang.ThousandsSeparated(num),
-				this.lang.ThousandsSeparated(num2)
-			});
-		}
-
-		protected internal ShieldGeneratorInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShieldGeneratorInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ShieldGeneratorInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateShieldHealth(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ShieldGeneratorInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateShieldRange(*(int*)args);
-			return -1L;
+				this.sliders[sliderIndex].CurrentLabel.Text = this.lang.Get("FRACTION", new object[]
+				{
+					this.lang.ThousandsSeparated(num),
+					this.lang.ThousandsSeparated(num2)
+				});
+			}
 		}
 	}
 }

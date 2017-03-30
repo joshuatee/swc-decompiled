@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Contracts.Buyout
 		public BuildingContractBuyoutCommand(BuildingContractRequest request) : base("player.building.buyout", request, new DefaultResponse())
 		{
 		}
-
-		protected internal BuildingContractBuyoutCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

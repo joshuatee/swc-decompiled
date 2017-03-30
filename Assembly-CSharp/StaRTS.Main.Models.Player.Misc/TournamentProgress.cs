@@ -5,8 +5,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player.Misc
 {
@@ -101,63 +99,12 @@ namespace StaRTS.Main.Models.Player.Misc
 					foreach (KeyValuePair<string, object> current in dictionary2)
 					{
 						Tournament tournament = new Tournament();
-						tournament.FromObject(current.get_Value());
-						this.tournaments.Add(current.get_Key(), tournament);
+						tournament.FromObject(current.Value);
+						this.tournaments.Add(current.Key, tournament);
 					}
 				}
 			}
 			return this;
-		}
-
-		protected internal TournamentProgress(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TournamentProgress)GCHandledObjects.GCHandleToObject(instance)).AddTournament(Marshal.PtrToStringUni(*(IntPtr*)args), (Tournament)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentProgress)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentProgress)GCHandledObjects.GCHandleToObject(instance)).GetTimedEvent(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentProgress)GCHandledObjects.GCHandleToObject(instance)).GetTournament(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentProgress)GCHandledObjects.GCHandleToObject(instance)).GetTournamentCurrentRank(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentProgress)GCHandledObjects.GCHandleToObject(instance)).GetTournamentFinalRank(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentProgress)GCHandledObjects.GCHandleToObject(instance)).HasTournament((TournamentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TournamentProgress)GCHandledObjects.GCHandleToObject(instance)).RemoveMissingTournamentData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentProgress)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

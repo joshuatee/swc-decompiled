@@ -6,14 +6,11 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Squads
 {
 	public class SquadWarBoardPlayerInfo : AbstractSquadWarBoardInfoElement
 	{
-		public SquadWarParticipantState participantState;
-
 		private const string WAR_BOARD_HQ_LABEL = "WAR_BOARD_HQ_LABEL";
 
 		private const string LABEL_TROOP_TOOLTIP = "LabelTroopTooltip";
@@ -29,6 +26,8 @@ namespace StaRTS.Main.Views.UX.Squads
 		private const string STAR_BG = "SpriteTroopTooltip";
 
 		private const string PLAYER_HIGHLIGHT = "SpritePlayerHighlight";
+
+		public SquadWarParticipantState participantState;
 
 		private UXLabel labelTroopTooltip;
 
@@ -134,50 +133,6 @@ namespace StaRTS.Main.Views.UX.Squads
 			this.spritePoint3.Alpha = proportion;
 			this.starBG.Alpha = proportion;
 			this.playerHighlight.Alpha = proportion;
-		}
-
-		protected internal SquadWarBoardPlayerInfo(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadWarBoardPlayerInfo)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadWarBoardPlayerInfo)GCHandledObjects.GCHandleToObject(instance)).FadeElements(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBoardPlayerInfo)GCHandledObjects.GCHandleToObject(instance)).GetPositionOfCenterStar());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBoardPlayerInfo)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadWarBoardPlayerInfo)GCHandledObjects.GCHandleToObject(instance)).SetupView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadWarBoardPlayerInfo)GCHandledObjects.GCHandleToObject(instance)).ToggleDisplay(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadWarBoardPlayerInfo)GCHandledObjects.GCHandleToObject(instance)).UpdateView();
-			return -1L;
 		}
 	}
 }

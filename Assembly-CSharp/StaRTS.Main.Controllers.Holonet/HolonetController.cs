@@ -1,6 +1,7 @@
 using StaRTS.Externals.BI;
 using StaRTS.Externals.Maker.Player;
 using StaRTS.Externals.Manimal;
+using StaRTS.Externals.Tapjoy;
 using StaRTS.Main.Controllers.GameStates;
 using StaRTS.Main.Controllers.Planets;
 using StaRTS.Main.Models;
@@ -18,8 +19,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Holonet
 {
@@ -185,29 +184,33 @@ namespace StaRTS.Main.Controllers.Holonet
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
 			EventManager eventManager = Service.Get<EventManager>();
-			if (id <= EventId.VideoEnd)
+			switch (id)
 			{
-				if (id != EventId.PlanetRelocate)
+			case EventId.SquadLeft:
+			case EventId.SquadJoinedByCurrentPlayer:
+				goto IL_5D;
+			case EventId.SquadChatFilterUpdated:
+				IL_20:
+				if (id == EventId.PlanetRelocate)
 				{
-					if (id != EventId.VideoEnd)
-					{
-						return EatResponse.NotEaten;
-					}
+					goto IL_5D;
+				}
+				if (id == EventId.VideoEnd)
+				{
 					eventManager.SendEvent(EventId.UIVideosViewComplete, cookie);
 					eventManager.UnregisterObserver(this, EventId.VideoEnd);
 					return EatResponse.NotEaten;
 				}
-			}
-			else if (id != EventId.SquadLeft && id != EventId.SquadJoinedByCurrentPlayer)
-			{
-				if (id == EventId.InventoryCrateCollectionClosed)
+				if (id != EventId.InventoryCrateCollectionClosed)
 				{
-					eventManager.UnregisterObserver(this, EventId.InventoryCrateCollectionClosed);
-					this.OpenHolonet();
 					return EatResponse.NotEaten;
 				}
+				eventManager.UnregisterObserver(this, EventId.InventoryCrateCollectionClosed);
+				this.OpenHolonet();
 				return EatResponse.NotEaten;
 			}
+			goto IL_20;
+			IL_5D:
 			this.PrepareContent(null);
 			return EatResponse.NotEaten;
 		}
@@ -233,7 +236,7 @@ namespace StaRTS.Main.Controllers.Holonet
 			}
 			if (string.IsNullOrEmpty(text))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Cannot find a prefname for tab {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Cannot find a prefname for tab {0}", new object[]
 				{
 					tab.GetType().ToString()
 				});
@@ -334,206 +337,83 @@ namespace StaRTS.Main.Controllers.Holonet
 		{
 			if (Service.Get<ScreenController>().GetHighestLevelScreen<HolonetScreen>() == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("CTA actions only work in Holonet.");
+				Service.Get<Logger>().Warn("CTA actions only work in Holonet.");
 				return;
 			}
-			uint num = <PrivateImplementationDetails>.ComputeStringHash(action);
-			if (num <= 2130426641u)
+			switch (action)
 			{
-				if (num <= 316263714u)
-				{
-					if (num <= 116839780u)
-					{
-						if (num != 17485778u)
-						{
-							if (num == 116839780u)
-							{
-								if (action == "gotowarboard")
-								{
-									this.GoToWarBoard();
-									return;
-								}
-							}
-						}
-						else if (action == "relocate")
-						{
-							this.OpenRelocateView(data);
-							return;
-						}
-					}
-					else if (num != 265927825u)
-					{
-						if (num != 270238212u)
-						{
-							if (num == 316263714u)
-							{
-								if (action == "dailycratereward")
-								{
-									this.OpenPrizeInventoryScreen();
-									return;
-								}
-							}
-						}
-						else if (action == "tapjoy")
-						{
-							return;
-						}
-					}
-					else if (action == "web")
-					{
-						GameUtils.OpenURL(data);
-						return;
-					}
-				}
-				else if (num <= 614761231u)
-				{
-					if (num != 536723741u)
-					{
-						if (num == 614761231u)
-						{
-							if (action == "squadchat")
-							{
-								this.GoToSquadMessage();
-								return;
-							}
-						}
-					}
-					else if (action == "squadlist")
-					{
-						this.GoToFeatureSquad();
-						return;
-					}
-				}
-				else if (num != 1608251484u)
-				{
-					if (num != 1939365082u)
-					{
-						if (num == 2130426641u)
-						{
-							if (action == "galaxy")
-							{
-								this.GoToGalaxyView(data);
-								return;
-							}
-						}
-					}
-					else if (action == "reward")
-					{
-						string contextUid = (string)cookie;
-						this.ClaimReward(data, contextUid);
-						return;
-					}
-				}
-				else if (action == "conflictend")
-				{
-					this.OpenPrizeInventoryScreen();
-					return;
-				}
+			case "conflict":
+				this.OpenPlanetView(data);
+				return;
+			case "planet":
+				this.OpenPlanetView(data);
+				return;
+			case "battle":
+				this.GoToBattleLog();
+				return;
+			case "leader":
+				this.GoToLeaderBoard();
+				return;
+			case "galaxy":
+				this.GoToGalaxyView(data);
+				return;
+			case "home":
+				this.holonetScreen.Close(null);
+				return;
+			case "gotowarboard":
+				this.GoToWarBoard();
+				return;
+			case "web":
+				GameUtils.OpenURL(data);
+				return;
+			case "reward":
+			{
+				string contextUid = (string)cookie;
+				this.ClaimReward(data, contextUid);
+				return;
 			}
-			else if (num <= 2966784228u)
-			{
-				if (num <= 2538552783u)
-				{
-					if (num != 2224108531u)
-					{
-						if (num == 2538552783u)
-						{
-							if (action == "conflict")
-							{
-								this.OpenPlanetView(data);
-								return;
-							}
-						}
-					}
-					else if (action == "planet")
-					{
-						this.OpenPlanetView(data);
-						return;
-					}
-				}
-				else if (num != 2820971575u)
-				{
-					if (num != 2894219868u)
-					{
-						if (num == 2966784228u)
-						{
-							if (action == "leader")
-							{
-								this.GoToLeaderBoard();
-								return;
-							}
-						}
-					}
-					else if (action == "squadlevelup")
-					{
-						this.GoToSquadAdvancement();
-						return;
-					}
-				}
-				else if (action == "battle")
-				{
-					this.GoToBattleLog();
-					return;
-				}
-			}
-			else if (num <= 3353852974u)
-			{
-				if (num != 3018300594u)
-				{
-					if (num != 3310580652u)
-					{
-						if (num == 3353852974u)
-						{
-							if (action == "store")
-							{
-								Service.Get<ScreenController>().CloseAll();
-								this.OpenStore(action, data);
-								return;
-							}
-						}
-					}
-					else if (action == "holonet")
-					{
-						if (this.holonetScreen != null && this.holonetScreen.IsLoaded())
-						{
-							HolonetControllerType tabType = StringUtils.ParseEnum<HolonetControllerType>(data);
-							this.holonetScreen.OpenTab(tabType);
-							return;
-						}
-						return;
-					}
-				}
-				else if (action == "story")
-				{
-					this.holonetScreen.Close(null);
-					new ActionChain(data);
-					return;
-				}
-			}
-			else if (num != 3472427884u)
-			{
-				if (num != 3536372366u)
-				{
-					if (num == 3621289194u)
-					{
-						if (action == "offers")
-						{
-							return;
-						}
-					}
-				}
-				else if (action == "home")
-				{
-					this.holonetScreen.Close(null);
-					return;
-				}
-			}
-			else if (action == "video")
-			{
+			case "conflictend":
+				this.OpenPrizeInventoryScreen();
+				return;
+			case "store":
+				Service.Get<ScreenController>().CloseAll();
+				this.OpenStore(action, data);
+				return;
+			case "video":
 				this.PlayVideo(data);
 				return;
+			case "tapjoy":
+			case "offers":
+				TapjoyManager.Instance.ShowOffers();
+				return;
+			case "holonet":
+				if (this.holonetScreen != null && this.holonetScreen.IsLoaded())
+				{
+					HolonetControllerType tabType = StringUtils.ParseEnum<HolonetControllerType>(data);
+					this.holonetScreen.OpenTab(tabType);
+				}
+				return;
+			case "story":
+				this.holonetScreen.Close(null);
+				new ActionChain(data);
+				return;
+			case "relocate":
+				this.OpenRelocateView(data);
+				return;
+			case "squadchat":
+				this.GoToSquadMessage();
+				return;
+			case "squadlist":
+				this.GoToFeatureSquad();
+				return;
+			case "squadlevelup":
+				this.GoToSquadAdvancement();
+				return;
+			case "dailycratereward":
+				this.OpenPrizeInventoryScreen();
+				return;
 			}
-			Service.Get<StaRTSLogger>().Warn("Unknown button1 action: " + action + " data: " + data);
+			Service.Get<Logger>().Warn("Unknown button1 action: " + action + " data: " + data);
 		}
 
 		private void ClaimReward(string limitedTimeRewardUid, string contextUid)
@@ -544,7 +424,7 @@ namespace StaRTS.Main.Controllers.Holonet
 				LimitedTimeRewardVO optional = dataController.GetOptional<LimitedTimeRewardVO>(limitedTimeRewardUid);
 				if (optional == null)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("No LimitedTimeReward data found for uid: {0}", new object[]
+					Service.Get<Logger>().WarnFormat("No LimitedTimeReward data found for uid: {0}", new object[]
 					{
 						limitedTimeRewardUid
 					});
@@ -553,7 +433,7 @@ namespace StaRTS.Main.Controllers.Holonet
 				RewardVO optional2 = dataController.GetOptional<RewardVO>(optional.RewardUid);
 				if (optional2 == null)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("LimitedTimeReward {0} points to reward {1} but it was not found", new object[]
+					Service.Get<Logger>().WarnFormat("LimitedTimeReward {0} points to reward {1} but it was not found", new object[]
 					{
 						limitedTimeRewardUid,
 						optional.RewardUid
@@ -594,9 +474,11 @@ namespace StaRTS.Main.Controllers.Holonet
 			{
 				this.holonetScreen.Close(null);
 				Service.Get<GalaxyViewController>().GoToPlanetView(text, section);
-				return;
 			}
-			AlertScreen.ShowModal(false, Service.Get<Lang>().Get("hn_upgrade_required", new object[0]), Service.Get<Lang>().Get("hn_noPC", new object[0]), null, null);
+			else
+			{
+				AlertScreen.ShowModal(false, Service.Get<Lang>().Get("hn_upgrade_required", new object[0]), Service.Get<Lang>().Get("hn_noPC", new object[0]), null, null);
+			}
 		}
 
 		private void GoToGalaxyView(string data)
@@ -606,9 +488,11 @@ namespace StaRTS.Main.Controllers.Holonet
 			{
 				this.holonetScreen.Close(null);
 				Service.Get<GalaxyViewController>().GoToGalaxyView(data);
-				return;
 			}
-			AlertScreen.ShowModal(false, Service.Get<Lang>().Get("hn_upgrade_required", new object[0]), Service.Get<Lang>().Get("hn_noPC", new object[0]), null, null);
+			else
+			{
+				AlertScreen.ShowModal(false, Service.Get<Lang>().Get("hn_upgrade_required", new object[0]), Service.Get<Lang>().Get("hn_noPC", new object[0]), null, null);
+			}
 		}
 
 		private void OpenRelocateView(string data)
@@ -636,9 +520,11 @@ namespace StaRTS.Main.Controllers.Holonet
 				Service.Get<GalaxyViewController>().GoToPlanetView(text, section);
 				PlanetVO planetVO = Service.Get<IDataController>().Get<PlanetVO>(text);
 				ConfirmRelocateScreen.ShowModal(planetVO, null, null);
-				return;
 			}
-			Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructionsError(Service.Get<Lang>().Get("HOLONET_RELOCATE_NO_PC", new object[0]));
+			else
+			{
+				Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructionsError(Service.Get<Lang>().Get("HOLONET_RELOCATE_NO_PC", new object[0]));
+			}
 		}
 
 		private void OpenStore(string action, string data)
@@ -648,7 +534,7 @@ namespace StaRTS.Main.Controllers.Holonet
 			{
 				'|'
 			});
-			if (array.Length != 0)
+			if (array.Length > 0)
 			{
 				StoreTab tab = StringUtils.ParseEnum<StoreTab>(array[0]);
 				storeScreen.SetTab(tab);
@@ -675,198 +561,6 @@ namespace StaRTS.Main.Controllers.Holonet
 			Service.Get<EventManager>().RegisterObserver(this, EventId.VideoEnd);
 			Service.Get<BILoggingController>().TrackGameAction("video_start", "cta_button", videoID, null);
 			VideoPlayer.Play(videoID, "cta_button");
-		}
-
-		protected internal HolonetController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolonetController)GCHandledObjects.GCHandleToObject(instance)).CalculateBadgeCount());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).ClaimReward(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).ClearTimestamps();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolonetController)GCHandledObjects.GCHandleToObject(instance)).CompareTimestamps((ITimestamped)GCHandledObjects.GCHandleToObject(*args), (ITimestamped)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).ContentPrepared((IHolonetContoller)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).DisableAllHolonetTabButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).DismissIncomingTransmission(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).EnableAllHolonetTabButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).GoToBattleLog();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).GoToFeatureSquad();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).GoToGalaxyView(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).GoToLeaderBoard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).GoToPlanet(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).GoToSquadAdvancement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).GoToSquadMessage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).GoToWarBoard();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).HandleCallToActionButton(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).HandleCallToActionButton(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolonetController)GCHandledObjects.GCHandleToObject(instance)).HasNewBattles());
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).InitBattlesTransmission((List<BattleEntry>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HolonetController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).OpenHolonet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).OpenPlanetView(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).OpenPrizeInventoryScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).OpenRelocateView(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).OpenStore(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).PlayVideo(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).PrepareContent((HolonetController.HolonetPreparedDelegate)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).RegisterForHolonetToReopenAfterCrateReward();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).SetLastViewed((AbstractHolonetTab)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).SetTabCount((IHolonetContoller)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((HolonetController)GCHandledObjects.GCHandleToObject(instance)).UpdateIncomingTransmission(*(int*)args);
-			return -1L;
 		}
 	}
 }

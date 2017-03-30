@@ -1,12 +1,9 @@
 using StaRTS.Assets;
 using StaRTS.Utils.Core;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Rendering;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -89,7 +86,6 @@ namespace StaRTS.Utils
 				if (UnityUtils.unityLogCallbacks != null && UnityUtils.unityLogCallbacks.ContainsKey(name))
 				{
 					UnityUtils.unityLogCallbacks.Remove(name);
-					return;
 				}
 			}
 			else
@@ -102,9 +98,11 @@ namespace StaRTS.Utils
 				if (UnityUtils.unityLogCallbacks.ContainsKey(name))
 				{
 					UnityUtils.unityLogCallbacks[name] = callback;
-					return;
 				}
-				UnityUtils.unityLogCallbacks.Add(name, callback);
+				else
+				{
+					UnityUtils.unityLogCallbacks.Add(name, callback);
+				}
 			}
 		}
 
@@ -436,7 +434,7 @@ namespace StaRTS.Utils
 			}
 		}
 
-		public static void EnsureScreenFillingComponent(GameObject gameObject, int depth, float uxCameraScale, bool bScreenSizeOverride = false, int w = 0, int h = 0)
+		public static void EnsureScreenFillingComponent(GameObject gameObject, int depth, float uxCameraScale)
 		{
 			UIStretch component = gameObject.GetComponent<UIStretch>();
 			if (component != null)
@@ -450,36 +448,8 @@ namespace StaRTS.Utils
 			}
 			uIWidget.depth = depth;
 			uIWidget.autoResizeBoxCollider = true;
-			if (bScreenSizeOverride)
-			{
-				uIWidget.width = (int)((float)w / uxCameraScale) + 5;
-				uIWidget.height = (int)((float)h / uxCameraScale) + 5;
-				return;
-			}
 			uIWidget.width = (int)((float)Screen.width / uxCameraScale) + 2;
 			uIWidget.height = (int)((float)Screen.height / uxCameraScale) + 2;
-		}
-
-		public static void EnsureScreenWidthFillingComponent(GameObject gameObject, int depth, float uxCameraScale, bool bScreenSizeOverride = false, int w = 0)
-		{
-			UIStretch component = gameObject.GetComponent<UIStretch>();
-			if (component != null)
-			{
-				UnityEngine.Object.Destroy(component);
-			}
-			UIWidget uIWidget = gameObject.GetComponent<UIWidget>();
-			if (uIWidget == null)
-			{
-				uIWidget = gameObject.AddComponent<UIWidget>();
-			}
-			uIWidget.depth = depth;
-			uIWidget.autoResizeBoxCollider = true;
-			if (bScreenSizeOverride)
-			{
-				uIWidget.width = (int)((float)w / uxCameraScale) + 5;
-				return;
-			}
-			uIWidget.width = (int)((float)Screen.width / uxCameraScale) + 2;
 		}
 
 		public static bool ShouldIgnoreUIGameObjectInRaycast(GameObject uiObject)
@@ -614,14 +584,10 @@ namespace StaRTS.Utils
 			Transform transform = gameObject.transform;
 			GameObject[] array = new GameObject[transform.childCount];
 			int num = 0;
-			using (IEnumerator enumerator = transform.GetEnumerator())
+			foreach (Transform transform2 in transform)
 			{
-				while (enumerator.MoveNext())
-				{
-					Transform transform2 = (Transform)enumerator.get_Current();
-					array[num] = transform2.gameObject;
-					num++;
-				}
+				array[num] = transform2.gameObject;
+				num++;
 			}
 			return array;
 		}
@@ -654,223 +620,14 @@ namespace StaRTS.Utils
 
 		public static void PlayParticleEmitter(ParticleSystem particle)
 		{
-			if (particle.emission.rate.constantMax > 0f)
+			if (particle.emissionRate > 0f)
 			{
 				particle.Play(false);
-				return;
 			}
-			particle.Emit(1);
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			UnityUtils.ChangeGameObjectParent((GameObject)GCHandledObjects.GCHandleToObject(*args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.CreateBuildingColorMaterial());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.CreateChildGameObject(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.CreateColorMaterial(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.CreateMaterial((Shader)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.CreateMesh());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.CreateMeshWithVertices((Vector3[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), (Vector2[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1]), (int[])GCHandledObjects.GCHandleToPinnedArrayObject(args[2])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.CreateQuadMesh(*(float*)args));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.CreateTexture2D(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			UnityUtils.DestroyMaterial((Material)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			UnityUtils.DestroyMesh((Mesh)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			UnityUtils.DestroyTexture2D((Texture2D)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.Divide(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			UnityUtils.EnableColliders((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.EnsureMaterialCopy((Renderer)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.EnsureMeshCopy((MeshFilter)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			UnityUtils.EnsureScreenFillingComponent((GameObject)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(float*)(args + 2), *(sbyte*)(args + 3) != 0, *(int*)(args + 4), *(int*)(args + 5));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			UnityUtils.EnsureScreenWidthFillingComponent((GameObject)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(float*)(args + 2), *(sbyte*)(args + 3) != 0, *(int*)(args + 4));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.FindCamera(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.FindGameObject((GameObject)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.GetAnimationWrapMode((Animation)GCHandledObjects.GCHandleToObject(*args), (AnimationState)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.GetChildren((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.GetGameObjectBounds((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.GetGameObjectBounds((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.GetGameObjectLocalBounds((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.GetRealTimeSinceStartUp());
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.GetRelativeGameObjectBounds((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			UnityUtils.HandleUnityLog(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (LogType)(*(int*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.HasRendererMaterial((Renderer)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.IsWideScreen());
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			UnityUtils.PlayParticleEmitter((ParticleSystem)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			UnityUtils.RegisterLogCallback(Marshal.PtrToStringUni(*(IntPtr*)args), (UnityUtils.OnUnityLogCallback)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			UnityUtils.RemoveColliders((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			UnityUtils.ScaleParticleSize((ParticleSystem)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			UnityUtils.SetLayerRecursively((GameObject)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			UnityUtils.SetQuadVertices(*(float*)args, *(float*)(args + 1), *(float*)(args + 2), *(float*)(args + 3), *(int*)(args + 4), (Vector3[])GCHandledObjects.GCHandleToPinnedArrayObject(args[5]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			UnityUtils.SetupMeshMaterial((GameObject)GCHandledObjects.GCHandleToObject(*args), (Mesh)GCHandledObjects.GCHandleToObject(args[1]), (Material)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UnityUtils.ShouldIgnoreUIGameObjectInRaycast((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			UnityUtils.StaticReset();
-			return -1L;
+			else
+			{
+				particle.Emit(1);
+			}
 		}
 	}
 }

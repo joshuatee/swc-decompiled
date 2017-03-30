@@ -13,9 +13,5 @@ namespace StaRTS.Main.Models.Squads
 		{
 			this.Participants = new List<string>();
 		}
-
-		protected internal SqmWarParticipantData(UIntPtr dummy)
-		{
-		}
 	}
 }

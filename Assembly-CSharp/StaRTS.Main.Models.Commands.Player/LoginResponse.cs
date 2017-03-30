@@ -11,8 +11,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player
 {
@@ -33,7 +31,7 @@ namespace StaRTS.Main.Models.Commands.Player
 			currentPlayer.FirstTimePlayer = (bool)dictionary["firstTimePlayer"];
 			if (dictionary.ContainsKey("created"))
 			{
-				Service.Get<CurrentPlayer>().FirstLoginTime = Convert.ToUInt32(dictionary["created"] as string, CultureInfo.InvariantCulture);
+				Service.Get<CurrentPlayer>().FirstLoginTime = Convert.ToUInt32(dictionary["created"] as string);
 			}
 			string prefsString = dictionary["clientPrefs"] as string;
 			ServerPlayerPrefs serverPlayerPrefs = new ServerPlayerPrefs(prefsString);
@@ -44,19 +42,19 @@ namespace StaRTS.Main.Models.Commands.Player
 				{
 					if (dictionary2.ContainsKey("attackRating"))
 					{
-						currentPlayer.AttackRating = Convert.ToInt32(dictionary2["attackRating"], CultureInfo.InvariantCulture);
+						currentPlayer.AttackRating = Convert.ToInt32(dictionary2["attackRating"]);
 					}
 					if (dictionary2.ContainsKey("defenseRating"))
 					{
-						currentPlayer.DefenseRating = Convert.ToInt32(dictionary2["defenseRating"], CultureInfo.InvariantCulture);
+						currentPlayer.DefenseRating = Convert.ToInt32(dictionary2["defenseRating"]);
 					}
 					if (dictionary2.ContainsKey("attacksWon"))
 					{
-						currentPlayer.AttacksWon = Convert.ToInt32(dictionary2["attacksWon"], CultureInfo.InvariantCulture);
+						currentPlayer.AttacksWon = Convert.ToInt32(dictionary2["attacksWon"]);
 					}
 					if (dictionary2.ContainsKey("defensesWon"))
 					{
-						currentPlayer.DefensesWon = Convert.ToInt32(dictionary2["defensesWon"], CultureInfo.InvariantCulture);
+						currentPlayer.DefensesWon = Convert.ToInt32(dictionary2["defensesWon"]);
 					}
 				}
 			}
@@ -77,7 +75,7 @@ namespace StaRTS.Main.Models.Commands.Player
 				}
 				else
 				{
-					currentPlayer.CurrentlyDefendingExpireTime = Convert.ToUInt32(dictionary3["expiration"], CultureInfo.InvariantCulture);
+					currentPlayer.CurrentlyDefendingExpireTime = Convert.ToUInt32(dictionary3["expiration"]);
 					if (currentPlayer.CurrentlyDefendingExpireTime > ServerTime.Time)
 					{
 						currentPlayer.CurrentlyDefending = true;
@@ -117,11 +115,11 @@ namespace StaRTS.Main.Models.Commands.Player
 				}
 				if (dictionary4.ContainsKey("protectedUntil"))
 				{
-					currentPlayer.ProtectedUntil = Convert.ToUInt32(dictionary4["protectedUntil"], CultureInfo.InvariantCulture);
+					currentPlayer.ProtectedUntil = Convert.ToUInt32(dictionary4["protectedUntil"]);
 				}
 				if (dictionary4.ContainsKey("protectionFrom"))
 				{
-					currentPlayer.ProtectionFrom = Convert.ToUInt32(dictionary4["protectionFrom"], CultureInfo.InvariantCulture);
+					currentPlayer.ProtectionFrom = Convert.ToUInt32(dictionary4["protectionFrom"]);
 				}
 				if (dictionary4.ContainsKey("protectionCooldownUntil"))
 				{
@@ -130,7 +128,7 @@ namespace StaRTS.Main.Models.Commands.Player
 					{
 						foreach (KeyValuePair<string, object> current in dictionary5)
 						{
-							currentPlayer.AddProtectionCooldownUntil(current.get_Key(), Convert.ToUInt32(current.get_Value(), CultureInfo.InvariantCulture));
+							currentPlayer.AddProtectionCooldownUntil(current.Key, Convert.ToUInt32(current.Value));
 						}
 					}
 				}
@@ -151,22 +149,22 @@ namespace StaRTS.Main.Models.Commands.Player
 					Dictionary<string, object> dictionary7 = dictionary4["guildInfo"] as Dictionary<string, object>;
 					if (dictionary7 != null && dictionary7.ContainsKey("guildId"))
 					{
-						string squadID = Convert.ToString(dictionary7["guildId"], CultureInfo.InvariantCulture);
+						string squadID = Convert.ToString(dictionary7["guildId"]);
 						currentPlayer.Squad = Service.Get<LeaderboardController>().GetOrCreateSquad(squadID);
 						currentPlayer.Squad.FromLoginObject(dictionary7);
 						if (dictionary7.ContainsKey("joinDate"))
 						{
-							stateManager.JoinDate = Convert.ToUInt32(dictionary7["joinDate"], CultureInfo.InvariantCulture);
+							stateManager.JoinDate = Convert.ToUInt32(dictionary7["joinDate"]);
 						}
 					}
 				}
 				if (dictionary.ContainsKey("lastTroopRequestTime"))
 				{
-					stateManager.TroopRequestDate = Convert.ToUInt32(dictionary["lastTroopRequestTime"], CultureInfo.InvariantCulture);
+					stateManager.TroopRequestDate = Convert.ToUInt32(dictionary["lastTroopRequestTime"]);
 				}
 				if (dictionary.ContainsKey("lastWarTroopRequestTime"))
 				{
-					stateManager.WarTroopRequestDate = Convert.ToUInt32(dictionary["lastWarTroopRequestTime"], CultureInfo.InvariantCulture);
+					stateManager.WarTroopRequestDate = Convert.ToUInt32(dictionary["lastWarTroopRequestTime"]);
 				}
 				if (dictionary4.ContainsKey("donatedTroops"))
 				{
@@ -196,7 +194,7 @@ namespace StaRTS.Main.Models.Commands.Player
 					{
 						foreach (KeyValuePair<string, object> current2 in dictionary9)
 						{
-							currentPlayer.Objectives.Add(current2.get_Key(), new ObjectiveGroup(current2.get_Key()).FromObject(current2.get_Value()) as ObjectiveGroup);
+							currentPlayer.Objectives.Add(current2.Key, new ObjectiveGroup(current2.Key).FromObject(current2.Value) as ObjectiveGroup);
 						}
 					}
 				}
@@ -230,7 +228,7 @@ namespace StaRTS.Main.Models.Commands.Player
 				}
 				if (dictionary4.ContainsKey("relocationStarCount"))
 				{
-					currentPlayer.SetRelocationStartsCount(Convert.ToInt32(dictionary4["relocationStarCount"], CultureInfo.InvariantCulture));
+					currentPlayer.SetRelocationStartsCount(Convert.ToInt32(dictionary4["relocationStarCount"]));
 				}
 				if (dictionary4.ContainsKey("frozenBuildings"))
 				{
@@ -242,7 +240,7 @@ namespace StaRTS.Main.Models.Commands.Player
 				{
 					foreach (KeyValuePair<string, object> current3 in dictionary10)
 					{
-						currentPlayer.DamagedBuildings.Add(current3.get_Key(), Convert.ToInt32(current3.get_Value(), CultureInfo.InvariantCulture));
+						currentPlayer.DamagedBuildings.Add(current3.Key, Convert.ToInt32(current3.Value));
 					}
 				}
 				if (dictionary4.ContainsKey("upgrades"))
@@ -263,7 +261,7 @@ namespace StaRTS.Main.Models.Commands.Player
 				}
 				if (dictionary4.ContainsKey("lastWarParticipationTime"))
 				{
-					currentPlayer.LastWarParticipationTime = Convert.ToUInt32(dictionary4["lastWarParticipationTime"], CultureInfo.InvariantCulture);
+					currentPlayer.LastWarParticipationTime = Convert.ToUInt32(dictionary4["lastWarParticipationTime"]);
 				}
 				if (dictionary4.ContainsKey("identitySwitchTimes"))
 				{
@@ -278,8 +276,8 @@ namespace StaRTS.Main.Models.Commands.Player
 					Dictionary<string, object> dictionary12 = dictionary4["openOffer"] as Dictionary<string, object>;
 					if (dictionary12 != null && dictionary12.ContainsKey("offerUid"))
 					{
-						currentPlayer.OfferId = Convert.ToString(dictionary12["offerUid"], CultureInfo.InvariantCulture);
-						currentPlayer.TriggerDate = Convert.ToUInt32(dictionary12["triggerDate"], CultureInfo.InvariantCulture);
+						currentPlayer.OfferId = Convert.ToString(dictionary12["offerUid"]);
+						currentPlayer.TriggerDate = Convert.ToUInt32(dictionary12["triggerDate"]);
 					}
 				}
 			}
@@ -291,39 +289,26 @@ namespace StaRTS.Main.Models.Commands.Player
 					if (dictionary13.ContainsKey("lastLoginTime"))
 					{
 						string pref = serverPlayerPrefs.GetPref(ServerPref.LastLoginTime);
-						uint loginTime = Convert.ToUInt32(dictionary13["lastLoginTime"], CultureInfo.InvariantCulture);
+						uint loginTime = Convert.ToUInt32(dictionary13["lastLoginTime"]);
 						if (!string.IsNullOrEmpty(pref))
 						{
-							currentPlayer.LastLoginTime = Convert.ToUInt32(pref, CultureInfo.InvariantCulture);
+							currentPlayer.LastLoginTime = Convert.ToUInt32(pref);
 						}
 						currentPlayer.LoginTime = loginTime;
 						serverPlayerPrefs.SetPref(ServerPref.LastLoginTime, loginTime.ToString());
 					}
 					if (dictionary13.ContainsKey("sessionCountToday"))
 					{
-						int sessionCountToday = Convert.ToInt32(dictionary13["sessionCountToday"], CultureInfo.InvariantCulture);
+						int sessionCountToday = Convert.ToInt32(dictionary13["sessionCountToday"]);
 						currentPlayer.SessionCountToday = sessionCountToday;
 					}
 					if (dictionary13.ContainsKey("installDate"))
 					{
-						currentPlayer.InstallDate = Convert.ToUInt32(dictionary13["installDate"], CultureInfo.InvariantCulture);
+						currentPlayer.InstallDate = Convert.ToUInt32(dictionary13["installDate"]);
 					}
 				}
 			}
 			return this;
-		}
-
-		public LoginResponse()
-		{
-		}
-
-		protected internal LoginResponse(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LoginResponse)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

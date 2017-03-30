@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Holonet
 		{
 			base.Context = lastTimeViewed;
 		}
-
-		protected internal HolonetGetCommandCenterEntriesCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

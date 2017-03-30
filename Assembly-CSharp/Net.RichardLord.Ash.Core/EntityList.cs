@@ -1,5 +1,4 @@
 using System;
-using WinRTBridge;
 
 namespace Net.RichardLord.Ash.Core
 {
@@ -31,13 +30,17 @@ namespace Net.RichardLord.Ash.Core
 			{
 				this._tail = entity;
 				this._head = entity;
-				entity.Next = (entity.Previous = null);
-				return;
+				Entity entity2 = null;
+				entity.Previous = entity2;
+				entity.Next = entity2;
 			}
-			this._tail.Next = entity;
-			entity.Previous = this._tail;
-			entity.Next = null;
-			this._tail = entity;
+			else
+			{
+				this._tail.Next = entity;
+				entity.Previous = this._tail;
+				entity.Next = null;
+				this._tail = entity;
+			}
 		}
 
 		public void Remove(Entity entity)
@@ -70,42 +73,6 @@ namespace Net.RichardLord.Ash.Core
 				head.Next = null;
 			}
 			this._tail = null;
-		}
-
-		public EntityList()
-		{
-		}
-
-		protected internal EntityList(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EntityList)GCHandledObjects.GCHandleToObject(instance)).Add((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityList)GCHandledObjects.GCHandleToObject(instance)).Head);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityList)GCHandledObjects.GCHandleToObject(instance)).Tail);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((EntityList)GCHandledObjects.GCHandleToObject(instance)).Remove((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EntityList)GCHandledObjects.GCHandleToObject(instance)).RemoveAll();
-			return -1L;
 		}
 	}
 }

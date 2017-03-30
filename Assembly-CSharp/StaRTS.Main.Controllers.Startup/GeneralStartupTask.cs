@@ -14,7 +14,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Animation;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -92,22 +91,6 @@ namespace StaRTS.Main.Controllers.Startup
 		private void OnHolonetPrepared()
 		{
 			base.Complete();
-		}
-
-		protected internal GeneralStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GeneralStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnHolonetPrepared();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GeneralStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

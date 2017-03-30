@@ -1,9 +1,6 @@
 using StaRTS.Utils;
 using System;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Externals.Maker.MRSS
 {
@@ -61,7 +58,7 @@ namespace StaRTS.Externals.Maker.MRSS
 			'f'
 		};
 
-		private StringBuilder urlString;
+		private StringBuilder urlString = new StringBuilder();
 
 		public string UserFeed()
 		{
@@ -80,12 +77,12 @@ namespace StaRTS.Externals.Maker.MRSS
 		{
 			this.BuildBaseURL("search");
 			query = query.Trim();
-			if (query.get_Length() == 0)
+			if (query.Length == 0)
 			{
 				query = " ";
 			}
 			this.AppendParameter("q", Uri.EscapeDataString(query));
-			this.AppendParameter("order", ascending ? "relevance-asc" : "relevance-desc");
+			this.AppendParameter("order", (!ascending) ? "relevance-desc" : "relevance-asc");
 			if (startAt != -1)
 			{
 				this.AppendParameter("startat", startAt.ToString());
@@ -106,8 +103,8 @@ namespace StaRTS.Externals.Maker.MRSS
 
 		private void BuildBaseURL(string path)
 		{
-			this.urlString.set_Length(0);
-			this.urlString.AppendFormat(CultureInfo.InvariantCulture, "{0}/{1}/{2}/{3}", new object[]
+			this.urlString.Length = 0;
+			this.urlString.AppendFormat("{0}/{1}/{2}/{3}", new object[]
 			{
 				"http://mobileapi.makerstudios.com",
 				"v1",
@@ -118,22 +115,13 @@ namespace StaRTS.Externals.Maker.MRSS
 
 		private void AppendParameter(string key, string value)
 		{
-			this.urlString.AppendFormat(CultureInfo.InvariantCulture, "{0}{1}={2}", new object[]
-			{
-				this.HasParameter() ? "&" : "?",
-				key,
-				value
-			});
+			this.urlString.AppendFormat("{0}{1}={2}", (!this.HasParameter()) ? "?" : "&", key, value);
 		}
 
 		private string GenerateHashedURL()
 		{
 			byte[] array = CryptographyUtils.ComputeHmacHash("HmacSHA256", "fd84f83863a613bf37fa", this.urlString.ToString());
-			this.urlString.AppendFormat(CultureInfo.InvariantCulture, "{0}{1}=", new object[]
-			{
-				this.HasParameter() ? "&" : "?",
-				"authorization"
-			});
+			this.urlString.AppendFormat("{0}{1}=", (!this.HasParameter()) ? "?" : "&", "authorization");
 			byte[] array2 = array;
 			for (int i = 0; i < array2.Length; i++)
 			{
@@ -146,9 +134,9 @@ namespace StaRTS.Externals.Maker.MRSS
 
 		private bool HasParameter()
 		{
-			for (int i = this.urlString.get_Length() - 1; i >= 0; i--)
+			for (int i = this.urlString.Length - 1; i >= 0; i--)
 			{
-				char c = this.urlString.get_Chars(i);
+				char c = this.urlString[i];
 				if (c == '?')
 				{
 					return true;
@@ -159,58 +147,6 @@ namespace StaRTS.Externals.Maker.MRSS
 				}
 			}
 			return false;
-		}
-
-		public QueryURLBuilder()
-		{
-			this.urlString = new StringBuilder();
-			base..ctor();
-		}
-
-		protected internal QueryURLBuilder(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((QueryURLBuilder)GCHandledObjects.GCHandleToObject(instance)).AppendParameter(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((QueryURLBuilder)GCHandledObjects.GCHandleToObject(instance)).BuildBaseURL(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryURLBuilder)GCHandledObjects.GCHandleToObject(instance)).GenerateHashedURL());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryURLBuilder)GCHandledObjects.GCHandleToObject(instance)).HasParameter());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryURLBuilder)GCHandledObjects.GCHandleToObject(instance)).Search(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0, *(int*)(args + 2), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryURLBuilder)GCHandledObjects.GCHandleToObject(instance)).Tag(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryURLBuilder)GCHandledObjects.GCHandleToObject(instance)).UserFeed());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((QueryURLBuilder)GCHandledObjects.GCHandleToObject(instance)).VideoDetails(Marshal.PtrToStringUni(*(IntPtr*)args)));
 		}
 	}
 }

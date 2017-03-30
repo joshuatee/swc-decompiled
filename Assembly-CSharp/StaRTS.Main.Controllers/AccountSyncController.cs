@@ -1,4 +1,4 @@
-using StaRTS.Externals.FacebookApi;
+using Facebook.Unity;
 using StaRTS.Externals.GameServices;
 using StaRTS.Externals.Manimal;
 using StaRTS.Externals.Manimal.TransferObjects.Request;
@@ -11,13 +11,11 @@ using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
-	public class AccountSyncController : IEventObserver, IAccountSyncController
+	public class AccountSyncController : IAccountSyncController, IEventObserver
 	{
 		private GetExternalAccountsResponse externalAccountInfo;
 
@@ -92,7 +90,6 @@ namespace StaRTS.Main.Controllers
 		{
 			PlayerPrefs.SetString("prefPlayerId", playerId);
 			PlayerPrefs.SetString("prefPlayerSecret", playerSecret);
-			PlayerPrefs.Save();
 			Service.Get<Engine>().Reload();
 		}
 
@@ -113,8 +110,8 @@ namespace StaRTS.Main.Controllers
 				this.gameServicesRegisterPending = true;
 				return;
 			}
-			string text = null;
-			if (text == userId)
+			string googlePlayAccountId = this.externalAccountInfo.GooglePlayAccountId;
+			if (googlePlayAccountId == userId)
 			{
 				return;
 			}
@@ -128,6 +125,7 @@ namespace StaRTS.Main.Controllers
 				OverrideExistingAccountRegistration = false,
 				ExternalAccountId = userId,
 				ExternalAccountSecurityToken = authToken,
+				Provider = AccountProvider.GOOGLEPLAY,
 				PlayerId = Service.Get<CurrentPlayer>().PlayerId,
 				OtherLinkedProvider = AccountProvider.FACEBOOK
 			});
@@ -135,27 +133,25 @@ namespace StaRTS.Main.Controllers
 
 		private void RegisterFacebookAccount()
 		{
-			string userId = FacebookManager.Instance.getUserId();
-			if (FacebookManager.IsLoggedIn && !string.IsNullOrEmpty(userId))
+			string userId = AccessToken.CurrentAccessToken.UserId;
+			if (this.externalAccountInfo == null)
 			{
-				if (this.externalAccountInfo == null)
-				{
-					this.facebookRegisterPending = true;
-					return;
-				}
-				if (this.externalAccountInfo.FacebookAccountId == userId)
-				{
-					return;
-				}
-				this.RegisterExternalAccount(new RegisterExternalAccountRequest
-				{
-					OverrideExistingAccountRegistration = false,
-					ExternalAccountId = userId,
-					ExternalAccountSecurityToken = FacebookManager.Instance.getAccessToken(),
-					Provider = AccountProvider.FACEBOOK,
-					PlayerId = Service.Get<CurrentPlayer>().PlayerId
-				});
+				this.facebookRegisterPending = true;
+				return;
 			}
+			if (this.externalAccountInfo.FacebookAccountId == userId)
+			{
+				return;
+			}
+			this.RegisterExternalAccount(new RegisterExternalAccountRequest
+			{
+				OverrideExistingAccountRegistration = false,
+				ExternalAccountId = userId,
+				ExternalAccountSecurityToken = AccessToken.CurrentAccessToken.TokenString,
+				Provider = AccountProvider.FACEBOOK,
+				PlayerId = Service.Get<CurrentPlayer>().PlayerId,
+				OtherLinkedProvider = AccountProvider.GOOGLEPLAY
+			});
 		}
 
 		public void RegisterExternalAccount(RegisterExternalAccountRequest request)
@@ -198,6 +194,7 @@ namespace StaRTS.Main.Controllers
 			}
 			UnregisterExternalAccountRequest unregisterExternalAccountRequest = new UnregisterExternalAccountRequest();
 			unregisterExternalAccountRequest.PlayerId = Service.Get<CurrentPlayer>().PlayerId;
+			unregisterExternalAccountRequest.Provider = AccountProvider.GOOGLEPLAY;
 			UnregisterExternalAccountCommand unregisterExternalAccountCommand = new UnregisterExternalAccountCommand(unregisterExternalAccountRequest);
 			unregisterExternalAccountCommand.AddSuccessCallback(new AbstractCommand<UnregisterExternalAccountRequest, DefaultResponse>.OnSuccessCallback(this.OnAccountUnregisterSuccess));
 			unregisterExternalAccountCommand.Context = unregisterExternalAccountRequest.Provider;
@@ -214,20 +211,19 @@ namespace StaRTS.Main.Controllers
 					serverAPI.Enabled = true;
 					serverAPI.Sync(command);
 					serverAPI.Enabled = false;
-					return;
 				}
-				serverAPI.Enqueue(command);
-				return;
+				else
+				{
+					serverAPI.Enqueue(command);
+				}
+			}
+			else if (immediate)
+			{
+				serverAPI.Sync(command);
 			}
 			else
 			{
-				if (immediate)
-				{
-					serverAPI.Sync(command);
-					return;
-				}
 				serverAPI.Enqueue(command);
-				return;
 			}
 		}
 
@@ -237,6 +233,10 @@ namespace StaRTS.Main.Controllers
 			if (!currentPlayer.IsConnectedAccount)
 			{
 				currentPlayer.IsConnectedAccount = true;
+				if (GameConstants.NO_FB_FACTION_CHOICE_ANDROID)
+				{
+					return;
+				}
 				currentPlayer.Inventory.ModifyCrystals(GameConstants.FB_CONNECT_REWARD);
 			}
 		}
@@ -249,15 +249,13 @@ namespace StaRTS.Main.Controllers
 			case AccountProvider.FACEBOOK:
 				this.externalAccountInfo.FacebookAccountId = registerExternalAccountCommand.RequestArgs.ExternalAccountId;
 				this.OnFacebookAccountRegisterSuccess(response, cookie);
-				return;
+				break;
 			case AccountProvider.GAMECENTER:
 				this.externalAccountInfo.GameCenterAccountId = registerExternalAccountCommand.RequestArgs.ExternalAccountId;
-				return;
+				break;
 			case AccountProvider.GOOGLEPLAY:
 				this.externalAccountInfo.GooglePlayAccountId = registerExternalAccountCommand.RequestArgs.ExternalAccountId;
-				return;
-			default:
-				return;
+				break;
 			}
 		}
 
@@ -267,87 +265,88 @@ namespace StaRTS.Main.Controllers
 			Lang lang = Service.Get<Lang>();
 			string title = lang.Get("ACCOUNT_SYNC_ERROR", new object[0]);
 			string message = null;
-			if (status == 1318u)
+			if (status != 2200u)
 			{
-				switch (registerExternalAccountCommand.RequestArgs.Provider)
+				if (status != 2201u)
 				{
-				case AccountProvider.FACEBOOK:
-					message = lang.Get("ACCOUNT_SYNC_AUTH_ERROR_FACEBOOK", new object[0]);
-					break;
-				case AccountProvider.GAMECENTER:
-					message = lang.Get("ACCOUNT_SYNC_AUTH_ERROR_GAMECENTER", new object[0]);
-					break;
-				case AccountProvider.GOOGLEPLAY:
-					message = lang.Get("ACCOUNT_SYNC_AUTH_ERROR_GOOGLEPLAY", new object[0]);
-					break;
+					if (status == 1318u)
+					{
+						switch (registerExternalAccountCommand.RequestArgs.Provider)
+						{
+						case AccountProvider.FACEBOOK:
+							message = lang.Get("ACCOUNT_SYNC_AUTH_ERROR_FACEBOOK", new object[0]);
+							break;
+						case AccountProvider.GAMECENTER:
+							message = lang.Get("ACCOUNT_SYNC_AUTH_ERROR_GAMECENTER", new object[0]);
+							break;
+						case AccountProvider.GOOGLEPLAY:
+							message = lang.Get("ACCOUNT_SYNC_AUTH_ERROR_GOOGLEPLAY", new object[0]);
+							break;
+						}
+						ProcessingScreen.Hide();
+						AlertScreen.ShowModal(false, title, message, null, null);
+					}
 				}
-				ProcessingScreen.Hide();
-				AlertScreen.ShowModal(false, title, message, null, null);
-				return;
+				else
+				{
+					switch (registerExternalAccountCommand.RequestArgs.Provider)
+					{
+					case AccountProvider.FACEBOOK:
+						if (this.externalAccountInfo.FacebookAccountId != null && this.externalAccountInfo.FacebookAccountId != AccessToken.CurrentAccessToken.UserId)
+						{
+							message = lang.Get("ACCOUNT_SYNC_ERROR_FACEBOOK", new object[0]);
+						}
+						else if (this.externalAccountInfo.GooglePlayAccountId != null)
+						{
+							message = lang.Get("ACCOUNT_SYNC_ERROR_FACEBOOK_GOOGLEPLAY", new object[0]);
+						}
+						break;
+					case AccountProvider.GAMECENTER:
+						if (this.externalAccountInfo.GameCenterAccountId != null && this.externalAccountInfo.GameCenterAccountId != GameServicesManager.GetUserId())
+						{
+							message = lang.Get("ACCOUNT_SYNC_ERROR_GAMECENTER", new object[0]);
+						}
+						else if (this.externalAccountInfo.FacebookAccountId != null)
+						{
+							message = lang.Get("ACCOUNT_SYNC_ERROR_GAMECENTER_FACEBOOK", new object[0]);
+						}
+						break;
+					case AccountProvider.GOOGLEPLAY:
+						if (this.externalAccountInfo.GooglePlayAccountId != null && this.externalAccountInfo.GooglePlayAccountId != GameServicesManager.GetUserId())
+						{
+							message = lang.Get("ACCOUNT_SYNC_ERROR_GOOGLEPLAY", new object[0]);
+						}
+						else if (this.externalAccountInfo.FacebookAccountId != null)
+						{
+							message = lang.Get("ACCOUNT_SYNC_ERROR_GOOGLEPLAY_FACEBOOK", new object[0]);
+						}
+						break;
+					}
+					ProcessingScreen.Hide();
+					AlertScreen.ShowModal(false, title, message, null, null);
+				}
 			}
-			if (status == 2200u)
+			else
 			{
 				ProcessingScreen.Hide();
 				AccountSyncScreen screen = AccountSyncScreen.CreateSyncConflictScreen(registerExternalAccountCommand);
 				Service.Get<ScreenController>().AddScreen(screen);
-				return;
 			}
-			if (status != 2201u)
-			{
-				return;
-			}
-			switch (registerExternalAccountCommand.RequestArgs.Provider)
-			{
-			case AccountProvider.FACEBOOK:
-				if (this.externalAccountInfo.FacebookAccountId != null && this.externalAccountInfo.FacebookAccountId != FacebookManager.Instance.getUserId())
-				{
-					message = lang.Get("ACCOUNT_SYNC_ERROR_FACEBOOK", new object[0]);
-				}
-				else if (this.externalAccountInfo.FacebookAccountId != null)
-				{
-					message = lang.Get("ACCOUNT_SYNC_ERROR_FACEBOOK", new object[0]);
-				}
-				break;
-			case AccountProvider.GAMECENTER:
-				if (this.externalAccountInfo.GameCenterAccountId != null && this.externalAccountInfo.GameCenterAccountId != GameServicesManager.GetUserId())
-				{
-					message = lang.Get("ACCOUNT_SYNC_ERROR_GAMECENTER", new object[0]);
-				}
-				else if (this.externalAccountInfo.FacebookAccountId != null)
-				{
-					message = lang.Get("ACCOUNT_SYNC_ERROR_GAMECENTER_FACEBOOK", new object[0]);
-				}
-				break;
-			case AccountProvider.GOOGLEPLAY:
-				if (this.externalAccountInfo.GooglePlayAccountId != null && this.externalAccountInfo.GooglePlayAccountId != GameServicesManager.GetUserId())
-				{
-					message = lang.Get("ACCOUNT_SYNC_ERROR_GOOGLEPLAY", new object[0]);
-				}
-				else if (this.externalAccountInfo.FacebookAccountId != null)
-				{
-					message = lang.Get("ACCOUNT_SYNC_ERROR_GOOGLEPLAY_FACEBOOK", new object[0]);
-				}
-				break;
-			}
-			ProcessingScreen.Hide();
-			AlertScreen.ShowModal(false, title, message, null, null);
 		}
 
 		private void OnAccountUnregisterSuccess(DefaultResponse response, object cookie)
 		{
-			switch ((AccountProvider)cookie)
+			switch ((int)cookie)
 			{
-			case AccountProvider.FACEBOOK:
+			case 0:
 				this.externalAccountInfo.FacebookAccountId = null;
-				return;
-			case AccountProvider.GAMECENTER:
+				break;
+			case 1:
 				this.externalAccountInfo.GameCenterAccountId = null;
-				return;
-			case AccountProvider.GOOGLEPLAY:
+				break;
+			case 2:
 				this.externalAccountInfo.GooglePlayAccountId = null;
-				return;
-			default:
-				return;
+				break;
 			}
 		}
 
@@ -358,98 +357,6 @@ namespace StaRTS.Main.Controllers
 				this.RegisterGameServicesAccount();
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal AccountSyncController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).GetAccountProviderId((AccountProvider)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).LoadAccount(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).OnAccountRegisterSuccess((RegisterExternalAccountResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).OnAccountUnregisterSuccess((DefaultResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).OnFacebookAccountRegisterSuccess((RegisterExternalAccountResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).OnFacebookSignIn();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).OnGetExternalAccountInfo((GetExternalAccountsResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).RegisterExternalAccount((RegisterExternalAccountRequest)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).RegisterFacebookAccount();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).RegisterGameServicesAccount();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).SendServerCommand((ICommand)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).UnregisterFacebookAccount();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).UnregisterGameServicesAccount();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((AccountSyncController)GCHandledObjects.GCHandleToObject(instance)).UpdateExternalAccountInfo((OnUpdateExternalAccountInfoResponseReceived)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

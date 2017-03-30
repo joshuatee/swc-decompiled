@@ -3,24 +3,11 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Cameras
 {
 	public class CameraShake : IViewPhysicsTimeObserver
 	{
-		private GameObject harness;
-
-		private Vector3 originalPosition;
-
-		private float elapsed;
-
-		private float magnitude;
-
-		private float duration;
-
-		private OnCameraShake onCameraShake;
-
 		public const float MAGNITUDE_SMALL = 0.2f;
 
 		public const float MAGNITUDE_MEDIUM = 0.25f;
@@ -32,6 +19,18 @@ namespace StaRTS.Main.Views.Cameras
 		public const float DURATION_MEDIUM = 0.5f;
 
 		public const float DURATION_LARGE = 1f;
+
+		private GameObject harness;
+
+		private Vector3 originalPosition;
+
+		private float elapsed;
+
+		private float magnitude;
+
+		private float duration;
+
+		private OnCameraShake onCameraShake;
 
 		public CameraShake(OnCameraShake onCameraShake)
 		{
@@ -88,34 +87,6 @@ namespace StaRTS.Main.Views.Cameras
 			{
 				this.onCameraShake(newPosition);
 			}
-		}
-
-		protected internal CameraShake(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CameraShake)GCHandledObjects.GCHandleToObject(instance)).OnViewPhysicsTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CameraShake)GCHandledObjects.GCHandleToObject(instance)).SetHarnessPosition(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CameraShake)GCHandledObjects.GCHandleToObject(instance)).Shake();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((CameraShake)GCHandledObjects.GCHandleToObject(instance)).Shake(*(float*)args, *(float*)(args + 1));
-			return -1L;
 		}
 	}
 }

@@ -9,7 +9,6 @@ using StaRTS.Main.Views.UX.Screens.ScreenHelpers;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 {
@@ -53,11 +52,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 		protected override void CreateItem()
 		{
 			string squadElementPrefix = this.GetSquadElementPrefix(this.tab);
-			this.id = string.Format("{0}{1}", new object[]
-			{
-				squadElementPrefix,
-				this.position
-			});
+			this.id = string.Format("{0}{1}", squadElementPrefix, this.position);
 			this.item = this.grid.CloneItem(this.id, this.templateItem);
 		}
 
@@ -175,45 +170,6 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				result = "squad_search_";
 			}
 			return result;
-		}
-
-		protected internal LeaderboardRowSquadView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LeaderboardRowSquadView)GCHandledObjects.GCHandleToObject(instance)).CreateItem();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((LeaderboardRowSquadView)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((LeaderboardRowSquadView)GCHandledObjects.GCHandleToObject(instance)).GetSquadElementPrefix((SocialTabs)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((LeaderboardRowSquadView)GCHandledObjects.GCHandleToObject(instance)).InitBaseView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((LeaderboardRowSquadView)GCHandledObjects.GCHandleToObject(instance)).InitFullView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((LeaderboardRowSquadView)GCHandledObjects.GCHandleToObject(instance)).OnJoinClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

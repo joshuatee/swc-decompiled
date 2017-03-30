@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatSquadWarTimeTravelCommand(CheatSquadWarTimeTravelRequest request) : base("cheats.guildWar.timeTravel", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatSquadWarTimeTravelCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

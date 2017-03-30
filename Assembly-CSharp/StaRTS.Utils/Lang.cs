@@ -9,9 +9,7 @@ using StaRTS.Utils.MetaData;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -37,9 +35,15 @@ namespace StaRTS.Utils
 
 		private const string LANG_BAD_FORMAT = "LANG: {0} bad format";
 
-		public const string KOREAN_FONT = "malgunbd";
+		public const string JAPANESE_FONT = "IwaNGNewsPro-Md.android";
+
+		public const string JAPAN_LOCALE = "ja_JP";
+
+		public const string KOREAN_FONT = "malgunbd.standalonewindows";
 
 		public const string KOREAN_LOCALE = "ko_KR";
+
+		public const string KOREAN_LANG = "ko";
 
 		private const string ID_NULL_OR_EMPTY = "ID_NULL_OR_EMPTY";
 
@@ -50,6 +54,8 @@ namespace StaRTS.Utils
 		private Dictionary<string, string> localeToDisplayLanguage;
 
 		private List<AssetHandle> assetHandles;
+
+		private Font japanFontInternal;
 
 		private Font koreanFontInternal;
 
@@ -63,13 +69,25 @@ namespace StaRTS.Utils
 			set;
 		}
 
+		public Font CustomJapaneseFont
+		{
+			get
+			{
+				if (this.japanFontInternal == null)
+				{
+					this.japanFontInternal = (Font)Resources.Load("IwaNGNewsPro-Md.android");
+				}
+				return this.japanFontInternal;
+			}
+		}
+
 		public Font CustomKoreanFont
 		{
 			get
 			{
 				if (this.koreanFontInternal == null)
 				{
-					this.koreanFontInternal = (Font)Resources.Load("malgunbd");
+					this.koreanFontInternal = (Font)Resources.Load("malgunbd.standalonewindows");
 				}
 				return this.koreanFontInternal;
 			}
@@ -92,7 +110,7 @@ namespace StaRTS.Utils
 			set
 			{
 				this.locale = value;
-				Service.Get<StaRTSLogger>().Debug("Locale: " + this.locale);
+				Service.Get<Logger>().Debug("Locale: " + this.locale);
 				this.ClearStringData();
 			}
 		}
@@ -118,16 +136,17 @@ namespace StaRTS.Utils
 		public string ExtractLanguageFromLocale()
 		{
 			int num = this.locale.IndexOf('_');
-			if (num < 0)
-			{
-				return this.locale;
-			}
-			return this.locale.Substring(0, num);
+			return (num < 0) ? this.locale : this.locale.Substring(0, num);
 		}
 
 		public static string ToDotNetLocale(string locale)
 		{
 			return locale.Replace("_", "-");
+		}
+
+		public bool IsJapanese()
+		{
+			return this.locale == "ja_JP";
 		}
 
 		public bool IsKorean()
@@ -177,25 +196,25 @@ namespace StaRTS.Utils
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
 			if (dictionary == null || !dictionary.ContainsKey("content"))
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid lang json: no content");
+				Service.Get<Logger>().Warn("Invalid lang json: no content");
 				return;
 			}
 			dictionary = (dictionary["content"] as Dictionary<string, object>);
 			if (dictionary == null || !dictionary.ContainsKey("objects"))
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid lang json: no objects");
+				Service.Get<Logger>().Warn("Invalid lang json: no objects");
 				return;
 			}
 			dictionary = (dictionary["objects"] as Dictionary<string, object>);
 			if (dictionary == null || !dictionary.ContainsKey("LocalizedStrings"))
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid lang json: no strings");
+				Service.Get<Logger>().Warn("Invalid lang json: no strings");
 				return;
 			}
 			List<object> list = dictionary["LocalizedStrings"] as List<object>;
 			if (list == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid lang json: no entries");
+				Service.Get<Logger>().Warn("Invalid lang json: no entries");
 				return;
 			}
 			int i = 0;
@@ -234,7 +253,7 @@ namespace StaRTS.Utils
 			}
 			if (sheet == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid lang joe file: no strings");
+				Service.Get<Logger>().Warn("Invalid lang joe file: no strings");
 				return;
 			}
 			int num2 = -1;
@@ -252,7 +271,7 @@ namespace StaRTS.Utils
 			}
 			if (num2 < 0)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid lang joe file: no text column");
+				Service.Get<Logger>().Warn("Invalid lang joe file: no text column");
 				return;
 			}
 			Dictionary<string, Row> allRows = sheet.GetAllRows();
@@ -260,11 +279,11 @@ namespace StaRTS.Utils
 			{
 				foreach (KeyValuePair<string, Row> current in allRows)
 				{
-					Row value = current.get_Value();
+					Row value = current.Value;
 					string text = value.TryGetString(num2);
 					if (text != null)
 					{
-						string key = current.get_Key();
+						string key = current.Key;
 						this.AddIdText(key, text);
 					}
 				}
@@ -273,19 +292,7 @@ namespace StaRTS.Utils
 
 		private void AddIdText(string id, string text)
 		{
-			if (this.strings.ContainsKey(id))
-			{
-				if (this.strings[id] != text)
-				{
-					Service.Get<StaRTSLogger>().WarnFormat("String id {0} must have the same translated values for locale {1}", new object[]
-					{
-						id,
-						this.locale
-					});
-					return;
-				}
-			}
-			else
+			if (!this.strings.ContainsKey(id))
 			{
 				this.strings.Add(id, text);
 			}
@@ -303,7 +310,7 @@ namespace StaRTS.Utils
 			this.localeToDisplayLanguage.Clear();
 			if (locales == null || displayLanguages == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid locale-language mapping");
+				Service.Get<Logger>().Warn("Invalid locale-language mapping");
 				if (locales == null)
 				{
 					return;
@@ -324,7 +331,7 @@ namespace StaRTS.Utils
 			int num = array.Length;
 			if (num != array2.Length)
 			{
-				Service.Get<StaRTSLogger>().Warn("Mismatched locale-language mapping");
+				Service.Get<Logger>().Warn("Mismatched locale-language mapping");
 				array2 = array;
 			}
 			for (int i = 0; i < num; i++)
@@ -332,7 +339,7 @@ namespace StaRTS.Utils
 				string key = array[i];
 				if (this.localeToDisplayLanguage.ContainsKey(key))
 				{
-					Service.Get<StaRTSLogger>().Warn("Duplicate locale in locale-language mapping");
+					Service.Get<Logger>().Warn("Duplicate locale in locale-language mapping");
 				}
 				else
 				{
@@ -343,11 +350,7 @@ namespace StaRTS.Utils
 
 		public string GetDisplayLanguage(string locale)
 		{
-			if (this.localeToDisplayLanguage == null || !this.localeToDisplayLanguage.ContainsKey(locale))
-			{
-				return null;
-			}
-			return this.localeToDisplayLanguage[locale];
+			return (this.localeToDisplayLanguage == null || !this.localeToDisplayLanguage.ContainsKey(locale)) ? null : this.localeToDisplayLanguage[locale];
 		}
 
 		public List<string> GetAvailableLocales()
@@ -357,14 +360,15 @@ namespace StaRTS.Utils
 			{
 				list.Add(current);
 			}
-			if (this.GetCultureInfo() == null)
+			CultureInfo cultureInfo = this.GetCultureInfo();
+			if (cultureInfo == null)
 			{
 				list.Sort();
 			}
 			else
 			{
 				Lang.staticLang = this;
-				Lang.staticComp = StringComparer.CurrentCulture;
+				Lang.staticComp = StringComparer.Create(cultureInfo, true);
 				try
 				{
 					list.Sort(new Comparison<string>(Lang.CompareLocaleDisplayLanguage));
@@ -388,7 +392,7 @@ namespace StaRTS.Utils
 			CultureInfo cultureInfo = null;
 			try
 			{
-				cultureInfo = new CultureInfo(this.DotNetLocale);
+				cultureInfo = CultureInfo.GetCultureInfo(this.DotNetLocale);
 			}
 			catch
 			{
@@ -398,7 +402,7 @@ namespace StaRTS.Utils
 			{
 				try
 				{
-					cultureInfo = new CultureInfo(Lang.ToDotNetLocale("en_US"));
+					cultureInfo = CultureInfo.GetCultureInfo("en_US");
 				}
 				catch
 				{
@@ -411,17 +415,10 @@ namespace StaRTS.Utils
 		public string ThousandsSeparated(int value)
 		{
 			CultureInfo cultureInfo = this.GetCultureInfo();
-			if (cultureInfo != null)
-			{
-				return string.Format(cultureInfo, "{0:n0}", new object[]
-				{
-					value
-				});
-			}
-			return string.Format("{0:n0}", new object[]
+			return (cultureInfo != null) ? string.Format(cultureInfo, "{0:n0}", new object[]
 			{
 				value
-			});
+			}) : string.Format("{0:n0}", value);
 		}
 
 		public bool GetOptional(string id, out string text)
@@ -439,16 +436,13 @@ namespace StaRTS.Utils
 		{
 			if (string.IsNullOrEmpty(id))
 			{
-				Service.Get<StaRTSLogger>().Error("Lang.Get(id) passed null or empty parameter.");
+				Service.Get<Logger>().Error("Lang.Get(id) passed null or empty parameter.");
 				return "ID_NULL_OR_EMPTY";
 			}
 			string text;
 			if (!this.strings.ContainsKey(id))
 			{
-				text = (id.StartsWith("s_") ? id : string.Format("LANG: {0} missing", new object[]
-				{
-					id
-				}));
+				text = ((!id.StartsWith("s_")) ? string.Format("LANG: {0} missing", id) : id);
 			}
 			else
 			{
@@ -461,10 +455,7 @@ namespace StaRTS.Utils
 					}
 					catch
 					{
-						text = string.Format("LANG: {0} bad format", new object[]
-						{
-							id
-						});
+						text = string.Format("LANG: {0} bad format", id);
 					}
 				}
 			}
@@ -494,10 +485,10 @@ namespace StaRTS.Utils
 				{
 					'='
 				});
-				string text3 = "@" + array2[0];
+				string oldValue = "@" + array2[0];
 				string type = array3[0];
 				string arg = array3[1];
-				text2 = text2.Replace(text3, this.DetermineMadlibValue(type, arg));
+				text2 = text2.Replace(oldValue, this.DetermineMadlibValue(type, arg));
 				i++;
 			}
 			return text2;
@@ -529,10 +520,7 @@ namespace StaRTS.Utils
 				string pref = Service.Get<SharedPlayerPrefs>().GetPref<string>(arg);
 				if (pref == null)
 				{
-					return string.Format("(Pref {0} has not been set)", new object[]
-					{
-						arg
-					});
+					return string.Format("(Pref {0} has not been set)", arg);
 				}
 				return this.Get(pref, new object[0]);
 			}
@@ -541,145 +529,6 @@ namespace StaRTS.Utils
 				return Service.Get<SharedPlayerPrefs>().GetPref<string>(arg);
 			}
 			return type + "=" + arg + ":Undefined";
-		}
-
-		protected internal Lang(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).AddIdText(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).AddStringData((JoeFile)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).AddStringData(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).ClearStringData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Lang.CompareLocaleDisplayLanguage(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).DetermineMadlibValue(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).ExtractLanguageFromLocale());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).Get(Marshal.PtrToStringUni(*(IntPtr*)args), (object[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).CustomKoreanFont);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).DotNetLocale);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).Initialized);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).Locale);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).GetAvailableLocales());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).GetCultureInfo());
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).GetDisplayLanguage(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).GetMadlibs(Marshal.PtrToStringUni(*(IntPtr*)args), (object[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).IsKorean());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).LoadAssets((List<string>)GCHandledObjects.GCHandleToObject(*args), (AssetSuccessDelegate)GCHandledObjects.GCHandleToObject(args[1]), (AssetFailureDelegate)GCHandledObjects.GCHandleToObject(args[2]), GCHandledObjects.GCHandleToObject(args[3]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).CustomKoreanFont = (Font)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).Initialized = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).Locale = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).SetupAvailableLocales(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((Lang)GCHandledObjects.GCHandleToObject(instance)).ThousandsSeparated(*(int*)args));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(Lang.ToDotNetLocale(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((Lang)GCHandledObjects.GCHandleToObject(instance)).UnloadAssets();
-			return -1L;
 		}
 	}
 }

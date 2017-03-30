@@ -25,10 +25,8 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -434,10 +432,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.activeContract = contract;
 				this.EnableTimers();
-				return;
 			}
-			this.activeContract = null;
-			this.DisableTimers();
+			else
+			{
+				this.activeContract = null;
+				this.DisableTimers();
+			}
 		}
 
 		public override EatResponse OnEvent(EventId id, object cookie)
@@ -495,11 +495,13 @@ namespace StaRTS.Main.Views.UX.Screens
 					this.labelUpgradeTime.Text = GameUtils.GetTimeLabelFromSeconds(remainingTimeForView);
 					int crystalCostToFinishContract = ContractUtils.GetCrystalCostToFinishContract(this.activeContract);
 					UXUtils.SetupCostElements(this, "FinishCost", null, 0, 0, 0, crystalCostToFinishContract, 0, !this.selectedTroop.ReqMet, null);
-					return;
 				}
-				this.activeContract = null;
-				this.DisableTimers();
-				this.Redraw();
+				else
+				{
+					this.activeContract = null;
+					this.DisableTimers();
+					this.Redraw();
+				}
 			}
 		}
 
@@ -619,7 +621,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			element2.Visible = flag3;
 			element3.Visible = flag3;
 			IDeployableVO troop = this.selectedTroop.Troop;
-			bool flag5 = (flag4 && !this.selectedTroop.ReqMet && this.IsNotMaxLevel(this.nextLevel)) | flag2;
+			bool flag5 = (flag4 && !this.selectedTroop.ReqMet && this.IsNotMaxLevel(this.nextLevel)) || flag2;
 			string text = this.selectedTroop.RequirementText;
 			bool flag6 = Service.Get<UnlockController>().CanDeployableBeUpgraded(this.currentLevel, deployableVO);
 			bool flag7 = this.nextLevel != null && Service.Get<DeployableShardUnlockController>().DoesUserHaveUpgradeShardRequirement(deployableVO);
@@ -669,7 +671,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					element3.Visible = false;
 					element4.Visible = visible;
-					element4.Enabled = (flag7 & flag6);
+					element4.Enabled = (flag7 && flag6);
 					base.GetElement<UXLabel>("LabelNormalIntro").Text = this.lang.Get("LABEL_REWARD_UPGRADE", new object[0]);
 				}
 				else
@@ -681,7 +683,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			bool flag9 = this.IsNotMaxLevel(this.nextLevel) && !string.IsNullOrEmpty(deployableVO.UpgradeShardUid);
 			if (flag4)
 			{
-				if (flag9 & flag7 & flag2)
+				if (flag9 && flag7 && flag2)
 				{
 					upgradeInfoLevel = DeployableInfoUIType.AskOnly;
 				}
@@ -696,7 +698,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (flag9)
 				{
 					element4.Visible = visible;
-					element4.Enabled = (flag7 & flag6);
+					element4.Enabled = (flag7 && flag6);
 					base.GetElement<UXLabel>("LabelNormalIntro").Text = this.lang.Get("LABEL_REWARD_UPGRADE", new object[0]);
 				}
 			}
@@ -719,38 +721,33 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			for (int i = 1; i <= 3; i++)
 			{
-				base.GetElement<UXElement>(string.Format("TroopImageQ{0}", new object[]
-				{
-					i
-				})).Visible = false;
+				base.GetElement<UXElement>(string.Format("TroopImageQ{0}", i)).Visible = false;
 			}
-			IDeployableVO deployableVO = (this.nextLevel != null) ? this.nextLevel : this.selectedTroop.Troop;
-			ShardVO shardVO = null;
-			if (!string.IsNullOrEmpty(deployableVO.UpgradeShardUid))
+			IDeployableVO arg_53_0;
+			if (this.nextLevel != null)
 			{
-				shardVO = Service.Get<IDataController>().GetOptional<ShardVO>(deployableVO.UpgradeShardUid);
+				IDeployableVO deployableVO = this.nextLevel;
+				arg_53_0 = deployableVO;
+			}
+			else
+			{
+				arg_53_0 = this.selectedTroop.Troop;
+			}
+			IDeployableVO deployableVO2 = arg_53_0;
+			ShardVO shardVO = null;
+			if (!string.IsNullOrEmpty(deployableVO2.UpgradeShardUid))
+			{
+				shardVO = Service.Get<IDataController>().GetOptional<ShardVO>(deployableVO2.UpgradeShardUid);
 			}
 			string name = "SpriteTroopSelectedItemImage";
 			base.GetElement<UXLabel>("LabelProgress").Text = string.Empty;
 			if (shardVO != null)
 			{
 				int quality = (int)shardVO.Quality;
-				base.GetElement<UXElement>(string.Format("TroopImageQ{0}", new object[]
-				{
-					quality
-				})).Visible = true;
-				base.GetElement<UXLabel>(string.Format("LabelQualityQ{0}", new object[]
-				{
-					quality
-				})).Text = LangUtils.GetShardQuality(shardVO.Quality);
-				base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", new object[]
-				{
-					quality
-				})).Visible = false;
-				name = string.Format("SpriteTroopSelectedItemImageQ{0}", new object[]
-				{
-					quality
-				});
+				base.GetElement<UXElement>(string.Format("TroopImageQ{0}", quality)).Visible = true;
+				base.GetElement<UXLabel>(string.Format("LabelQualityQ{0}", quality)).Text = LangUtils.GetShardQuality(shardVO.Quality);
+				base.GetElement<UXElement>(string.Format("SpriteTroopImageBkgGridQ{0}", quality)).Visible = false;
+				name = string.Format("SpriteTroopSelectedItemImageQ{0}", quality);
 				this.SetupShardProgressBar(quality);
 				base.SetupFragmentSprite(quality);
 			}
@@ -761,7 +758,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			base.GetElement<UXElement>("TroopImage").Visible = (shardVO == null);
 			UXSprite element = base.GetElement<UXSprite>(name);
-			ProjectorConfig projectorConfig = ProjectorUtils.GenerateGeometryConfig(deployableVO, element, true);
+			ProjectorConfig projectorConfig = ProjectorUtils.GenerateGeometryConfig(deployableVO2, element, true);
 			projectorConfig.AnimPreference = AnimationPreference.AnimationPreferred;
 			this.troopImage = ProjectorUtils.GenerateProjector(projectorConfig);
 			FactionDecal.SetDeployableDecalVisibiliy(this, false);
@@ -778,7 +775,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.nextLevel == null)
 			{
 				element3.Text = this.lang.Get("MAX_LEVEL", new object[0]);
-				element.Value = 1f;
+				element.Value = 0f;
 				return;
 			}
 			IDeployableVO deployableVO = this.nextLevel;
@@ -795,7 +792,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			});
 			if (upgradeShardCount == 0)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
+				Service.Get<Logger>().ErrorFormat("CMS Error: Shards required for {0} is zero", new object[]
 				{
 					this.nextLevel.Uid
 				});
@@ -812,19 +809,26 @@ namespace StaRTS.Main.Views.UX.Screens
 		private string GetOwnLabelID()
 		{
 			string result = "LabelQuantityOwn";
-			IDeployableVO deployableVO = (this.nextLevel != null) ? this.nextLevel : this.selectedTroop.Troop;
-			ShardVO shardVO = null;
-			if (!string.IsNullOrEmpty(deployableVO.UpgradeShardUid))
+			IDeployableVO arg_2B_0;
+			if (this.nextLevel != null)
 			{
-				shardVO = Service.Get<IDataController>().GetOptional<ShardVO>(deployableVO.UpgradeShardUid);
+				IDeployableVO deployableVO = this.nextLevel;
+				arg_2B_0 = deployableVO;
+			}
+			else
+			{
+				arg_2B_0 = this.selectedTroop.Troop;
+			}
+			IDeployableVO deployableVO2 = arg_2B_0;
+			ShardVO shardVO = null;
+			if (!string.IsNullOrEmpty(deployableVO2.UpgradeShardUid))
+			{
+				shardVO = Service.Get<IDataController>().GetOptional<ShardVO>(deployableVO2.UpgradeShardUid);
 			}
 			if (shardVO != null)
 			{
 				int quality = (int)shardVO.Quality;
-				result = string.Format("LabelQuantityOwnQ{0}", new object[]
-				{
-					quality
-				});
+				result = string.Format("LabelQuantityOwnQ{0}", quality);
 			}
 			return result;
 		}
@@ -836,7 +840,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				LangUtils.GetStarshipDisplayName(nextLevelVO),
 				this.nextLevel.Lvl
 			});
-			base.GetElement<UXLabel>(this.GetOwnLabelID()).Text = "";
+			base.GetElement<UXLabel>(this.GetOwnLabelID()).Text = string.Empty;
 		}
 
 		private void RefreshStarshipViewNoUpgradeAsk(SpecialAttackTypeVO specialAttack)
@@ -851,7 +855,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.lang.ThousandsSeparated(itemAmount)
 			});
-			base.GetElement<UXLabel>("LabelTrainingTimeIncrease").Text = "";
+			base.GetElement<UXLabel>("LabelTrainingTimeIncrease").Text = string.Empty;
 		}
 
 		private void RefreshStarshipView(SpecialAttackTypeVO specialAttack, DeployableInfoUIType upgradeInfoLevel)
@@ -871,7 +875,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (upgradeInfoLevel != DeployableInfoUIType.AskOnly)
 				{
 					int num = specialAttackTypeVO.TrainingTime - specialAttack.TrainingTime;
-					string id = (num >= 0) ? "PLUS" : "MINUS";
+					string id = (num < 0) ? "MINUS" : "PLUS";
 					base.GetElement<UXLabel>("LabelTrainingTimeIncrease").Text = this.lang.Get(id, new object[]
 					{
 						GameUtils.GetTimeLabelFromSeconds(num)
@@ -903,15 +907,15 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 				if (flag && troopTypeVO2 == null)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Invaild Dropship Troop: {0}, on Special Attack: {1}", new object[]
+					Service.Get<Logger>().ErrorFormat("Invaild Dropship Troop: {0}, on Special Attack: {1}", new object[]
 					{
 						specialAttackTypeVO.LinkedUnit,
 						specialAttackTypeVO.Uid
 					});
 				}
-				this.SetupBar(1, this.lang.Get("TROOP_UNITS", new object[0]), (int)specialAttack.UnitCount, (int)(flag ? specialAttackTypeVO.UnitCount : 0u), (int)maxLevel.UnitCount);
-				this.SetupBar(2, this.lang.Get("PER_UNIT_DAMAGE", new object[0]), troopTypeVO.DPS, flag ? troopTypeVO2.DPS : 0, troopTypeVO3.DPS);
-				this.SetupBar(3, this.lang.Get("PER_UNIT_HEALTH", new object[0]), troopTypeVO.Health, flag ? troopTypeVO2.Health : 0, troopTypeVO3.Health);
+				this.SetupBar(1, this.lang.Get("TROOP_UNITS", new object[0]), (int)specialAttack.UnitCount, (int)((!flag) ? 0u : specialAttackTypeVO.UnitCount), (int)maxLevel.UnitCount);
+				this.SetupBar(2, this.lang.Get("PER_UNIT_DAMAGE", new object[0]), troopTypeVO.DPS, (!flag) ? 0 : troopTypeVO2.DPS, troopTypeVO3.DPS);
+				this.SetupBar(3, this.lang.Get("PER_UNIT_HEALTH", new object[0]), troopTypeVO.Health, (!flag) ? 0 : troopTypeVO2.Health, troopTypeVO3.Health);
 				this.movementSpeedNameLabel.Visible = false;
 				this.movementSpeedValueLabel.Visible = false;
 				this.SetAttackRange(0u, 0u);
@@ -972,7 +976,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				LangUtils.GetTroopDisplayName(nextLevelVO),
 				nextLevelVO.Lvl
 			});
-			base.GetElement<UXLabel>(this.GetOwnLabelID()).Text = "";
+			base.GetElement<UXLabel>(this.GetOwnLabelID()).Text = string.Empty;
 		}
 
 		private void RefreshTroopViewNoUpgradeAsk(TroopTypeVO troop)
@@ -1004,7 +1008,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.lang.ThousandsSeparated(itemAmount)
 			});
-			base.GetElement<UXLabel>("LabelTrainingTimeIncrease").Text = "";
+			base.GetElement<UXLabel>("LabelTrainingTimeIncrease").Text = string.Empty;
 		}
 
 		private void RefreshTroopView(TroopTypeVO troop, DeployableInfoUIType upgradeInfoLevel)
@@ -1025,7 +1029,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (upgradeInfoLevel != DeployableInfoUIType.AskOnly)
 				{
 					int num = troopTypeVO.TrainingTime - troop.TrainingTime;
-					string id = (num >= 0) ? "PLUS" : "MINUS";
+					string id = (num < 0) ? "MINUS" : "PLUS";
 					base.GetElement<UXLabel>("LabelTrainingTimeIncrease").Text = this.lang.Get(id, new object[]
 					{
 						GameUtils.GetTimeLabelFromSeconds(num)
@@ -1058,11 +1062,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.SetupBar(1, this.lang.Get(id2, new object[0]), troop.DPS, nextValue, this.maxTroopDps);
 			this.SetupBar(2, this.lang.Get("HEALTH", new object[]
 			{
-				""
+				string.Empty
 			}), troop.Health, nextValue2, this.maxHealth);
 			this.SetupBar3();
 			this.SetupLeftTableItem(0, this.lang.Get("TRAINING_CLASS_TYPE", new object[0]), this.lang.Get("trp_class_" + troop.TroopRole.ToString(), new object[0]));
-			this.SetupLeftTableItem(1, this.lang.Get("DAMAGE_TYPE", new object[0]), this.lang.Get((troop.ProjectileType.SplashRadius > 0) ? "DAMAGE_TYPE_SPLASH" : "DAMAGE_TYPE_STANDARD", new object[0]));
+			this.SetupLeftTableItem(1, this.lang.Get("DAMAGE_TYPE", new object[0]), this.lang.Get((troop.ProjectileType.SplashRadius <= 0) ? "DAMAGE_TYPE_STANDARD" : "DAMAGE_TYPE_SPLASH", new object[0]));
 			this.SetupLeftTableItem(2, this.lang.Get("FAVORITE_TARGET", new object[0]), this.lang.Get("target_pref_" + troop.FavoriteTargetType, new object[0]));
 			if (troop.Type == TroopType.Hero && !string.IsNullOrEmpty(troop.Ability))
 			{
@@ -1129,9 +1133,9 @@ namespace StaRTS.Main.Views.UX.Screens
 			int contraband = vo.Contraband;
 			int materials = vo.Materials;
 			int credits = vo.Credits;
-			int num2 = (this.nextLevel == null) ? 0 : this.nextLevel.Contraband;
-			int num3 = (this.nextLevel == null) ? 0 : this.nextLevel.Materials;
-			int num4 = (this.nextLevel == null) ? 0 : this.nextLevel.Credits;
+			int num2 = (this.nextLevel != null) ? this.nextLevel.Contraband : 0;
+			int num3 = (this.nextLevel != null) ? this.nextLevel.Materials : 0;
+			int num4 = (this.nextLevel != null) ? this.nextLevel.Credits : 0;
 			BuildingLookupController buildingLookupController = Service.Get<BuildingLookupController>();
 			PerkManager perkManager = Service.Get<PerkManager>();
 			BuildingTypeVO minBuildingRequirement = buildingLookupController.GetMinBuildingRequirement(vo);
@@ -1172,7 +1176,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.trainingCostNextValueLabel.Visible = showUpgradeCostIncrease;
 			if (showUpgradeCostIncrease)
 			{
-				string id = (num >= 0) ? "PLUS" : "MINUS";
+				string id = (num < 0) ? "MINUS" : "PLUS";
 				base.GetElement<UXLabel>("LabelTrainingCostIncrease").Text = this.lang.Get(id, new object[]
 				{
 					num
@@ -1186,19 +1190,21 @@ namespace StaRTS.Main.Views.UX.Screens
 			UXLabel uXLabel2 = this.attackRangeValueLabel;
 			if (maxAttackRange == 0u)
 			{
-				uXLabel.Text = "";
-				uXLabel2.Text = "";
-				return;
+				uXLabel.Text = string.Empty;
+				uXLabel2.Text = string.Empty;
 			}
-			uXLabel.Text = this.lang.Get("RANGE", new object[0]);
-			uXLabel2.Text = ((minAttackRange == 0u) ? this.lang.Get("TILE_COUNT", new object[]
+			else
 			{
-				maxAttackRange
-			}) : this.lang.Get("TILE_RANGE", new object[]
-			{
-				minAttackRange,
-				maxAttackRange
-			}));
+				uXLabel.Text = this.lang.Get("RANGE", new object[0]);
+				uXLabel2.Text = ((minAttackRange != 0u) ? this.lang.Get("TILE_RANGE", new object[]
+				{
+					minAttackRange,
+					maxAttackRange
+				}) : this.lang.Get("TILE_COUNT", new object[]
+				{
+					maxAttackRange
+				}));
+			}
 		}
 
 		protected virtual void SetupBar3()
@@ -1209,38 +1215,20 @@ namespace StaRTS.Main.Views.UX.Screens
 		protected void SetupBar(int index, string labelString, int currentValue, int nextValue, int maxValue)
 		{
 			bool flag = labelString != null;
-			base.GetElement<UXElement>(string.Format("pBar{0}", new object[]
-			{
-				index
-			})).Visible = flag;
+			base.GetElement<UXElement>(string.Format("pBar{0}", index)).Visible = flag;
 			if (!flag)
 			{
 				return;
 			}
-			UXLabel element = base.GetElement<UXLabel>(string.Format("LabelpBar{0}", new object[]
-			{
-				index
-			}));
+			UXLabel element = base.GetElement<UXLabel>(string.Format("LabelpBar{0}", index));
 			element.Text = labelString;
-			UXSlider element2 = base.GetElement<UXSlider>(string.Format("pBarCurrent{0}", new object[]
-			{
-				index
-			}));
-			UXSlider element3 = base.GetElement<UXSlider>(string.Format("pBarNext{0}", new object[]
-			{
-				index
-			}));
+			UXSlider element2 = base.GetElement<UXSlider>(string.Format("pBarCurrent{0}", index));
+			UXSlider element3 = base.GetElement<UXSlider>(string.Format("pBarNext{0}", index));
 			element3.Visible = (nextValue > currentValue);
 			element2.Value = MathUtils.NormalizeRange((float)currentValue, 0f, (float)maxValue);
 			element3.Value = MathUtils.NormalizeRange((float)nextValue, 0f, (float)maxValue);
-			UXLabel element4 = base.GetElement<UXLabel>(string.Format("LabelpBar{0}Current", new object[]
-			{
-				index
-			}));
-			UXLabel element5 = base.GetElement<UXLabel>(string.Format("LabelpBar{0}Next", new object[]
-			{
-				index
-			}));
+			UXLabel element4 = base.GetElement<UXLabel>(string.Format("LabelpBar{0}Current", index));
+			UXLabel element5 = base.GetElement<UXLabel>(string.Format("LabelpBar{0}Next", index));
 			element5.Visible = (nextValue > currentValue);
 			element4.Text = this.lang.ThousandsSeparated(currentValue);
 			element5.Text = this.lang.Get("PLUS", new object[]
@@ -1252,20 +1240,11 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void SetupLeftTableItem(int index, string title, string desc)
 		{
 			bool flag = !string.IsNullOrEmpty(title);
-			base.GetElement<UXElement>(string.Format("InfoRow{0}", new object[]
-			{
-				index
-			})).Visible = flag;
+			base.GetElement<UXElement>(string.Format("InfoRow{0}", index)).Visible = flag;
 			if (flag)
 			{
-				base.GetElement<UXLabel>(string.Format("InfoTitle{0}", new object[]
-				{
-					index
-				})).Text = title;
-				base.GetElement<UXLabel>(string.Format("InfoDetail{0}", new object[]
-				{
-					index
-				})).Text = desc;
+				base.GetElement<UXLabel>(string.Format("InfoTitle{0}", index)).Text = title;
+				base.GetElement<UXLabel>(string.Format("InfoDetail{0}", index)).Text = desc;
 			}
 		}
 
@@ -1289,11 +1268,11 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			int num = (int)button.Tag;
 			int count = this.troopList.Count;
-			int index = (num < 0) ? (count - 1) : 0;
+			int index = (num >= 0) ? 0 : (count - 1);
 			TroopUpgradeTag troopUpgradeTag = this.troopList[index];
 			for (int i = count - 1; i >= 0; i--)
 			{
-				int index2 = (num < 0) ? (count - 1 - i) : i;
+				int index2 = (num >= 0) ? i : (count - 1 - i);
 				TroopUpgradeTag troopUpgradeTag2 = this.troopList[index2];
 				if (troopUpgradeTag2.Troop == this.selectedTroop.Troop)
 				{
@@ -1368,27 +1347,27 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			IUpgradeableVO upgradeableVO = this.nextLevel;
 			StringBuilder stringBuilder = new StringBuilder();
-			string text = "";
-			string text2 = "";
-			int num = 0;
+			string text = string.Empty;
+			string value = string.Empty;
+			int value2 = 0;
 			if (upgradeableVO is SpecialAttackTypeVO)
 			{
 				text = (upgradeableVO as SpecialAttackTypeVO).SpecialAttackID;
-				text2 = text;
-				num = (upgradeableVO as SpecialAttackTypeVO).Lvl;
+				value = text;
+				value2 = (upgradeableVO as SpecialAttackTypeVO).Lvl;
 			}
 			else if (upgradeableVO is TroopTypeVO)
 			{
 				text = (upgradeableVO as TroopTypeVO).Type.ToString();
-				text2 = (upgradeableVO as TroopTypeVO).TroopID;
-				num = (upgradeableVO as TroopTypeVO).Lvl;
+				value = (upgradeableVO as TroopTypeVO).TroopID;
+				value2 = (upgradeableVO as TroopTypeVO).Lvl;
 			}
-			string text3 = StringUtils.ToLowerCaseUnderscoreSeperated(text);
-			stringBuilder.Append(text3);
+			string value3 = StringUtils.ToLowerCaseUnderscoreSeperated(text);
+			stringBuilder.Append(value3);
 			stringBuilder.Append("|");
-			stringBuilder.Append(text2);
+			stringBuilder.Append(value);
 			stringBuilder.Append("|");
-			stringBuilder.Append(num);
+			stringBuilder.Append(value2);
 			stringBuilder.Append("|research");
 			if (!PayMeScreen.ShowIfNotEnoughCurrency(upgradeableVO.UpgradeCredits, upgradeableVO.UpgradeMaterials, upgradeableVO.UpgradeContraband, stringBuilder.ToString(), new OnScreenModalResult(this.OnPayMeForCurrencyResult)))
 			{
@@ -1406,19 +1385,19 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				string instructions = this.lang.Get("PLANETS_PLAY_BUILD_PC", new object[0]);
 				Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructionsError(instructions);
-				return;
 			}
-			if (currentState is HomeState)
+			else if (currentState is HomeState)
 			{
 				this.GoToGalaxyFromHomeState(tag);
-				return;
 			}
-			if (currentState is GalaxyState)
+			else if (currentState is GalaxyState)
 			{
 				this.GoToGalaxyFromGalaxyState(tag);
-				return;
 			}
-			Service.Get<StaRTSLogger>().Error("Attempt to go to galaxy from invalide state " + currentState.ToString());
+			else
+			{
+				Service.Get<Logger>().Error("Attempt to go to galaxy from invalide state " + currentState.ToString());
+			}
 		}
 
 		private void GoToGalaxyFromHomeState(DeployableInfoActionButtonTag tag)
@@ -1430,9 +1409,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (actionId == "planet")
 			{
 				galaxyViewController.GoToPlanetView(planetUID, CampaignScreenSection.Main);
-				return;
 			}
-			if (actionId == "galaxy")
+			else if (actionId == "galaxy")
 			{
 				galaxyViewController.GoToGalaxyView(planetUID);
 			}
@@ -1458,7 +1436,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				if (highestLevelScreen2 != null)
 				{
 					highestLevelScreen2.CloseNoTransition(null);
-					return;
 				}
 			}
 			else if (actionId == "galaxy")
@@ -1481,9 +1458,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (crystalCostToFinishContract >= GameConstants.CRYSTAL_SPEND_WARNING_MINIMUM)
 			{
 				FinishNowScreen.ShowModal(this.selectedBuilding, new OnScreenModalResult(this.FinishContract), null);
-				return;
 			}
-			this.FinishContract(this.selectedBuilding, null);
+			else
+			{
+				this.FinishContract(this.selectedBuilding, null);
+			}
 		}
 
 		private void FinishContract(object result, object cookie)
@@ -1522,274 +1501,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.StartUpgrading();
 			}
-		}
-
-		protected internal DeployableInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).CheckActiveContract();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).CloseFromResearchScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).DisableTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).EnableTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).FillPlanetsUnlockGrid((List<string>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).FinishContract(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ShowCurrencyTray);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).GetNextDeployable((IDeployableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).GetOwnLabelID());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).GoToGalaxyFromGalaxyState((DeployableInfoActionButtonTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).GoToGalaxyFromHomeState((DeployableInfoActionButtonTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).HideUnlockUnitGalaxyUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).IsNotMaxLevel((IDeployableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnBackButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnFinishClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnGoToGalaxyClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPayMeForCurrencyResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPrevOrNextButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPurchaseClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).Redraw();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshResearchContextButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshStarshipView((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args), (DeployableInfoUIType)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshStarshipViewNoUpgradeAsk((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshStarshipViewUpgradeAsk((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshTroopView((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (DeployableInfoUIType)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshTroopViewNoUpgradeAsk((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshTroopViewUpgradeAsk((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetTrainingCost((IDeployableVO)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupAndEnableUnlockUnitGalaxyUI((IDeployableVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupBar(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupBar3();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupLeftTableAltAbilityItem((TroopUniqueAbilityDescVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupLeftTableItem(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupPerksButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupShardProgressBar(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).SetupTroopImage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).StartUpgrading();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ToggleParentScreenVisibility(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((DeployableInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateContractTimers();
-			return -1L;
 		}
 	}
 }

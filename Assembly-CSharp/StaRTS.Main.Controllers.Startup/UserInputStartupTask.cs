@@ -5,7 +5,6 @@ using StaRTS.Main.Views.UX;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -20,14 +19,10 @@ namespace StaRTS.Main.Controllers.Startup
 			Service.Get<UserInputManager>().Init();
 			Service.Get<EventManager>().RegisterObserver(this, EventId.HudComplete, EventPriority.Default);
 			new ScreenController();
+			new PromoPopupManager();
 			new UXController();
 			new UserInputInhibitor();
 			new BackButtonManager();
-			ScreenSizeController instance = ScreenSizeController.Instance;
-			if (instance != null)
-			{
-				instance.isEnabled = true;
-			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
@@ -46,28 +41,8 @@ namespace StaRTS.Main.Controllers.Startup
 
 		private void OnPreloadAndCacheScreensComplete(object cookie)
 		{
+			Service.Get<AssetManager>().UnloadDependencyBundle("gui_shared");
 			base.Complete();
-		}
-
-		protected internal UserInputStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UserInputStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((UserInputStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnPreloadAndCacheScreensComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((UserInputStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

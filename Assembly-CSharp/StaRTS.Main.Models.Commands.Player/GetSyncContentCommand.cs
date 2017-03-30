@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public GetSyncContentCommand(PlayerIdRequest request) : base("player.getSyncContent", request, new GetSyncContentResponse())
 		{
 		}
-
-		protected internal GetSyncContentCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

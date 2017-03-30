@@ -5,7 +5,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -36,8 +35,8 @@ namespace StaRTS.Main.Views.Entities
 		public AbstractFadingView(object fadingObject, float delay, float fadeTime, FadingDelegate onStart, FadingDelegate onComplete)
 		{
 			this.fadingObject = fadingObject;
-			this.delay = ((delay < 0f) ? 0f : delay);
-			this.fadeTime = ((fadeTime < 0f) ? 0f : fadeTime);
+			this.delay = ((delay >= 0f) ? delay : 0f);
+			this.fadeTime = ((fadeTime >= 0f) ? fadeTime : 0f);
 			this.onStart = onStart;
 			this.onComplete = onComplete;
 			this.startedFade = false;
@@ -62,7 +61,7 @@ namespace StaRTS.Main.Views.Entities
 			}
 			this.HandleStarted();
 			bool flag = num >= this.fadeTime;
-			num = (flag ? 0f : (1f - num / this.fadeTime));
+			num = ((!flag) ? (1f - num / this.fadeTime) : 0f);
 			Color color = new Color(1f, 1f, 1f, num);
 			if (!this.EnsureMaterials())
 			{
@@ -200,50 +199,6 @@ namespace StaRTS.Main.Views.Entities
 				}
 			}
 			this.oldMaterials = null;
-		}
-
-		protected internal AbstractFadingView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AbstractFadingView)GCHandledObjects.GCHandleToObject(instance)).Complete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractFadingView)GCHandledObjects.GCHandleToObject(instance)).EnsureMaterials());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AbstractFadingView)GCHandledObjects.GCHandleToObject(instance)).Fade(*(float*)args));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AbstractFadingView)GCHandledObjects.GCHandleToObject(instance)).HandleStarted();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AbstractFadingView)GCHandledObjects.GCHandleToObject(instance)).InitData((GameObject)GCHandledObjects.GCHandleToObject(*args), (MeterShaderComponent)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((AbstractFadingView)GCHandledObjects.GCHandleToObject(instance)).RestoreMaterials();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((AbstractFadingView)GCHandledObjects.GCHandleToObject(instance)).SetColor(*(int*)args, *(*(IntPtr*)(args + 1)));
-			return -1L;
 		}
 	}
 }

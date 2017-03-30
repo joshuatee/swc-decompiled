@@ -3,7 +3,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -35,16 +34,6 @@ namespace StaRTS.Main.Controllers
 			string type = perkEffectVO.Type;
 			BuildingType perkBuilding = perkEffectVO.PerkBuilding;
 			return contractBuildingVO != null && (type == "contractCost" && perkBuilding == contractBuildingVO.Type);
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractCostPerkUtils.CanApplyEffect((PerkEffectVO)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ContractCostPerkUtils.GetDiscountedCostMultiplier((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (List<string>)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

@@ -1,7 +1,6 @@
 using Net.RichardLord.Ash.Core;
 using StaRTS.Main.Models.Entities.Components;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
@@ -26,15 +25,6 @@ namespace StaRTS.Main.Views.Entities
 				MeterShaderComponent meter = entity.Get<MeterShaderComponent>();
 				base.InitData(gameObjectViewComponent.MainGameObject, meter);
 			}
-		}
-
-		protected internal FadingEntity(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FadingEntity)GCHandledObjects.GCHandleToObject(instance)).Entity);
 		}
 	}
 }

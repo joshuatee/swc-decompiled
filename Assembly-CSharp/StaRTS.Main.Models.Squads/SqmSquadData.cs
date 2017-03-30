@@ -21,13 +21,5 @@ namespace StaRTS.Main.Models.Squads
 		public int Level;
 
 		public int TotalRepInvested;
-
-		public SqmSquadData()
-		{
-		}
-
-		protected internal SqmSquadData(UIntPtr dummy)
-		{
-		}
 	}
 }

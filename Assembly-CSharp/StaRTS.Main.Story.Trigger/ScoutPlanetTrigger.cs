@@ -3,7 +3,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Trigger
 {
@@ -27,21 +26,6 @@ namespace StaRTS.Main.Story.Trigger
 		{
 			base.Activate();
 			Service.Get<EventManager>().RegisterObserver(this, EventId.PlanetScoutingStart, EventPriority.Default);
-		}
-
-		protected internal ScoutPlanetTrigger(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ScoutPlanetTrigger)GCHandledObjects.GCHandleToObject(instance)).Activate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ScoutPlanetTrigger)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

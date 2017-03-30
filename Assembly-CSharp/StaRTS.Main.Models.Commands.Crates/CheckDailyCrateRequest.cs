@@ -12,9 +12,5 @@ namespace StaRTS.Main.Models.Commands.Crates
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			base.PlayerId = currentPlayer.PlayerId;
 		}
-
-		protected internal CheckDailyCrateRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

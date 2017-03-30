@@ -6,7 +6,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -45,22 +44,6 @@ namespace StaRTS.Main.Controllers.Startup
 			new ProfanityController();
 			base.Complete();
 			Service.Get<EventManager>().SendEvent(EventId.StringsLoadEnd, null);
-		}
-
-		protected internal LangStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((LangStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnComplete(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((LangStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

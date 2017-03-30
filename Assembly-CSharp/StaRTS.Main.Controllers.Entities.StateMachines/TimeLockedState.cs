@@ -1,6 +1,5 @@
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities.StateMachines
 {
@@ -58,50 +57,6 @@ namespace StaRTS.Main.Controllers.Entities.StateMachines
 		public void ForceUnlock()
 		{
 			this.NextUnlockTime = 0u;
-		}
-
-		protected internal TimeLockedState(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TimeLockedState)GCHandledObjects.GCHandleToObject(instance)).ForceUnlock();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TimeLockedState)GCHandledObjects.GCHandleToObject(instance)).Owner);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TimeLockedState)GCHandledObjects.GCHandleToObject(instance)).IsUnlocked());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TimeLockedState)GCHandledObjects.GCHandleToObject(instance)).OnEnter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TimeLockedState)GCHandledObjects.GCHandleToObject(instance)).OnExit((IState)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TimeLockedState)GCHandledObjects.GCHandleToObject(instance)).ResetLock();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TimeLockedState)GCHandledObjects.GCHandleToObject(instance)).Owner = (TimeLockedStateMachine)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
 		}
 	}
 }

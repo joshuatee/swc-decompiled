@@ -3,7 +3,6 @@ using StaRTS.Main.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -59,34 +58,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
 			base.OnDestroyElement();
-		}
-
-		protected internal TimerAlertScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TimerAlertScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TimerAlertScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TimerAlertScreen)GCHandledObjects.GCHandleToObject(instance)).SetupControls();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TimerAlertScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateTimeText();
-			return -1L;
 		}
 	}
 }

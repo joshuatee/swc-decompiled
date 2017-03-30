@@ -10,7 +10,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -101,10 +100,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (perksAppliedToBuilding.Count > 0)
 			{
 				Service.Get<ViewTimeEngine>().RegisterClockTimeObserver(this, 1f);
-				return;
 			}
-			this.Close(null);
-			Service.Get<EventManager>().SendEvent(EventId.ActivePerksUpdated, null);
+			else
+			{
+				this.Close(null);
+				Service.Get<EventManager>().SendEvent(EventId.ActivePerksUpdated, null);
+			}
 		}
 
 		private void AddPerkToGrid(ActivatedPerkData perkData)
@@ -169,64 +170,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			Service.Get<ViewTimeEngine>().UnregisterClockTimeObserver(this);
 			this.perksGrid.Clear();
 			this.perksGrid = null;
-		}
-
-		protected internal ActivePerksInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ActivePerksInfoScreen)GCHandledObjects.GCHandleToObject(instance)).AddPerkToGrid((ActivatedPerkData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ActivePerksInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ActivePerksInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitializePerksGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ActivePerksInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ActivePerksInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ActivePerksInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ActivePerksInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ActivePerksInfoScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshPerkStates();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ActivePerksInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdatePerkTimer((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

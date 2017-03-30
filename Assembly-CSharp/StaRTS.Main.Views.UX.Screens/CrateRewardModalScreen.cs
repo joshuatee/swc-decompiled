@@ -5,7 +5,6 @@ using StaRTS.Main.Views.Animations;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -69,27 +68,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				Service.Get<ScreenController>().AddScreen(screenBase);
 			}
 			this.Close(null);
-		}
-
-		protected internal CrateRewardModalScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CrateRewardModalScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CrateRewardModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnPrimaryButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((CrateRewardModalScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
 		}
 	}
 }

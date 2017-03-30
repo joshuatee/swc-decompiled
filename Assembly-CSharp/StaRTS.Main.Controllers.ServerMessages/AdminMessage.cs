@@ -3,8 +3,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.ServerMessages
 {
@@ -54,45 +52,15 @@ namespace StaRTS.Main.Controllers.ServerMessages
 				{
 					foreach (KeyValuePair<string, object> current in dictionary2)
 					{
-						string key = current.get_Key();
-						Dictionary<string, object> dictionary3 = current.get_Value() as Dictionary<string, object>;
+						string key = current.Key;
+						Dictionary<string, object> dictionary3 = current.Value as Dictionary<string, object>;
 						string message = (string)dictionary3["content"];
-						bool isCritical = Convert.ToInt32(dictionary3["flags"], CultureInfo.InvariantCulture) == 1;
+						bool isCritical = Convert.ToInt32(dictionary3["flags"]) == 1;
 						this.Messages.Add(new AdminMessageData(key, message, isCritical));
 					}
 				}
 			}
 			return this;
-		}
-
-		protected internal AdminMessage(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AdminMessage)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AdminMessage)GCHandledObjects.GCHandleToObject(instance)).MessageCookie);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AdminMessage)GCHandledObjects.GCHandleToObject(instance)).MessageEventId);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AdminMessage)GCHandledObjects.GCHandleToObject(instance)).Messages);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((AdminMessage)GCHandledObjects.GCHandleToObject(instance)).Messages = (List<AdminMessageData>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
 		}
 	}
 }

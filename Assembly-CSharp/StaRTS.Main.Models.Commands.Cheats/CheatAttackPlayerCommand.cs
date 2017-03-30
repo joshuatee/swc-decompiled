@@ -25,9 +25,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 			}
 			return OnCompleteAction.Desync;
 		}
-
-		protected internal CheatAttackPlayerCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

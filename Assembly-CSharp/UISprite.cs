@@ -1,37 +1,29 @@
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/UI/NGUI Sprite"), ExecuteInEditMode]
-public class UISprite : UIBasicSprite, IUnitySerializable
+public class UISprite : UIBasicSprite
 {
 	[HideInInspector, SerializeField]
-	protected internal UIAtlas mAtlas;
+	private UIAtlas mAtlas;
 
 	[HideInInspector, SerializeField]
-	protected internal string mSpriteName;
+	private string mSpriteName;
 
 	[HideInInspector, SerializeField]
-	protected internal bool mFillCenter;
+	private bool mFillCenter = true;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	protected UISpriteData mSprite;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mSpriteSet;
 
 	public override Material material
 	{
 		get
 		{
-			if (!(this.mAtlas != null))
-			{
-				return null;
-			}
-			return this.mAtlas.spriteMaterial;
+			return (!(this.mAtlas != null)) ? null : this.mAtlas.spriteMaterial;
 		}
 	}
 
@@ -57,7 +49,7 @@ public class UISprite : UIBasicSprite, IUnitySerializable
 				if (!string.IsNullOrEmpty(this.mSpriteName))
 				{
 					string spriteName = this.mSpriteName;
-					this.mSpriteName = "";
+					this.mSpriteName = string.Empty;
 					this.spriteName = spriteName;
 					this.MarkAsChanged();
 				}
@@ -73,25 +65,24 @@ public class UISprite : UIBasicSprite, IUnitySerializable
 		}
 		set
 		{
-			if (!string.IsNullOrEmpty(value))
+			if (string.IsNullOrEmpty(value))
 			{
-				if (this.mSpriteName != value)
+				if (string.IsNullOrEmpty(this.mSpriteName))
 				{
-					this.mSpriteName = value;
-					this.mSprite = null;
-					this.mChanged = true;
-					this.mSpriteSet = false;
+					return;
 				}
-				return;
+				this.mSpriteName = string.Empty;
+				this.mSprite = null;
+				this.mChanged = true;
+				this.mSpriteSet = false;
 			}
-			if (string.IsNullOrEmpty(this.mSpriteName))
+			else if (this.mSpriteName != value)
 			{
-				return;
+				this.mSpriteName = value;
+				this.mSprite = null;
+				this.mChanged = true;
+				this.mSpriteSet = false;
 			}
-			this.mSpriteName = "";
-			this.mSprite = null;
-			this.mChanged = true;
-			this.mSpriteSet = false;
 		}
 	}
 
@@ -108,13 +99,13 @@ public class UISprite : UIBasicSprite, IUnitySerializable
 	{
 		get
 		{
-			return this.centerType > UIBasicSprite.AdvancedType.Invisible;
+			return this.centerType != UIBasicSprite.AdvancedType.Invisible;
 		}
 		set
 		{
-			if (value != this.centerType > UIBasicSprite.AdvancedType.Invisible)
+			if (value != (this.centerType != UIBasicSprite.AdvancedType.Invisible))
 			{
-				this.centerType = (value ? UIBasicSprite.AdvancedType.Sliced : UIBasicSprite.AdvancedType.Invisible);
+				this.centerType = ((!value) ? UIBasicSprite.AdvancedType.Invisible : UIBasicSprite.AdvancedType.Sliced);
 				this.MarkAsChanged();
 			}
 		}
@@ -137,11 +128,7 @@ public class UISprite : UIBasicSprite, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.mAtlas != null))
-			{
-				return 1f;
-			}
-			return this.mAtlas.pixelSize;
+			return (!(this.mAtlas != null)) ? 1f : this.mAtlas.pixelSize;
 		}
 	}
 
@@ -159,7 +146,7 @@ public class UISprite : UIBasicSprite, IUnitySerializable
 				{
 					num += Mathf.RoundToInt(pixelSize * (float)(atlasSprite.paddingLeft + atlasSprite.paddingRight));
 				}
-				return Mathf.Max(base.minWidth, ((num & 1) == 1) ? (num + 1) : num);
+				return Mathf.Max(base.minWidth, ((num & 1) != 1) ? num : (num + 1));
 			}
 			return base.minWidth;
 		}
@@ -179,7 +166,7 @@ public class UISprite : UIBasicSprite, IUnitySerializable
 				{
 					num += Mathf.RoundToInt(pixelSize * (float)(atlasSprite.paddingTop + atlasSprite.paddingBottom));
 				}
-				return Mathf.Max(base.minHeight, ((num & 1) == 1) ? (num + 1) : num);
+				return Mathf.Max(base.minHeight, ((num & 1) != 1) ? num : (num + 1));
 			}
 			return base.minHeight;
 		}
@@ -249,7 +236,7 @@ public class UISprite : UIBasicSprite, IUnitySerializable
 					num4 -= (float)num8 * num12;
 				}
 			}
-			Vector4 vector = (this.mAtlas != null) ? (this.border * this.pixelSize) : Vector4.zero;
+			Vector4 vector = (!(this.mAtlas != null)) ? Vector4.zero : (this.border * this.pixelSize);
 			float num13 = vector.x + vector.z;
 			float num14 = vector.y + vector.w;
 			float x = Mathf.Lerp(num, num3 - num13, this.mDrawRegion.x);
@@ -312,10 +299,12 @@ public class UISprite : UIBasicSprite, IUnitySerializable
 		{
 			this.mSprite = sp;
 			this.mSpriteName = this.mSprite.name;
-			return;
 		}
-		this.mSpriteName = ((this.mSprite != null) ? this.mSprite.name : "");
-		this.mSprite = sp;
+		else
+		{
+			this.mSpriteName = ((this.mSprite == null) ? string.Empty : this.mSprite.name);
+			this.mSprite = sp;
+		}
 	}
 
 	public override void MakePixelPerfect()
@@ -402,535 +391,5 @@ public class UISprite : UIBasicSprite, IUnitySerializable
 		{
 			this.onPostFill(this, size, verts, uvs, cols);
 		}
-	}
-
-	public UISprite()
-	{
-		this.mFillCenter = true;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			this.leftAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			this.rightAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			this.bottomAnchor.Unity_Serialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			this.topAnchor.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.WriteInt32((int)this.updateAnchors);
-		if (depth <= 7)
-		{
-			this.mColor.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32((int)this.mPivot);
-		SerializedStateWriter.Instance.WriteInt32(this.mWidth);
-		SerializedStateWriter.Instance.WriteInt32(this.mHeight);
-		SerializedStateWriter.Instance.WriteInt32(this.mDepth);
-		SerializedStateWriter.Instance.WriteBoolean(this.autoResizeBoxCollider);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.hideIfOffScreen);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.skipBoundsCalculations);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32((int)this.keepAspectRatio);
-		SerializedStateWriter.Instance.WriteSingle(this.aspectRatio);
-		SerializedStateWriter.Instance.WriteInt32((int)this.mType);
-		SerializedStateWriter.Instance.WriteInt32((int)this.mFillDirection);
-		SerializedStateWriter.Instance.WriteSingle(this.mFillAmount);
-		SerializedStateWriter.Instance.WriteBoolean(this.mInvert);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteInt32((int)this.mFlip);
-		SerializedStateWriter.Instance.WriteInt32((int)this.centerType);
-		SerializedStateWriter.Instance.WriteInt32((int)this.leftType);
-		SerializedStateWriter.Instance.WriteInt32((int)this.rightType);
-		SerializedStateWriter.Instance.WriteInt32((int)this.bottomType);
-		SerializedStateWriter.Instance.WriteInt32((int)this.topType);
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mAtlas);
-		}
-		SerializedStateWriter.Instance.WriteString(this.mSpriteName);
-		SerializedStateWriter.Instance.WriteBoolean(this.mFillCenter);
-		SerializedStateWriter.Instance.Align();
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			this.leftAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			this.rightAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			this.bottomAnchor.Unity_Deserialize(depth + 1);
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			this.topAnchor.Unity_Deserialize(depth + 1);
-		}
-		this.updateAnchors = (UIRect.AnchorUpdate)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mColor.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-		this.mPivot = (UIWidget.Pivot)SerializedStateReader.Instance.ReadInt32();
-		this.mWidth = SerializedStateReader.Instance.ReadInt32();
-		this.mHeight = SerializedStateReader.Instance.ReadInt32();
-		this.mDepth = SerializedStateReader.Instance.ReadInt32();
-		this.autoResizeBoxCollider = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.hideIfOffScreen = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.skipBoundsCalculations = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.keepAspectRatio = (UIWidget.AspectRatioSource)SerializedStateReader.Instance.ReadInt32();
-		this.aspectRatio = SerializedStateReader.Instance.ReadSingle();
-		this.mType = (UIBasicSprite.Type)SerializedStateReader.Instance.ReadInt32();
-		this.mFillDirection = (UIBasicSprite.FillDirection)SerializedStateReader.Instance.ReadInt32();
-		this.mFillAmount = SerializedStateReader.Instance.ReadSingle();
-		this.mInvert = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.mFlip = (UIBasicSprite.Flip)SerializedStateReader.Instance.ReadInt32();
-		this.centerType = (UIBasicSprite.AdvancedType)SerializedStateReader.Instance.ReadInt32();
-		this.leftType = (UIBasicSprite.AdvancedType)SerializedStateReader.Instance.ReadInt32();
-		this.rightType = (UIBasicSprite.AdvancedType)SerializedStateReader.Instance.ReadInt32();
-		this.bottomType = (UIBasicSprite.AdvancedType)SerializedStateReader.Instance.ReadInt32();
-		this.topType = (UIBasicSprite.AdvancedType)SerializedStateReader.Instance.ReadInt32();
-		if (depth <= 7)
-		{
-			this.mAtlas = (SerializedStateReader.Instance.ReadUnityEngineObject() as UIAtlas);
-		}
-		this.mSpriteName = (SerializedStateReader.Instance.ReadString() as string);
-		this.mFillCenter = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (depth <= 7)
-		{
-			if (this.leftAnchor != null)
-			{
-				this.leftAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor != null)
-			{
-				this.rightAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor != null)
-			{
-				this.bottomAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor != null)
-			{
-				this.topAnchor.Unity_RemapPPtrs(depth + 1);
-			}
-		}
-		if (this.mAtlas != null)
-		{
-			this.mAtlas = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mAtlas) as UIAtlas);
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_3F_0 = this.leftAnchor;
-			ISerializedNamedStateWriter arg_37_0 = SerializedNamedStateWriter.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_37_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2296);
-			arg_3F_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_82_0 = this.rightAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2307);
-			arg_82_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_C5_0 = this.bottomAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2319);
-			arg_C5_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_108_0 = this.topAnchor;
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2332);
-			arg_108_0.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.updateAnchors, &var_0_cp_0[var_0_cp_1] + 741);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2342);
-			this.mColor.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mPivot, &var_0_cp_0[var_0_cp_1] + 2349);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mWidth, &var_0_cp_0[var_0_cp_1] + 2098);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mHeight, &var_0_cp_0[var_0_cp_1] + 2105);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.mDepth, &var_0_cp_0[var_0_cp_1] + 2356);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.autoResizeBoxCollider, &var_0_cp_0[var_0_cp_1] + 2363);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.hideIfOffScreen, &var_0_cp_0[var_0_cp_1] + 2385);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.skipBoundsCalculations, &var_0_cp_0[var_0_cp_1] + 2401);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.keepAspectRatio, &var_0_cp_0[var_0_cp_1] + 2424);
-		SerializedNamedStateWriter.Instance.WriteSingle(this.aspectRatio, &var_0_cp_0[var_0_cp_1] + 2440);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mType, &var_0_cp_0[var_0_cp_1] + 2452);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mFillDirection, &var_0_cp_0[var_0_cp_1] + 2458);
-		SerializedNamedStateWriter.Instance.WriteSingle(this.mFillAmount, &var_0_cp_0[var_0_cp_1] + 2473);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.mInvert, &var_0_cp_0[var_0_cp_1] + 2485);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.mFlip, &var_0_cp_0[var_0_cp_1] + 2493);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.centerType, &var_0_cp_0[var_0_cp_1] + 2499);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.leftType, &var_0_cp_0[var_0_cp_1] + 2510);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.rightType, &var_0_cp_0[var_0_cp_1] + 2519);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.bottomType, &var_0_cp_0[var_0_cp_1] + 2529);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.topType, &var_0_cp_0[var_0_cp_1] + 2540);
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.mAtlas, &var_0_cp_0[var_0_cp_1] + 3531);
-		}
-		SerializedNamedStateWriter.Instance.WriteString(this.mSpriteName, &var_0_cp_0[var_0_cp_1] + 2113);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.mFillCenter, &var_0_cp_0[var_0_cp_1] + 4429);
-		SerializedNamedStateWriter.Instance.Align();
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			if (this.leftAnchor == null)
-			{
-				this.leftAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_3F_0 = this.leftAnchor;
-			ISerializedNamedStateReader arg_37_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_37_0.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2296);
-			arg_3F_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.rightAnchor == null)
-			{
-				this.rightAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_82_0 = this.rightAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2307);
-			arg_82_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.bottomAnchor == null)
-			{
-				this.bottomAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_C5_0 = this.bottomAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2319);
-			arg_C5_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		if (depth <= 7)
-		{
-			if (this.topAnchor == null)
-			{
-				this.topAnchor = new UIRect.AnchorPoint();
-			}
-			UIRect.AnchorPoint arg_108_0 = this.topAnchor;
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2332);
-			arg_108_0.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		this.updateAnchors = (UIRect.AnchorUpdate)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 741);
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 2342);
-			this.mColor.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-		this.mPivot = (UIWidget.Pivot)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2349);
-		this.mWidth = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2098);
-		this.mHeight = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2105);
-		this.mDepth = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2356);
-		this.autoResizeBoxCollider = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 2363);
-		SerializedNamedStateReader.Instance.Align();
-		this.hideIfOffScreen = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 2385);
-		SerializedNamedStateReader.Instance.Align();
-		this.skipBoundsCalculations = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 2401);
-		SerializedNamedStateReader.Instance.Align();
-		this.keepAspectRatio = (UIWidget.AspectRatioSource)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2424);
-		this.aspectRatio = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 2440);
-		this.mType = (UIBasicSprite.Type)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2452);
-		this.mFillDirection = (UIBasicSprite.FillDirection)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2458);
-		this.mFillAmount = SerializedNamedStateReader.Instance.ReadSingle(&var_0_cp_0[var_0_cp_1] + 2473);
-		this.mInvert = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 2485);
-		SerializedNamedStateReader.Instance.Align();
-		this.mFlip = (UIBasicSprite.Flip)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2493);
-		this.centerType = (UIBasicSprite.AdvancedType)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2499);
-		this.leftType = (UIBasicSprite.AdvancedType)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2510);
-		this.rightType = (UIBasicSprite.AdvancedType)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2519);
-		this.bottomType = (UIBasicSprite.AdvancedType)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2529);
-		this.topType = (UIBasicSprite.AdvancedType)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2540);
-		if (depth <= 7)
-		{
-			this.mAtlas = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 3531) as UIAtlas);
-		}
-		this.mSpriteName = (SerializedNamedStateReader.Instance.ReadString(&var_0_cp_0[var_0_cp_1] + 2113) as string);
-		this.mFillCenter = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 4429);
-		SerializedNamedStateReader.Instance.Align();
-	}
-
-	protected internal UISprite(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static long $Get0(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)instance).mAtlas);
-	}
-
-	public static void $Set0(object instance, long value)
-	{
-		((UISprite)instance).mAtlas = (UIAtlas)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static bool $Get1(object instance)
-	{
-		return ((UISprite)instance).mFillCenter;
-	}
-
-	public static void $Set1(object instance, bool value)
-	{
-		((UISprite)instance).mFillCenter = value;
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).atlas);
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).border);
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).drawingDimensions);
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).fillCenter);
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).isValid);
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).material);
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).minHeight);
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).minWidth);
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).pixelSize);
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).premultipliedAlpha);
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).spriteName);
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UISprite)GCHandledObjects.GCHandleToObject(instance)).GetAtlasSprite());
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).MakePixelPerfect();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).OnFill((BetterList<Vector3>)GCHandledObjects.GCHandleToObject(*args), (BetterList<Vector2>)GCHandledObjects.GCHandleToObject(args[1]), (BetterList<Color32>)GCHandledObjects.GCHandleToObject(args[2]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).OnInit();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).OnUpdate();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).atlas = (UIAtlas)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).fillCenter = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).spriteName = Marshal.PtrToStringUni(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).SetAtlasSprite((UISpriteData)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		((UISprite)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
 	}
 }

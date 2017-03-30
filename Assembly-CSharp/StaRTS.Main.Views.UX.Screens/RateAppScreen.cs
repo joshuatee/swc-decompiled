@@ -11,7 +11,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -81,8 +80,8 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void Init()
 		{
 			this.InitButtons();
-			this.showIncent = GameConstants.RATE_APP_INCENTIVE_SHOW_WINDOWS;
-			this.grantIncent = GameConstants.RATE_APP_INCENTIVE_GRANT_WINDOWS;
+			this.showIncent = GameConstants.RATE_APP_INCENTIVE_SHOW_ANDROID;
+			this.grantIncent = GameConstants.RATE_APP_INCENTIVE_GRANT_ANDROID;
 			if (this.showIncent)
 			{
 				base.GetElement<UXLabel>("LabelCrystalIncentive").Text = this.lang.Get("crystal_incentive_1", new object[]
@@ -168,74 +167,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.obiWanObject = null;
 			}
 			base.OnDestroyElement();
-		}
-
-		protected internal RateAppScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).AwardLocalCrystals((DefaultResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).ClosedWithConfirmation);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).Init();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).OnButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).OnObiWanLoadFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).OnObiWanLoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((RateAppScreen)GCHandledObjects.GCHandleToObject(instance)).ClosedWithConfirmation = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

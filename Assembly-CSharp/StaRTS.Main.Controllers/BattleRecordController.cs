@@ -16,11 +16,10 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
-	public class BattleRecordController : IEventObserver, IPerformanceObserver
+	public class BattleRecordController : IPerformanceObserver, IEventObserver
 	{
 		private delegate void HandleEvent(object cookie);
 
@@ -90,7 +89,7 @@ namespace StaRTS.Main.Controllers
 			this.battleRecord.BuildingLootContrabandMap = currentBattle.BuildingLootContrabandMap;
 			this.battleRecord.DefenderChampions = currentBattle.DefenderChampionsAvailable;
 			this.battleRecord.CmsVersion = Service.Get<FMS>().GetFileVersion("patches/base.json").ToString();
-			this.battleRecord.BattleVersion = "21.0";
+			this.battleRecord.BattleVersion = "22.0";
 			this.battleRecord.PlanetId = currentBattle.PlanetId;
 			this.battleRecord.BattleLength = currentBattle.TimeLeft;
 			this.battleRecord.DisabledBuildings = currentBattle.DisabledBuildings;
@@ -105,7 +104,7 @@ namespace StaRTS.Main.Controllers
 			}
 			else
 			{
-				this.battleRecord.failureConditionUid = "";
+				this.battleRecord.failureConditionUid = string.Empty;
 			}
 			this.battleRecord.BattleAttributes.AddDeviceInfo();
 			this.battleRecord.DefenseEncounterProfile = currentBattle.DefenseEncounterProfile;
@@ -326,104 +325,6 @@ namespace StaRTS.Main.Controllers
 
 		public void OnPerformanceDeviceMemUsage(long memory)
 		{
-		}
-
-		protected internal BattleRecordController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).EndRecord();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).EraseRecord();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).BattleRecord);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).HandleBattleCanceledEvent(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).HandleBattleEndedEvent(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).HandleChampionDeployedEvent(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).HandleEntityKilledEvent(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).HandleHeroDeployedEvent(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).HandleSpecialAttackDeployedEvent(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).HandleSquadTroopsDeployedEvent(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).HandleTroopAbilityActivateEvent(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).HandleTroopDeployedEvent(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).OnPerformanceDeviceMemUsage(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).OnPerformanceFPS(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BattleRecordController)GCHandledObjects.GCHandleToObject(instance)).StartRecord();
-			return -1L;
 		}
 	}
 }

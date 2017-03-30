@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Deployable
 		public DeployableCancelContractCommand(DeployableContractRequest request) : base("player.deployable.cancel", request, new DefaultResponse())
 		{
 		}
-
-		protected internal DeployableCancelContractCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

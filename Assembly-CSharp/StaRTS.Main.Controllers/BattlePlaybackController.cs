@@ -19,14 +19,16 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class BattlePlaybackController : IEventObserver
 	{
+		private const int DEFAULT_PLAYBACK_SCALE = 1;
+
+		private const int MAX_PLAYBACK_SCALE = 4;
+
 		private Dictionary<string, TimerDelegate> actionCallbacks;
 
 		private SimTimerManager timerManager;
@@ -34,10 +36,6 @@ namespace StaRTS.Main.Controllers
 		private EventManager eventManager;
 
 		private BattleController battleController;
-
-		private const int DEFAULT_PLAYBACK_SCALE = 1;
-
-		private const int MAX_PLAYBACK_SCALE = 4;
 
 		private uint currentPlaybackScale;
 
@@ -155,12 +153,12 @@ namespace StaRTS.Main.Controllers
 			this.eventManager.SendEvent(EventId.BattleReplayEnded, null);
 			if (BattleAttributes.Equals(this.playbackBattleAttr, this.recordBattleAttr))
 			{
-				Service.Get<StaRTSLogger>().Debug("Verified: Playback and Record matched.");
+				Service.Get<Logger>().Debug("Verified: Playback and Record matched.");
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().DebugFormat("PLAYBACK_MISMATCH!!! DamagePercentage, CreditsEarned, MaterialsEarned, ContrabandEarned, DeathLogCount, BattleEndedAt", new object[0]);
-				Service.Get<StaRTSLogger>().DebugFormat("PLAYBACK_MISMATCH!!! We got: {0}, {1}, {2}, {3}, {4}, {5}", new object[]
+				Service.Get<Logger>().DebugFormat("PLAYBACK_MISMATCH!!! DamagePercentage, CreditsEarned, MaterialsEarned, ContrabandEarned, DeathLogCount, BattleEndedAt", new object[0]);
+				Service.Get<Logger>().DebugFormat("PLAYBACK_MISMATCH!!! We got: {0}, {1}, {2}, {3}, {4}, {5}", new object[]
 				{
 					this.playbackBattleAttr.DamagePercentage,
 					this.playbackBattleAttr.LootCreditsEarned,
@@ -169,7 +167,7 @@ namespace StaRTS.Main.Controllers
 					this.playbackBattleAttr.DeathLogCount,
 					this.playbackBattleAttr.BattleEndedAt
 				});
-				Service.Get<StaRTSLogger>().DebugFormat("PLAYBACK_MISMATCH!!! We expect: {0}, {1}, {2}, {3}, {4}, {5}", new object[]
+				Service.Get<Logger>().DebugFormat("PLAYBACK_MISMATCH!!! We expect: {0}, {1}, {2}, {3}, {4}, {5}", new object[]
 				{
 					this.recordBattleAttr.DamagePercentage,
 					this.recordBattleAttr.LootCreditsEarned,
@@ -179,10 +177,10 @@ namespace StaRTS.Main.Controllers
 					this.recordBattleAttr.BattleEndedAt
 				});
 			}
-			string text = this.playbackBattleAttr.ToJson();
-			string text2 = this.recordBattleAttr.ToJson();
-			Service.Get<StaRTSLogger>().Debug("playbackBattleAttr: " + text);
-			Service.Get<StaRTSLogger>().Debug("recordBattleAttr: " + text2);
+			string str = this.playbackBattleAttr.ToJson();
+			string str2 = this.recordBattleAttr.ToJson();
+			Service.Get<Logger>().Debug("playbackBattleAttr: " + str);
+			Service.Get<Logger>().Debug("recordBattleAttr: " + str2);
 		}
 
 		public void DiscardLastReplay()
@@ -238,7 +236,7 @@ namespace StaRTS.Main.Controllers
 			IDataController dataController = Service.Get<IDataController>();
 			TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(troopPlacedAction.TroopId);
 			IntPosition boardPosition = new IntPosition(troopPlacedAction.BoardX, troopPlacedAction.BoardZ);
-			Service.Get<TroopController>().SpawnTroop(troopTypeVO, troopPlacedAction.TeamType, boardPosition, (troopPlacedAction.TeamType == TeamType.Defender) ? TroopSpawnMode.LeashedToBuilding : TroopSpawnMode.Unleashed, true);
+			Service.Get<TroopController>().SpawnTroop(troopTypeVO, troopPlacedAction.TeamType, boardPosition, (troopPlacedAction.TeamType != TeamType.Defender) ? TroopSpawnMode.Unleashed : TroopSpawnMode.LeashedToBuilding, true);
 			this.battleController.OnTroopDeployed(troopTypeVO.Uid, troopPlacedAction.TeamType, boardPosition);
 		}
 
@@ -313,9 +311,9 @@ namespace StaRTS.Main.Controllers
 		public void LogReplayViewed(string battleId, string defenderPlayerId, string sharerPlayerId)
 		{
 			string playerId = Service.Get<CurrentPlayer>().PlayerId;
-			string text = (sharerPlayerId != null) ? sharerPlayerId : playerId;
-			string message = (text == playerId) ? "personal" : "shared";
-			string action = (defenderPlayerId == text) ? "defense" : "attack";
+			string text = (sharerPlayerId == null) ? playerId : sharerPlayerId;
+			string message = (!(text == playerId)) ? "shared" : "personal";
+			string action = (!(defenderPlayerId == text)) ? "attack" : "defense";
 			Service.Get<BILoggingController>().TrackGameAction("watch_replay", action, message, battleId, 1);
 		}
 
@@ -354,107 +352,6 @@ namespace StaRTS.Main.Controllers
 				this.playbackBattleAttr.AddToDeathLog(cookie as SmartEntity, this.battleController.Now);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal BattlePlaybackController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).DiscardLastReplay();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).EndPlayback();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).FastForward();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).CurrentBattleEntry);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).CurrentBattleRecord);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).PlaybackBattleAttr);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).RecordBattleAttr);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).InitPlayback((BattleRecord)GCHandledObjects.GCHandleToObject(*args), (BattleEntry)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).LogReplayViewed(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).Pause();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).ReplayLastBattleOrReplay();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).ScalePlaybackTime();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).CurrentBattleEntry = (BattleEntry)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).CurrentBattleRecord = (BattleRecord)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).SetDefaultPlaybackScale();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((BattlePlaybackController)GCHandledObjects.GCHandleToObject(instance)).StartPlayback();
-			return -1L;
 		}
 	}
 }

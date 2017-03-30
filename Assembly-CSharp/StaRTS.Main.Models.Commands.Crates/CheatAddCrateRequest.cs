@@ -3,7 +3,6 @@ using StaRTS.Main.Models.Player;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Crates
 {
@@ -42,15 +41,6 @@ namespace StaRTS.Main.Models.Commands.Crates
 			serializer.AddString("hqLevel", this.hqLevel.ToString());
 			serializer.AddString("expiresInMinutes", this.expireInMin.ToString());
 			return serializer.End().ToString();
-		}
-
-		protected internal CheatAddCrateRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CheatAddCrateRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

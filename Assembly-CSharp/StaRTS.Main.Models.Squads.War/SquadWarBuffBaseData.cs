@@ -1,8 +1,6 @@
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Squads.War
 {
@@ -29,23 +27,23 @@ namespace StaRTS.Main.Models.Squads.War
 			}
 			if (dictionary.ContainsKey("buffUid"))
 			{
-				this.BuffBaseId = Convert.ToString(dictionary["buffUid"], CultureInfo.InvariantCulture);
+				this.BuffBaseId = Convert.ToString(dictionary["buffUid"]);
 			}
 			if (dictionary.ContainsKey("level"))
 			{
-				this.BaseLevel = Convert.ToInt32(dictionary["level"], CultureInfo.InvariantCulture);
+				this.BaseLevel = Convert.ToInt32(dictionary["level"]);
 			}
 			if (dictionary.ContainsKey("currentlyDefending"))
 			{
 				Dictionary<string, object> dictionary2 = dictionary["currentlyDefending"] as Dictionary<string, object>;
 				if (dictionary2 != null && dictionary2.ContainsKey("expiration"))
 				{
-					this.AttackExpirationDate = Convert.ToUInt32(dictionary2["expiration"], CultureInfo.InvariantCulture);
+					this.AttackExpirationDate = Convert.ToUInt32(dictionary2["expiration"]);
 				}
 			}
 			if (dictionary.ContainsKey("ownerId"))
 			{
-				this.OwnerId = Convert.ToString(dictionary["ownerId"], CultureInfo.InvariantCulture);
+				this.OwnerId = Convert.ToString(dictionary["ownerId"]);
 			}
 			return this;
 		}
@@ -68,29 +66,6 @@ namespace StaRTS.Main.Models.Squads.War
 		public string ToJson()
 		{
 			return Serializer.Start().End().ToString();
-		}
-
-		public SquadWarBuffBaseData()
-		{
-		}
-
-		protected internal SquadWarBuffBaseData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(instance)).GetDisplayBaseLevel());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarBuffBaseData)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

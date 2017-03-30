@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Holonet
 		public HolonetGetMessagesCommand(PlayerIdRequest request) : base("player.holonet.getEventMessage", request, new HolonetGetMessagesResponse())
 		{
 		}
-
-		protected internal HolonetGetMessagesCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

@@ -16,15 +16,12 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class PerkManager
 	{
-		private StaRTSLogger logger;
+		private Logger logger;
 
 		public int SquadLevelMax
 		{
@@ -35,7 +32,7 @@ namespace StaRTS.Main.Controllers
 		public PerkManager()
 		{
 			Service.Set<PerkManager>(this);
-			this.logger = Service.Get<StaRTSLogger>();
+			this.logger = Service.Get<Logger>();
 			this.SquadLevelMax = Service.Get<IDataController>().GetAll<SquadLevelVO>().Count;
 		}
 
@@ -548,7 +545,7 @@ namespace StaRTS.Main.Controllers
 			if (!GameUtils.IsPerkCommandStatusFatal(status) && cookie != null)
 			{
 				CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-				int delta = Convert.ToInt32(cookie, CultureInfo.InvariantCulture);
+				int delta = Convert.ToInt32(cookie);
 				currentPlayer.Inventory.ModifyReputation(delta);
 			}
 		}
@@ -695,25 +692,27 @@ namespace StaRTS.Main.Controllers
 			IDataController dataController = Service.Get<IDataController>();
 			string perkGroup = dataController.Get<PerkVO>(perkId).PerkGroup;
 			ActivatedPerkData playerPerkForGroup = this.GetPlayerPerkForGroup(perkGroup);
-			if (!this.IsPerkInCooldown(playerPerkForGroup))
+			if (this.IsPerkInCooldown(playerPerkForGroup))
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Perk {0} is no longer in cooldown, skipping purchase", new object[]
+				Dictionary<string, uint> playerPerkGroupCooldowns = this.GetPlayerPerkGroupCooldowns();
+				uint seconds = playerPerkGroupCooldowns[perkGroup] - ServerTime.Time;
+				int crystals = GameUtils.SecondsToCrystalsForPerk((int)seconds);
+				if (!GameUtils.SpendCrystals(crystals))
+				{
+					return;
+				}
+				ProcessingScreen.Show();
+				PlayerPerkSkipCooldownRequest request = new PlayerPerkSkipCooldownRequest(playerPerkForGroup.PerkId);
+				PlayerPerkSkipCooldownCommand command = new PlayerPerkSkipCooldownCommand(request);
+				Service.Get<ServerAPI>().Sync(command);
+			}
+			else
+			{
+				Service.Get<Logger>().WarnFormat("Perk {0} is no longer in cooldown, skipping purchase", new object[]
 				{
 					playerPerkForGroup.PerkId
 				});
-				return;
 			}
-			Dictionary<string, uint> playerPerkGroupCooldowns = this.GetPlayerPerkGroupCooldowns();
-			uint seconds = playerPerkGroupCooldowns[perkGroup] - ServerTime.Time;
-			int crystals = GameUtils.SecondsToCrystalsForPerk((int)seconds);
-			if (!GameUtils.SpendCrystals(crystals))
-			{
-				return;
-			}
-			ProcessingScreen.Show();
-			PlayerPerkSkipCooldownRequest request = new PlayerPerkSkipCooldownRequest(playerPerkForGroup.PerkId);
-			PlayerPerkSkipCooldownCommand command = new PlayerPerkSkipCooldownCommand(request);
-			Service.Get<ServerAPI>().Sync(command);
 		}
 
 		public void PurchaseCooldownSkipResponse(object response)
@@ -840,318 +839,6 @@ namespace StaRTS.Main.Controllers
 				perkVO.PerkTier,
 				currentPlayer.Planet.PlanetBIName
 			});
-		}
-
-		protected internal PerkManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).ActivatePlayerPerk(Marshal.PtrToStringUni(*(IntPtr*)args), (Dictionary<string, string>)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).CancelPlayerPerk(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((PerkManager)GCHandledObjects.GCHandleToObject(instance)).CleanupExpiredPlayerPerks();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((PerkManager)GCHandledObjects.GCHandleToObject(instance)).ConfirmPurchaseCooldownSkip(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).SquadLevelMax);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetActiveNavCenterPerks());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetAvailableSlotsCount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetBuildingsForActivePerks());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetBuildingsForPerk((PerkVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetContractCostMultiplier((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetContractCostMultiplierForPerks((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (List<string>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetContractTimeReductionMultiplier((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetContractTimeReductionMultiplierForPerks((IUpgradeableVO)GCHandledObjects.GCHandleToObject(*args), (List<string>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPerkEffectIds((List<string>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPerkInvestedProgress((PerkVO)GCHandledObjects.GCHandleToObject(*args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPerksAppliedToBuilding((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPerksUnlockedAtSquadLevel(*(int*)args));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerActivatedPerks());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerActivePerkEffectIds());
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerActivePerkIds());
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerActivePerks());
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerCooldownPerkIds());
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerCooldownPerks());
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerExpiredPerkIds());
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerExpiredPerks());
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerPerk(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerPerkForGroup(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerPerkIdsInState((PerkState)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerPerksInState((PerkState)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetPurchaseContextForActivationCost((PerkVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetRelocationCostDiscount());
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetRelocationCostDiscountForPerks((List<string>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).GetTroopRequestCooldownTime());
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).HasEmptyPerkActivationSlot(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).HasPlayerActivatedFirstPerk());
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).HasPlayerSeenPerkTutorial());
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).HasPrerequistesUnlocked((PerkVO)GCHandledObjects.GCHandleToObject(*args), (Dictionary<string, string>)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((PerkManager)GCHandledObjects.GCHandleToObject(instance)).InvestInPerk(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (Dictionary<string, string>)GCHandledObjects.GCHandleToObject(args[2]), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsContractCostMultiplierAppliedToBuilding((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkActive((ActivatedPerkData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkActive(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkAppliedToBuilding((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkEffectAppliedToBuilding((PerkEffectVO)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkExpired((ActivatedPerkData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkExpired(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkGroupActive(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkGroupExpired(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkGroupInCooldown(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkInCooldown((ActivatedPerkData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkInCooldown(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkLevelLocked((PerkVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkMaxTier((PerkVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkReputationLocked((PerkVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), (Dictionary<string, string>)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).IsPerkValidForInvestment((PerkVO)GCHandledObjects.GCHandleToObject(*args), (Dictionary<string, string>)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			((PerkManager)GCHandledObjects.GCHandleToObject(instance)).PurchaseCooldownSkip(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			((PerkManager)GCHandledObjects.GCHandleToObject(instance)).PurchaseCooldownSkipConfirmed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			((PerkManager)GCHandledObjects.GCHandleToObject(instance)).PurchaseCooldownSkipResponse(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			((PerkManager)GCHandledObjects.GCHandleToObject(instance)).SquadLevelMax = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((PerkManager)GCHandledObjects.GCHandleToObject(instance)).UpdatePlayerPerksData(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PerkManager)GCHandledObjects.GCHandleToObject(instance)).WillShowPerkTutorial());
 		}
 	}
 }

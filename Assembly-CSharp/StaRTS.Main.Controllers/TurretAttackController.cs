@@ -5,7 +5,6 @@ using StaRTS.Main.Utils;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -124,107 +123,35 @@ namespace StaRTS.Main.Controllers
 					EntityState entityState = stateComp.DequeuePrevState();
 					if (entityState == EntityState.AttackingReset)
 					{
-						anim.Play("", 0, 0f);
+						anim.Play(string.Empty, 0, 0f);
 					}
 				}
 				switch (stateComp.CurState)
 				{
 				case EntityState.Idle:
 					anim.SetInteger("Motivation", 0);
-					return;
+					break;
 				case EntityState.Moving:
 					anim.SetInteger("Motivation", 1);
-					return;
-				case EntityState.Tracking:
 					break;
 				case EntityState.Turning:
 					anim.SetInteger("Motivation", 1);
-					return;
+					break;
 				case EntityState.WarmingUp:
 					anim.SetInteger("Motivation", 4);
-					return;
+					break;
 				case EntityState.Attacking:
 				case EntityState.AttackingReset:
 					anim.SetInteger("Motivation", 3);
-					return;
+					break;
 				case EntityState.CoolingDown:
 					anim.SetInteger("Motivation", 4);
-					return;
+					break;
 				case EntityState.Dying:
 					anim.SetInteger("Motivation", 2);
 					break;
-				default:
-					return;
 				}
 			}
-		}
-
-		protected internal TurretAttackController(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).IsTargetAliveAndInRange((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).IsTargetInRange((ShooterComponent)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).OnAttackBegin((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).OnBeforeAttack((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).OnTargetIsDead((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).OnTargetIsNull((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).OnTargetIsOutOfRange((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).StartSearch((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).StopAttackingAndStartSearching((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).UpdateAnimationState((Animator)GCHandledObjects.GCHandleToObject(*args), (StateComponent)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TurretAttackController)GCHandledObjects.GCHandleToObject(instance)).UpdateTurret((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

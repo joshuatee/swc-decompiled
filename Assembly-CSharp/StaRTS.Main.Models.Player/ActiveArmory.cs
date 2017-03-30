@@ -1,8 +1,6 @@
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player
 {
@@ -49,7 +47,7 @@ namespace StaRTS.Main.Models.Player
 			}
 			if (dictionary.ContainsKey("capacity"))
 			{
-				this.MaxCapacity = Convert.ToInt32(dictionary["capacity"], CultureInfo.InvariantCulture);
+				this.MaxCapacity = Convert.ToInt32(dictionary["capacity"]);
 			}
 			return this;
 		}
@@ -57,52 +55,6 @@ namespace StaRTS.Main.Models.Player
 		public void SetMaxEquipmentCapacity(int capacity)
 		{
 			this.MaxCapacity = capacity;
-		}
-
-		public ActiveArmory()
-		{
-		}
-
-		protected internal ActiveArmory(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ActiveArmory)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ActiveArmory)GCHandledObjects.GCHandleToObject(instance)).Equipment);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ActiveArmory)GCHandledObjects.GCHandleToObject(instance)).MaxCapacity);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ActiveArmory)GCHandledObjects.GCHandleToObject(instance)).Equipment = (List<string>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ActiveArmory)GCHandledObjects.GCHandleToObject(instance)).MaxCapacity = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ActiveArmory)GCHandledObjects.GCHandleToObject(instance)).SetMaxEquipmentCapacity(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ActiveArmory)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

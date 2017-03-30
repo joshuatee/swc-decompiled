@@ -72,17 +72,5 @@ namespace StaRTS.Main.Models.Entities.Shared
 			CollisionFilters.PLATFORM = null;
 			CollisionFilters.PLATFORM_GHOST = null;
 		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			CollisionFilters.StaticInit();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			CollisionFilters.StaticReset();
-			return -1L;
-		}
 	}
 }

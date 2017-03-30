@@ -1,14 +1,12 @@
 using StaRTS.Main.Controllers;
 using StaRTS.Main.Controllers.GameStates;
 using StaRTS.Main.Controllers.Squads;
-using StaRTS.Main.Models.Player;
 using StaRTS.Main.Models.Squads.War;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -78,7 +76,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private int startingIndex;
 
-		private int currentIndex;
+		private int currentIndex = -1;
 
 		private UXButton prevButton;
 
@@ -92,10 +90,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 		}
 
-		public SquadWarInfoScreen(int pageIndex)
+		public SquadWarInfoScreen(int pageIndex) : base("gui_squadwar_info")
 		{
-			this.currentIndex = -1;
-			base..ctor("gui_squadwar_info");
 			this.startingIndex = pageIndex;
 			base.IsAlwaysOnTop = true;
 		}
@@ -169,7 +165,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			int num = this.tabs.IndexOf(tab);
 			if (num == -1)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Cannot find tab in tabs list.", new object[0]);
+				Service.Get<Logger>().ErrorFormat("Cannot find tab in tabs list.", new object[0]);
 				return;
 			}
 			this.UpdateIndex(num);
@@ -209,76 +205,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				Service.Get<UXController>().MiscElementsManager.AddSquadWarTickerStatus();
 			}
-			Service.Get<SharedPlayerPrefs>().SetPref("WarTut", "2");
 			base.HandleClose(button);
-		}
-
-		protected internal SquadWarInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).DetermineDefaultPage());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).WantTransitions);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).HandleClose((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnNextButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnPrevButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnTabShown((AbstractSquadWarInfoScreenTab)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ShowPage(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).ShowTab((AbstractSquadWarInfoScreenTab)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadWarInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateIndex(*(int*)args);
-			return -1L;
 		}
 	}
 }

@@ -16,7 +16,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -102,9 +101,23 @@ namespace StaRTS.Main.Controllers
 			if (percent <= 0f && shuttleType != 1)
 			{
 				this.RemoveStarportShuttle(starport);
-				return;
 			}
-			if (!this.shuttles.ContainsKey(starport))
+			else if (this.shuttles.ContainsKey(starport))
+			{
+				if (shuttleType == 1)
+				{
+					this.AnimateContrabandShuttle(this.shuttles[starport], percent);
+				}
+				else if (shuttleType == 2)
+				{
+					this.AnimateArmoryShuttle(this.shuttles[starport]);
+				}
+				else
+				{
+					this.AnimateShuttle(this.shuttles[starport], percent);
+				}
+			}
+			else
 			{
 				BuildingComponent buildingComponent = starport.Get<BuildingComponent>();
 				BuildingTypeVO buildingType = buildingComponent.BuildingType;
@@ -155,19 +168,7 @@ namespace StaRTS.Main.Controllers
 					assetManager.Load(ref shuttleAnim.MainHandle, text, new AssetSuccessDelegate(this.OnAssetSuccess), new AssetFailureDelegate(this.OnAssetFailure), shuttleAnim);
 					this.shuttles.Add(starport, shuttleAnim);
 				}
-				return;
 			}
-			if (shuttleType == 1)
-			{
-				this.AnimateContrabandShuttle(this.shuttles[starport], percent);
-				return;
-			}
-			if (shuttleType == 2)
-			{
-				this.AnimateArmoryShuttle(this.shuttles[starport]);
-				return;
-			}
-			this.AnimateShuttle(this.shuttles[starport], percent);
 		}
 
 		private void OnLandingFxSuccess(object asset, object cookie)
@@ -283,18 +284,19 @@ namespace StaRTS.Main.Controllers
 				{
 					anim.EnqueueState(ShuttleState.Landing);
 					anim.EnqueueState(ShuttleState.Idle);
-					return;
 				}
 			}
 			else
 			{
 				ShuttleState state = anim.State;
-				if (state == ShuttleState.Landing || state == ShuttleState.Idle)
+				if (state != ShuttleState.Landing && state != ShuttleState.Idle)
+				{
+					this.RemoveStarportShuttle(anim.Starport);
+				}
+				else
 				{
 					anim.EnqueueState(ShuttleState.LiftOff);
-					return;
 				}
-				this.RemoveStarportShuttle(anim.Starport);
 			}
 		}
 
@@ -339,12 +341,7 @@ namespace StaRTS.Main.Controllers
 				case ShuttleState.None:
 					anim.EnqueueState(ShuttleState.Landing);
 					anim.EnqueueState(ShuttleState.Idle);
-					return;
-				case ShuttleState.Landing:
-				case ShuttleState.Idle:
 					break;
-				default:
-					return;
 				}
 			}
 			else
@@ -356,17 +353,11 @@ namespace StaRTS.Main.Controllers
 					anim.EnqueueState(ShuttleState.Idle);
 					anim.EnqueueState(ShuttleState.LiftOff);
 					anim.EnqueueState(ShuttleState.Hover);
-					return;
-				case ShuttleState.Landing:
-				case ShuttleState.LiftOff:
-				case ShuttleState.Hover:
 					break;
 				case ShuttleState.Idle:
 					anim.EnqueueState(ShuttleState.LiftOff);
 					anim.EnqueueState(ShuttleState.Hover);
 					break;
-				default:
-					return;
 				}
 			}
 		}
@@ -433,199 +424,96 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.EntityDestroyed)
+			if (id != EventId.BuildingViewReady)
 			{
-				if (id != EventId.BuildingViewReady)
+				if (id != EventId.CurrencyCollected)
 				{
-					if (id != EventId.CurrencyCollected)
+					if (id != EventId.EntityDestroyed)
 					{
-						if (id != EventId.EntityDestroyed)
+						if (id != EventId.StarportMeterUpdated)
 						{
-							return EatResponse.NotEaten;
-						}
-						uint num = (uint)cookie;
-						using (Dictionary<Entity, ShuttleAnim>.KeyCollection.Enumerator enumerator = this.shuttles.Keys.GetEnumerator())
-						{
-							while (enumerator.MoveNext())
+							if (id != EventId.BuildingReplaced)
 							{
-								Entity current = enumerator.Current;
-								if (current.ID == num)
+								if (id != EventId.UserLiftedBuilding)
 								{
-									this.RemoveStarportShuttle(current);
-									break;
+									if (id == EventId.EquipmentDeactivated)
+									{
+										NodeList<ArmoryNode> armoryNodeList = Service.Get<BuildingLookupController>().ArmoryNodeList;
+										for (ArmoryNode armoryNode = armoryNodeList.Head; armoryNode != null; armoryNode = armoryNode.Next)
+										{
+											this.DestroyArmoryShuttle(armoryNode.Entity);
+										}
+									}
+								}
+								else
+								{
+									Entity entity = (Entity)cookie;
+									BuildingTypeVO buildingType = entity.Get<BuildingComponent>().BuildingType;
+									if (buildingType.Type == BuildingType.Starport || (buildingType.Type == BuildingType.Resource && buildingType.Currency == CurrencyType.Contraband) || buildingType.Type == BuildingType.Armory)
+									{
+										this.RemoveStarportShuttle(entity);
+									}
 								}
 							}
-							return EatResponse.NotEaten;
+							else
+							{
+								Entity entity2 = (Entity)cookie;
+								BuildingTypeVO buildingType2 = entity2.Get<BuildingComponent>().BuildingType;
+								if (buildingType2.Type == BuildingType.Starport || (buildingType2.Type == BuildingType.Resource && buildingType2.Currency == CurrencyType.Contraband))
+								{
+									if (buildingType2.Currency == CurrencyType.Contraband)
+									{
+										this.UpdateShuttle(entity2, 0.5f, 1);
+									}
+									else if (buildingType2.Type == BuildingType.Armory)
+									{
+										this.UpdateShuttle(entity2, 0.5f, 2);
+									}
+									else
+									{
+										this.UpdateShuttle(entity2, 0.5f, 0);
+									}
+								}
+							}
+						}
+						else
+						{
+							MeterShaderComponent meterShaderComponent = (MeterShaderComponent)cookie;
+							this.UpdateShuttle(meterShaderComponent.Entity, meterShaderComponent.Percentage, 0);
 						}
 					}
 					else
 					{
-						CurrencyCollectionTag currencyCollectionTag = cookie as CurrencyCollectionTag;
-						if (currencyCollectionTag.Type == CurrencyType.Contraband)
+						uint num = (uint)cookie;
+						foreach (Entity current in this.shuttles.Keys)
 						{
-							this.UpdateContrabandShuttle((SmartEntity)currencyCollectionTag.Building);
-							return EatResponse.NotEaten;
-						}
-						return EatResponse.NotEaten;
-					}
-				}
-				EntityViewParams entityViewParams = (EntityViewParams)cookie;
-				SmartEntity entity = entityViewParams.Entity;
-				if (!this.shuttles.ContainsKey(entity) && Service.Get<GameStateMachine>().CurrentState is HomeState && entity.BuildingComp.BuildingType.Type == BuildingType.Resource && entity.BuildingComp.BuildingType.Currency == CurrencyType.Contraband)
-				{
-					this.UpdateContrabandShuttle(entity);
-				}
-			}
-			else if (id <= EventId.BuildingReplaced)
-			{
-				if (id != EventId.StarportMeterUpdated)
-				{
-					if (id == EventId.BuildingReplaced)
-					{
-						Entity entity2 = (Entity)cookie;
-						BuildingTypeVO buildingType = entity2.Get<BuildingComponent>().BuildingType;
-						if (buildingType.Type == BuildingType.Starport || (buildingType.Type == BuildingType.Resource && buildingType.Currency == CurrencyType.Contraband))
-						{
-							if (buildingType.Currency == CurrencyType.Contraband)
+							if (current.ID == num)
 							{
-								this.UpdateShuttle(entity2, 0.5f, 1);
-							}
-							else if (buildingType.Type == BuildingType.Armory)
-							{
-								this.UpdateShuttle(entity2, 0.5f, 2);
-							}
-							else
-							{
-								this.UpdateShuttle(entity2, 0.5f, 0);
+								this.RemoveStarportShuttle(current);
+								break;
 							}
 						}
 					}
 				}
 				else
 				{
-					MeterShaderComponent meterShaderComponent = (MeterShaderComponent)cookie;
-					this.UpdateShuttle(meterShaderComponent.Entity, meterShaderComponent.Percentage, 0);
-				}
-			}
-			else if (id != EventId.UserLiftedBuilding)
-			{
-				if (id == EventId.EquipmentDeactivated)
-				{
-					NodeList<ArmoryNode> armoryNodeList = Service.Get<BuildingLookupController>().ArmoryNodeList;
-					for (ArmoryNode armoryNode = armoryNodeList.Head; armoryNode != null; armoryNode = armoryNode.Next)
+					CurrencyCollectionTag currencyCollectionTag = cookie as CurrencyCollectionTag;
+					if (currencyCollectionTag.Type == CurrencyType.Contraband)
 					{
-						this.DestroyArmoryShuttle(armoryNode.Entity);
+						this.UpdateContrabandShuttle((SmartEntity)currencyCollectionTag.Building);
 					}
 				}
 			}
 			else
 			{
-				Entity entity3 = (Entity)cookie;
-				BuildingTypeVO buildingType2 = entity3.Get<BuildingComponent>().BuildingType;
-				if (buildingType2.Type == BuildingType.Starport || (buildingType2.Type == BuildingType.Resource && buildingType2.Currency == CurrencyType.Contraband) || buildingType2.Type == BuildingType.Armory)
+				EntityViewParams entityViewParams = (EntityViewParams)cookie;
+				SmartEntity entity3 = entityViewParams.Entity;
+				if (!this.shuttles.ContainsKey(entity3) && Service.Get<GameStateMachine>().CurrentState is HomeState && entity3.BuildingComp.BuildingType.Type == BuildingType.Resource && entity3.BuildingComp.BuildingType.Currency == CurrencyType.Contraband)
 				{
-					this.RemoveStarportShuttle(entity3);
+					this.UpdateContrabandShuttle(entity3);
 				}
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal ShuttleController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).AnimateArmoryShuttle((ShuttleAnim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).AnimateContrabandShuttle((ShuttleAnim)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).AnimateShuttle((ShuttleAnim)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).DestroyArmoryShuttle((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).GetShuttleForStarport((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).OnAssetFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).OnAssetSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).OnLandingFxSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).OnTakeOffFxSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).RemoveStarportShuttle((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).SortShuttleAssetDataByFactionAndLevel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).UnloadShuttle((ShuttleAnim)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).UpdateArmoryShuttle((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).UpdateContrabandShuttle((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ShuttleController)GCHandledObjects.GCHandleToObject(instance)).UpdateShuttle((Entity)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(int*)(args + 2));
-			return -1L;
 		}
 	}
 }

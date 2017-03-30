@@ -20,7 +20,6 @@ namespace StaRTS.Main.Views.UX
 
 		public GameObjectElementPair(GameObject obj, UXElement elm)
 		{
-			this = default(GameObjectElementPair);
 			this.PairObject = obj;
 			this.PairElement = elm;
 		}

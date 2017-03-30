@@ -14,13 +14,5 @@ namespace StaRTS.Main.Models
 		public bool FloorPin;
 
 		public bool CenterOfMassPin;
-
-		public GameObjectAttachment()
-		{
-		}
-
-		protected internal GameObjectAttachment(UIntPtr dummy)
-		{
-		}
 	}
 }

@@ -5,7 +5,6 @@ using StaRTS.Main.Views.UX;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Entities.Components
 {
@@ -157,8 +156,7 @@ namespace StaRTS.Main.Models.Entities.Components
 				this.SecondaryMaxHealthAmount = maxHealth;
 				if (this.secondarySlider != null)
 				{
-					this.secondarySlider.Value = ((maxHealth <= 0) ? 0f : ((float)health / (float)maxHealth));
-					return;
+					this.secondarySlider.Value = ((maxHealth > 0) ? ((float)health / (float)maxHealth) : 0f);
 				}
 			}
 			else
@@ -167,7 +165,7 @@ namespace StaRTS.Main.Models.Entities.Components
 				this.MaxHealthAmount = maxHealth;
 				if (this.slider != null)
 				{
-					this.slider.Value = ((maxHealth <= 0) ? 0f : ((float)health / (float)maxHealth));
+					this.slider.Value = ((maxHealth > 0) ? ((float)health / (float)maxHealth) : 0f);
 				}
 			}
 		}
@@ -213,146 +211,6 @@ namespace StaRTS.Main.Models.Entities.Components
 		private void RemoveSelf()
 		{
 			this.TeardownElements();
-		}
-
-		protected internal HealthViewComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).AutoRegenerating);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).HasRubble);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).HealthAmount);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).IsInitialized);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).MaxHealthAmount);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).SecondaryHealthAmount);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).SecondaryMaxHealthAmount);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).GoAwayIn(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).OnRemove();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).RemoveSelf();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).AutoRegenerating = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).HasRubble = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).HealthAmount = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).IsInitialized = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).MaxHealthAmount = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).SecondaryHealthAmount = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).SecondaryMaxHealthAmount = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).SetEnabled(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).SetupElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).SetupElements((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).TeardownElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).UpdateHealth(*(int*)args, *(int*)(args + 1), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).UpdateLocation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HealthViewComponent)GCHandledObjects.GCHandleToObject(instance)).WillFadeOnTimer());
 		}
 	}
 }

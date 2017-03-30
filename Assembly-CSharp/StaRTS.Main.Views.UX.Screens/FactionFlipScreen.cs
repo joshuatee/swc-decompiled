@@ -10,9 +10,7 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using System.Globalization;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -125,7 +123,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.locked = (num < GameConstants.FACTION_FLIPPING_UNLOCK_LEVEL);
 			}
 			this.currentFaction = currentPlayer.Faction;
-			this.oppositeFaction = ((this.currentFaction == FactionType.Empire) ? FactionType.Rebel : FactionType.Empire);
+			this.oppositeFaction = ((this.currentFaction != FactionType.Empire) ? FactionType.Empire : FactionType.Rebel);
 			if (!this.locked && currentPlayer.NumIdentities > 1)
 			{
 				Service.Get<PlayerIdentityController>().GetOtherPlayerIdentity(new PlayerIdentityController.GetOtherPlayerIdentityCallback(this.OnGetOtherPlayerIdentity));
@@ -142,7 +140,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.titleLabel = base.GetElement<UXLabel>("LabelFactionSecondTitle");
 			base.GetElement<UXLabel>("LabelBtnLearnMore").Text = this.lang.Get("FACTION_FLIP_LEARN_MORE", new object[0]);
 			base.GetElement<UXLabel>("LabelLearnMore").Text = this.lang.Get("FACTION_FLIP_LEARN_MORE_INFO", new object[0]);
-			this.factionSuffix = "";
+			this.factionSuffix = string.Empty;
 			FactionType factionType = this.oppositeFaction;
 			if (factionType != FactionType.Empire)
 			{
@@ -191,9 +189,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (Service.Get<CurrentPlayer>().NumIdentities > 1 || this.locked)
 			{
 				base.GetElement<UXLabel>("LabelFactionInstructions" + this.factionSuffix).Visible = false;
-				return;
 			}
-			base.GetElement<UXLabel>("LabelFactionInstructions" + this.factionSuffix).Text = this.lang.Get("FACTION_FLIP_INSTRUCTIONS", new object[0]);
+			else
+			{
+				base.GetElement<UXLabel>("LabelFactionInstructions" + this.factionSuffix).Text = this.lang.Get("FACTION_FLIP_INSTRUCTIONS", new object[0]);
+			}
 		}
 
 		protected override void InitButtons()
@@ -231,10 +231,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				Service.Get<ScreenController>().AddScreen(new FactionFlipConfirmationScreen(this.currentFaction, this.oppositeFaction, new OnScreenModalResult(this.OnFactionFlipConfirmed)));
 				this.Visible = false;
-				return;
 			}
-			this.OnFactionFlipConfirmed(true, null);
-			Service.Get<EventManager>().SendEvent(EventId.UIFactionFlipAction, "faction");
+			else
+			{
+				this.OnFactionFlipConfirmed(true, null);
+				Service.Get<EventManager>().SendEvent(EventId.UIFactionFlipAction, "faction");
+			}
 		}
 
 		private void OnFactionFlipConfirmed(object result, object cookie)
@@ -243,7 +245,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				return;
 			}
-			if (!Convert.ToBoolean(result, CultureInfo.InvariantCulture))
+			if (!Convert.ToBoolean(result))
 			{
 				this.Visible = true;
 				return;
@@ -257,9 +259,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (this.oppositePlayerInfo != null && !string.IsNullOrEmpty(this.oppositePlayerInfo.PlayerId))
 			{
 				Service.Get<PlayerIdentityController>().SwitchIdentity(this.oppositePlayerInfo.PlayerId);
-				return;
 			}
-			Service.Get<PlayerIdentityController>().SwitchToNewIdentity();
+			else
+			{
+				Service.Get<PlayerIdentityController>().SwitchToNewIdentity();
+			}
 		}
 
 		private void OnGetOtherPlayerIdentity(PlayerIdentityInfo info)
@@ -274,16 +278,16 @@ namespace StaRTS.Main.Views.UX.Screens
 		private void InitCurrentPlayerInfo()
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-			string text = (this.currentFaction == FactionType.Empire) ? "Empire" : "Rebel";
-			Color textColor = base.GetElement<UXLabel>("LabelCallsignName" + text).TextColor;
-			base.GetElement<UXLabel>("LabelFactionCurrent").Text = ((this.currentFaction == FactionType.Empire) ? this.lang.Get("FACTION_FLIP_CURRENT_BASE_EMPIRE", new object[0]) : this.lang.Get("FACTION_FLIP_CURRENT_BASE_REBEL", new object[0]));
+			string str = (this.currentFaction != FactionType.Empire) ? "Rebel" : "Empire";
+			Color textColor = base.GetElement<UXLabel>("LabelCallsignName" + str).TextColor;
+			base.GetElement<UXLabel>("LabelFactionCurrent").Text = ((this.currentFaction != FactionType.Empire) ? this.lang.Get("FACTION_FLIP_CURRENT_BASE_REBEL", new object[0]) : this.lang.Get("FACTION_FLIP_CURRENT_BASE_EMPIRE", new object[0]));
 			base.GetElement<UXLabel>("LabelCallsignCurrent").Text = this.lang.Get("FACTION_FLIP_CALL_SIGN", new object[0]);
 			UXLabel element = base.GetElement<UXLabel>("LabelCallsignNameCurrent");
 			element.Text = currentPlayer.PlayerName;
 			element.TextColor = textColor;
 			base.GetElement<UXLabel>("LabelHQLEVELOther").Text = this.lang.Get("FACTION_FLIP_HQ_LEVEL", new object[]
 			{
-				""
+				string.Empty
 			});
 			UXLabel element2 = base.GetElement<UXLabel>("LabelHQLEVELCountOther");
 			element2.Text = currentPlayer.Map.FindHighestHqLevel().ToString();
@@ -295,14 +299,14 @@ namespace StaRTS.Main.Views.UX.Screens
 			base.GetElement<UXLabel>("LabelSquadOther").Text = this.lang.Get("FACTION_FLIP_SQUAD", new object[0]);
 			UXLabel element4 = base.GetElement<UXLabel>("LabelSquadNameOther");
 			Squad currentSquad = Service.Get<SquadController>().StateManager.GetCurrentSquad();
-			element4.Text = ((currentSquad != null) ? currentSquad.SquadName : this.lang.Get("general_none", new object[0]));
+			element4.Text = ((currentSquad == null) ? this.lang.Get("general_none", new object[0]) : currentSquad.SquadName);
 			element4.TextColor = textColor;
 		}
 
 		private void InitPlayerInfo(PlayerIdentityInfo playerInfo)
 		{
 			base.GetElement<UXLabel>("LabelCallsign" + this.factionSuffix).Text = this.lang.Get("FACTION_FLIP_CALL_SIGN", new object[0]);
-			base.GetElement<UXLabel>("LabelCallsignName" + this.factionSuffix).Text = ((playerInfo.PlayerName != null) ? playerInfo.PlayerName : this.lang.Get("general_none", new object[0]));
+			base.GetElement<UXLabel>("LabelCallsignName" + this.factionSuffix).Text = ((playerInfo.PlayerName == null) ? this.lang.Get("general_none", new object[0]) : playerInfo.PlayerName);
 			base.GetElement<UXLabel>("LabelHQLEVEL" + this.factionSuffix).Text = this.lang.Get("FACTION_FLIP_HQ_LEVEL", new object[]
 			{
 				playerInfo.HQLevel
@@ -312,7 +316,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				playerInfo.Medals
 			});
 			base.GetElement<UXLabel>("LabelSquad" + this.factionSuffix).Text = this.lang.Get("FACTION_FLIP_SQUAD", new object[0]);
-			base.GetElement<UXLabel>("LabelSquadName" + this.factionSuffix).Text = ((playerInfo.SquadName != null) ? playerInfo.SquadName : this.lang.Get("general_none", new object[0]));
+			base.GetElement<UXLabel>("LabelSquadName" + this.factionSuffix).Text = ((playerInfo.SquadName == null) ? this.lang.Get("general_none", new object[0]) : playerInfo.SquadName);
 			this.swapButton.Enabled = true;
 			this.groupStats.Visible = true;
 		}
@@ -327,76 +331,6 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			this.oppositePlayerInfo = null;
 			base.OnDestroyElement();
-		}
-
-		protected internal FactionFlipScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).Close(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).InitCurrentPlayerInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).InitPlayerInfo((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).OnBackButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).OnFactionFlipConfirmed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).OnGetOtherPlayerIdentity((PlayerIdentityInfo)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).OnLearnMoreButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((FactionFlipScreen)GCHandledObjects.GCHandleToObject(instance)).OnSwapButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

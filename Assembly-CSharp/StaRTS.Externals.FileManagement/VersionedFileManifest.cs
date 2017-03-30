@@ -2,8 +2,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Externals.FileManagement
 {
@@ -25,7 +23,7 @@ namespace StaRTS.Externals.FileManagement
 
 		private int version;
 
-		private StaRTSLogger logger;
+		private Logger logger;
 
 		private static readonly string[] allTargets = new string[]
 		{
@@ -39,7 +37,7 @@ namespace StaRTS.Externals.FileManagement
 		public VersionedFileManifest()
 		{
 			this.translatedUrls = new Dictionary<string, string>();
-			this.logger = Service.Get<StaRTSLogger>();
+			this.logger = Service.Get<Logger>();
 		}
 
 		public void Prepare(FmsOptions options, string json)
@@ -52,7 +50,7 @@ namespace StaRTS.Externals.FileManagement
 			while (i < num)
 			{
 				string text = VersionedFileManifest.allTargets[i];
-				if (text != "wsaplayer")
+				if (text != "android")
 				{
 					list.Add("assetbundles/" + text + "/");
 					list2.Add("." + text + ".assetbundle");
@@ -91,7 +89,7 @@ namespace StaRTS.Externals.FileManagement
 					{
 						relativePath
 					});
-					return "";
+					return string.Empty;
 				}
 				string text = "{root}{codename}/{environment}/{relativePath}/{hash}.{filename}";
 				text = text.Replace("{root}", this.options.RemoteRootUrl);
@@ -99,8 +97,8 @@ namespace StaRTS.Externals.FileManagement
 				text = text.Replace("{environment}", this.options.Env.ToString().ToLower());
 				text = text.Replace("{relativePath}", relativePath);
 				text = text.Replace("{hash}", this.hashes[relativePath]);
-				string text2 = relativePath.Substring(relativePath.LastIndexOf("/") + 1);
-				text = text.Replace("{filename}", text2);
+				string newValue = relativePath.Substring(relativePath.LastIndexOf("/") + 1);
+				text = text.Replace("{filename}", newValue);
 				this.translatedUrls[relativePath] = text;
 			}
 			return this.translatedUrls[relativePath];
@@ -118,7 +116,7 @@ namespace StaRTS.Externals.FileManagement
 				return 0;
 			}
 			string text = this.hashes[relativePath];
-			return Convert.ToInt32(text.Substring(text.get_Length() - 8), 16);
+			return Convert.ToInt32(text.Substring(text.Length - 8), 16);
 		}
 
 		public int GetManifestVersion()
@@ -149,15 +147,15 @@ namespace StaRTS.Externals.FileManagement
 				this.logger.Error("Cannot find FMS hashes in json");
 				return;
 			}
-			num += "\"hashes\":{".get_Length();
+			num += "\"hashes\":{".Length;
 			int num2 = 0;
 			int num3 = -1;
 			string text = null;
 			int i = num;
-			int length = json.get_Length();
+			int length = json.Length;
 			while (i < length)
 			{
-				char c = json.get_Chars(i);
+				char c = json[i];
 				if (c == '"')
 				{
 					switch (num2)
@@ -232,57 +230,17 @@ namespace StaRTS.Externals.FileManagement
 				this.logger.Error("Cannot find FMS version in json");
 				return;
 			}
-			num += "\"version\":".get_Length();
-			int length = json.get_Length();
-			int num2 = num;
-			while (num2 < length && char.IsDigit(json.get_Chars(num2)))
+			num += "\"version\":".Length;
+			int length = json.Length;
+			int i;
+			for (i = num; i < length; i++)
 			{
-				num2++;
+				if (!char.IsDigit(json[i]))
+				{
+					break;
+				}
 			}
-			this.version = int.Parse(json.Substring(num, num2 - num));
-		}
-
-		protected internal VersionedFileManifest(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((VersionedFileManifest)GCHandledObjects.GCHandleToObject(instance)).AssertReady();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VersionedFileManifest)GCHandledObjects.GCHandleToObject(instance)).GetManifestVersion());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VersionedFileManifest)GCHandledObjects.GCHandleToObject(instance)).GetVersionFromFileUrl(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((VersionedFileManifest)GCHandledObjects.GCHandleToObject(instance)).ParseHashes(Marshal.PtrToStringUni(*(IntPtr*)args), (List<string>)GCHandledObjects.GCHandleToObject(args[1]), (List<string>)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((VersionedFileManifest)GCHandledObjects.GCHandleToObject(instance)).ParseVersion(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((VersionedFileManifest)GCHandledObjects.GCHandleToObject(instance)).Prepare((FmsOptions)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VersionedFileManifest)GCHandledObjects.GCHandleToObject(instance)).TranslateFileUrl(Marshal.PtrToStringUni(*(IntPtr*)args)));
+			this.version = int.Parse(json.Substring(num, i - num));
 		}
 	}
 }

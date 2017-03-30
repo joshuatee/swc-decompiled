@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Cameras
 {
@@ -17,30 +16,6 @@ namespace StaRTS.Main.Views.Cameras
 		public Vector3 WorldPositionToScreenPoint(Vector3 worldPoint)
 		{
 			return this.unityCamera.WorldToScreenPoint(worldPoint);
-		}
-
-		protected WorldCamera()
-		{
-		}
-
-		protected internal WorldCamera(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldCamera)GCHandledObjects.GCHandleToObject(instance)).GroundOffset);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((WorldCamera)GCHandledObjects.GCHandleToObject(instance)).GroundOffset = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldCamera)GCHandledObjects.GCHandleToObject(instance)).WorldPositionToScreenPoint(*(*(IntPtr*)args)));
 		}
 	}
 }

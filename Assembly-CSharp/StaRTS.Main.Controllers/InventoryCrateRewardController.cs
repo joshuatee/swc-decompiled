@@ -18,9 +18,7 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -128,7 +126,7 @@ namespace StaRTS.Main.Controllers
 				Service.Get<DeployableShardUnlockController>().GrantUnlockShards(crateSupplyVO.RewardUid, this.GetRewardAmount(crateSupplyVO, hqLevel));
 				break;
 			case SupplyType.Invalid:
-				Service.Get<StaRTSLogger>().Error("Supply Type Invalid: " + crateSupplyVO.Uid);
+				Service.Get<Logger>().Error("Supply Type Invalid: " + crateSupplyVO.Uid);
 				break;
 			}
 			return crateSupplyVO;
@@ -137,7 +135,7 @@ namespace StaRTS.Main.Controllers
 		public RewardVO GenerateRewardFromSupply(CrateSupplyVO supplyData, int hqLevel)
 		{
 			RewardVO rewardVO = new RewardVO();
-			rewardVO.Uid = (string.IsNullOrEmpty(supplyData.ScalingUid) ? supplyData.RewardUid : supplyData.ScalingUid);
+			rewardVO.Uid = ((!string.IsNullOrEmpty(supplyData.ScalingUid)) ? supplyData.ScalingUid : supplyData.RewardUid);
 			switch (supplyData.Type)
 			{
 			case SupplyType.Currency:
@@ -224,7 +222,7 @@ namespace StaRTS.Main.Controllers
 			}
 			if (string.IsNullOrEmpty(text))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("CrateSupplyVO Uid:{0}, Cannot find reward for RewardUid:{1}, Type:{2}", new object[]
+				Service.Get<Logger>().ErrorFormat("CrateSupplyVO Uid:{0}, Cannot find reward for RewardUid:{1}, Type:{2}", new object[]
 				{
 					supplyData.Uid,
 					rewardUid,
@@ -238,7 +236,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (supplyData == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Crate reward given to GetRewardAmount is null", new object[0]);
+				Service.Get<Logger>().ErrorFormat("Crate reward given to GetRewardAmount is null", new object[0]);
 				return 0;
 			}
 			CrateSupplyScaleVO crateSupplyScaleVO = null;
@@ -255,7 +253,7 @@ namespace StaRTS.Main.Controllers
 			case SupplyType.ShardSpecialAttack:
 				if (crateSupplyScaleVO == null)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Crate reward {0} requires HQ scaling data, but none found", new object[]
+					Service.Get<Logger>().ErrorFormat("Crate reward {0} requires HQ scaling data, but none found", new object[]
 					{
 						supplyData.Uid,
 						supplyData.ScalingUid
@@ -312,7 +310,7 @@ namespace StaRTS.Main.Controllers
 				PlanetLootEntryVO optional = dataController.GetOptional<PlanetLootEntryVO>(array[i]);
 				if (optional == null)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Couldn't find PlanetLootEntryVO: {0} specified in PlanetLoot: {1}", new object[]
+					Service.Get<Logger>().ErrorFormat("Couldn't find PlanetLootEntryVO: {0} specified in PlanetLoot: {1}", new object[]
 					{
 						array[i],
 						currentPlanet.VO.PlanetLootUid
@@ -365,9 +363,15 @@ namespace StaRTS.Main.Controllers
 			CrateData crateData = null;
 			foreach (CrateData current in crates.Available.Values)
 			{
-				if (current.DoesExpire && current.ExpiresTimeStamp >= afterTime && (crateData == null || crateData.ExpiresTimeStamp > current.ExpiresTimeStamp))
+				if (current.DoesExpire)
 				{
-					crateData = current;
+					if (current.ExpiresTimeStamp >= afterTime)
+					{
+						if (crateData == null || crateData.ExpiresTimeStamp > current.ExpiresTimeStamp)
+						{
+							crateData = current;
+						}
+					}
 				}
 			}
 			return crateData;
@@ -474,7 +478,7 @@ namespace StaRTS.Main.Controllers
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
 			bool flag = Service.Get<UXController>().MiscElementsManager.CanShowToast(currentState);
 			bool flag2 = currentState is HomeState || currentState is EditBaseState || currentState is BaseLayoutToolState || currentState is GalaxyState || currentState is WarBoardState;
-			if (flag & flag2)
+			if (flag && flag2)
 			{
 				SelectedBuildingScreen highestLevelScreen = Service.Get<ScreenController>().GetHighestLevelScreen<SelectedBuildingScreen>();
 				return highestLevelScreen == null;
@@ -502,149 +506,38 @@ namespace StaRTS.Main.Controllers
 			if (this.IsValidGameStateForToast())
 			{
 				this.ShowCrateExpireToast();
-				return;
 			}
-			Service.Get<EventManager>().RegisterObserver(this, EventId.WorldInTransitionComplete);
-			Service.Get<EventManager>().RegisterObserver(this, EventId.GameStateChanged);
+			else
+			{
+				Service.Get<EventManager>().RegisterObserver(this, EventId.WorldInTransitionComplete);
+				Service.Get<EventManager>().RegisterObserver(this, EventId.GameStateChanged);
+			}
 		}
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.GameStateChanged)
+			if (id != EventId.WorldInTransitionComplete && id != EventId.GameStateChanged)
 			{
-				if (id == EventId.WorldInTransitionComplete || id == EventId.GameStateChanged)
+				if (id != EventId.CrateInventoryUpdated)
 				{
-					if (this.IsValidGameStateForToast())
+					if (id == EventId.InventoryCrateCollectionClosed)
 					{
-						Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldInTransitionComplete);
-						Service.Get<EventManager>().UnregisterObserver(this, EventId.GameStateChanged);
-						this.ShowCrateExpireToast();
+						this.IsCrateAnimationShowingOrPending = false;
 					}
 				}
-			}
-			else if (id != EventId.CrateInventoryUpdated)
-			{
-				if (id == EventId.InventoryCrateCollectionClosed)
+				else
 				{
-					this.IsCrateAnimationShowingOrPending = false;
+					this.ScheduleCrateExpireToast();
+					this.ScheduleCrateExpireBadgeUpdate();
 				}
 			}
-			else
+			else if (this.IsValidGameStateForToast())
 			{
-				this.ScheduleCrateExpireToast();
-				this.ScheduleCrateExpireBadgeUpdate();
+				Service.Get<EventManager>().UnregisterObserver(this, EventId.WorldInTransitionComplete);
+				Service.Get<EventManager>().UnregisterObserver(this, EventId.GameStateChanged);
+				this.ShowCrateExpireToast();
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal InventoryCrateRewardController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).CalculatePlanetRewardChecksum((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).CancelDailyCrateScheduledTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).GenerateRewardFromSupply((CrateSupplyVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).IsCrateAnimationShowingOrPending);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).GetCrateSupplyRewardName((CrateSupplyVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).GetFeaturedLootEntriesForPlanet((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).GetRewardAmount((CrateSupplyVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).GetUnitRewardUid((CrateSupplyVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).GrantInventoryCrateReward((List<string>)GCHandledObjects.GCHandleToObject(*args), (CrateData)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).GrantSingleSupplyCrateReward(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).IsPlanetLootEntryValidToShow((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (PlanetLootEntryVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).IsValidGameStateForToast());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).ScheduleCrateExpireBadgeUpdate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).ScheduleCrateExpireToast();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).ScheduleGivingNextDailyCrate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).IsCrateAnimationShowingOrPending = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).ShowCrateExpireToast();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).ShowInventoryCrateAnimation((List<CrateSupplyVO>)GCHandledObjects.GCHandleToObject(*args), (CrateData)GCHandledObjects.GCHandleToObject(args[1]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[2]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[3]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[4]), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[5])));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateRewardController)GCHandledObjects.GCHandleToObject(instance)).SortFeaturedLootEntries((PlanetLootEntryVO)GCHandledObjects.GCHandleToObject(*args), (PlanetLootEntryVO)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

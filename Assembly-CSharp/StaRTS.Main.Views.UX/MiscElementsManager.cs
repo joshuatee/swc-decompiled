@@ -32,15 +32,12 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX
 {
-	public class MiscElementsManager : UXFactory, IViewFrameTimeObserver, IUserInputObserver, IEventObserver
+	public class MiscElementsManager : UXFactory, IEventObserver, IUserInputObserver, IViewFrameTimeObserver
 	{
 		private const float HEIGHT_OFFSET = 4f;
 
@@ -51,8 +48,6 @@ namespace StaRTS.Main.Views.UX
 		private const float TOOL_TIP_OFFSET = 4f;
 
 		private const float SQUAD_LEVEL_TOOLTIP_OFFSET = 0.3f;
-
-		private static readonly Vector3 OFF_SCREEN_OFFSET = new Vector3(10000f, 10000f, 0f);
 
 		private const int FIRST_TICKER_INDEX = 0;
 
@@ -222,14 +217,6 @@ namespace StaRTS.Main.Views.UX
 
 		public const string ARROW_BOTTOM_LEFT = "bottomleft";
 
-		private bool startedHighlightAnim;
-
-		private uint hideHighlightTimerId;
-
-		private RegionHighlight regionHighlightMover;
-
-		private Transform buttonHighlightArrow;
-
 		private const string CURRENCY_TRAY = "CurrencyTray";
 
 		private const string CURRENCY_TRAY_BG = "CurrencyTrayBg";
@@ -256,23 +243,9 @@ namespace StaRTS.Main.Views.UX
 
 		private const string CURRENCY_REPUTATION = "Reputation";
 
-		public static readonly string[] CURRENCY_LIST = new string[]
-		{
-			"Credit",
-			"Alloy",
-			"Contraband",
-			"Points",
-			"Crystal",
-			"Reputation"
-		};
-
 		private const string NAME_TROOP_COUNTER = "TroopCount";
 
 		private const string NAME_TROOP_COUNTER_LABEL = "LabelTroopCount";
-
-		private UXElement troopCounter;
-
-		private UXLabel troopCounterLabel;
 
 		private const string PLANET_ANCHOR_TOP_RIGHT = "AnchorTopRight";
 
@@ -287,10 +260,6 @@ namespace StaRTS.Main.Views.UX
 		private const float TOURNAMENT_STATUS_TITLE_ANIMATION_LENGTH = 0.5f;
 
 		private const float TOURNAMENT_STATUS_SHOW_DELAY = 1f;
-
-		private uint ConflictStatusTitleTimerId;
-
-		private uint ConflictStatusShowTimerId;
 
 		private const string PLANET_HIGHLIGHT_BACK = "PlanetHighlightBack";
 
@@ -389,6 +358,34 @@ namespace StaRTS.Main.Views.UX
 		private const string HUD_BUFF_TOOLTIP_ITEM_BODY = "LabelBodyBuffsInfo";
 
 		private const string HUD_BUFF_TOOLTIP_BG = "SpriteBgBuffsInfo";
+
+		private static readonly Vector3 OFF_SCREEN_OFFSET = new Vector3(10000f, 10000f, 0f);
+
+		private bool startedHighlightAnim;
+
+		private uint hideHighlightTimerId;
+
+		private RegionHighlight regionHighlightMover;
+
+		private Transform buttonHighlightArrow;
+
+		public static readonly string[] CURRENCY_LIST = new string[]
+		{
+			"Credit",
+			"Alloy",
+			"Contraband",
+			"Points",
+			"Crystal",
+			"Reputation"
+		};
+
+		private UXElement troopCounter;
+
+		private UXLabel troopCounterLabel;
+
+		private uint ConflictStatusTitleTimerId;
+
+		private uint ConflictStatusShowTimerId;
 
 		private AssetsCompleteDelegate onCompleteCallback;
 
@@ -741,10 +738,7 @@ namespace StaRTS.Main.Views.UX
 				this.currencyTrayTable.AddItem(uXElement, i);
 				for (int j = 0; j < MiscElementsManager.CURRENCY_LIST.Length; j++)
 				{
-					this.currencyTrayTable.GetSubElement<UXSprite>(MiscElementsManager.CURRENCY_LIST[i], string.Format("CurrencyIcon{0}", new object[]
-					{
-						MiscElementsManager.CURRENCY_LIST[j]
-					})).Visible = (i == j);
+					this.currencyTrayTable.GetSubElement<UXSprite>(MiscElementsManager.CURRENCY_LIST[i], string.Format("CurrencyIcon{0}", MiscElementsManager.CURRENCY_LIST[j])).Visible = (i == j);
 				}
 			}
 			this.currencyTrayTable.RepositionItemsFrameDelayed();
@@ -810,7 +804,6 @@ namespace StaRTS.Main.Views.UX
 			Service.Get<UserInputManager>().RegisterObserver(this, UserInputLayer.Screen);
 			Service.Get<EventManager>().RegisterObserver(this, EventId.InventoryResourceUpdated, EventPriority.Default);
 			Service.Get<EventManager>().RegisterObserver(this, EventId.SquadAdvancementTabSelected, EventPriority.Default);
-			Service.Get<EventManager>().RegisterObserver(this, EventId.ScreenSizeChanged, EventPriority.Default);
 			this.planetFrontFullCircle = base.GetElement<UXSprite>("SpriteCircleFull");
 			this.planetFrontCirclePiece1 = base.GetElement<UXSprite>("SpriteCirclePiece1");
 			this.planetFrontCirclePiece2 = base.GetElement<UXSprite>("SpriteCirclePiece2");
@@ -857,7 +850,7 @@ namespace StaRTS.Main.Views.UX
 			this.squadLevelTooltipLabel = base.GetElement<UXLabel>(text);
 			if (this.squadLevelTooltipLabel == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Could not set up squad level tooltip label {0}", new object[]
+				Service.Get<Logger>().WarnFormat("Could not set up squad level tooltip label {0}", new object[]
 				{
 					text
 				});
@@ -867,7 +860,7 @@ namespace StaRTS.Main.Views.UX
 			this.squadLevelTooltipPanel = element.Root.GetComponent<UIPanel>();
 			if (this.squadLevelTooltipPanel == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Could not set up squad level tooltip panel {0}", new object[]
+				Service.Get<Logger>().WarnFormat("Could not set up squad level tooltip panel {0}", new object[]
 				{
 					text2
 				});
@@ -882,7 +875,7 @@ namespace StaRTS.Main.Views.UX
 			this.sameFactionMatchMakingTooltipLabel = base.GetElement<UXLabel>(text);
 			if (this.sameFactionMatchMakingTooltipLabel == null)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Could not set up same faction MM tooltip label {0}", new object[]
+				Service.Get<Logger>().WarnFormat("Could not set up same faction MM tooltip label {0}", new object[]
 				{
 					text
 				});
@@ -909,20 +902,12 @@ namespace StaRTS.Main.Views.UX
 
 		private UXLabel GetPlayerInstructionsLabelBasedOnGameState()
 		{
-			if (!(Service.Get<GameStateMachine>().CurrentState is WarBoardState))
-			{
-				return this.playerInstructions;
-			}
-			return this.playerInstructionsWarBoard;
+			return (!(Service.Get<GameStateMachine>().CurrentState is WarBoardState)) ? this.playerInstructions : this.playerInstructionsWarBoard;
 		}
 
 		private UXElement GetPlayerInstructionsPanelBasedOnGameState()
 		{
-			if (!(Service.Get<GameStateMachine>().CurrentState is WarBoardState))
-			{
-				return this.playerInstructionsPanel;
-			}
-			return this.playerInstructionsWarBoardPanel;
+			return (!(Service.Get<GameStateMachine>().CurrentState is WarBoardState)) ? this.playerInstructionsPanel : this.playerInstructionsWarBoardPanel;
 		}
 
 		private void SetFrontUIColorBasedOnEventState(TimedEventState state)
@@ -970,9 +955,11 @@ namespace StaRTS.Main.Views.UX
 			if (visible)
 			{
 				this.ShowEventsTickerView();
-				return;
 			}
-			this.HideEventsTickerView();
+			else
+			{
+				this.HideEventsTickerView();
+			}
 		}
 
 		public void ShowEventsTickerView()
@@ -1100,9 +1087,8 @@ namespace StaRTS.Main.Views.UX
 						{
 							Service.Get<EventManager>().SendEvent(EventId.UIConflictStatusClicked, new ActionMessageBIData("galaxy", planetVO.PlanetBIName));
 							Service.Get<GalaxyViewController>().OpenPlanetDetailsForPlanet(text);
-							return;
 						}
-						if (currentState is HomeState)
+						else if (currentState is HomeState)
 						{
 							Service.Get<EventManager>().SendEvent(EventId.UIConflictStatusClicked, new ActionMessageBIData("base", planetVO.PlanetBIName));
 							Service.Get<GalaxyViewController>().GoToPlanetView(text, CampaignScreenSection.Main);
@@ -1115,11 +1101,7 @@ namespace StaRTS.Main.Views.UX
 		private int GetTotalTickerDisplayCount()
 		{
 			int num = this.GetActiveTournamentDisplayCount() + this.GetTotalRaidsDisplayCount() + this.GetTotalSquadWarDisplayCount();
-			if (num <= 4)
-			{
-				return num;
-			}
-			return 4;
+			return (num <= 4) ? num : 4;
 		}
 
 		private int GetTotalNonConflictTickerDisplayCount()
@@ -1129,7 +1111,7 @@ namespace StaRTS.Main.Views.UX
 
 		private int GetActiveTournamentDisplayCount()
 		{
-			return this.CanShowGalaxyTournamentStatus() ? this.tournamentDisplayCount : 0;
+			return (!this.CanShowGalaxyTournamentStatus()) ? 0 : this.tournamentDisplayCount;
 		}
 
 		private void LoadConflictMedalsData()
@@ -1308,7 +1290,7 @@ namespace StaRTS.Main.Views.UX
 
 		private void OnRaidTickerStatusClicked(UXButton button)
 		{
-			Service.Get<BILoggingController>().TrackGameAction("UI_raid_briefing", "open", "ticker", "", 1);
+			Service.Get<BILoggingController>().TrackGameAction("UI_raid_briefing", "open", "ticker", string.Empty, 1);
 			this.raidDefenseController.ShowRaidInfo();
 		}
 
@@ -1343,7 +1325,7 @@ namespace StaRTS.Main.Views.UX
 		private void SetupRaidInfo()
 		{
 			this.SetupRaidStateColors();
-			this.raidTimerText = (this.raidAvailable ? "RAID_TIME_REMAINING_TICKER_ACTIVE" : "RAID_TIME_REMAINING_TICKER_INACTIVE");
+			this.raidTimerText = ((!this.raidAvailable) ? "RAID_TIME_REMAINING_TICKER_INACTIVE" : "RAID_TIME_REMAINING_TICKER_ACTIVE");
 			this.UpdateRaidTimer();
 			EventTickerObject tickerObject = this.eventTickerView.GetTickerObject(0);
 			if (tickerObject != null)
@@ -1385,11 +1367,7 @@ namespace StaRTS.Main.Views.UX
 
 		private int GetTotalRaidsDisplayCount()
 		{
-			if (!this.CanShowRaidTickerStatus())
-			{
-				return 0;
-			}
-			return 1;
+			return (!this.CanShowRaidTickerStatus()) ? 0 : 1;
 		}
 
 		public void AddSquadWarTickerStatus()
@@ -1469,7 +1447,7 @@ namespace StaRTS.Main.Views.UX
 			SquadWarData currentSquadWar = Service.Get<SquadController>().WarManager.CurrentSquadWar;
 			if (currentSquadWar == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Trying to update squad war timer with no squad data");
+				Service.Get<Logger>().Warn("Trying to update squad war timer with no squad data");
 				return;
 			}
 			uint serverTime = Service.Get<ServerAPI>().ServerTime;
@@ -1489,11 +1467,7 @@ namespace StaRTS.Main.Views.UX
 
 		private int GetTotalSquadWarDisplayCount()
 		{
-			if (!this.CanShowSquadWarPrepPhaseStatus())
-			{
-				return 0;
-			}
-			return 1;
+			return (!this.CanShowSquadWarPrepPhaseStatus()) ? 0 : 1;
 		}
 
 		public void AttachCurrencyTrayToScreen(UXElement screenRoot, CurrencyTrayType type)
@@ -1575,32 +1549,28 @@ namespace StaRTS.Main.Views.UX
 
 		public override EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ShowObjectiveToast)
+			if (id != EventId.InventoryResourceUpdated)
 			{
-				if (id != EventId.InventoryResourceUpdated)
+				if (id != EventId.ShowObjectiveToast)
 				{
-					if (id == EventId.ShowObjectiveToast)
+					if (id == EventId.SquadAdvancementTabSelected)
 					{
-						this.checkPendingObjectiveToast = true;
-						this.EnableFrameTimeObserving(true);
+						if (cookie != null)
+						{
+							SquadScreenAdvancementView squadScreenAdvancementView = cookie as SquadScreenAdvancementView;
+							this.currencyTrayType = squadScreenAdvancementView.GetDisplayCurrencyTrayType();
+							this.UpdateCurrencyTrayContents(null);
+						}
 					}
 				}
 				else
 				{
-					this.UpdateCurrencyTrayContents(null);
+					this.checkPendingObjectiveToast = true;
+					this.EnableFrameTimeObserving(true);
 				}
 			}
-			else if (id != EventId.SquadAdvancementTabSelected)
+			else
 			{
-				if (id == EventId.ScreenSizeChanged)
-				{
-					this.StretchScrimToScreen();
-				}
-			}
-			else if (cookie != null)
-			{
-				SquadScreenAdvancementView squadScreenAdvancementView = cookie as SquadScreenAdvancementView;
-				this.currencyTrayType = squadScreenAdvancementView.GetDisplayCurrencyTrayType();
 				this.UpdateCurrencyTrayContents(null);
 			}
 			return base.OnEvent(id, cookie);
@@ -1610,17 +1580,9 @@ namespace StaRTS.Main.Views.UX
 		{
 			GameObject root = this.scrimElement.Root;
 			root.transform.parent = this.uxCamera.Anchor.transform;
-			UnityUtils.EnsureScreenFillingComponent(this.scrimButton.Root, 0, this.uxCamera.Scale, false, 0, 0);
+			UnityUtils.EnsureScreenFillingComponent(this.scrimButton.Root, 0, this.uxCamera.Scale);
 			this.scrimElement.Visible = false;
 			this.scrimButton.OnClicked = new UXButtonClickedDelegate(this.OnScrimButtonClicked);
-		}
-
-		private void StretchScrimToScreen()
-		{
-			if (this.scrimButton != null && this.scrimButton.Visible)
-			{
-				UnityUtils.EnsureScreenFillingComponent(this.scrimButton.Root, 0, this.uxCamera.Scale, true, Screen.width, Screen.height);
-			}
 		}
 
 		private void SetupConfirmGroup()
@@ -1671,15 +1633,11 @@ namespace StaRTS.Main.Views.UX
 					animatedAlpha.enabled = true;
 					animation = gameObject.AddComponent<Animation>();
 					animation.playAutomatically = false;
-					using (IEnumerator enumerator = component.GetEnumerator())
+					foreach (AnimationState animationState in component)
 					{
-						while (enumerator.MoveNext())
-						{
-							AnimationState animationState = (AnimationState)enumerator.get_Current();
-							AnimationClip animationClip = UnityEngine.Object.Instantiate<AnimationClip>(animationState.clip);
-							animationClip.name = animationState.name;
-							animation.AddClip(animationClip, animationClip.name);
-						}
+						AnimationClip animationClip = UnityEngine.Object.Instantiate<AnimationClip>(animationState.clip);
+						animationClip.name = animationState.name;
+						animation.AddClip(animationClip, animationClip.name);
 					}
 				}
 			}
@@ -1697,7 +1655,6 @@ namespace StaRTS.Main.Views.UX
 			if (show)
 			{
 				this.HideEventsTickerView();
-				this.StretchScrimToScreen();
 			}
 			else
 			{
@@ -1720,12 +1677,14 @@ namespace StaRTS.Main.Views.UX
 			if (highestLevelScreen is SquadSlidingScreen && Service.Get<UXController>().HUD.IsSquadScreenOpenAndCloseable())
 			{
 				Service.Get<UXController>().HUD.SlideSquadScreenClosed();
-				return;
 			}
-			ClosableScreen nonFatalClosableScreen = this.GetNonFatalClosableScreen();
-			if (nonFatalClosableScreen != null && !(nonFatalClosableScreen is PlanetDetailsScreen))
+			else
 			{
-				nonFatalClosableScreen.Close(null);
+				ClosableScreen nonFatalClosableScreen = this.GetNonFatalClosableScreen();
+				if (nonFatalClosableScreen != null && !(nonFatalClosableScreen is PlanetDetailsScreen))
+				{
+					nonFatalClosableScreen.Close(null);
+				}
 			}
 		}
 
@@ -1786,10 +1745,10 @@ namespace StaRTS.Main.Views.UX
 			uXCamera.AttachToMainAnchor(element.Root);
 			element.UXCamera = uXCamera;
 			Vector3 position = targetElement.Root.transform.position + Vector3.up * (targetElement.Root.GetComponent<Collider>().bounds.size.y / 2f);
-			Vector3 vector = uXCamera.Camera.WorldToViewportPoint(position);
-			if (vector.x >= 0f && vector.x <= 1f && vector.y >= 0f && vector.y <= 1f)
+			Vector3 position2 = uXCamera.Camera.WorldToViewportPoint(position);
+			if (position2.x >= 0f && position2.x <= 1f && position2.y >= 0f && position2.y <= 1f)
 			{
-				element.Root.transform.position = uXCamera.Camera.ViewportToWorldPoint(vector);
+				element.Root.transform.position = uXCamera.Camera.ViewportToWorldPoint(position2);
 			}
 		}
 
@@ -1854,18 +1813,11 @@ namespace StaRTS.Main.Views.UX
 			UXSprite element = base.GetElement<UXSprite>("Border");
 			UXSprite element2 = base.GetElement<UXSprite>("BorderCircular");
 			UXSprite element3 = base.GetElement<UXSprite>("BorderCircle");
-			using (IEnumerator enumerator = element.Root.transform.parent.GetEnumerator())
+			foreach (Transform transform2 in element.Root.transform.parent)
 			{
-				while (enumerator.MoveNext())
-				{
-					Transform transform2 = (Transform)enumerator.get_Current();
-					transform2.gameObject.SetActive(false);
-				}
+				transform2.gameObject.SetActive(false);
 			}
-			string name = string.Format("{0}Highlight", new object[]
-			{
-				button.Root.name
-			});
+			string name = string.Format("{0}Highlight", button.Root.name);
 			GameObject gameObject = UnityUtils.FindGameObject(button.Root, name);
 			if (gameObject == null)
 			{
@@ -1972,13 +1924,9 @@ namespace StaRTS.Main.Views.UX
 			this.buttonHighlightArrow.localPosition = zero;
 			this.buttonHighlightArrow.localEulerAngles = Vector3.zero;
 			UXSprite element = base.GetElement<UXSprite>("Border");
-			using (IEnumerator enumerator = element.Root.transform.parent.GetEnumerator())
+			foreach (Transform transform in element.Root.transform.parent)
 			{
-				while (enumerator.MoveNext())
-				{
-					Transform transform = (Transform)enumerator.get_Current();
-					transform.gameObject.SetActive(false);
-				}
+				transform.gameObject.SetActive(false);
 			}
 			if (this.regionHighlightMover != null)
 			{
@@ -1997,7 +1945,6 @@ namespace StaRTS.Main.Views.UX
 					Animator component = this.buttonHighlight.Root.GetComponent<Animator>();
 					component.SetTrigger("Hide");
 					this.hideHighlightTimerId = Service.Get<ViewTimerManager>().CreateViewTimer(0.5f, false, new TimerDelegate(this.OnHideHighlightFinish), null);
-					return;
 				}
 			}
 			else
@@ -2084,7 +2031,7 @@ namespace StaRTS.Main.Views.UX
 				}
 				int depth = element.Root.GetComponent<UIWidget>().depth;
 				ScreenBase highestLevelScreen = Service.Get<ScreenController>().GetHighestLevelScreen<ScreenBase>();
-				int val = (highestLevelScreen == null) ? 0 : highestLevelScreen.GetRootPanelDepth();
+				int val = (highestLevelScreen != null) ? highestLevelScreen.GetRootPanelDepth() : 0;
 				int num = Math.Max(depth, val);
 				this.squadLevelTooltipPanel.depth = Math.Max(this.squadLevelTooltipPanel.depth, num + 1);
 			}
@@ -2139,13 +2086,13 @@ namespace StaRTS.Main.Views.UX
 			}
 			if (element == null || buffs == null)
 			{
-				Service.Get<StaRTSLogger>().Error("ShowHudBuffToolTip, sent null param(s)");
+				Service.Get<Logger>().Error("ShowHudBuffToolTip, sent null param(s)");
 				return;
 			}
 			int count = buffs.Count;
 			if (count <= 0)
 			{
-				Service.Get<StaRTSLogger>().Error("ShowHudBuffToolTip, sent empty buff list");
+				Service.Get<Logger>().Error("ShowHudBuffToolTip, sent empty buff list");
 				return;
 			}
 			if (!rightSide)
@@ -2343,7 +2290,7 @@ namespace StaRTS.Main.Views.UX
 		{
 			if (string.IsNullOrEmpty(instructions))
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Trying to show an empty player message", new object[0]);
+				Service.Get<Logger>().WarnFormat("Trying to show an empty player message", new object[0]);
 				return;
 			}
 			if (id != string.Empty)
@@ -2374,15 +2321,8 @@ namespace StaRTS.Main.Views.UX
 			}
 			UXElement playerInstructionsPanelBasedOnGameState = this.GetPlayerInstructionsPanelBasedOnGameState();
 			UXLabel playerInstructionsLabelBasedOnGameState = this.GetPlayerInstructionsLabelBasedOnGameState();
-			string text = string.Format("Instructions Panel {0}", new object[]
-			{
-				this.playerInstructionsAutoInc
-			});
-			string name = string.Format("{0} ({1})", new object[]
-			{
-				playerInstructionsLabelBasedOnGameState.Root.name,
-				text
-			});
+			string text = string.Format("Instructions Panel {0}", this.playerInstructionsAutoInc);
+			string name = string.Format("{0} ({1})", playerInstructionsLabelBasedOnGameState.Root.name, text);
 			this.playerInstructionsAutoInc++;
 			GameObject gameObject = playerInstructionsPanelBasedOnGameState.Root.transform.parent.gameObject;
 			UXElement objectToDestroy = base.CloneElement<UXElement>(playerInstructionsPanelBasedOnGameState, text, gameObject);
@@ -2469,10 +2409,7 @@ namespace StaRTS.Main.Views.UX
 
 		public UXSprite GetHolonetLoader(UXElement newParent)
 		{
-			return base.CloneElement<UXSprite>(base.GetElement<UXSprite>("HolonetLoader"), string.Format("HolonetLoader ({0})", new object[]
-			{
-				1
-			}), newParent.Root);
+			return base.CloneElement<UXSprite>(base.GetElement<UXSprite>("HolonetLoader"), string.Format("HolonetLoader ({0})", 1), newParent.Root);
 		}
 
 		public UXLabel CreateCollectionLabel(string name, UXElement parent)
@@ -2594,19 +2531,16 @@ namespace StaRTS.Main.Views.UX
 				{
 					num = this.planetFrontSize.x / screenRadiusFor3DVolume;
 				}
-				float num2 = (float)Screen.width / (float)Screen.height;
-				if (num2 < 1f)
-				{
-					num *= num2;
-				}
 				num = Mathf.Lerp(1f, num, Service.Get<GalaxyViewController>().GetPlanetScaleFactor(planet));
 				this.planetScale.Set(num, num, num);
 				planetGameObject.transform.localScale = this.planetScale;
 				UnityUtils.ScaleParticleSize(planet.ParticleRings, planet.OriginalRingSize, num);
-				return;
 			}
-			UnityUtils.ScaleParticleSize(planet.ParticleRings, planet.OriginalRingSize, 1f);
-			planetGameObject.transform.localScale = Vector3.one * this.uxCamera.Scale;
+			else
+			{
+				UnityUtils.ScaleParticleSize(planet.ParticleRings, planet.OriginalRingSize, 1f);
+				planetGameObject.transform.localScale = Vector3.one;
+			}
 		}
 
 		private void UpdatePlanetUIPosition()
@@ -2729,7 +2663,7 @@ namespace StaRTS.Main.Views.UX
 
 		public void CreatePlanetBackgroundUI(Planet planet)
 		{
-			string text = "PlanetBackGroup";
+			string arg = "PlanetBackGroup";
 			string name = "PlanetHighlightBack";
 			string labelName = "LabelEventTimerBack";
 			string labelName2 = "LabelCurrentBack";
@@ -2740,14 +2674,14 @@ namespace StaRTS.Main.Views.UX
 				if (state == TimedEventState.Upcoming || state == TimedEventState.Closing)
 				{
 					labelName2 = "LabelCurrentBackImminent";
-					text = "PlanetImminentGroup";
+					arg = "PlanetImminentGroup";
 					name = "PlanetHighlightImminent";
 					labelName = "LabelEventTimerBackImminent";
 				}
 			}
 			GameObject planetGameObject = planet.PlanetGameObject;
 			int count = this.planetBackUIList.Count;
-			GameObject gameObject = new GameObject(text + count);
+			GameObject gameObject = new GameObject(arg + count);
 			string name2 = planetGameObject.name;
 			gameObject.transform.parent = Service.Get<UXController>().WorldAnchor.Root.transform;
 			UXElement element = base.GetElement<UXElement>(name);
@@ -2937,7 +2871,7 @@ namespace StaRTS.Main.Views.UX
 		{
 			if (this.closePlanetsGalaxyCallback != null)
 			{
-				this.closePlanetsGalaxyCallback.Invoke();
+				this.closePlanetsGalaxyCallback();
 				Service.Get<EventManager>().SendEvent(EventId.GalaxyScreenClosed, null);
 			}
 		}
@@ -3021,20 +2955,22 @@ namespace StaRTS.Main.Views.UX
 				this.planetFriendsGroup.Visible = true;
 				this.planetFriendsGrid.Visible = false;
 				this.planetNoFriends.Visible = true;
-				return;
 			}
-			this.planetFriendsGroup.Visible = true;
-			this.planetFriendsGrid.Visible = true;
-			this.planetNoFriends.Visible = false;
-			int num = 0;
-			while (num < planet.FriendsOnPlanet.Count && num < 5)
+			else
 			{
-				SocialFriendData socialFriendData = planet.FriendsOnPlanet[num];
-				UXElement item = this.planetFriendsGrid.CloneTemplateItem(socialFriendData.Id);
-				UXTexture subElement = this.planetFriendsGrid.GetSubElement<UXTexture>(socialFriendData.Id, "FriendPic");
-				Service.Get<ISocialDataController>().GetFriendPicture(socialFriendData, new OnGetProfilePicture(this.OnGetFriendPicture), subElement);
-				this.planetFriendsGrid.AddItem(item, num);
-				num++;
+				this.planetFriendsGroup.Visible = true;
+				this.planetFriendsGrid.Visible = true;
+				this.planetNoFriends.Visible = false;
+				int num = 0;
+				while (num < planet.FriendsOnPlanet.Count && num < 5)
+				{
+					SocialFriendData socialFriendData = planet.FriendsOnPlanet[num];
+					UXElement item = this.planetFriendsGrid.CloneTemplateItem(socialFriendData.Id);
+					UXTexture subElement = this.planetFriendsGrid.GetSubElement<UXTexture>(socialFriendData.Id, "FriendPic");
+					Service.Get<ISocialDataController>().GetFriendPicture(socialFriendData, new OnGetProfilePicture(this.OnGetFriendPicture), subElement);
+					this.planetFriendsGrid.AddItem(item, num);
+					num++;
+				}
 			}
 		}
 
@@ -3057,10 +2993,10 @@ namespace StaRTS.Main.Views.UX
 
 		public UXSlider CreateHealthSlider(string name, GameObject parentGameObject, bool forShields)
 		{
-			Queue<UXSlider> queue = forShields ? this.shieldSliderPool : this.healthSliderPool;
+			Queue<UXSlider> queue = (!forShields) ? this.healthSliderPool : this.shieldSliderPool;
 			if (queue == null)
 			{
-				UXSlider template = forShields ? this.healthShieldSlider : this.healthSlider;
+				UXSlider template = (!forShields) ? this.healthSlider : this.healthShieldSlider;
 				return base.CloneElement<UXSlider>(template, name, parentGameObject);
 			}
 			if (queue.Count == 0)
@@ -3075,14 +3011,16 @@ namespace StaRTS.Main.Views.UX
 
 		public void DestroyHealthSlider(UXSlider slider, bool forShields)
 		{
-			Queue<UXSlider> queue = forShields ? this.shieldSliderPool : this.healthSliderPool;
+			Queue<UXSlider> queue = (!forShields) ? this.healthSliderPool : this.shieldSliderPool;
 			if (queue != null)
 			{
 				slider.Visible = false;
 				queue.Enqueue(slider);
-				return;
 			}
-			this.DestroyMiscElement(slider);
+			else
+			{
+				this.DestroyMiscElement(slider);
+			}
 		}
 
 		public BuildingTooltip CreateGeneralTooltip(string name, GameObject parentGameObject)
@@ -3172,22 +3110,14 @@ namespace StaRTS.Main.Views.UX
 		{
 			if (enable)
 			{
-				int num = this.observerCount;
-				this.observerCount = num + 1;
-				if (num == 0)
+				if (this.observerCount++ == 0)
 				{
 					Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
-					return;
 				}
 			}
-			else if (this.observerCount > 0)
+			else if (this.observerCount > 0 && --this.observerCount == 0)
 			{
-				int num = this.observerCount - 1;
-				this.observerCount = num;
-				if (num == 0)
-				{
-					Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
-				}
+				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
 			}
 		}
 
@@ -3204,7 +3134,6 @@ namespace StaRTS.Main.Views.UX
 			{
 				this.UpdateFingerPosition(dt);
 			}
-			this.StretchScrimToScreen();
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
 			if (!this.CanShowToast(currentState))
 			{
@@ -3243,10 +3172,10 @@ namespace StaRTS.Main.Views.UX
 						component.SetTrigger("Show");
 					}
 					UXCamera uXCamera = Service.Get<CameraManager>().UXCamera;
-					Vector3 vector = uXCamera.Camera.WorldToViewportPoint(this.buttonHighlightTarget.Root.GetComponent<Collider>().bounds.center);
-					if (vector.x >= 0f && vector.x <= 1f && vector.y >= 0f && vector.y <= 1f)
+					Vector3 position = uXCamera.Camera.WorldToViewportPoint(this.buttonHighlightTarget.Root.GetComponent<Collider>().bounds.center);
+					if (position.x >= 0f && position.x <= 1f && position.y >= 0f && position.y <= 1f)
 					{
-						this.buttonHighlight.Root.transform.position = uXCamera.Camera.ViewportToWorldPoint(vector);
+						this.buttonHighlight.Root.transform.position = uXCamera.Camera.ViewportToWorldPoint(position);
 					}
 				}
 			}
@@ -3297,978 +3226,6 @@ namespace StaRTS.Main.Views.UX
 		public UXElement GetButtonHighlight()
 		{
 			return this.buttonHighlight;
-		}
-
-		protected internal MiscElementsManager(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).AddGalaxyTournamentStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).AddRaidsTickerStatus((RaidDefenseController)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).AddScreenTransitionAnimation((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).AddSquadWarTickerStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).AlignArrow(*(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).AttachCurrencyTrayToScreen((UXElement)GCHandledObjects.GCHandleToObject(*args), (CurrencyTrayType)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).AttachFrontUIInternal((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).AttachPlanetFrontUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CancelWaitForRaidTime();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CanShowGalaxyTournamentStatus());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CanShowRaidTickerStatus());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CanShowSquadWarPrepPhaseStatus());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CanShowToast((IState)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ClearFriendsPicGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ClearPlanetFrontUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CloneUXButton((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (GameObject)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CloneUXLabel((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (GameObject)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CloneUXTexture((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (GameObject)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateBubbleRepairTooltip(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateBubbleTooltip(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateBuildingTooltip((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), (GameObject)GCHandledObjects.GCHandleToObject(args[2]), (BuildingTooltipKind)(*(int*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateCollectionLabel(Marshal.PtrToStringUni(*(IntPtr*)args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateDebugCursor(Marshal.PtrToStringUni(*(IntPtr*)args), (UXAnchor)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateGameBoardLabel(Marshal.PtrToStringUni(*(IntPtr*)args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateGeneralTooltip(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateHealthSlider(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateHQBubbleTooltip(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateIconProgressTooltip(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateLongPress(Marshal.PtrToStringUni(*(IntPtr*)args), (UXAnchor)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreatePlanetBackgroundUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreatePlanetLockedUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateProgressTooltip(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CreateShardUpgradeTooltip(Marshal.PtrToStringUni(*(IntPtr*)args), (GameObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).CurrencyTrayResize((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).DestroyAllPlanetBackgroundUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).DestroyBuildingTooltip((BuildingTooltip)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).DestroyHealthSlider((UXSlider)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).DestroyMiscElement((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).DestroyPlanetBackgroundUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).DestroyPlanetLockedUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).DetachCurrencyTray();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).EnableConfirmGroupAcceptButton(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).EnableFrameTimeObserving(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).EnsureHealthSliderPool();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).EnableCancelBuildingPlacement);
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetActiveTournamentDisplayCount());
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetButtonHighlight());
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetChildElementLabel((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetChildElementSprite((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetHolonetLoader((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetNonFatalClosableScreen());
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetPlanetBackUIElement((GameObject)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerInstructionsLabelBasedOnGameState());
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetPlayerInstructionsPanelBasedOnGameState());
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetTotalNonConflictTickerDisplayCount());
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetTotalRaidsDisplayCount());
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetTotalSquadWarDisplayCount());
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).GetTotalTickerDisplayCount());
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideArrow();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideConfirmGroup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideEventsTickerView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideFingerAnimation();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideGalaxyCloseButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideGalaxyPlanetUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideGalaxyTournamentStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideHighlight();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideHudBuffToolTip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideHudFactionIconToolTip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideHudTooltip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideObjectiveToast();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideObjectiveToastButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HidePlanetBackUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HidePlanetLockedUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HidePlayerInstructions();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideRaidsTickerStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideSameFactionMatchMakingToolTip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideSquadLevelToolTip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideSquadWarBeginStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideTroopCounter();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HideTroopTooltip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HighlightButton((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).HighlightRegion(*(float*)args, *(float*)(args + 1), *(int*)(args + 2), *(int*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).InitPlayerInstructionElements();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).InitSameFactionMatchMakingTooltip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).InitSquadLevelTooltip();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).IsGalaxyTournamentStatusVisible());
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).IsRaidCountdownReady());
-		}
-
-		public unsafe static long $Invoke87(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).IsRaidTickerAvailable());
-		}
-
-		public unsafe static long $Invoke88(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).LoadConflictMedalsData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke89(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).Loaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke90(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).LoadFailure(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke91(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).LoadFriendPictures((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke92(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).LoadRaidsData());
-		}
-
-		public unsafe static long $Invoke93(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).LoadSquadWarData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke94(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).LoadSuccess(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke95(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnBuffToolTipTableRepositioned();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke96(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnConfirmButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke97(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke98(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke99(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke100(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnGalaxyConflictStatusClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke101(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnGetFriendPicture((Texture2D)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke102(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnLabelFaderComplete((LabelFader)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke103(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnPlanetsGalaxyCloseClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke104(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnPress(*(int*)args, (GameObject)GCHandledObjects.GCHandleToObject(args[1]), *(*(IntPtr*)(args + 2)), *(*(IntPtr*)(args + 3))));
-		}
-
-		public unsafe static long $Invoke105(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnRaidTickerStatusClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke106(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnRelease(*(int*)args));
-		}
-
-		public unsafe static long $Invoke107(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnScrimButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke108(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args, *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke109(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke110(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).PanBetweenPlanets();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke111(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).PositionElementRelatively((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke112(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).PrepareGalaxyPlanetUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke113(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ReleaseHealthSliderPool();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke114(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).RemoveGalaxyTournamentStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke115(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ResetAllConflictStatusTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke116(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ResetObjectiveHideTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke117(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ScalePlanet((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke118(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).EnableCancelBuildingPlacement = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke119(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetEventTickerViewVisible(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke120(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetFrontUIColorBasedOnEventState((TimedEventState)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke121(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetGalaxyCloseButtonVisible(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke122(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetupConfirmGroup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke123(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetupPlanetGalaxyUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke124(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetupPlayerInstructionElements((UXLabel)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke125(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetupRaidData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke126(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetupRaidInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke127(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetupRaidStateColors();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke128(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetupScrim();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke129(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).SetupSquadWarColors();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke130(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowArrowOnScreen(*(float*)args, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke131(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowConfirmGroup((Entity)GCHandledObjects.GCHandleToObject(*args), (MiscConfirmDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke132(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowEventsTickerView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke133(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowFingerAnimation(*(float*)args, *(float*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke134(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowGalaxyCloseButton((Action)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke135(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowGalaxyTournamentStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke136(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowHudBuffToolTip((UXElement)GCHandledObjects.GCHandleToObject(*args), (List<WarBuffVO>)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke137(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowHudFactionIconTooltip((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke138(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowHudTooltip((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke139(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowObjectiveToast((ObjectiveProgress)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke140(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowPlanetBackUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke141(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowPlanetFrontUI((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke142(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowPlanetLockedUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke143(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowPlayerInstructions(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke144(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowPlayerInstructions(Marshal.PtrToStringUni(*(IntPtr*)args), *(float*)(args + 1), *(float*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke145(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowPlayerInstructions(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(float*)(args + 2), *(float*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke146(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowPlayerInstructionsError(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke147(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowPlayerInstructionsWithColor(Marshal.PtrToStringUni(*(IntPtr*)args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke148(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowRaidsTickerStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke149(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowSameFactionMatchMakingTooltip((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke150(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowScrim(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke151(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowScrim(*(sbyte*)args != 0, *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke152(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowSquadLevelTooltip((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke153(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowSquadWarBeginStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke154(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowToast(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke155(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowTroopCounter((UXElement)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke156(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).ShowTroopTooltip((UXElement)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke157(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).StretchScrimToScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke158(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).TryCloseNonFatalAlertScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke159(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).TryToHideCurrentPlanetText((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke160(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).TryWaitForRaidTime();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke161(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrencyTrayContents((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke162(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).UpdateFingerPosition(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke163(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).UpdateFrontPlanetEventTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke164(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetUIPosition();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke165(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).UpdateRaidTickerView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke166(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).UpdateRaidTimer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke167(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadWarTickerView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke168(long instance, long* args)
-		{
-			((MiscElementsManager)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadWarTimer();
-			return -1L;
 		}
 	}
 }

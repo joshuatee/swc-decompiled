@@ -11,7 +11,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Animations
 {
@@ -119,7 +118,7 @@ namespace StaRTS.Main.Views.Animations
 			this.modelGameObject = (asset as GameObject);
 			if (this.modelGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid GameObject: " + this.modelAssetName);
+				Service.Get<Logger>().Warn("Invalid GameObject: " + this.modelAssetName);
 			}
 			this.modelAssetLoadReturned = true;
 			this.AssembleLoadingScene();
@@ -136,7 +135,7 @@ namespace StaRTS.Main.Views.Animations
 			this.planetGameObject = (asset as GameObject);
 			if (this.planetGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid GameObject: " + this.planet.GalaxyAssetName);
+				Service.Get<Logger>().Warn("Invalid GameObject: " + this.planet.GalaxyAssetName);
 			}
 			else
 			{
@@ -158,7 +157,7 @@ namespace StaRTS.Main.Views.Animations
 			this.planetGlowGameObject = UnityEngine.Object.Instantiate<GameObject>(this.planetGlowGameObject);
 			if (this.planetGlowGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid GameObject: fx_planetGlow");
+				Service.Get<Logger>().Warn("Invalid GameObject: fx_planetGlow");
 			}
 			this.planetGlowAssetLoadReturned = true;
 			this.AssembleLoadingScene();
@@ -176,7 +175,7 @@ namespace StaRTS.Main.Views.Animations
 			this.starsGameObject.SetActive(true);
 			if (this.starsGameObject == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("Invalid GameObject: planets_starfield_non-moving");
+				Service.Get<Logger>().Warn("Invalid GameObject: planets_starfield_non-moving");
 			}
 			this.starfieldAssetLoadReturned = true;
 			this.AssembleLoadingScene();
@@ -300,88 +299,6 @@ namespace StaRTS.Main.Views.Animations
 			Service.Get<CameraManager>().UXSceneCamera.Camera.enabled = false;
 			UnityUtils.DestroyMaterial(this.planetMaterial);
 			base.DestroyFactory();
-		}
-
-		protected internal TransitionVisuals(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).AssembleLoadingScene();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).Cleanup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).ExecuteCallBack();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).LoadingGUIFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).LoadingModelFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).LoadingPlanetFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).LoadingPlanetGlowFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).ModelsLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).OnStarsLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).OnStarsLoadFail(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).PlanetGlowLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).PlanetLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((TransitionVisuals)GCHandledObjects.GCHandleToObject(instance)).UILoaded(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -1,7 +1,6 @@
 using StaRTS.Externals.Manimal.TransferObjects.Request;
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Tournament
 {
@@ -11,19 +10,6 @@ namespace StaRTS.Main.Models.Commands.Tournament
 		{
 			Serializer serializer = Serializer.Start();
 			return serializer.End().ToString();
-		}
-
-		public RedeemTournamentRewardRequest()
-		{
-		}
-
-		protected internal RedeemTournamentRewardRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RedeemTournamentRewardRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

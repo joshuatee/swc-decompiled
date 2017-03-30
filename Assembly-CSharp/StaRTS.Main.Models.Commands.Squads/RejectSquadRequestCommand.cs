@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public RejectSquadRequestCommand(MemberIdRequest request) : base("guild.join.reject", request, new DefaultResponse())
 		{
 		}
-
-		protected internal RejectSquadRequestCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

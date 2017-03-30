@@ -3,7 +3,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -30,11 +29,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			return num;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TroopRequestPerkUtils.GetTroopRequestPerkTimeReduction((List<string>)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

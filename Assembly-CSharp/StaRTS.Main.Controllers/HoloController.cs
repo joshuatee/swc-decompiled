@@ -7,9 +7,7 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -24,8 +22,6 @@ namespace StaRTS.Main.Controllers
 		public HoloController()
 		{
 			Service.Set<HoloController>(this);
-			this.holocommScreen = new HolocommScreen();
-			this.holocommScreen = null;
 			this.commandBuffer = new List<HoloCommand>();
 			this.events = Service.Get<EventManager>();
 			this.events.RegisterObserver(this, EventId.HoloCommScreenDestroyed);
@@ -40,7 +36,6 @@ namespace StaRTS.Main.Controllers
 			this.events.RegisterObserver(this, EventId.ScreenLoaded);
 			this.events.RegisterObserver(this, EventId.ShowInfoPanel);
 			this.events.RegisterObserver(this, EventId.HideInfoPanel);
-			this.events.RegisterObserver(this, EventId.ScreenSizeChanged);
 		}
 
 		private void SafeRunThroughCommandBuffer()
@@ -58,137 +53,125 @@ namespace StaRTS.Main.Controllers
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.HoloCommScreenDestroyed)
+			switch (id)
 			{
-				if (id != EventId.ScreenLoaded)
+			case EventId.ShowHologram:
+			{
+				ShowHologramStoryAction showHologramStoryAction = (ShowHologramStoryAction)cookie;
+				if (this.EnsureScreenActive())
 				{
-					if (id == EventId.HoloCommScreenDestroyed)
+					this.holocommScreen.ShowHoloCharacter(showHologramStoryAction.Character);
+				}
+				else
+				{
+					this.StoreCommandInBuffer(id, cookie);
+				}
+				return EatResponse.NotEaten;
+			}
+			case EventId.ShowHologramComplete:
+			case EventId.ShowAttackButton:
+			case EventId.HideHologramComplete:
+				IL_44:
+				if (id == EventId.ScreenLoaded)
+				{
+					if (cookie is HolocommScreen)
 					{
-						this.holocommScreen = null;
-						if (!(Service.Get<GameStateMachine>().CurrentState is GalaxyState))
+						HolocommScreen holocommScreen = (HolocommScreen)cookie;
+						if (!holocommScreen.HiddenInQueue)
 						{
-							Service.Get<UXController>().HUD.Visible = true;
+							this.SafeRunThroughCommandBuffer();
+							this.commandBuffer.Clear();
 						}
 					}
+					return EatResponse.NotEaten;
 				}
-				else if (cookie is HolocommScreen)
+				if (id != EventId.HoloCommScreenDestroyed)
 				{
-					HolocommScreen holocommScreen = (HolocommScreen)cookie;
-					if (!holocommScreen.HiddenInQueue)
-					{
-						this.SafeRunThroughCommandBuffer();
-						this.commandBuffer.Clear();
-					}
+					return EatResponse.NotEaten;
 				}
-			}
-			else
+				this.holocommScreen = null;
+				if (!(Service.Get<GameStateMachine>().CurrentState is GalaxyState))
+				{
+					Service.Get<UXController>().HUD.Visible = true;
+				}
+				return EatResponse.NotEaten;
+			case EventId.ShowTranscript:
 			{
-				switch (id)
+				ShowTranscriptStoryAction showTranscriptStoryAction = (ShowTranscriptStoryAction)cookie;
+				if (this.EnsureScreenActive())
 				{
-				case EventId.ShowHologram:
+					this.holocommScreen.AddDialogue(showTranscriptStoryAction.Text, showTranscriptStoryAction.Title);
+				}
+				else
 				{
-					ShowHologramStoryAction showHologramStoryAction = (ShowHologramStoryAction)cookie;
-					if (this.EnsureScreenActive())
-					{
-						this.holocommScreen.ShowHoloCharacter(showHologramStoryAction.Character);
-					}
-					else
-					{
-						this.StoreCommandInBuffer(id, cookie);
-					}
-					break;
+					this.StoreCommandInBuffer(id, cookie);
 				}
-				case EventId.ShowHologramComplete:
-				case EventId.ShowAttackButton:
-				case EventId.HideHologramComplete:
-					break;
-				case EventId.ShowTranscript:
-				{
-					ShowTranscriptStoryAction showTranscriptStoryAction = (ShowTranscriptStoryAction)cookie;
-					if (this.EnsureScreenActive())
-					{
-						this.holocommScreen.AddDialogue(showTranscriptStoryAction.Text, showTranscriptStoryAction.Title);
-					}
-					else
-					{
-						this.StoreCommandInBuffer(id, cookie);
-					}
-					break;
-				}
-				case EventId.PlayHologramAnimation:
-				{
-					PlayHoloAnimationStoryAction playHoloAnimationStoryAction = (PlayHoloAnimationStoryAction)cookie;
-					this.holocommScreen.PlayHoloAnimation(playHoloAnimationStoryAction.AnimName);
-					break;
-				}
-				case EventId.HideHologram:
-					if (this.holocommScreen != null && this.holocommScreen.IsLoaded())
-					{
-						this.holocommScreen.CloseAndDestroyHoloCharacter();
-					}
-					break;
-				case EventId.HideTranscript:
-					if (this.holocommScreen != null && this.holocommScreen.IsLoaded())
-					{
-						this.holocommScreen.RemoveDialogue();
-					}
-					break;
-				case EventId.ShowNextButton:
-					if (this.EnsureScreenActive())
-					{
-						this.holocommScreen.ShowButton("BtnNext");
-					}
-					else
-					{
-						this.StoreCommandInBuffer(id, cookie);
-					}
-					break;
-				case EventId.ShowStoreNextButton:
-					if (this.EnsureScreenActive())
-					{
-						this.holocommScreen.ShowButton("ButtonStore");
-					}
-					else
-					{
-						this.StoreCommandInBuffer(id, cookie);
-					}
-					break;
-				case EventId.HideAllHolograms:
-					if (this.holocommScreen != null && this.holocommScreen.IsLoaded())
-					{
-						this.holocommScreen.HideAllElements();
-						this.holocommScreen.CloseAndDestroyHoloCharacter();
-					}
-					break;
-				case EventId.ShowInfoPanel:
-					if (this.EnsureScreenActive())
-					{
-						ShowHologramInfoStoryAction showHologramInfoStoryAction = (ShowHologramInfoStoryAction)cookie;
-						this.holocommScreen.ShowInfoPanel(showHologramInfoStoryAction.ImageName, showHologramInfoStoryAction.DisplayText, showHologramInfoStoryAction.TitleText, showHologramInfoStoryAction.PlanetPanel);
-					}
-					else
-					{
-						this.StoreCommandInBuffer(id, cookie);
-					}
-					break;
-				case EventId.HideInfoPanel:
-					if (this.holocommScreen != null && this.holocommScreen.IsLoaded())
-					{
-						this.holocommScreen.HideInfoPanel();
-					}
-					break;
-				default:
-					if (id == EventId.ScreenSizeChanged)
-					{
-						if (this.holocommScreen != null && this.holocommScreen.IsLoaded())
-						{
-							this.holocommScreen.ResizeCharacter();
-						}
-					}
-					break;
-				}
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			case EventId.PlayHologramAnimation:
+			{
+				PlayHoloAnimationStoryAction playHoloAnimationStoryAction = (PlayHoloAnimationStoryAction)cookie;
+				this.holocommScreen.PlayHoloAnimation(playHoloAnimationStoryAction.AnimName);
+				return EatResponse.NotEaten;
+			}
+			case EventId.HideHologram:
+				if (this.holocommScreen != null && this.holocommScreen.IsLoaded())
+				{
+					this.holocommScreen.CloseAndDestroyHoloCharacter();
+				}
+				return EatResponse.NotEaten;
+			case EventId.HideTranscript:
+				if (this.holocommScreen != null && this.holocommScreen.IsLoaded())
+				{
+					this.holocommScreen.RemoveDialogue();
+				}
+				return EatResponse.NotEaten;
+			case EventId.ShowNextButton:
+				if (this.EnsureScreenActive())
+				{
+					this.holocommScreen.ShowButton("BtnNext");
+				}
+				else
+				{
+					this.StoreCommandInBuffer(id, cookie);
+				}
+				return EatResponse.NotEaten;
+			case EventId.ShowStoreNextButton:
+				if (this.EnsureScreenActive())
+				{
+					this.holocommScreen.ShowButton("ButtonStore");
+				}
+				else
+				{
+					this.StoreCommandInBuffer(id, cookie);
+				}
+				return EatResponse.NotEaten;
+			case EventId.HideAllHolograms:
+				if (this.holocommScreen != null && this.holocommScreen.IsLoaded())
+				{
+					this.holocommScreen.HideAllElements();
+					this.holocommScreen.CloseAndDestroyHoloCharacter();
+				}
+				return EatResponse.NotEaten;
+			case EventId.ShowInfoPanel:
+				if (this.EnsureScreenActive())
+				{
+					ShowHologramInfoStoryAction showHologramInfoStoryAction = (ShowHologramInfoStoryAction)cookie;
+					this.holocommScreen.ShowInfoPanel(showHologramInfoStoryAction.ImageName, showHologramInfoStoryAction.DisplayText, showHologramInfoStoryAction.TitleText, showHologramInfoStoryAction.PlanetPanel);
+				}
+				else
+				{
+					this.StoreCommandInBuffer(id, cookie);
+				}
+				return EatResponse.NotEaten;
+			case EventId.HideInfoPanel:
+				if (this.holocommScreen != null && this.holocommScreen.IsLoaded())
+				{
+					this.holocommScreen.HideInfoPanel();
+				}
+				return EatResponse.NotEaten;
+			}
+			goto IL_44;
 		}
 
 		private void StoreCommandInBuffer(EventId id, object cookie)
@@ -232,64 +215,9 @@ namespace StaRTS.Main.Controllers
 			return this.holocommScreen != null && this.holocommScreen.IsLoaded() && this.holocommScreen.HasCharacterShowing();
 		}
 
-		public void ResizeCurrentCharacter(int width, int height)
-		{
-			if (this.HasAnyCharacter())
-			{
-				this.holocommScreen.ResizeCurrentCharacter(width, height);
-			}
-		}
-
 		public bool CharacterAlreadyShowing(string characterId)
 		{
 			return this.holocommScreen != null && this.holocommScreen.IsLoaded() && this.holocommScreen.CharacterAlreadyShowing(characterId);
-		}
-
-		protected internal HoloController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HoloController)GCHandledObjects.GCHandleToObject(instance)).CharacterAlreadyShowing(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HoloController)GCHandledObjects.GCHandleToObject(instance)).EnsureScreenActive());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HoloController)GCHandledObjects.GCHandleToObject(instance)).GetActiveCamera());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HoloController)GCHandledObjects.GCHandleToObject(instance)).HasAnyCharacter());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HoloController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HoloController)GCHandledObjects.GCHandleToObject(instance)).ResizeCurrentCharacter(*(int*)args, *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((HoloController)GCHandledObjects.GCHandleToObject(instance)).SafeRunThroughCommandBuffer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((HoloController)GCHandledObjects.GCHandleToObject(instance)).StoreCommandInBuffer((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

@@ -8,8 +8,6 @@ using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Notifications
 {
@@ -42,56 +40,58 @@ namespace StaRTS.Main.Controllers.Notifications
 			}
 			uint time = ServerTime.Time;
 			ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
-			int num = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.PushAuthPromptedCount), CultureInfo.InvariantCulture);
+			int num = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.PushAuthPromptedCount));
 			bool flag = this.HasReachedPushNotificationLimit(num);
-			if (id != EventId.RaidNotifyRequest)
+			switch (id)
 			{
-				switch (id)
+			case EventId.SquadJoinedByCurrentPlayer:
+			case EventId.SquadJoinInviteAcceptedByCurrentPlayer:
+				if (!flag && this.HasEnoughTimeElapsed(time, ServerPref.LastPushAuthPromptSquadJoinedTime, GameConstants.PUSH_NOTIFICATION_SQUAD_JOIN_COOLDOWN) && !this.IsHolonetOpen())
 				{
-				case EventId.SquadJoinedByCurrentPlayer:
-				case EventId.SquadJoinInviteAcceptedByCurrentPlayer:
-					if (!flag && this.HasEnoughTimeElapsed(time, ServerPref.LastPushAuthPromptSquadJoinedTime, GameConstants.PUSH_NOTIFICATION_SQUAD_JOIN_COOLDOWN) && !this.IsHolonetOpen())
-					{
-						new ActionChain("SocialPushNotifRepromptActionForSquadJoin");
-						serverPlayerPrefs.SetPref(ServerPref.LastPushAuthPromptSquadJoinedTime, time.ToString());
-						serverPlayerPrefs.SetPref(ServerPref.PushAuthPromptedCount, (num + 1).ToString());
-						Service.Get<ServerAPI>().Sync(new SetPrefsCommand(false));
-					}
-					break;
-				case EventId.SquadTroopsRequestedByCurrentPlayer:
-					if (!flag && this.HasEnoughTimeElapsed(time, ServerPref.LastPushAuthPromptTroopRequestTime, GameConstants.PUSH_NOTIFICATIONS_TROOP_REQUEST_COOLDOWN))
-					{
-						new ActionChain("SocialPushNotifRepromptActionForTroopRequest");
-						serverPlayerPrefs.SetPref(ServerPref.LastPushAuthPromptTroopRequestTime, time.ToString());
-						serverPlayerPrefs.SetPref(ServerPref.PushAuthPromptedCount, (num + 1).ToString());
-						Service.Get<ServerAPI>().Sync(new SetPrefsCommand(false));
-					}
-					break;
-				case EventId.SquadWarTroopsRequestedByCurrentPlayer:
-					if (!flag && this.HasEnoughTimeElapsed(time, ServerPref.LastPushAuthPromptTroopRequestTime, GameConstants.PUSH_NOTIFICATIONS_TROOP_REQUEST_COOLDOWN))
-					{
-						new ActionChain("SocialPushNotifRepromptActionForWarTroopRequest");
-						serverPlayerPrefs.SetPref(ServerPref.LastPushAuthPromptTroopRequestTime, time.ToString());
-						serverPlayerPrefs.SetPref(ServerPref.PushAuthPromptedCount, (num + 1).ToString());
-						Service.Get<ServerAPI>().Sync(new SetPrefsCommand(false));
-					}
-					break;
+					new ActionChain("SocialPushNotifRepromptActionForSquadJoin");
+					serverPlayerPrefs.SetPref(ServerPref.LastPushAuthPromptSquadJoinedTime, time.ToString());
+					serverPlayerPrefs.SetPref(ServerPref.PushAuthPromptedCount, (num + 1).ToString());
+					Service.Get<ServerAPI>().Sync(new SetPrefsCommand(false));
 				}
-			}
-			else
-			{
+				return EatResponse.NotEaten;
+			case EventId.SquadJoinApplicationAcceptedByCurrentPlayer:
+			case EventId.SquadWarTroopsRequestStartedByCurrentPlayer:
+				IL_5B:
+				if (id != EventId.RaidNotifyRequest)
+				{
+					return EatResponse.NotEaten;
+				}
 				new ActionChain("SocialPushNotifRepromptActionForRaids");
 				serverPlayerPrefs.SetPref(ServerPref.LastPushAuthPromptTroopRequestTime, time.ToString());
 				serverPlayerPrefs.SetPref(ServerPref.PushAuthPromptedCount, (num + 1).ToString());
 				Service.Get<ServerAPI>().Sync(new SetPrefsCommand(false));
+				return EatResponse.NotEaten;
+			case EventId.SquadTroopsRequestedByCurrentPlayer:
+				if (!flag && this.HasEnoughTimeElapsed(time, ServerPref.LastPushAuthPromptTroopRequestTime, GameConstants.PUSH_NOTIFICATIONS_TROOP_REQUEST_COOLDOWN))
+				{
+					new ActionChain("SocialPushNotifRepromptActionForTroopRequest");
+					serverPlayerPrefs.SetPref(ServerPref.LastPushAuthPromptTroopRequestTime, time.ToString());
+					serverPlayerPrefs.SetPref(ServerPref.PushAuthPromptedCount, (num + 1).ToString());
+					Service.Get<ServerAPI>().Sync(new SetPrefsCommand(false));
+				}
+				return EatResponse.NotEaten;
+			case EventId.SquadWarTroopsRequestedByCurrentPlayer:
+				if (!flag && this.HasEnoughTimeElapsed(time, ServerPref.LastPushAuthPromptTroopRequestTime, GameConstants.PUSH_NOTIFICATIONS_TROOP_REQUEST_COOLDOWN))
+				{
+					new ActionChain("SocialPushNotifRepromptActionForWarTroopRequest");
+					serverPlayerPrefs.SetPref(ServerPref.LastPushAuthPromptTroopRequestTime, time.ToString());
+					serverPlayerPrefs.SetPref(ServerPref.PushAuthPromptedCount, (num + 1).ToString());
+					Service.Get<ServerAPI>().Sync(new SetPrefsCommand(false));
+				}
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			goto IL_5B;
 		}
 
 		private bool HasEnoughTimeElapsed(uint nowSeconds, ServerPref pref, float cooldown)
 		{
 			ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
-			uint num = Convert.ToUInt32(serverPlayerPrefs.GetPref(pref), CultureInfo.InvariantCulture);
+			uint num = Convert.ToUInt32(serverPlayerPrefs.GetPref(pref));
 			uint num2 = nowSeconds - num;
 			uint num3 = (uint)(cooldown * 3600f);
 			return num2 > num3;
@@ -105,25 +105,6 @@ namespace StaRTS.Main.Controllers.Notifications
 		private bool IsHolonetOpen()
 		{
 			return Service.Get<ScreenController>().GetHighestLevelScreen<HolonetScreen>() != null;
-		}
-
-		protected internal SocialPushNotificationController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SocialPushNotificationController)GCHandledObjects.GCHandleToObject(instance)).HasReachedPushNotificationLimit(*(int*)args));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SocialPushNotificationController)GCHandledObjects.GCHandleToObject(instance)).IsHolonetOpen());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SocialPushNotificationController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

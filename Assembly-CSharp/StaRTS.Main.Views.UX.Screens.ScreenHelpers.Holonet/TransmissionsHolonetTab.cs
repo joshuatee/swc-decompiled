@@ -9,8 +9,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 {
@@ -61,8 +59,8 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 			int count = transmissions.Count;
 			this.table = holoScreen.GetElement<UXTable>("TransmissionsLogTable");
 			this.table.SetTemplateItem("TransmissionsLogItem");
-			string title = "";
-			string body = "";
+			string title = string.Empty;
+			string body = string.Empty;
 			for (int i = 0; i < count; i++)
 			{
 				bool flag = false;
@@ -99,8 +97,8 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 					break;
 				case TransmissionType.Conflict:
 				{
-					string text = "";
-					string text2 = "";
+					string text = string.Empty;
+					string text2 = string.Empty;
 					IDataController dataController = Service.Get<IDataController>();
 					TournamentVO optional = dataController.GetOptional<TournamentVO>(transmissionVO.TransData);
 					TournamentTierVO optional2 = dataController.GetOptional<TournamentTierVO>(transmissionVO.Btn1Data);
@@ -183,7 +181,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 
 		private string GetResearchDisplayName(string uid)
 		{
-			string result = "";
+			string result = string.Empty;
 			if (!string.IsNullOrEmpty(uid))
 			{
 				IDataController dataController = Service.Get<IDataController>();
@@ -297,62 +295,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers.Holonet
 		public override string GetBITabName()
 		{
 			return "transmission_log";
-		}
-
-		protected internal TransmissionsHolonetTab(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TransmissionsHolonetTab)GCHandledObjects.GCHandleToObject(instance)).AddCustomTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TransmissionsHolonetTab)GCHandledObjects.GCHandleToObject(instance)).AddGenericTransmission((TransmissionVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TransmissionsHolonetTab)GCHandledObjects.GCHandleToObject(instance)).FeaturedButton1Clicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TransmissionsHolonetTab)GCHandledObjects.GCHandleToObject(instance)).FeaturedButton2Clicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetTab)GCHandledObjects.GCHandleToObject(instance)).GetBITabName());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TransmissionsHolonetTab)GCHandledObjects.GCHandleToObject(instance)).GetResearchDisplayName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TransmissionsHolonetTab)GCHandledObjects.GCHandleToObject(instance)).OnDestroyTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TransmissionsHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetupTransmissionBody((UXTable)GCHandledObjects.GCHandleToObject(*args), (TransmissionVO)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TransmissionsHolonetTab)GCHandledObjects.GCHandleToObject(instance)).SetVisibleByTabButton((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
 		}
 	}
 }

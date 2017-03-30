@@ -1,3 +1,4 @@
+using StaRTS.Main.Models;
 using StaRTS.Main.Models.Entities;
 using StaRTS.Main.Models.Entities.Components;
 using StaRTS.Main.Utils.Events;
@@ -6,11 +7,10 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Entities
 {
-	public class EntityFlasher : IViewFrameTimeObserver, IEventObserver
+	public class EntityFlasher : IEventObserver, IViewFrameTimeObserver
 	{
 		private List<FlashingEntity> flashingEntities;
 
@@ -41,13 +41,19 @@ namespace StaRTS.Main.Views.Entities
 
 		public void RemoveFlashing(SmartEntity entity)
 		{
+			bool flag = false;
 			for (int i = this.flashingEntities.Count - 1; i >= 0; i--)
 			{
 				FlashingEntity flashingEntity = this.flashingEntities[i];
 				if (flashingEntity.Entity == entity)
 				{
+					flag = true;
 					this.StopFlashing(i);
 				}
+			}
+			if (flag)
+			{
+				this.TrySendShaderResetOnEntityEvent();
 			}
 		}
 
@@ -79,8 +85,17 @@ namespace StaRTS.Main.Views.Entities
 				FlashingEntity flashingEntity = this.flashingEntities[i];
 				flashingEntity.Complete();
 			}
+			this.TrySendShaderResetOnEntityEvent();
 			this.flashingEntities.Clear();
 			this.UnregisterObservers();
+		}
+
+		private void TrySendShaderResetOnEntityEvent()
+		{
+			if (GameConstants.SEND_RESET_EVENT_ON_ENTITY_STOP_FLASHING)
+			{
+				Service.Get<EventManager>().SendEvent(EventId.ShaderResetOnEntity, null);
+			}
 		}
 
 		private void RegisterObservers()
@@ -97,13 +112,19 @@ namespace StaRTS.Main.Views.Entities
 
 		public void OnViewFrameTime(float dt)
 		{
+			bool flag = false;
 			for (int i = this.flashingEntities.Count - 1; i >= 0; i--)
 			{
 				FlashingEntity flashingEntity = this.flashingEntities[i];
 				if (flashingEntity.Flash(dt))
 				{
+					flag = true;
 					this.StopFlashing(i);
 				}
+			}
+			if (flag)
+			{
+				this.TrySendShaderResetOnEntityEvent();
 			}
 		}
 
@@ -114,57 +135,6 @@ namespace StaRTS.Main.Views.Entities
 				this.RemoveFlashing((SmartEntity)cookie);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal EntityFlasher(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EntityFlasher)GCHandledObjects.GCHandleToObject(instance)).AddFlashing((SmartEntity)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1), *(float*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EntityFlasher)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EntityFlasher)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((EntityFlasher)GCHandledObjects.GCHandleToObject(instance)).RegisterObservers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EntityFlasher)GCHandledObjects.GCHandleToObject(instance)).RemoveFlashing((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((EntityFlasher)GCHandledObjects.GCHandleToObject(instance)).RemoveFlashingFromAllEntities();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((EntityFlasher)GCHandledObjects.GCHandleToObject(instance)).StopFlashing(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((EntityFlasher)GCHandledObjects.GCHandleToObject(instance)).UnregisterObservers();
-			return -1L;
 		}
 	}
 }

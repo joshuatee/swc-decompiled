@@ -4,7 +4,7 @@ namespace StaRTS.Utils.Core
 {
 	internal class ServiceWrapper<T> : IServiceWrapper
 	{
-		public static T instance;
+		public static T instance = default(T);
 
 		public void Unset()
 		{

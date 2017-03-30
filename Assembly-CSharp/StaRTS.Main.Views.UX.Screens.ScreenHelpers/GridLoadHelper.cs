@@ -5,7 +5,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 {
@@ -25,7 +24,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 
 		protected GridLoadHelper.AddItemsOverTimeFinished overTimeAddItemsFinished;
 
-		protected System.Collections.ArrayList overTimeItemAdditionList;
+		protected ArrayList overTimeItemAdditionList;
 
 		private int overTimeItemAdditionTimeCount;
 
@@ -135,7 +134,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 		{
 			this.IsBusyAddingItems = true;
 			this.overTimeItemAdditionTimeCount = 3;
-			this.overTimeItemAdditionList = new System.Collections.ArrayList(items);
+			this.overTimeItemAdditionList = new ArrayList(items);
 			this.cookie = cookie;
 			this.overTimeAddItemsFinished = addItemsOverTimeFinished;
 			Service.Get<ViewTimeEngine>().RegisterFrameTimeObserver(this);
@@ -169,7 +168,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 				if (this.overTimeItemAdditionList == null || this.overTimeItemAdditionList.Count <= 0)
 				{
 					this.OverTimeAdditionCompleted();
-					return;
+					break;
 				}
 				this.AddItem<object>(this.overTimeItemAdditionList[0], this.cookie);
 				this.overTimeItemAdditionList.RemoveAt(0);
@@ -178,9 +177,7 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 
 		public void OnViewFrameTime(float dt)
 		{
-			int num = this.overTimeItemAdditionTimeCount - 1;
-			this.overTimeItemAdditionTimeCount = num;
-			if (num == 0)
+			if (--this.overTimeItemAdditionTimeCount == 0)
 			{
 				this.overTimeItemAdditionTimeCount = 3;
 				this.AddItemsInGroup();
@@ -193,119 +190,6 @@ namespace StaRTS.Main.Views.UX.Screens.ScreenHelpers
 			{
 				Service.Get<ViewTimeEngine>().UnregisterFrameTimeObserver(this);
 			}
-		}
-
-		protected internal GridLoadHelper(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).AddElement((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).AddItemsInGroup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).ClearGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).ExpediteAddingItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).IsAddedItems);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).IsBusyAddingItems);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).GetCookie());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).GetGrid());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).GetNexElementPosition());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).InvalidateExistingItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).OverTimeAdditionCompleted();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).RemoveElement((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).ResetAfterOverTimeAdditionCompleted();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).ResetGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).ResetGrid(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).IsAddedItems = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((GridLoadHelper)GCHandledObjects.GCHandleToObject(instance)).IsBusyAddingItems = (*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

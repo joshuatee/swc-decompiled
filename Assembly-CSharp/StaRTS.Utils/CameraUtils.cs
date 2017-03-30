@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Utils
 {
@@ -25,12 +24,12 @@ namespace StaRTS.Utils
 
 		public static bool GetGroundPositionHelper(Camera unityCamera, Vector3 screenPosition, Vector3 rayOrigin, float distanceFromEyeToScreen, float groundOffset, ref Vector3 groundPosition)
 		{
-			Vector3 vector;
-			CameraUtils.ScreenToRay(unityCamera, screenPosition, distanceFromEyeToScreen, out vector);
-			if (vector.y < 0f)
+			Vector3 a;
+			CameraUtils.ScreenToRay(unityCamera, screenPosition, distanceFromEyeToScreen, out a);
+			if (a.y < 0f)
 			{
-				float d = (groundOffset - rayOrigin.y) / vector.y;
-				groundPosition = rayOrigin + vector * d;
+				float d = (groundOffset - rayOrigin.y) / a.y;
+				groundPosition = rayOrigin + a * d;
 				groundPosition.y = 0f;
 				return true;
 			}
@@ -39,21 +38,11 @@ namespace StaRTS.Utils
 
 		private static void ScreenToRay(Camera unityCamera, Vector2 screenPosition, float distanceFromEyeToScreen, out Vector3 outRayDirection)
 		{
-			Vector4 vector = new Vector4(screenPosition.x - 0.5f * (float)Screen.width, screenPosition.y - 0.5f * (float)Screen.height, -distanceFromEyeToScreen, 0f);
+			Vector4 v = new Vector4(screenPosition.x - 0.5f * (float)Screen.width, screenPosition.y - 0.5f * (float)Screen.height, -distanceFromEyeToScreen, 0f);
 			Matrix4x4 cameraToWorldMatrix = unityCamera.cameraToWorldMatrix;
-			vector = cameraToWorldMatrix * vector;
-			outRayDirection = new Vector3(vector.x, vector.y, vector.z);
+			v = cameraToWorldMatrix * v;
+			outRayDirection = new Vector3(v.x, v.y, v.z);
 			outRayDirection = outRayDirection.normalized;
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CameraUtils.CalculateDistanceFromEyeToScreen((Camera)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(CameraUtils.HasDragged(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1))));
 		}
 	}
 }

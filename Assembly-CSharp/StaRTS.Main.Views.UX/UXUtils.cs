@@ -12,10 +12,8 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX
 {
@@ -49,6 +47,24 @@ namespace StaRTS.Main.Views.UX
 
 		private const int REWARD_DEFAULT_NUM = 3;
 
+		public const string COLOR_EMPIRE_STRING = "c0d0ff";
+
+		public const string COLOR_REBEL_STRING = "f0dfc1";
+
+		private const string UPLINK_ACTIVE_SPRITE = "icoVictoryPoint";
+
+		private const string UPLINK_DISABLED_SPRITE = "AnimUplinkC";
+
+		private const string CRATE_INVENTORY_CRATE_NO_EXPIRATION_TIMER = "CRATE_INVENTORY_CRATE_NO_EXPIRATION_TIMER";
+
+		private const string CRATE_INVENTORY_CRATE_EXPIRATION_TIMER = "CRATE_INVENTORY_CRATE_EXPIRATION_TIMER";
+
+		private const string CRATE_FLYOUT_LEI_EXPIRATION_TIMER = "CRATE_FLYOUT_LEI_EXPIRATION_TIMER";
+
+		private const string FRAGMENT_SPRITE_FORMAT = "icoDataFragQ{0}";
+
+		private const string EXPIRES_IN = "expires_in";
+
 		public static readonly Color COLOR_COST_CANNOT_AFFORD = new Color(0.956862748f, 0f, 0f);
 
 		public static readonly Color COLOR_COST_LOCKED = new Color(0.156862751f, 0.156862751f, 0.156862751f);
@@ -77,38 +93,13 @@ namespace StaRTS.Main.Views.UX
 
 		public static readonly Color COLOR_SHARD_COMPLETE = new Color(0.380392164f, 0.65882355f, 0.164705887f);
 
-		public const string COLOR_EMPIRE_STRING = "c0d0ff";
-
-		public const string COLOR_REBEL_STRING = "f0dfc1";
-
-		private const string UPLINK_ACTIVE_SPRITE = "icoVictoryPoint";
-
-		private const string UPLINK_DISABLED_SPRITE = "AnimUplinkC";
-
 		private static readonly Color UPLINK_ACTIVE_TINT = Color.white;
 
 		private static readonly Color UPLINK_DISABLED_TINT = new Color(0.06f, 0.33f, 0.48f);
 
-		private const string CRATE_INVENTORY_CRATE_NO_EXPIRATION_TIMER = "CRATE_INVENTORY_CRATE_NO_EXPIRATION_TIMER";
-
-		private const string CRATE_INVENTORY_CRATE_EXPIRATION_TIMER = "CRATE_INVENTORY_CRATE_EXPIRATION_TIMER";
-
-		private const string CRATE_FLYOUT_LEI_EXPIRATION_TIMER = "CRATE_FLYOUT_LEI_EXPIRATION_TIMER";
-
-		private const string FRAGMENT_SPRITE_FORMAT = "icoDataFragQ{0}";
-
-		private const string EXPIRES_IN = "expires_in";
-
 		public static string FormatNameToOriginalName(string currentName, string appendedName)
 		{
-			if (!string.IsNullOrEmpty(appendedName))
-			{
-				return currentName.Replace(string.Format(" ({0})", new object[]
-				{
-					appendedName
-				}), "");
-			}
-			return currentName;
+			return (!string.IsNullOrEmpty(appendedName)) ? currentName.Replace(string.Format(" ({0})", appendedName), string.Empty) : currentName;
 		}
 
 		public static void AppendNameRecursively(GameObject gameObject, string name, bool root)
@@ -149,15 +140,7 @@ namespace StaRTS.Main.Views.UX
 
 		public static string FormatAppendedName(string originalName, string appendedName)
 		{
-			if (!string.IsNullOrEmpty(appendedName))
-			{
-				return string.Format("{0} ({1})", new object[]
-				{
-					originalName,
-					appendedName
-				});
-			}
-			return originalName;
+			return (!string.IsNullOrEmpty(appendedName)) ? string.Format("{0} ({1})", originalName, appendedName) : originalName;
 		}
 
 		public static void SetSpriteTopAnchorPoint(UXSprite sprite, int value)
@@ -183,11 +166,7 @@ namespace StaRTS.Main.Views.UX
 
 		public static Color GetWinResultColor(bool win)
 		{
-			if (!win)
-			{
-				return Color.red;
-			}
-			return Color.green;
+			return (!win) ? Color.red : Color.green;
 		}
 
 		public static void SetupMultiCostElements(UXFactory uxFactory, string[] costElementNames, string clonedParentName, string[] cost, int costMapCount)
@@ -272,7 +251,7 @@ namespace StaRTS.Main.Views.UX
 				int associatedIconWidth = 0;
 				if (!uxFactory.HasElement<UXLabel>(costElementStr))
 				{
-					Service.Get<StaRTSLogger>().Error("UXFactory missing needed label: " + costElementStr);
+					Service.Get<Logger>().Error("UXFactory missing needed label: " + costElementStr);
 					return;
 				}
 				UXLabel element2 = uxFactory.GetElement<UXLabel>(costElementStr);
@@ -442,7 +421,7 @@ namespace StaRTS.Main.Views.UX
 			label.TextColor = costColor;
 			if (icon != null)
 			{
-				icon.Color = (locked ? costColor : Color.white);
+				icon.Color = ((!locked) ? Color.white : costColor);
 			}
 		}
 
@@ -526,7 +505,7 @@ namespace StaRTS.Main.Views.UX
 
 		public static string GetIconNameFromTroopClass(TroopRole troopClass)
 		{
-			string result;
+			string result = string.Empty;
 			switch (troopClass)
 			{
 			case TroopRole.Striker:
@@ -650,11 +629,13 @@ namespace StaRTS.Main.Views.UX
 			{
 				expirationLabel.Text = lang.Get("CRATE_INVENTORY_CRATE_NO_EXPIRATION_TIMER", new object[0]);
 				expirationLabel.TextColor = UXUtils.COLOR_CRATE_EXPIRE_LABEL_NORMAL;
-				return;
 			}
-			int thresholdSeconds = GameConstants.CRATE_INVENTORY_EXPIRATION_TIMER_WARNING * 60;
-			CountdownControl countdownControl = new CountdownControl(expirationLabel, lang.Get("CRATE_INVENTORY_CRATE_EXPIRATION_TIMER", new object[0]), (int)crate.ExpiresTimeStamp);
-			countdownControl.SetThreshold(thresholdSeconds, UXUtils.COLOR_CRATE_EXPIRE_LABEL_WARNING);
+			else
+			{
+				int thresholdSeconds = GameConstants.CRATE_INVENTORY_EXPIRATION_TIMER_WARNING * 60;
+				CountdownControl countdownControl = new CountdownControl(expirationLabel, lang.Get("CRATE_INVENTORY_CRATE_EXPIRATION_TIMER", new object[0]), (int)crate.ExpiresTimeStamp);
+				countdownControl.SetThreshold(thresholdSeconds, UXUtils.COLOR_CRATE_EXPIRE_LABEL_WARNING);
+			}
 		}
 
 		public static void SetCrateTargetedOfferTimerLabel(uint expiresAt, UXLabel expirationLabel, Lang lang)
@@ -667,8 +648,8 @@ namespace StaRTS.Main.Views.UX
 
 		public static void SetShardProgressBarValue(UXSlider slider, UXSprite sprite, float sliderValue)
 		{
-			slider.Value = ((sliderValue > 1f) ? 1f : sliderValue);
-			sprite.Color = ((sliderValue >= 1f) ? UXUtils.COLOR_SHARD_COMPLETE : UXUtils.COLOR_SHARD_INPROGRESS);
+			slider.Value = ((sliderValue <= 1f) ? sliderValue : 1f);
+			sprite.Color = ((sliderValue < 1f) ? UXUtils.COLOR_SHARD_INPROGRESS : UXUtils.COLOR_SHARD_COMPLETE);
 		}
 
 		public static float GetScreenRadiusFor3DVolume(Vector3 pos, Vector3 extents)
@@ -714,10 +695,7 @@ namespace StaRTS.Main.Views.UX
 			stringBuilder.Append(input);
 			if (!string.IsNullOrEmpty(colorCode))
 			{
-				stringBuilder.Insert(0, string.Format("[{0}]", new object[]
-				{
-					colorCode
-				}));
+				stringBuilder.Insert(0, string.Format("[{0}]", colorCode));
 				stringBuilder.Append("[-]");
 			}
 			return stringBuilder.ToString();
@@ -742,16 +720,17 @@ namespace StaRTS.Main.Views.UX
 			if (hideIfInactive)
 			{
 				sprite.Visible = active;
-				return;
 			}
-			if (active)
+			else if (active)
 			{
 				sprite.SpriteName = "icoVictoryPoint";
 				sprite.Color = UXUtils.UPLINK_ACTIVE_TINT;
-				return;
 			}
-			sprite.SpriteName = "AnimUplinkC";
-			sprite.Color = UXUtils.UPLINK_DISABLED_TINT;
+			else
+			{
+				sprite.SpriteName = "AnimUplinkC";
+				sprite.Color = UXUtils.UPLINK_DISABLED_TINT;
+			}
 		}
 
 		public static bool IsElementObjective(UXElement element)
@@ -763,10 +742,7 @@ namespace StaRTS.Main.Views.UX
 		{
 			for (int i = 1; i <= 3; i++)
 			{
-				string name = string.Format(cardName, new object[]
-				{
-					i
-				});
+				string name = string.Format(cardName, i);
 				UXElement optionalSubElement = grid.GetOptionalSubElement<UXElement>(itemUid, name);
 				if (optionalSubElement == null)
 				{
@@ -778,10 +754,7 @@ namespace StaRTS.Main.Views.UX
 
 		public static UXElement SetCardQuality(UXFactory uxFactory, UXGrid grid, string itemUid, int qualityInt, string cardName)
 		{
-			string name = string.Format(cardName, new object[]
-			{
-				qualityInt
-			});
+			string name = string.Format(cardName, qualityInt);
 			UXElement optionalSubElement = grid.GetOptionalSubElement<UXElement>(itemUid, name);
 			if (optionalSubElement == null)
 			{
@@ -811,10 +784,7 @@ namespace StaRTS.Main.Views.UX
 			if (fragmentSprite != null)
 			{
 				fragmentSprite.Visible = true;
-				fragmentSprite.SpriteName = string.Format("icoDataFragQ{0}", new object[]
-				{
-					quality
-				});
+				fragmentSprite.SpriteName = string.Format("icoDataFragQ{0}", quality);
 			}
 		}
 
@@ -843,7 +813,7 @@ namespace StaRTS.Main.Views.UX
 			string[] cost = currentOffer.Cost;
 			if (cost == null || cost.Length == 0)
 			{
-				Service.Get<StaRTSLogger>().Error("SetupCurrencyCostOffer Cost was empty or null: " + currentOffer.Uid);
+				Service.Get<Logger>().Error("SetupCurrencyCostOffer Cost was empty or null: " + currentOffer.Uid);
 				return;
 			}
 			string costString = cost[0];
@@ -914,295 +884,6 @@ namespace StaRTS.Main.Views.UX
 		public static bool ShouldDisplayCrateFlyoutItem(CrateFlyoutItemVO flyoutVO, CrateFlyoutDisplayType displayType)
 		{
 			return flyoutVO != null && (flyoutVO.ShowParams == null || flyoutVO.ShowParams.Count < 1 || flyoutVO.ShowParams.Contains(displayType));
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			UXUtils.AppendNameRecursively((GameObject)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.CalculateAbsoluteWidgetBound((Transform)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.CalculateElementSize((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			UXUtils.ClampUILabelWidth((UXLabel)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			UXUtils.CommonSetupTasks((UXFactory)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(sbyte*)(args + 6) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 7)), Marshal.PtrToStringUni(*(IntPtr*)(args + 8)), Marshal.PtrToStringUni(*(IntPtr*)(args + 9)), Marshal.PtrToStringUni(*(IntPtr*)(args + 10)), Marshal.PtrToStringUni(*(IntPtr*)(args + 11)), Marshal.PtrToStringUni(*(IntPtr*)(args + 12)), Marshal.PtrToStringUni(*(IntPtr*)(args + 13)), Marshal.PtrToStringUni(*(IntPtr*)(args + 14)), Marshal.PtrToStringUni(*(IntPtr*)(args + 15)), *(int*)(args + 16));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			UXUtils.CostGroupSetup((UXElement)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.FormatAppendedName(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.FormatNameToOriginalName(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetCostColor((UXLabel)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetCurrencyIconVO(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetCurrencyIconVO(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetCurrencyItemAssetName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetCurrencyItemAssetName(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetDefaultCurrencyIconVO(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetIconNameFromFactionType((FactionType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetIconNameFromTroopClass((TroopRole)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetScreenRadiusFor3DVolume(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.GetWinResultColor(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			UXUtils.HideAllQualityCards((UXGrid)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			UXUtils.HideChildrenRecursively((GameObject)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			UXUtils.HideIcon((UXSprite)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.IsElementObjective((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.IsValidRewardItem((CrateFlyoutItemVO)GCHandledObjects.GCHandleToObject(*args), (PlanetVO)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.IsVisibleInHierarchy((UXElement)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.SetCardQuality((UXFactory)GCHandledObjects.GCHandleToObject(*args), (UXGrid)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), Marshal.PtrToStringUni(*(IntPtr*)(args + 4))));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.SetCardQuality((UXFactory)GCHandledObjects.GCHandleToObject(*args), (UXGrid)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5))));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			UXUtils.SetCrateExpirationTimerLabel((CrateData)GCHandledObjects.GCHandleToObject(*args), (UXLabel)GCHandledObjects.GCHandleToObject(args[1]), (Lang)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			UXUtils.SetLeiExpirationTimerLabel((LimitedEditionItemVO)GCHandledObjects.GCHandleToObject(*args), (UXLabel)GCHandledObjects.GCHandleToObject(args[1]), (Lang)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			UXUtils.SetShardProgressBarValue((UXSlider)GCHandledObjects.GCHandleToObject(*args), (UXSprite)GCHandledObjects.GCHandleToObject(args[1]), *(float*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			UXUtils.SetSpriteTopAnchorPoint((UXSprite)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			UXUtils.SetupCostElements((UXFactory)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(sbyte*)(args + 7) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 8)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			UXUtils.SetupCostElements((UXFactory)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(sbyte*)(args + 7) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 8)), *(int*)(args + 9));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			UXUtils.SetupCostElements((UXFactory)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(int*)(args + 7), *(sbyte*)(args + 8) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 9)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			UXUtils.SetupCostElements((UXFactory)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(int*)(args + 7), *(sbyte*)(args + 8) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 9)), *(int*)(args + 10));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			UXUtils.SetupCurrencySprite((UXSprite)GCHandledObjects.GCHandleToObject(*args), (CurrencyType)(*(int*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			UXUtils.SetupFragmentIconSprite((UXSprite)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			UXUtils.SetupGeometryForIcon((UXSprite)GCHandledObjects.GCHandleToObject(*args), (IGeometryVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			UXUtils.SetupGeometryForIcon((UXSprite)GCHandledObjects.GCHandleToObject(*args), (ProjectorConfig)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			UXUtils.SetupGeometryForIcon((UXSprite)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			UXUtils.SetupGeometryForIcon((UXSprite)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			UXUtils.SetupMultiCostElements((UXFactory)GCHandledObjects.GCHandleToObject(*args), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)), (string[])GCHandledObjects.GCHandleToPinnedArrayObject(args[3]), *(int*)(args + 4));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			UXUtils.SetupSingleCostElement((UXFactory)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(sbyte*)(args + 7) != 0, Marshal.PtrToStringUni(*(IntPtr*)(args + 8)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			UXUtils.SetupTargetedOfferCostUI((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args), (UXLabel)GCHandledObjects.GCHandleToObject(args[1]), (UXSprite)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.ShouldDisplayCrateFlyoutItem((CrateFlyoutItemVO)GCHandledObjects.GCHandleToObject(*args), (CrateFlyoutDisplayType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.ShouldHideHudAfterClosingScreen(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.ShouldShowHudBehindScreen(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			UXUtils.ShowIcon((UXSprite)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			UXUtils.SortListForTwoRowGrids((List<UXElement>)GCHandledObjects.GCHandleToObject(*args), (UXGrid)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			UXUtils.TrySetupItemQualityView((CrateSupplyVO)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1]), (UXElement)GCHandledObjects.GCHandleToObject(args[2]), (UXElement)GCHandledObjects.GCHandleToObject(args[3]), (UXElement)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			UXUtils.UpdateCostColor((UXLabel)GCHandledObjects.GCHandleToObject(*args), (UXSprite)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(sbyte*)(args + 7) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			UXUtils.UpdateUplinkHelper((UXSprite)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(UXUtils.WrapTextInColor(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
 		}
 	}
 }

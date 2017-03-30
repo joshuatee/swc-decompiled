@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace StaRTS.DataStructures
 {
-	public class OrderedSet<T> : ICollection<T>, IEnumerable<T>, IEnumerable
+	public class OrderedSet<T> : IEnumerable, ICollection<T>, IEnumerable<T>
 	{
 		private readonly IDictionary<T, LinkedListNode<T>> dictionary;
 
@@ -16,7 +16,7 @@ namespace StaRTS.DataStructures
 		{
 			get
 			{
-				return this.dictionary.get_Count();
+				return this.dictionary.Count;
 			}
 		}
 
@@ -24,7 +24,7 @@ namespace StaRTS.DataStructures
 		{
 			get
 			{
-				return this.dictionary.get_IsReadOnly();
+				return this.dictionary.IsReadOnly;
 			}
 		}
 
@@ -59,6 +59,11 @@ namespace StaRTS.DataStructures
 			this.Add(item);
 		}
 
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return this.GetEnumerator();
+		}
+
 		public void Clear()
 		{
 			this.linkedList.Clear();
@@ -70,22 +75,22 @@ namespace StaRTS.DataStructures
 			if (item != null)
 			{
 				LinkedListNode<T> linkedListNode;
-				if (!this.dictionary.TryGetValue(item, ref linkedListNode))
+				if (!this.dictionary.TryGetValue(item, out linkedListNode))
 				{
 					return false;
 				}
 				this.dictionary.Remove(item);
 				if (linkedListNode == null)
 				{
-					Service.Get<StaRTSLogger>().Error("OrderedSet Node is NULL");
+					Service.Get<Logger>().Error("OrderedSet Node is NULL");
 				}
 				else if (!this.linkedList.Contains(item))
 				{
-					Service.Get<StaRTSLogger>().Error("OrderedSet list does not contain item");
+					Service.Get<Logger>().Error("OrderedSet list does not contain item");
 				}
 				else if (linkedListNode.List != this.linkedList)
 				{
-					Service.Get<StaRTSLogger>().Error("OrderedSet node list does not match");
+					Service.Get<Logger>().Error("OrderedSet node list does not match");
 					linkedListNode = this.linkedList.Find(item);
 					if (linkedListNode != null)
 					{
@@ -99,7 +104,7 @@ namespace StaRTS.DataStructures
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("OrderedSet Item is NULL");
+				Service.Get<Logger>().Error("OrderedSet Item is NULL");
 			}
 			return true;
 		}
@@ -107,11 +112,6 @@ namespace StaRTS.DataStructures
 		public IEnumerator<T> GetEnumerator()
 		{
 			return this.linkedList.GetEnumerator();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return this.GetEnumerator();
 		}
 
 		public bool Contains(T item)
@@ -134,7 +134,7 @@ namespace StaRTS.DataStructures
 			this.dictionary.Add(item, linkedListNode);
 			if (linkedListNode == null)
 			{
-				Service.Get<StaRTSLogger>().Error("OrderedSet Added NULL node " + item);
+				Service.Get<Logger>().Error("OrderedSet Added NULL node " + item);
 			}
 			return true;
 		}

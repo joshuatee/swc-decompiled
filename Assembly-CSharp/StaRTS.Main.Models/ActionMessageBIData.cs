@@ -18,7 +18,6 @@ namespace StaRTS.Main.Models
 
 		public ActionMessageBIData(string action, string message)
 		{
-			this = default(ActionMessageBIData);
 			this.Action = action;
 			this.Message = message;
 		}

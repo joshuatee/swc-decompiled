@@ -26,9 +26,5 @@ namespace StaRTS.Main.Models.Entities.Components
 			this.ObstacleTarget = null;
 			this.CurrentWallTarget = null;
 		}
-
-		protected internal SecondaryTargetsComponent(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

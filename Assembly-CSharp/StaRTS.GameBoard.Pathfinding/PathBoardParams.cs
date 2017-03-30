@@ -7,13 +7,5 @@ namespace StaRTS.GameBoard.Pathfinding
 		public bool IgnoreWall;
 
 		public bool Destructible;
-
-		public PathBoardParams()
-		{
-		}
-
-		protected internal PathBoardParams(UIntPtr dummy)
-		{
-		}
 	}
 }

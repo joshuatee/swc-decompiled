@@ -1,7 +1,6 @@
 using StaRTS.Main.Views.Cameras;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Elements
 {
@@ -93,38 +92,6 @@ namespace StaRTS.Main.Views.UX.Elements
 		{
 			this.component.Slider = null;
 			UnityEngine.Object.Destroy(this.component);
-		}
-
-		protected internal UXSlider(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXSlider)GCHandledObjects.GCHandleToObject(instance)).Alpha);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((UXSlider)GCHandledObjects.GCHandleToObject(instance)).Value);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((UXSlider)GCHandledObjects.GCHandleToObject(instance)).InternalDestroyComponent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((UXSlider)GCHandledObjects.GCHandleToObject(instance)).Alpha = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((UXSlider)GCHandledObjects.GCHandleToObject(instance)).Value = *(float*)args;
-			return -1L;
 		}
 	}
 }

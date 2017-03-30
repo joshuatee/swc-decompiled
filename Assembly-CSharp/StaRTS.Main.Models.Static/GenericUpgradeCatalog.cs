@@ -4,8 +4,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Static
 {
@@ -66,60 +64,60 @@ namespace StaRTS.Main.Models.Static
 			}
 			foreach (KeyValuePair<string, List<T>> current2 in this.upgradeGroups)
 			{
-				current2.get_Value().Sort(new Comparison<T>(GenericUpgradeCatalog<T>.SortByLevelAscending));
-				int arg_23A_0 = current2.get_Value().Count;
-				T t3 = this.maxLevels[current2.get_Key()];
-				if (arg_23A_0 != t3.Lvl)
+				current2.Value.Sort(new Comparison<T>(GenericUpgradeCatalog<T>.SortByLevelAscending));
+				int arg_256_0 = current2.Value.Count;
+				T t3 = this.maxLevels[current2.Key];
+				if (arg_256_0 != t3.Lvl)
 				{
-					for (int i = 1; i < current2.get_Value().Count; i++)
+					for (int i = 1; i < current2.Value.Count; i++)
 					{
-						t3 = current2.get_Value()[i];
-						int arg_283_0 = t3.Lvl;
-						t3 = current2.get_Value()[i - 1];
-						if (arg_283_0 == t3.Lvl)
+						T t4 = current2.Value[i];
+						int arg_29F_0 = t4.Lvl;
+						T t5 = current2.Value[i - 1];
+						if (arg_29F_0 == t5.Lvl)
 						{
-							StaRTSLogger arg_330_0 = Service.Get<StaRTSLogger>();
-							string arg_330_1 = "Duplicate levels in group {4}: {0} ({1}) AND {2} ({3})";
-							object[] expr_298 = new object[5];
-							int arg_2B7_1 = 0;
-							t3 = current2.get_Value()[i];
-							expr_298[arg_2B7_1] = t3.Uid;
-							int arg_2DC_1 = 1;
-							t3 = current2.get_Value()[i];
-							expr_298[arg_2DC_1] = t3.Lvl;
-							int arg_2FE_1 = 2;
-							t3 = current2.get_Value()[i - 1];
-							expr_298[arg_2FE_1] = t3.Uid;
-							int arg_325_1 = 3;
-							t3 = current2.get_Value()[i - 1];
-							expr_298[arg_325_1] = t3.Lvl;
-							expr_298[4] = current2.get_Key();
-							arg_330_0.ErrorFormat(arg_330_1, expr_298);
+							Logger arg_34C_0 = Service.Get<Logger>();
+							string arg_34C_1 = "Duplicate levels in group {4}: {0} ({1}) AND {2} ({3})";
+							object[] expr_2B4 = new object[5];
+							int arg_2D3_1 = 0;
+							T t6 = current2.Value[i];
+							expr_2B4[arg_2D3_1] = t6.Uid;
+							int arg_2F8_1 = 1;
+							T t7 = current2.Value[i];
+							expr_2B4[arg_2F8_1] = t7.Lvl;
+							int arg_31A_1 = 2;
+							T t8 = current2.Value[i - 1];
+							expr_2B4[arg_31A_1] = t8.Uid;
+							int arg_341_1 = 3;
+							T t9 = current2.Value[i - 1];
+							expr_2B4[arg_341_1] = t9.Lvl;
+							expr_2B4[4] = current2.Key;
+							arg_34C_0.ErrorFormat(arg_34C_1, expr_2B4);
 						}
 						else
 						{
-							t3 = current2.get_Value()[i];
-							int arg_378_0 = t3.Lvl;
-							t3 = current2.get_Value()[i - 1];
-							if (arg_378_0 != t3.Lvl + 1)
+							T t10 = current2.Value[i];
+							int arg_394_0 = t10.Lvl;
+							T t11 = current2.Value[i - 1];
+							if (arg_394_0 != t11.Lvl + 1)
 							{
-								StaRTSLogger arg_425_0 = Service.Get<StaRTSLogger>();
-								string arg_425_1 = "In Group {4} expected {0} ({1}) to be one level higher than {2} ({3})";
-								object[] expr_38D = new object[5];
-								int arg_3AC_1 = 0;
-								t3 = current2.get_Value()[i];
-								expr_38D[arg_3AC_1] = t3.Uid;
-								int arg_3D1_1 = 1;
-								t3 = current2.get_Value()[i];
-								expr_38D[arg_3D1_1] = t3.Lvl;
-								int arg_3F3_1 = 2;
-								t3 = current2.get_Value()[i - 1];
-								expr_38D[arg_3F3_1] = t3.Uid;
-								int arg_41A_1 = 3;
-								t3 = current2.get_Value()[i - 1];
-								expr_38D[arg_41A_1] = t3.Lvl;
-								expr_38D[4] = current2.get_Key();
-								arg_425_0.ErrorFormat(arg_425_1, expr_38D);
+								Logger arg_441_0 = Service.Get<Logger>();
+								string arg_441_1 = "In Group {4} expected {0} ({1}) to be one level higher than {2} ({3})";
+								object[] expr_3A9 = new object[5];
+								int arg_3C8_1 = 0;
+								T t12 = current2.Value[i];
+								expr_3A9[arg_3C8_1] = t12.Uid;
+								int arg_3ED_1 = 1;
+								T t13 = current2.Value[i];
+								expr_3A9[arg_3ED_1] = t13.Lvl;
+								int arg_40F_1 = 2;
+								T t14 = current2.Value[i - 1];
+								expr_3A9[arg_40F_1] = t14.Uid;
+								int arg_436_1 = 3;
+								T t15 = current2.Value[i - 1];
+								expr_3A9[arg_436_1] = t15.Lvl;
+								expr_3A9[4] = current2.Key;
+								arg_441_0.ErrorFormat(arg_441_1, expr_3A9);
 							}
 						}
 					}
@@ -139,7 +137,7 @@ namespace StaRTS.Main.Models.Static
 			return new List<string>(this.upgradeGroups.Keys);
 		}
 
-		public T GetByLevel(string upgradeGroup, int level)
+		public new T GetByLevel(string upgradeGroup, int level)
 		{
 			List<T> upgradeGroupLevels = this.GetUpgradeGroupLevels(upgradeGroup);
 			int num = level - 1;
@@ -213,74 +211,6 @@ namespace StaRTS.Main.Models.Static
 		public static int SortByLevelAscending(T a, T b)
 		{
 			return a.Lvl - b.Lvl;
-		}
-
-		protected internal GenericUpgradeCatalog(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GenericUpgradeCatalog<BuildingTypeVO>)GCHandledObjects.GCHandleToObject(instance)).GetIDCollection());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GenericUpgradeCatalog<BuildingTypeVO>)GCHandledObjects.GCHandleToObject(instance)).InitService();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GenericUpgradeCatalog<BuildingTypeVO>)GCHandledObjects.GCHandleToObject(instance)).InternalGetByLevel(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GenericUpgradeCatalog<EquipmentVO>)GCHandledObjects.GCHandleToObject(instance)).GetIDCollection());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((GenericUpgradeCatalog<EquipmentVO>)GCHandledObjects.GCHandleToObject(instance)).InitService();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GenericUpgradeCatalog<EquipmentVO>)GCHandledObjects.GCHandleToObject(instance)).InternalGetByLevel(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GenericUpgradeCatalog<SpecialAttackTypeVO>)GCHandledObjects.GCHandleToObject(instance)).GetIDCollection());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((GenericUpgradeCatalog<SpecialAttackTypeVO>)GCHandledObjects.GCHandleToObject(instance)).InitService();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GenericUpgradeCatalog<SpecialAttackTypeVO>)GCHandledObjects.GCHandleToObject(instance)).InternalGetByLevel(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GenericUpgradeCatalog<TroopTypeVO>)GCHandledObjects.GCHandleToObject(instance)).GetIDCollection());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((GenericUpgradeCatalog<TroopTypeVO>)GCHandledObjects.GCHandleToObject(instance)).InitService();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GenericUpgradeCatalog<TroopTypeVO>)GCHandledObjects.GCHandleToObject(instance)).InternalGetByLevel(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
 		}
 	}
 }

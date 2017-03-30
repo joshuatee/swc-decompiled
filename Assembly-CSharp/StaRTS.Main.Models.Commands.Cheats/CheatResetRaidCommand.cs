@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatResetRaidCommand(PlayerIdRequest request) : base("cheats.raids.reset", request, new DefaultResponse())
 		{
 		}
-
-		protected internal CheatResetRaidCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

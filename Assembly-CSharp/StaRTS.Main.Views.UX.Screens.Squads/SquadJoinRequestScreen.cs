@@ -6,7 +6,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -64,11 +63,13 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				{
 					this.squad.SquadName,
 					currentSquad.SquadName
-				}), false, this.lang.Get("APPLY_CTA", new object[0]), this.lang.Get("ACCOUNT_CONFLICT_CONFIRM_CANCEL", new object[0]), new OnScreenModalResult(this.OnLeaveConfirmation), null, false);
+				}), false, this.lang.Get("APPLY_CTA", new object[0]), this.lang.Get("ACCOUNT_CONFLICT_CONFIRM_CANCEL", new object[0]), new OnScreenModalResult(this.OnLeaveConfirmation), null);
 				Service.Get<EventManager>().SendEvent(EventId.UISquadLeaveConfirmation, currentSquad.SquadID + "|apply|" + this.squad.SquadID);
-				return;
 			}
-			this.SendRequest();
+			else
+			{
+				this.SendRequest();
+			}
 		}
 
 		private void OnLeaveConfirmation(object result, object cookie)
@@ -76,9 +77,11 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (result != null)
 			{
 				this.SendRequest();
-				return;
 			}
-			this.OnCancel(null);
+			else
+			{
+				this.OnCancel(null);
+			}
 		}
 
 		private void SendRequest()
@@ -101,40 +104,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				this.callback(false, this.cookie);
 			}
 			this.OnCloseButtonClicked(button);
-		}
-
-		protected internal SquadJoinRequestScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadJoinRequestScreen)GCHandledObjects.GCHandleToObject(instance)).OnCancel((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadJoinRequestScreen)GCHandledObjects.GCHandleToObject(instance)).OnClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadJoinRequestScreen)GCHandledObjects.GCHandleToObject(instance)).OnLeaveConfirmation(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadJoinRequestScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadJoinRequestScreen)GCHandledObjects.GCHandleToObject(instance)).SendRequest();
-			return -1L;
 		}
 	}
 }

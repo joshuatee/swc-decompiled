@@ -18,17 +18,12 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class TournamentController : IEventObserver, IViewFrameTimeObserver
 	{
 		public delegate void PlayerRankUpdatedCallback(TournamentRank oldRank, TournamentRank rank, string tournamentUId);
-
-		private static List<TournamentTierVO> tiers;
 
 		public const string LANG_LOOT_BONUS = "LOOT_BONUS";
 
@@ -39,6 +34,8 @@ namespace StaRTS.Main.Controllers
 		private const string PARAM_TOURNAMENT_ID = "tournamentId";
 
 		private const string PARAM_CALLBACK = "callback";
+
+		private static List<TournamentTierVO> tiers;
 
 		private Dictionary<string, bool> viewedTournaments;
 
@@ -142,12 +139,12 @@ namespace StaRTS.Main.Controllers
 
 		public void UpdateAndSyncTournamentViewedData()
 		{
-			string text = "";
+			string text = string.Empty;
 			foreach (KeyValuePair<string, bool> current in this.viewedTournaments)
 			{
-				if (current.get_Value())
+				if (current.Value)
 				{
-					text = text + current.get_Key() + "|";
+					text = text + current.Key + '|';
 				}
 			}
 			Service.Get<ServerPlayerPrefs>().SetPref(ServerPref.TournamentViewed, text);
@@ -296,17 +293,16 @@ namespace StaRTS.Main.Controllers
 						Service.Get<EventManager>().RegisterObserver(this, EventId.WorldInTransitionComplete, EventPriority.Default);
 					}
 					string pref = Service.Get<ServerPlayerPrefs>().GetPref(ServerPref.TournamentTierChangeTimeViewed);
-					uint num = Convert.ToUInt32(pref, CultureInfo.InvariantCulture);
+					uint num = Convert.ToUInt32(pref);
 					uint num2 = (ServerTime.Time - num) / 3600u;
 					if (num2 >= GameConstants.TOURNAMENT_TIER_CHANGE_VIEW_THROTTLE)
 					{
 						this.UpdatePlayerRank(new TournamentController.PlayerRankUpdatedCallback(this.CheckForTierChangeAfterBattle), this.CurrentPlanetActiveTournament);
-						return;
 					}
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().Warn("Conflict is live but we are missing progress for it (id):" + this.CurrentPlanetActiveTournament.Uid);
+					Service.Get<Logger>().Warn("Conflict is live but we are missing progress for it (id):" + this.CurrentPlanetActiveTournament.Uid);
 				}
 			}
 		}
@@ -341,10 +337,10 @@ namespace StaRTS.Main.Controllers
 			{
 				foreach (KeyValuePair<string, object> current in ranks.tournamentRankResponse)
 				{
-					Tournament tournament = this.currentPlayer.TournamentProgress.GetTournament(current.get_Key());
+					Tournament tournament = this.currentPlayer.TournamentProgress.GetTournament(current.Key);
 					if (tournament != null)
 					{
-						tournament.UpdateRatingAndCurrentRank(current.get_Value());
+						tournament.UpdateRatingAndCurrentRank(current.Value);
 					}
 				}
 			}
@@ -458,7 +454,7 @@ namespace StaRTS.Main.Controllers
 			Tournament tournament = null;
 			if (response.TournamentsData.Count == 0)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Client is trying to redeem tournament(s), however server does not redeem anything. Player ID: {0}", new object[]
+				Service.Get<Logger>().WarnFormat("Client is trying to redeem tournament(s), however server does not redeem anything. Player ID: {0}", new object[]
 				{
 					this.currentPlayer.PlayerId
 				});
@@ -489,9 +485,11 @@ namespace StaRTS.Main.Controllers
 			if (Service.Get<GameStateMachine>().CurrentState is HomeState)
 			{
 				this.ShowTournamentEnded();
-				return;
 			}
-			Service.Get<EventManager>().RegisterObserver(this, EventId.WorldInTransitionComplete, EventPriority.Default);
+			else
+			{
+				Service.Get<EventManager>().RegisterObserver(this, EventId.WorldInTransitionComplete, EventPriority.Default);
+			}
 		}
 
 		private void OnTournamentRedeemedNoDialog(TournamentResponse response, object cookie)
@@ -597,20 +595,20 @@ namespace StaRTS.Main.Controllers
 						flag = TimedEventUtils.IsTimedEventActive(current);
 						break;
 					case TournamentFilter.All:
-						goto IL_60;
+						goto IL_76;
 					default:
-						goto IL_60;
+						goto IL_76;
 					}
-					IL_63:
+					IL_7E:
 					if (flag)
 					{
 						list.Add(current);
 						continue;
 					}
 					continue;
-					IL_60:
+					IL_76:
 					flag = true;
-					goto IL_63;
+					goto IL_7E;
 				}
 			}
 			return list;
@@ -666,11 +664,7 @@ namespace StaRTS.Main.Controllers
 
 		public static TournamentTierVO GetIdForTopTier()
 		{
-			if (TournamentController.tiers != null)
-			{
-				return TournamentController.tiers[0];
-			}
-			return null;
+			return (TournamentController.tiers != null) ? TournamentController.tiers[0] : null;
 		}
 
 		public static TournamentTierVO GetVOForNextTier(TournamentTierVO tierVO)
@@ -683,242 +677,6 @@ namespace StaRTS.Main.Controllers
 				}
 			}
 			return tierVO;
-		}
-
-		protected internal TournamentController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).CheckForTierChangeAfterBattle((TournamentRank)GCHandledObjects.GCHandleToObject(*args), (TournamentRank)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TournamentController.CompareTiers((TournamentTierVO)GCHandledObjects.GCHandleToObject(*args), (TournamentTierVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).EnterPlanetConflict();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).EnterTournament((TournamentVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).FindNextExpiringConflict();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).NotifyEndForTournamentVO);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).GetActiveTournamentOnCurrentPlanet());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TournamentController.GetActiveTournamentOnPlanet(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TournamentController.GetAllActiveTournaments());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TournamentController.GetAllLiveAndClosingTournaments());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TournamentController.GetIdForTopTier());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).GetTierIconName((TournamentTierVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).GetTournamentRating((TournamentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TournamentController.GetTournamentVOs((TournamentFilter)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TournamentController.GetVOForNextTier((TournamentTierVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).IsBattleInCurrentTournament((BattleEntry)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(TournamentController.IsPlanetaryConflict((TournamentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).IsPlayerInTournament((TournamentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).IsThisTournamentLive((TournamentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).IsTournamentRedeemed((TournamentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			TournamentController.LoadTierData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).LoadTournamentViewedData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).NumberOfTournamentsNotViewed());
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).OnGalaxyViewed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).OnGetRanks((ConflictRanks)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).OnGetTournamentRank((TournamentRankResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).OnPvpBattleComplete((Tournament)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).OnTournamentRedeemed((TournamentResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).OnTournamentRedeemedNoDialog((TournamentResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).OnTournamentViewed(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).ParseLastTournament((TournamentResponse)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).RedeemTournaments(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).NotifyEndForTournamentVO = (TournamentVO)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).SetConflictPopupIsShown();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TournamentController)GCHandledObjects.GCHandleToObject(instance)).ShouldShowTournamentLeaderboard((TournamentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).ShowTournamentEnded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).UpdateAndSyncTournamentViewedData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlayerRank((TournamentController.PlayerRankUpdatedCallback)GCHandledObjects.GCHandleToObject(*args), (TournamentVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlayerRanks();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((TournamentController)GCHandledObjects.GCHandleToObject(instance)).UpdateTournamentsData(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

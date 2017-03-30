@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Collect
 		public BuildingCollectCommand(BuildingCollectRequest request) : base("player.building.collect", request, new DefaultResponse())
 		{
 		}
-
-		protected internal BuildingCollectCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

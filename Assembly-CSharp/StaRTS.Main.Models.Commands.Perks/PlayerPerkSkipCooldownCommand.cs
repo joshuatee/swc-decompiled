@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Perks
 		public PlayerPerkSkipCooldownCommand(PlayerPerkSkipCooldownRequest request) : base("player.perks.skipCooldown", request, new PlayerPerkSkipCooldownResponse())
 		{
 		}
-
-		protected internal PlayerPerkSkipCooldownCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

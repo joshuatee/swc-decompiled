@@ -1,7 +1,6 @@
 using StaRTS.Main.Models.Commands.Equipment;
 using StaRTS.Utils.Json;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Cheats
 {
@@ -20,15 +19,6 @@ namespace StaRTS.Main.Models.Commands.Cheats
 			startedSerializer.AddString("equipmentId", base.EquipmentID);
 			startedSerializer.Add<int>("equipmentLevel", this.level);
 			return startedSerializer.End().ToString();
-		}
-
-		protected internal CheatSetEquipmentRequest(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CheatSetEquipmentRequest)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public SetFactionCommand(SetFactionRequest request) : base("player.faction.set", request, new DefaultResponse())
 		{
 		}
-
-		protected internal SetFactionCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

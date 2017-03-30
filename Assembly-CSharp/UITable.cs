@@ -1,15 +1,10 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/Interaction/Table")]
-public class UITable : UIWidgetContainer, IUnitySerializable
+public class UITable : UIWidgetContainer
 {
-	public delegate void OnReposition();
-
 	public enum Direction
 	{
 		Down,
@@ -25,6 +20,8 @@ public class UITable : UIWidgetContainer, IUnitySerializable
 		Custom
 	}
 
+	public delegate void OnReposition();
+
 	public int columns;
 
 	public UITable.Direction direction;
@@ -35,11 +32,11 @@ public class UITable : UIWidgetContainer, IUnitySerializable
 
 	public UIWidget.Pivot cellAlignment;
 
-	public bool hideInactive;
+	public bool hideInactive = true;
 
 	public bool keepWithinPanel;
 
-	public Vector2 padding;
+	public Vector2 padding = Vector2.zero;
 
 	public UITable.OnReposition onReposition;
 
@@ -140,8 +137,8 @@ public class UITable : UIWidgetContainer, IUnitySerializable
 	{
 		float num = 0f;
 		float num2 = 0f;
-		int num3 = (this.columns > 0) ? (children.Count / this.columns + 1) : 1;
-		int num4 = (this.columns > 0) ? this.columns : children.Count;
+		int num3 = (this.columns <= 0) ? 1 : (children.Count / this.columns + 1);
+		int num4 = (this.columns <= 0) ? children.Count : this.columns;
 		Bounds[,] array = new Bounds[num3, num4];
 		Bounds[] array2 = new Bounds[num4];
 		Bounds[] array3 = new Bounds[num3];
@@ -214,10 +211,10 @@ public class UITable : UIWidgetContainer, IUnitySerializable
 				SpringPosition component = child.GetComponent<SpringPosition>();
 				if (component != null)
 				{
-					SpringPosition expr_415_cp_0_cp_0 = component;
-					expr_415_cp_0_cp_0.target.x = expr_415_cp_0_cp_0.target.x - num7;
-					SpringPosition expr_427_cp_0_cp_0 = component;
-					expr_427_cp_0_cp_0.target.y = expr_427_cp_0_cp_0.target.y - num8;
+					SpringPosition expr_49C_cp_0 = component;
+					expr_49C_cp_0.target.x = expr_49C_cp_0.target.x - num7;
+					SpringPosition expr_4B1_cp_0 = component;
+					expr_4B1_cp_0.target.y = expr_4B1_cp_0.target.y - num8;
 				}
 				else
 				{
@@ -257,236 +254,5 @@ public class UITable : UIWidgetContainer, IUnitySerializable
 		{
 			this.onReposition();
 		}
-	}
-
-	public UITable()
-	{
-		this.hideInactive = true;
-		this.padding = Vector2.zero;
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		SerializedStateWriter.Instance.WriteInt32(this.columns);
-		SerializedStateWriter.Instance.WriteInt32((int)this.direction);
-		SerializedStateWriter.Instance.WriteInt32((int)this.sorting);
-		SerializedStateWriter.Instance.WriteInt32((int)this.pivot);
-		SerializedStateWriter.Instance.WriteInt32((int)this.cellAlignment);
-		SerializedStateWriter.Instance.WriteBoolean(this.hideInactive);
-		SerializedStateWriter.Instance.Align();
-		SerializedStateWriter.Instance.WriteBoolean(this.keepWithinPanel);
-		SerializedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			this.padding.Unity_Serialize(depth + 1);
-		}
-		SerializedStateWriter.Instance.Align();
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		this.columns = SerializedStateReader.Instance.ReadInt32();
-		this.direction = (UITable.Direction)SerializedStateReader.Instance.ReadInt32();
-		this.sorting = (UITable.Sorting)SerializedStateReader.Instance.ReadInt32();
-		this.pivot = (UIWidget.Pivot)SerializedStateReader.Instance.ReadInt32();
-		this.cellAlignment = (UIWidget.Pivot)SerializedStateReader.Instance.ReadInt32();
-		this.hideInactive = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		this.keepWithinPanel = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			this.padding.Unity_Deserialize(depth + 1);
-		}
-		SerializedStateReader.Instance.Align();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		ISerializedNamedStateWriter arg_1F_0 = SerializedNamedStateWriter.Instance;
-		int arg_1F_1 = this.columns;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		arg_1F_0.WriteInt32(arg_1F_1, &var_0_cp_0[var_0_cp_1] + 1879);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.direction, &var_0_cp_0[var_0_cp_1] + 1639);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.sorting, &var_0_cp_0[var_0_cp_1] + 940);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.pivot, &var_0_cp_0[var_0_cp_1] + 697);
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.cellAlignment, &var_0_cp_0[var_0_cp_1] + 1887);
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.hideInactive, &var_0_cp_0[var_0_cp_1] + 996);
-		SerializedNamedStateWriter.Instance.Align();
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.keepWithinPanel, &var_0_cp_0[var_0_cp_1] + 1009);
-		SerializedNamedStateWriter.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 1353);
-			this.padding.Unity_NamedSerialize(depth + 1);
-			SerializedNamedStateWriter.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateWriter.Instance.Align();
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		ISerializedNamedStateReader arg_1A_0 = SerializedNamedStateReader.Instance;
-		byte[] var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-		int var_0_cp_1 = 0;
-		this.columns = arg_1A_0.ReadInt32(&var_0_cp_0[var_0_cp_1] + 1879);
-		this.direction = (UITable.Direction)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 1639);
-		this.sorting = (UITable.Sorting)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 940);
-		this.pivot = (UIWidget.Pivot)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 697);
-		this.cellAlignment = (UIWidget.Pivot)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 1887);
-		this.hideInactive = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 996);
-		SerializedNamedStateReader.Instance.Align();
-		this.keepWithinPanel = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 1009);
-		SerializedNamedStateReader.Instance.Align();
-		if (depth <= 7)
-		{
-			SerializedNamedStateReader.Instance.BeginMetaGroup(&var_0_cp_0[var_0_cp_1] + 1353);
-			this.padding.Unity_NamedDeserialize(depth + 1);
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		SerializedNamedStateReader.Instance.Align();
-	}
-
-	protected internal UITable(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static bool $Get0(object instance)
-	{
-		return ((UITable)instance).hideInactive;
-	}
-
-	public static void $Set0(object instance, bool value)
-	{
-		((UITable)instance).hideInactive = value;
-	}
-
-	public static bool $Get1(object instance)
-	{
-		return ((UITable)instance).keepWithinPanel;
-	}
-
-	public static void $Set1(object instance, bool value)
-	{
-		((UITable)instance).keepWithinPanel = value;
-	}
-
-	public static float $Get2(object instance, int index)
-	{
-		UITable expr_06_cp_0 = (UITable)instance;
-		switch (index)
-		{
-		case 0:
-			return expr_06_cp_0.padding.x;
-		case 1:
-			return expr_06_cp_0.padding.y;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public static void $Set2(object instance, float value, int index)
-	{
-		UITable expr_06_cp_0 = (UITable)instance;
-		switch (index)
-		{
-		case 0:
-			expr_06_cp_0.padding.x = value;
-			return;
-		case 1:
-			expr_06_cp_0.padding.y = value;
-			return;
-		default:
-			throw new ArgumentOutOfRangeException("index");
-		}
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UITable)GCHandledObjects.GCHandleToObject(instance)).GetChildList());
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).Init();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).LateUpdate();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).OnValidate();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).Reposition();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).RepositionVariableSize((List<Transform>)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).repositionNow = (*(sbyte*)args != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).Sort((List<Transform>)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UITable)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
 	}
 }

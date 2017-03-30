@@ -18,20 +18,17 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class DroidController : IEventObserver
 	{
-		private string DROID_UID;
+		private string DROID_UID = "civilianWorkerDroid01";
 
 		private EntityController entityController;
 
 		public DroidController()
 		{
-			this.DROID_UID = "civilianWorkerDroid01";
-			base..ctor();
 			this.entityController = Service.Get<EntityController>();
 			Service.Set<DroidController>(this);
 			EventManager eventManager = Service.Get<EventManager>();
@@ -56,11 +53,7 @@ namespace StaRTS.Main.Controllers
 		{
 			NodeList<DroidHutNode> nodeList = this.entityController.GetNodeList<DroidHutNode>();
 			DroidHutNode head = nodeList.Head;
-			if (head == null)
-			{
-				return null;
-			}
-			return head.Entity;
+			return (head == null) ? null : head.Entity;
 		}
 
 		private Entity CreateDroid(CivilianTypeVO droidType)
@@ -71,10 +64,10 @@ namespace StaRTS.Main.Controllers
 				return null;
 			}
 			TransformComponent transformComponent = droidHut.Get<TransformComponent>();
-			IntPosition intPosition = new IntPosition(transformComponent.X - 1, transformComponent.Z - 1);
-			Entity entity = Service.Get<EntityFactory>().CreateDroidEntity(droidType, intPosition);
+			IntPosition position = new IntPosition(transformComponent.X - 1, transformComponent.Z - 1);
+			Entity entity = Service.Get<EntityFactory>().CreateDroidEntity(droidType, position);
 			BoardItemComponent boardItemComponent = entity.Get<BoardItemComponent>();
-			Service.Get<BoardController>().Board.AddChild(boardItemComponent.BoardItem, intPosition.x, intPosition.z, null, false);
+			Service.Get<BoardController>().Board.AddChild(boardItemComponent.BoardItem, position.x, position.z, null, false);
 			Service.Get<EntityController>().AddEntity(entity);
 			return entity;
 		}
@@ -227,7 +220,7 @@ namespace StaRTS.Main.Controllers
 		private void AssignWorkToDroid(Entity building, bool hasScaffolding, bool forceCreate, bool animateTravel)
 		{
 			CivilianTypeVO droidType = Service.Get<IDataController>().Get<CivilianTypeVO>(this.DROID_UID);
-			Entity entity = forceCreate ? this.CreateDroid(droidType) : this.FindIdleDroid(droidType);
+			Entity entity = (!forceCreate) ? this.FindIdleDroid(droidType) : this.CreateDroid(droidType);
 			if (entity == null || building == null)
 			{
 				return;
@@ -252,7 +245,7 @@ namespace StaRTS.Main.Controllers
 					droidNode.Droid.Target = this.GetDroidHut();
 					droidNode.State.CurState = EntityState.Moving;
 					this.AssignDroidPath(droidNode);
-					return;
+					break;
 				}
 			}
 		}
@@ -300,192 +293,91 @@ namespace StaRTS.Main.Controllers
 
 		public virtual EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.ClearableStarted)
+			switch (id)
 			{
-				if (id <= EventId.BuildingPurchaseSuccess)
-				{
-					switch (id)
-					{
-					case EventId.DroidViewReady:
-					{
-						EntityViewParams entityViewParams = cookie as EntityViewParams;
-						this.PrepareDroid(entityViewParams.Entity);
-						return EatResponse.NotEaten;
-					}
-					case EventId.BuildingViewReady:
-					case EventId.BuildingViewFailed:
-						return EatResponse.NotEaten;
-					case EventId.BuildingCancelled:
-					case EventId.TroopCancelled:
-					{
-						ContractEventData contractEventData = (ContractEventData)cookie;
-						ContractType contractType = ContractUtils.GetContractType(contractEventData.Contract.DeliveryType);
-						if (ContractUtils.ContractTypeConsumesDroid(contractType))
-						{
-							SmartEntity smartEntity = (SmartEntity)contractEventData.Entity;
-							BuildingComponent buildingComp = smartEntity.BuildingComp;
-							this.RemoveWorkFromDroid(smartEntity, buildingComp.BuildingType.Type != BuildingType.Clearable);
-							return EatResponse.NotEaten;
-						}
-						return EatResponse.NotEaten;
-					}
-					default:
-						if (id != EventId.BuildingPurchaseSuccess)
-						{
-							return EatResponse.NotEaten;
-						}
-						break;
-					}
-				}
-				else if (id != EventId.BuildingStartedUpgrading)
-				{
-					if (id == EventId.ClearableCleared)
-					{
-						goto IL_148;
-					}
-					if (id != EventId.ClearableStarted)
-					{
-						return EatResponse.NotEaten;
-					}
-				}
+			case EventId.DroidViewReady:
+			{
+				EntityViewParams entityViewParams = cookie as EntityViewParams;
+				this.PrepareDroid(entityViewParams.Entity);
+				return EatResponse.NotEaten;
 			}
-			else if (id <= EventId.BuildingConstructed)
+			case EventId.BuildingViewReady:
+			case EventId.BuildingViewFailed:
 			{
-				if (id != EventId.ChampionStartedRepairing)
+				IL_20:
+				switch (id)
 				{
-					if (id == EventId.ChampionRepaired)
-					{
-						goto IL_148;
-					}
+				case EventId.BuildingPurchaseSuccess:
+				case EventId.BuildingStartedUpgrading:
+					goto IL_137;
+				case EventId.BuildingPurchaseModeStarted:
+				case EventId.BuildingPurchaseModeEnded:
+				{
+					IL_3A:
 					switch (id)
 					{
 					case EventId.BuildingLevelUpgraded:
 					case EventId.BuildingSwapped:
 					case EventId.BuildingConstructed:
-						goto IL_148;
+						break;
 					default:
-						return EatResponse.NotEaten;
+						if (id != EventId.ClearableCleared)
+						{
+							if (id == EventId.ClearableStarted || id == EventId.ChampionStartedRepairing)
+							{
+								goto IL_137;
+							}
+							if (id != EventId.ChampionRepaired)
+							{
+								if (id == EventId.WorldLoadComplete)
+								{
+									this.InitializeDroids();
+									return EatResponse.NotEaten;
+								}
+								if (id == EventId.BattleLoadStart)
+								{
+									this.DestroyAllDroids();
+									return EatResponse.NotEaten;
+								}
+								if (id != EventId.InventoryResourceUpdated)
+								{
+									return EatResponse.NotEaten;
+								}
+								if (object.Equals(cookie, "droids"))
+								{
+									this.AssignWorkToDroid(this.GetDroidHut(), false, true, true);
+								}
+								return EatResponse.NotEaten;
+							}
+						}
+						break;
 					}
+					ContractEventData contractEventData = cookie as ContractEventData;
+					this.RemoveWorkFromDroid(contractEventData.Entity, id != EventId.ClearableCleared);
+					return EatResponse.NotEaten;
 				}
+				}
+				goto IL_3A;
+				IL_137:
+				Entity building = cookie as Entity;
+				this.AssignWorkToDroid(building, false, false, true);
+				return EatResponse.NotEaten;
 			}
-			else
+			case EventId.BuildingCancelled:
+			case EventId.TroopCancelled:
 			{
-				if (id == EventId.WorldLoadComplete)
+				ContractEventData contractEventData2 = (ContractEventData)cookie;
+				ContractType contractType = ContractUtils.GetContractType(contractEventData2.Contract.DeliveryType);
+				if (ContractUtils.ContractTypeConsumesDroid(contractType))
 				{
-					this.InitializeDroids();
-					return EatResponse.NotEaten;
-				}
-				if (id == EventId.BattleLoadStart)
-				{
-					this.DestroyAllDroids();
-					return EatResponse.NotEaten;
-				}
-				if (id != EventId.InventoryResourceUpdated)
-				{
-					return EatResponse.NotEaten;
-				}
-				if (object.Equals(cookie, "droids"))
-				{
-					this.AssignWorkToDroid(this.GetDroidHut(), false, true, true);
-					return EatResponse.NotEaten;
+					SmartEntity smartEntity = (SmartEntity)contractEventData2.Entity;
+					BuildingComponent buildingComp = smartEntity.BuildingComp;
+					this.RemoveWorkFromDroid(smartEntity, buildingComp.BuildingType.Type != BuildingType.Clearable);
 				}
 				return EatResponse.NotEaten;
 			}
-			Entity building = cookie as Entity;
-			this.AssignWorkToDroid(building, false, false, true);
-			return EatResponse.NotEaten;
-			IL_148:
-			ContractEventData contractEventData2 = cookie as ContractEventData;
-			this.RemoveWorkFromDroid(contractEventData2.Entity, id != EventId.ClearableCleared);
-			return EatResponse.NotEaten;
-		}
-
-		protected internal DroidController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DroidController)GCHandledObjects.GCHandleToObject(instance)).AssignDroidPath((DroidNode)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DroidController)GCHandledObjects.GCHandleToObject(instance)).AssignWorkToDroid((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0, *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DroidController)GCHandledObjects.GCHandleToObject(instance)).CreateDroid((CivilianTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((DroidController)GCHandledObjects.GCHandleToObject(instance)).DestroyAllDroids();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((DroidController)GCHandledObjects.GCHandleToObject(instance)).DestroyDroid((DroidNode)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DroidController)GCHandledObjects.GCHandleToObject(instance)).FindIdleDroid((CivilianTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DroidController)GCHandledObjects.GCHandleToObject(instance)).GetDroidHut());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((DroidController)GCHandledObjects.GCHandleToObject(instance)).HideAllNonClearableDroids();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((DroidController)GCHandledObjects.GCHandleToObject(instance)).InitializeDroids();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DroidController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((DroidController)GCHandledObjects.GCHandleToObject(instance)).PrepareDroid((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((DroidController)GCHandledObjects.GCHandleToObject(instance)).RemoveWorkFromDroid((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DroidController)GCHandledObjects.GCHandleToObject(instance)).ShouldCalculatePath((DroidNode)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((DroidController)GCHandledObjects.GCHandleToObject(instance)).ShowAllDroids();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DroidController)GCHandledObjects.GCHandleToObject(instance)).UpdateDroidTransform((DroidNode)GCHandledObjects.GCHandleToObject(*args), *(float*)(args + 1)));
+			}
+			goto IL_20;
 		}
 	}
 }

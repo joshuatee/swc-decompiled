@@ -7,13 +7,5 @@ namespace StaRTS.Main.Models.Squads
 		public string AcceptorId;
 
 		public string RejectorId;
-
-		public SqmApplyData()
-		{
-		}
-
-		protected internal SqmApplyData(UIntPtr dummy)
-		{
-		}
 	}
 }

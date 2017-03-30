@@ -3,7 +3,6 @@ using StaRTS.Main.Models.Player.Objectives;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Objectives
 {
@@ -26,15 +25,6 @@ namespace StaRTS.Main.Models.Commands.Objectives
 				this.Group = (new ObjectiveGroup(this.planetUid).FromObject(dictionary) as ObjectiveGroup);
 			}
 			return this;
-		}
-
-		protected internal ForceObjectivesResponse(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ForceObjectivesResponse)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

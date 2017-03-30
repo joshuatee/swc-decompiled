@@ -16,7 +16,6 @@ using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities.StateMachines.Attack
 {
@@ -108,14 +107,14 @@ namespace StaRTS.Main.Controllers.Entities.StateMachines.Attack
 			}
 		}
 
-		public uint getTurnDelayInMs()
-		{
-			return this.TurnState.GetDuration();
-		}
-
 		public AttackFSM(ISimTimeProvider timeProvider, SmartEntity entity, StateComponent stateComponent, ShooterComponent shooterComp, TransformComponent transformComponent, HealthType healthType) : base(timeProvider)
 		{
 			this.Initialize(entity, shooterComp, stateComponent, transformComponent, healthType);
+		}
+
+		public uint getTurnDelayInMs()
+		{
+			return this.TurnState.GetDuration();
 		}
 
 		private void Initialize(SmartEntity entity, ShooterComponent shooterComp, StateComponent stateComponent, TransformComponent transformComponent, HealthType healthType)
@@ -160,9 +159,8 @@ namespace StaRTS.Main.Controllers.Entities.StateMachines.Attack
 			if (troopComp != null)
 			{
 				this.gunSequences = troopComp.TroopShooterVO.Sequences;
-				return;
 			}
-			if (buildingComp != null)
+			else if (buildingComp != null)
 			{
 				string uid = null;
 				BuildingType type = buildingComp.BuildingType.Type;
@@ -179,9 +177,11 @@ namespace StaRTS.Main.Controllers.Entities.StateMachines.Attack
 				}
 				TurretTypeVO turretTypeVO = Service.Get<IDataController>().Get<TurretTypeVO>(uid);
 				this.gunSequences = turretTypeVO.Sequences;
-				return;
 			}
-			Service.Get<StaRTSLogger>().Error("Attaching AttackFMS to Unsupported Entity. No Troop, Building, or Trap Componenet found.");
+			else
+			{
+				Service.Get<Logger>().Error("Attaching AttackFMS to Unsupported Entity. No Troop, Building, or Trap Componenet found.");
+			}
 		}
 
 		public bool IsGunSequenceDone()
@@ -203,36 +203,34 @@ namespace StaRTS.Main.Controllers.Entities.StateMachines.Attack
 			if (base.CurrentState == this.TurnState)
 			{
 				this.SetState(this.WarmupState);
-				return;
 			}
-			if (base.CurrentState == this.WarmupState)
+			else if (base.CurrentState == this.WarmupState)
 			{
 				this.SetState(this.PreFireState);
-				return;
 			}
-			if (base.CurrentState == this.PreFireState)
+			else if (base.CurrentState == this.PreFireState)
 			{
 				this.SetState(this.PostFireState);
-				return;
 			}
-			if (base.CurrentState != this.PostFireState)
+			else if (base.CurrentState == this.PostFireState)
 			{
-				if (base.CurrentState == this.CooldownState)
+				if (this.shooterController.NeedsReload(this.ShooterComp))
 				{
-					this.SetState(this.WarmupState);
+					this.SetState(this.CooldownState);
 				}
-				return;
+				else
+				{
+					if (this.IsGunSequenceDone())
+					{
+						this.StateComponent.CurState = EntityState.AttackingReset;
+					}
+					this.SetState(this.PreFireState);
+				}
 			}
-			if (this.shooterController.NeedsReload(this.ShooterComp))
+			else if (base.CurrentState == this.CooldownState)
 			{
-				this.SetState(this.CooldownState);
-				return;
+				this.SetState(this.WarmupState);
 			}
-			if (this.IsGunSequenceDone())
-			{
-				this.StateComponent.CurState = EntityState.AttackingReset;
-			}
-			this.SetState(this.PreFireState);
 		}
 
 		public bool StartAttack()
@@ -260,7 +258,7 @@ namespace StaRTS.Main.Controllers.Entities.StateMachines.Attack
 			{
 				int num2 = IntMath.Atan2Lookup(this.lastLookAtX, this.lastLookAtZ);
 				int num3 = IntMath.Atan2Lookup(x, y);
-				int num4 = (num2 > num3) ? (num2 - num3) : (num3 - num2);
+				int num4 = (num2 <= num3) ? (num3 - num2) : (num2 - num3);
 				if (num4 > 16384)
 				{
 					num4 = 32768 - num4;
@@ -368,7 +366,7 @@ namespace StaRTS.Main.Controllers.Entities.StateMachines.Attack
 					}
 					else
 					{
-						Vector3 vector = (gameObjectViewComp == null) ? new Vector3(transformComp.CenterX(), 0f, transformComp.CenterZ()) : gameObjectViewComp.MainGameObject.transform.position;
+						Vector3 vector = (gameObjectViewComp != null) ? gameObjectViewComp.MainGameObject.transform.position : new Vector3(transformComp.CenterX(), 0f, transformComp.CenterZ());
 						startPos = new Vector3(vector.x, 2f, vector.z);
 						this.FireAShot(transformComp.CenterGridX(), transformComp.CenterGridZ(), startPos, targetToAttack, null);
 					}
@@ -385,191 +383,6 @@ namespace StaRTS.Main.Controllers.Entities.StateMachines.Attack
 		{
 			this.StateComponent.CurState = EntityState.Idle;
 			this.StateComponent.ForceUpdateAnimation = true;
-		}
-
-		protected internal AttackFSM(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).Activate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).CanSwitchAbility());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).Fire();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).FireAShot(*(int*)args, *(int*)(args + 1), *(*(IntPtr*)(args + 2)), (Target)GCHandledObjects.GCHandleToObject(args[3]), (GameObject)GCHandledObjects.GCHandleToObject(args[4]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).CooldownState);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).Entity);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).IdleState);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).IsAttacking);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).PostFireState);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).PreFireState);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).ShooterComp);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).StateComponent);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).TransformComponent);
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).TurnState);
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).WarmupState);
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).Initialize((SmartEntity)GCHandledObjects.GCHandleToObject(*args), (ShooterComponent)GCHandledObjects.GCHandleToObject(args[1]), (StateComponent)GCHandledObjects.GCHandleToObject(args[2]), (TransformComponent)GCHandledObjects.GCHandleToObject(args[3]), (HealthType)(*(int*)(args + 4)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).InStrictCoolDownState());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).IsGunSequenceDone());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).IsUnlocked());
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).CooldownState = (CooldownState)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).Entity = (SmartEntity)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).IdleState = (IdleState)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).PostFireState = (PostFireState)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).PreFireState = (PreFireState)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).ShooterComp = (ShooterComponent)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).StateComponent = (StateComponent)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).TransformComponent = (TransformComponent)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).TurnState = (TurnState)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).WarmupState = (WarmupState)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).SetEntityState((EntityState)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).StartAttack());
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).StopAttacking(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((AttackFSM)GCHandledObjects.GCHandleToObject(instance)).Update();
-			return -1L;
 		}
 	}
 }

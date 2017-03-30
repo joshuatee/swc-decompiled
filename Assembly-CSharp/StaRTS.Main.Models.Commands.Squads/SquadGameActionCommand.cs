@@ -19,9 +19,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 			}
 			return base.OnFailure(status, data);
 		}
-
-		protected internal SquadGameActionCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

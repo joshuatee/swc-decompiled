@@ -14,9 +14,5 @@ namespace StaRTS.Main.Controllers.TrapConditions
 		{
 			this.Radius = radius;
 		}
-
-		protected internal RadiusTrapCondition(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

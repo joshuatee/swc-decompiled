@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public SetPlayerNameCommand(string name) : base("player.name.set", new SetPlayerNameRequest(name), new DefaultResponse())
 		{
 		}
-
-		protected internal SetPlayerNameCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

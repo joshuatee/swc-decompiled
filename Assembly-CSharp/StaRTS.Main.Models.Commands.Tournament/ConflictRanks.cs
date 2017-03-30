@@ -2,7 +2,6 @@ using StaRTS.Externals.Manimal.TransferObjects.Response;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Tournament
 {
@@ -19,23 +18,10 @@ namespace StaRTS.Main.Models.Commands.Tournament
 				Dictionary<string, object> dictionary2 = dictionary;
 				foreach (KeyValuePair<string, object> current in dictionary2)
 				{
-					this.tournamentRankResponse.Add(current.get_Key(), current.get_Value());
+					this.tournamentRankResponse.Add(current.Key, current.Value);
 				}
 			}
 			return this;
-		}
-
-		public ConflictRanks()
-		{
-		}
-
-		protected internal ConflictRanks(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ConflictRanks)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

@@ -7,8 +7,6 @@ using StaRTS.Main.Views.UX.Controls;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -39,8 +37,8 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.lang.ThousandsSeparated(capacityNext - capacity)
 			});
-			sliderControl.CurrentSlider.Value = ((capacityTotal == 0) ? 0f : ((float)capacity / (float)capacityTotal));
-			sliderControl.NextSlider.Value = ((capacityTotal == 0) ? 0f : ((float)capacityNext / (float)capacityTotal));
+			sliderControl.CurrentSlider.Value = ((capacityTotal != 0) ? ((float)capacity / (float)capacityTotal) : 0f);
+			sliderControl.NextSlider.Value = ((capacityTotal != 0) ? ((float)capacityNext / (float)capacityTotal) : 0f);
 		}
 
 		private void UpdateCapacity(int sliderIndex)
@@ -58,7 +56,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (!inventory.HasItem("reputation"))
 			{
 				this.sliders[sliderIndex].HideAll();
-				Service.Get<StaRTSLogger>().WarnFormat("No reputation found in your inventory", new object[0]);
+				Service.Get<Logger>().WarnFormat("No reputation found in your inventory", new object[0]);
 				return;
 			}
 			BuildingUpgradeCatalog buildingUpgradeCatalog = Service.Get<BuildingUpgradeCatalog>();
@@ -66,34 +64,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			int reputationCapacityForLevel = GameUtils.GetReputationCapacityForLevel(buildingUpgradeCatalog.GetNextLevel(this.buildingInfo).Lvl);
 			int reputationCapacityForLevel2 = GameUtils.GetReputationCapacityForLevel(buildingUpgradeCatalog.GetMaxLevel(this.buildingInfo.UpgradeGroup).Lvl);
 			this.UpdateSlider(sliderIndex, this.lang.Get("BUILDING_REPUTATION", new object[0]), itemCapacity, reputationCapacityForLevel, reputationCapacityForLevel2);
-		}
-
-		protected internal SquadUpgradeScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateCapacity(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateReputation(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadUpgradeScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateSlider(*(int*)args, Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4));
-			return -1L;
 		}
 	}
 }

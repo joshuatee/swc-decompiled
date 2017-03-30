@@ -225,11 +225,11 @@ namespace StaRTS.Main.Configs
 
 		private const string GUI_TEXTURES_CAMPAIGN_REBEL = "gui_textures_campaign_r";
 
-		private const string GUI_TEXTURES_FUE_LEIA = "gui_textures_CharacterPopUp_Leia";
+		private const string GUI_TEXTURES_FUE_LEIA = "gui_textures_characterpopup_leia";
 
-		private const string GUI_TEXTURES_FUE_SAPONZA = "gui_textures_CharacterPopUp_Sapz";
+		private const string GUI_TEXTURES_FUE_SAPONZA = "gui_textures_characterpopup_sapz";
 
-		private const string GUI_TEXTURES_FUE_VADER = "gui_textures_CharacterPopUp_Vader";
+		private const string GUI_TEXTURES_FUE_VADER = "gui_textures_characterpopup_vader";
 
 		private const string DYNAMIC_RADIUS = "dynamic_radius";
 
@@ -357,9 +357,9 @@ namespace StaRTS.Main.Configs
 			"gui_textures_cmp_fue",
 			"gui_textures_campaign_e",
 			"gui_textures_campaign_r",
-			"gui_textures_CharacterPopUp_Leia",
-			"gui_textures_CharacterPopUp_Sapz",
-			"gui_textures_CharacterPopUp_Vader",
+			"gui_textures_characterpopup_leia",
+			"gui_textures_characterpopup_sapz",
+			"gui_textures_characterpopup_vader",
 			"gui_FactionIcon_celebration",
 			"dynamic_radius",
 			"planets_galaxy",

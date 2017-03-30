@@ -1,5 +1,4 @@
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -15,16 +14,6 @@ namespace StaRTS.Main.Controllers.Startup
 			new BaseLayoutToolController();
 			new WarBaseEditController();
 			base.Complete();
-		}
-
-		protected internal EditBaseStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((EditBaseStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

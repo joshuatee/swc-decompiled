@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
 [AddComponentMenu("NGUI/UI/Text List")]
-public class UITextList : MonoBehaviour, IUnitySerializable
+public class UITextList : MonoBehaviour
 {
 	public enum Style
 	{
@@ -29,9 +25,12 @@ public class UITextList : MonoBehaviour, IUnitySerializable
 
 	public UITextList.Style style;
 
-	public int paragraphHistory;
+	public int paragraphHistory = 100;
 
-	protected char[] mSeparator;
+	protected char[] mSeparator = new char[]
+	{
+		'\n'
+	};
 
 	protected float mScroll;
 
@@ -80,10 +79,12 @@ public class UITextList : MonoBehaviour, IUnitySerializable
 				if (this.scrollBar != null)
 				{
 					this.scrollBar.value = value;
-					return;
 				}
-				this.mScroll = value;
-				this.UpdateVisibleText();
+				else
+				{
+					this.mScroll = value;
+					this.UpdateVisibleText();
+				}
 			}
 		}
 	}
@@ -92,11 +93,7 @@ public class UITextList : MonoBehaviour, IUnitySerializable
 	{
 		get
 		{
-			if (!(this.textLabel != null))
-			{
-				return 20f;
-			}
-			return (float)this.textLabel.fontSize + this.textLabel.effectiveSpacingY;
+			return (!(this.textLabel != null)) ? 20f : ((float)this.textLabel.fontSize + this.textLabel.effectiveSpacingY);
 		}
 	}
 
@@ -134,10 +131,12 @@ public class UITextList : MonoBehaviour, IUnitySerializable
 		{
 			this.textLabel.pivot = UIWidget.Pivot.BottomLeft;
 			this.scrollValue = 1f;
-			return;
 		}
-		this.textLabel.pivot = UIWidget.Pivot.TopLeft;
-		this.scrollValue = 0f;
+		else
+		{
+			this.textLabel.pivot = UIWidget.Pivot.TopLeft;
+			this.scrollValue = 0f;
+		}
 	}
 
 	private void Update()
@@ -230,7 +229,7 @@ public class UITextList : MonoBehaviour, IUnitySerializable
 				UIScrollBar uIScrollBar = this.scrollBar as UIScrollBar;
 				if (uIScrollBar != null)
 				{
-					uIScrollBar.barSize = ((this.mTotalLines == 0) ? 1f : (1f - (float)this.scrollHeight / (float)this.mTotalLines));
+					uIScrollBar.barSize = ((this.mTotalLines != 0) ? (1f - (float)this.scrollHeight / (float)this.mTotalLines) : 1f);
 				}
 			}
 			this.UpdateVisibleText();
@@ -243,7 +242,7 @@ public class UITextList : MonoBehaviour, IUnitySerializable
 		{
 			if (this.mTotalLines == 0)
 			{
-				this.textLabel.text = "";
+				this.textLabel.text = string.Empty;
 				return;
 			}
 			int num = Mathf.FloorToInt((float)this.textLabel.height / this.lineHeight);
@@ -263,18 +262,18 @@ public class UITextList : MonoBehaviour, IUnitySerializable
 				int num6 = paragraph.lines.Length;
 				while (num > 0 && num5 < num6)
 				{
-					string text = paragraph.lines[num5];
+					string value = paragraph.lines[num5];
 					if (num3 > 0)
 					{
 						num3--;
 					}
 					else
 					{
-						if (stringBuilder.get_Length() > 0)
+						if (stringBuilder.Length > 0)
 						{
 							stringBuilder.Append("\n");
 						}
-						stringBuilder.Append(text);
+						stringBuilder.Append(value);
 						num--;
 					}
 					num5++;
@@ -283,239 +282,5 @@ public class UITextList : MonoBehaviour, IUnitySerializable
 			}
 			this.textLabel.text = stringBuilder.ToString();
 		}
-	}
-
-	public UITextList()
-	{
-		this.paragraphHistory = 100;
-		this.mSeparator = new char[]
-		{
-			'\n'
-		};
-		base..ctor();
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.textLabel);
-		}
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.scrollBar);
-		}
-		SerializedStateWriter.Instance.WriteInt32((int)this.style);
-		SerializedStateWriter.Instance.WriteInt32(this.paragraphHistory);
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			this.textLabel = (SerializedStateReader.Instance.ReadUnityEngineObject() as UILabel);
-		}
-		if (depth <= 7)
-		{
-			this.scrollBar = (SerializedStateReader.Instance.ReadUnityEngineObject() as UIProgressBar);
-		}
-		this.style = (UITextList.Style)SerializedStateReader.Instance.ReadInt32();
-		this.paragraphHistory = SerializedStateReader.Instance.ReadInt32();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (this.textLabel != null)
-		{
-			this.textLabel = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.textLabel) as UILabel);
-		}
-		if (this.scrollBar != null)
-		{
-			this.scrollBar = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.scrollBar) as UIProgressBar);
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateWriter arg_23_0 = SerializedNamedStateWriter.Instance;
-			UnityEngine.Object arg_23_1 = this.textLabel;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_23_0.WriteUnityEngineObject(arg_23_1, &var_0_cp_0[var_0_cp_1] + 1553);
-		}
-		if (depth <= 7)
-		{
-			SerializedNamedStateWriter.Instance.WriteUnityEngineObject(this.scrollBar, &var_0_cp_0[var_0_cp_1] + 4551);
-		}
-		SerializedNamedStateWriter.Instance.WriteInt32((int)this.style, &var_0_cp_0[var_0_cp_1] + 2693);
-		SerializedNamedStateWriter.Instance.WriteInt32(this.paragraphHistory, &var_0_cp_0[var_0_cp_1] + 4561);
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateReader arg_1E_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			this.textLabel = (arg_1E_0.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 1553) as UILabel);
-		}
-		if (depth <= 7)
-		{
-			this.scrollBar = (SerializedNamedStateReader.Instance.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 4551) as UIProgressBar);
-		}
-		this.style = (UITextList.Style)SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 2693);
-		this.paragraphHistory = SerializedNamedStateReader.Instance.ReadInt32(&var_0_cp_0[var_0_cp_1] + 4561);
-	}
-
-	protected internal UITextList(UIntPtr dummy) : base(dummy)
-	{
-	}
-
-	public static long $Get0(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UITextList)instance).textLabel);
-	}
-
-	public static void $Set0(object instance, long value)
-	{
-		((UITextList)instance).textLabel = (UILabel)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public static long $Get1(object instance)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UITextList)instance).scrollBar);
-	}
-
-	public static void $Set1(object instance, long value)
-	{
-		((UITextList)instance).scrollBar = (UIProgressBar)GCHandledObjects.GCHandleToObject(value);
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Add(Marshal.PtrToStringUni(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Add(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UITextList)GCHandledObjects.GCHandleToObject(instance)).isValid);
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UITextList)GCHandledObjects.GCHandleToObject(instance)).lineHeight);
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UITextList)GCHandledObjects.GCHandleToObject(instance)).paragraphs);
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UITextList)GCHandledObjects.GCHandleToObject(instance)).scrollHeight);
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((UITextList)GCHandledObjects.GCHandleToObject(instance)).scrollValue);
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).OnDrag(*(*(IntPtr*)args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).OnScroll(*(float*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).OnScrollBar();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Rebuild();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).scrollValue = *(float*)args;
-		return -1L;
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Start();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).Update();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		((UITextList)GCHandledObjects.GCHandleToObject(instance)).UpdateVisibleText();
-		return -1L;
 	}
 }

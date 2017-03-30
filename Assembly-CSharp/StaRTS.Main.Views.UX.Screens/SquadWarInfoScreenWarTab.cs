@@ -24,14 +24,14 @@ namespace StaRTS.Main.Views.UX.Screens
 		public SquadWarInfoScreenWarTab(SquadWarInfoScreen parent, UXCheckbox tabButton, UXElement topGroup) : base(parent, tabButton, topGroup)
 		{
 			FactionType faction = Service.Get<CurrentPlayer>().Faction;
-			string text = (faction == FactionType.Rebel) ? GameConstants.WAR_HELP_WAR_REBEL : GameConstants.WAR_HELP_WAR_EMPIRE;
+			string text = (faction != FactionType.Rebel) ? GameConstants.WAR_HELP_WAR_EMPIRE : GameConstants.WAR_HELP_WAR_REBEL;
 			string[] array = text.Split(new char[]
 			{
 				'|'
 			});
 			if (array.Length < 2)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("GameConstant [War Help War {0}] is not formatted correctly: {1}", new object[]
+				Service.Get<Logger>().WarnFormat("GameConstant [War Help War {0}] is not formatted correctly: {1}", new object[]
 				{
 					faction,
 					text
@@ -40,10 +40,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			}
 			base.PopulateBgTexture(array[0], "TextureWar");
 			base.PopulateGrid(array, "GridWar", "ItemWar", "TextureItemWar", "LabelTitleWar", "LabelBodyWar");
-		}
-
-		protected internal SquadWarInfoScreenWarTab(UIntPtr dummy) : base(dummy)
-		{
 		}
 	}
 }

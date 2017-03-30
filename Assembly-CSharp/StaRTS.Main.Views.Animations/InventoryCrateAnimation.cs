@@ -7,7 +7,6 @@ using StaRTS.Main.Models.ValueObjects;
 using StaRTS.Main.Utils;
 using StaRTS.Main.Utils.Events;
 using StaRTS.Main.Views.Projectors;
-using StaRTS.Main.Views.UserInput;
 using StaRTS.Main.Views.UX.Controls;
 using StaRTS.Main.Views.UX.Screens;
 using StaRTS.Utils;
@@ -16,17 +15,13 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.Animations
 {
 	public class InventoryCrateAnimation : IEventObserver
 	{
 		private const float LAND_TO_OPEN_DELAY = 2.1f;
-
-		private static readonly Vector3 RIG_OFFSET = new Vector3(3000f, 1000f, 0f);
 
 		private const int RENDER_WIDTH_HEIGHT = 256;
 
@@ -100,19 +95,21 @@ namespace StaRTS.Main.Views.Animations
 
 		private const string DISK_LEVEL3_MESH = "disc_body_03";
 
+		private static readonly Vector3 RIG_OFFSET = new Vector3(3000f, 1000f, 0f);
+
 		private GameObject crateRayEffect;
 
 		private Transform beamsEffect;
 
 		private Transform sparkleEffect;
 
-		private readonly Color ELITE_COLOR;
+		private readonly Color ELITE_COLOR = new Color(1f, 0.5f, 0f);
 
-		private readonly Color ELITE_BURST_COLOR;
+		private readonly Color ELITE_BURST_COLOR = new Color(1f, 0.25f, 0f);
 
-		private readonly Color ADVANCED_COLOR;
+		private readonly Color ADVANCED_COLOR = new Color(0f, 0.45f, 1f);
 
-		private readonly Color BASIC_COLOR;
+		private readonly Color BASIC_COLOR = new Color(0.5f, 0.5f, 0.5f);
 
 		private List<SupplyCrateTag> supplyCrateDataList;
 
@@ -206,11 +203,6 @@ namespace StaRTS.Main.Views.Animations
 
 		public InventoryCrateAnimation(List<CrateSupplyVO> supplyTableDataList, CrateData crateData, Dictionary<string, int> shardsOriginal, Dictionary<string, int> equipmentOriginal, Dictionary<string, int> troopUpgradeOriginalCopy, Dictionary<string, int> specialAttackUpgradeOriginalCopy)
 		{
-			this.ELITE_COLOR = new Color(1f, 0.5f, 0f);
-			this.ELITE_BURST_COLOR = new Color(1f, 0.25f, 0f);
-			this.ADVANCED_COLOR = new Color(0f, 0.45f, 1f);
-			this.BASIC_COLOR = new Color(0.5f, 0.5f, 0.5f);
-			base..ctor();
 			List<string> assetNames = new List<string>();
 			List<object> cookies = new List<object>();
 			this.assetHandles = new List<AssetHandle>();
@@ -269,8 +261,6 @@ namespace StaRTS.Main.Views.Animations
 			}
 			this.AddAssetToLoadList(assetNames, cookies, this.crateVO.RewardAnimationAssetName);
 			this.AddAssetToLoadList(assetNames, cookies, "crate_controller");
-			Service.Get<UserInputInhibitor>().DenyAll();
-			ProcessingScreen.Show();
 			Service.Get<AssetManager>().MultiLoad(this.assetHandles, assetNames, new AssetSuccessDelegate(this.LoadSuccess), new AssetFailureDelegate(this.LoadFailed), cookies, new AssetsCompleteDelegate(this.AssetsCompleteDelegate), null);
 		}
 
@@ -298,8 +288,8 @@ namespace StaRTS.Main.Views.Animations
 		{
 			if (this.currentCrateItem == null || this.currentCrateItem.CrateSupply == null)
 			{
-				string text = (this.crateVO == null) ? "unknown" : this.crateVO.Uid;
-				Service.Get<StaRTSLogger>().ErrorFormat("Reward data for crate {0} not found or has been cleaned up while using it", new object[]
+				string text = (this.crateVO != null) ? this.crateVO.Uid : "unknown";
+				Service.Get<Logger>().ErrorFormat("Reward data for crate {0} not found or has been cleaned up while using it", new object[]
 				{
 					text
 				});
@@ -328,7 +318,7 @@ namespace StaRTS.Main.Views.Animations
 				ShardVO shardVO;
 				if (!this.GetUnlockShardUIInfoForCurrentItem(out shardsFrom, out num, out shardsNeededForLevel, out showLevel, out shardVO))
 				{
-					Service.Get<StaRTSLogger>().Error("Inventory Crate Animation: HandleRewardItemShow Unknown Shard RewardType");
+					Service.Get<Logger>().Error("Inventory Crate Animation: HandleRewardItemShow Unknown Shard RewardType");
 					return;
 				}
 				key = shardVO.Uid;
@@ -374,7 +364,7 @@ namespace StaRTS.Main.Views.Animations
 				num = this.specialAttackUpgradeOrignal[targetGroupId];
 			}
 			int hqLevel = currentPlayer.Map.FindHighestHqLevel();
-			int num2 = this.shardsOriginal.ContainsKey(uid) ? this.shardsOriginal[uid] : 0;
+			int num2 = (!this.shardsOriginal.ContainsKey(uid)) ? 0 : this.shardsOriginal[uid];
 			int rewardAmount = Service.Get<InventoryCrateRewardController>().GetRewardAmount(crateSupply, hqLevel);
 			currentShardAmount = num2;
 			increasedShardAmount = num2 + rewardAmount;
@@ -409,7 +399,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			EquipmentUpgradeCatalog equipmentUpgradeCatalog = Service.Get<EquipmentUpgradeCatalog>();
 			string equipmentID = equipment.EquipmentID;
-			int num = this.shardsOriginal.ContainsKey(equipmentID) ? this.shardsOriginal[equipmentID] : 0;
+			int num = (!this.shardsOriginal.ContainsKey(equipmentID)) ? 0 : this.shardsOriginal[equipmentID];
 			currentShardAmount = num;
 			RewardVO reward = Service.Get<InventoryCrateRewardController>().GenerateRewardFromSupply(crateSupply, this.hq);
 			int shardsRewarded = RewardUtils.GetShardsRewarded(reward);
@@ -451,7 +441,7 @@ namespace StaRTS.Main.Views.Animations
 				if (config == supplyCrateTag.Config)
 				{
 					supplyCrateTag.RenderTexture = renderTexture;
-					return;
+					break;
 				}
 				i++;
 			}
@@ -459,8 +449,6 @@ namespace StaRTS.Main.Views.Animations
 
 		private void LoadFailed(object cookie)
 		{
-			Service.Get<UserInputInhibitor>().AllowAll();
-			ProcessingScreen.Hide();
 		}
 
 		private void AssetsCompleteDelegate(object cookie)
@@ -536,7 +524,7 @@ namespace StaRTS.Main.Views.Animations
 			this.contrabandCurrencyReward = this.crateController.transform.FindChild(text).gameObject;
 			if (this.contrabandCurrencyReward == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -545,7 +533,7 @@ namespace StaRTS.Main.Views.Animations
 			this.reputationReward = this.crateController.transform.FindChild(text).gameObject;
 			if (this.reputationReward == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -554,7 +542,7 @@ namespace StaRTS.Main.Views.Animations
 			this.crystalCurrencyReward = this.crateController.transform.FindChild(text).gameObject;
 			if (this.crystalCurrencyReward == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -563,7 +551,7 @@ namespace StaRTS.Main.Views.Animations
 			this.creditCurrencyReward = this.crateController.transform.FindChild(text).gameObject;
 			if (this.creditCurrencyReward == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -572,7 +560,7 @@ namespace StaRTS.Main.Views.Animations
 			this.materialCurrencyReward = this.crateController.transform.FindChild(text).gameObject;
 			if (this.materialCurrencyReward == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -581,7 +569,7 @@ namespace StaRTS.Main.Views.Animations
 			this.unitReward = this.crateController.transform.FindChild(text).gameObject;
 			if (this.unitReward == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -590,7 +578,7 @@ namespace StaRTS.Main.Views.Animations
 			this.shardReward = this.crateController.transform.FindChild(text).gameObject;
 			if (this.shardReward == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -603,7 +591,7 @@ namespace StaRTS.Main.Views.Animations
 			this.contrabandBackVfx = this.crateController.transform.FindChild(text).gameObject;
 			if (this.contrabandBackVfx == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -612,7 +600,7 @@ namespace StaRTS.Main.Views.Animations
 			this.reputationBackVfx = this.crateController.transform.FindChild(text).gameObject;
 			if (this.reputationBackVfx == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -621,7 +609,7 @@ namespace StaRTS.Main.Views.Animations
 			this.crystalBackVfx = this.crateController.transform.FindChild(text).gameObject;
 			if (this.crystalBackVfx == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -630,7 +618,7 @@ namespace StaRTS.Main.Views.Animations
 			this.creditBackVfx = this.crateController.transform.FindChild(text).gameObject;
 			if (this.creditBackVfx == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -639,7 +627,7 @@ namespace StaRTS.Main.Views.Animations
 			this.materialBackVfx = this.crateController.transform.FindChild(text).gameObject;
 			if (this.materialBackVfx == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -648,7 +636,7 @@ namespace StaRTS.Main.Views.Animations
 			this.unitBackVfx = this.crateController.transform.FindChild(text).gameObject;
 			if (this.unitBackVfx == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -657,7 +645,7 @@ namespace StaRTS.Main.Views.Animations
 			this.shardBackVfx = this.crateController.transform.FindChild(text).gameObject;
 			if (this.shardBackVfx == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find gameObject {0} in crate controller", new object[]
 				{
 					text
 				});
@@ -709,7 +697,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("contrabandCurrencyReward has been destroyed during possible use");
+				Service.Get<Logger>().Error("contrabandCurrencyReward has been destroyed during possible use");
 			}
 			if (this.reputationReward != null)
 			{
@@ -717,7 +705,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("reputationReward has been destroyed during possible use");
+				Service.Get<Logger>().Error("reputationReward has been destroyed during possible use");
 			}
 			if (this.crystalCurrencyReward != null)
 			{
@@ -725,7 +713,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("crystalCurrencyReward has been destroyed during possible use");
+				Service.Get<Logger>().Error("crystalCurrencyReward has been destroyed during possible use");
 			}
 			if (this.creditCurrencyReward != null)
 			{
@@ -733,7 +721,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("creditCurrencyReward has been destroyed during possible use");
+				Service.Get<Logger>().Error("creditCurrencyReward has been destroyed during possible use");
 			}
 			if (this.materialCurrencyReward != null)
 			{
@@ -741,7 +729,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("materialCurrencyReward has been destroyed during possible use");
+				Service.Get<Logger>().Error("materialCurrencyReward has been destroyed during possible use");
 			}
 			if (this.unitReward != null)
 			{
@@ -749,7 +737,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("unitReward has been destroyed during possible use");
+				Service.Get<Logger>().Error("unitReward has been destroyed during possible use");
 			}
 			if (this.shardReward != null)
 			{
@@ -757,7 +745,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("shardReward has been destroyed during possible use");
+				Service.Get<Logger>().Error("shardReward has been destroyed during possible use");
 			}
 			if (this.contrabandBackVfx != null)
 			{
@@ -765,7 +753,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("contrabandBackVfx has been destroyed during possible use");
+				Service.Get<Logger>().Error("contrabandBackVfx has been destroyed during possible use");
 			}
 			if (this.reputationBackVfx != null)
 			{
@@ -773,7 +761,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("reputationBackVfx has been destroyed during possible use");
+				Service.Get<Logger>().Error("reputationBackVfx has been destroyed during possible use");
 			}
 			if (this.crystalBackVfx != null)
 			{
@@ -781,7 +769,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("crystalBackVfx has been destroyed during possible use");
+				Service.Get<Logger>().Error("crystalBackVfx has been destroyed during possible use");
 			}
 			if (this.creditBackVfx != null)
 			{
@@ -789,7 +777,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("creditBackVfx has been destroyed during possible use");
+				Service.Get<Logger>().Error("creditBackVfx has been destroyed during possible use");
 			}
 			if (this.materialBackVfx != null)
 			{
@@ -797,7 +785,7 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("materialBackVfx has been destroyed during possible use");
+				Service.Get<Logger>().Error("materialBackVfx has been destroyed during possible use");
 			}
 			if (this.unitBackVfx != null)
 			{
@@ -805,14 +793,16 @@ namespace StaRTS.Main.Views.Animations
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("unitBackVfx has been destroyed during possible use");
+				Service.Get<Logger>().Error("unitBackVfx has been destroyed during possible use");
 			}
 			if (this.shardBackVfx != null)
 			{
 				this.shardBackVfx.SetActive(false);
-				return;
 			}
-			Service.Get<StaRTSLogger>().Error("shardBackVfx has been destroyed during possible use");
+			else
+			{
+				Service.Get<Logger>().Error("shardBackVfx has been destroyed during possible use");
+			}
 		}
 
 		private void LoadSuccess(object asset, object cookie)
@@ -825,16 +815,15 @@ namespace StaRTS.Main.Views.Animations
 					this.crateController = gameObject;
 					this.crateController.transform.position = InventoryCrateAnimation.RIG_OFFSET;
 					this.crateController.SetActive(false);
-					Service.Get<UserInputInhibitor>().AllowAll();
-					ProcessingScreen.Hide();
-					return;
 				}
-				if (this.crateVO.RewardAnimationAssetName == gameObject.name)
+				else if (this.crateVO.RewardAnimationAssetName == gameObject.name)
 				{
 					this.crateObj = gameObject;
-					return;
 				}
-				UnityEngine.Object.Destroy(gameObject);
+				else
+				{
+					UnityEngine.Object.Destroy(gameObject);
+				}
 			}
 		}
 
@@ -866,7 +855,7 @@ namespace StaRTS.Main.Views.Animations
 			{
 			case SupplyType.Currency:
 				this.ActivateCurrencyRewardItem(crateSupply.RewardUid);
-				return;
+				break;
 			case SupplyType.Shard:
 			case SupplyType.ShardTroop:
 			case SupplyType.ShardSpecialAttack:
@@ -896,11 +885,8 @@ namespace StaRTS.Main.Views.Animations
 				if (this.unitBackVfx != null)
 				{
 					this.unitBackVfx.SetActive(true);
-					return;
 				}
 				break;
-			default:
-				return;
 			}
 		}
 
@@ -989,7 +975,6 @@ namespace StaRTS.Main.Views.Animations
 				if (this.creditBackVfx != null)
 				{
 					this.creditBackVfx.SetActive(true);
-					return;
 				}
 				break;
 			case CurrencyType.Materials:
@@ -1000,7 +985,6 @@ namespace StaRTS.Main.Views.Animations
 				if (this.materialBackVfx != null)
 				{
 					this.materialBackVfx.SetActive(true);
-					return;
 				}
 				break;
 			case CurrencyType.Contraband:
@@ -1011,7 +995,6 @@ namespace StaRTS.Main.Views.Animations
 				if (this.contrabandBackVfx != null)
 				{
 					this.contrabandBackVfx.SetActive(true);
-					return;
 				}
 				break;
 			case CurrencyType.Reputation:
@@ -1032,11 +1015,8 @@ namespace StaRTS.Main.Views.Animations
 				if (this.crystalBackVfx != null)
 				{
 					this.crystalBackVfx.SetActive(true);
-					return;
 				}
 				break;
-			default:
-				return;
 			}
 		}
 
@@ -1131,180 +1111,6 @@ namespace StaRTS.Main.Views.Animations
 			}
 			this.assetHandles.Clear();
 			Service.Get<UXController>().RestoreVisibilityToAll();
-		}
-
-		protected internal InventoryCrateAnimation(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).ActivateCurrencyRewardItem(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).AddAssetToLoadList((List<string>)GCHandledObjects.GCHandleToObject(*args), (List<object>)GCHandledObjects.GCHandleToObject(args[1]), Marshal.PtrToStringUni(*(IntPtr*)(args + 2)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).AssetsCompleteDelegate(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).AvailableToAnimate());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).ChangeCrateRayColor();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).CleanUp();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).FindChildAnims();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).InvCrateCollectionScreen);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).IsLoaded);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).GetCrateHQLevel());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).GetCurrentRewardIndex());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).GetRewardList());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).GetTotalRewardsCount());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).HandleShardRewardItemShow();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).HideAllRewards();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).IsCurrentItemRewardAShard());
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).IsSkippingAllowed());
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).LoadFailed(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).LoadSuccess(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).PlayAnimStateSFX((InventoryCrateAnimationState)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).PlayVFXTriggerSFX(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).RenderTextureCompleteCallback((RenderTexture)GCHandledObjects.GCHandleToObject(*args), (ProjectorConfig)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).IsLoaded = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).SetupCrateRewardItem((SupplyCrateTag)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).SetupRenderTargetMesh((GameObject)GCHandledObjects.GCHandleToObject(*args), (SupplyCrateTag)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).SetupShardQualityDisplay((GameObject)GCHandledObjects.GCHandleToObject(*args), (SupplyCrateTag)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).ShowNextReward();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).SkipToEndOfCrateRewardAnim();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((InventoryCrateAnimation)GCHandledObjects.GCHandleToObject(instance)).UpdateCrateAnimState((InventoryCrateAnimationState)(*(int*)args));
-			return -1L;
 		}
 	}
 }

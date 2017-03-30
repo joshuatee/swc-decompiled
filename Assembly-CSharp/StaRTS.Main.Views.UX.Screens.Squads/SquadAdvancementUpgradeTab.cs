@@ -9,8 +9,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -184,69 +182,72 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				string uid = current.Uid;
 				bool flag = perkManager.IsPerkMaxTier(current) && available.ContainsValue(uid);
 				bool flag2 = perkManager.IsPerkLevelLocked(current, squad.Level);
-				if (perkManager.HasPrerequistesUnlocked(current, available) && (flag || !available.ContainsValue(uid)))
+				if (perkManager.HasPrerequistesUnlocked(current, available))
 				{
-					string perkGroup = current.PerkGroup;
-					string text = "PerkItem_" + perkGroup;
-					UXElement uXElement = base.FetchPerkGridItem(this.perkGrid, text);
-					uXElement.Tag = current;
-					UXElement subElement = this.perkGrid.GetSubElement<UXElement>(text, "LockedGroupUpCardPerks");
-					UXElement subElement2 = this.perkGrid.GetSubElement<UXElement>(text, "MaxLvlGroupUpCardPerks");
-					UXButton subElement3 = this.perkGrid.GetSubElement<UXButton>(text, "BtnUpCardPerks");
-					subElement3.Tag = current;
-					subElement3.OnClicked = new UXButtonClickedDelegate(this.OnPerkClicked);
-					int reputationCost = current.ReputationCost;
-					int squadLevelUnlock = current.SquadLevelUnlock;
-					int perkInvestedProgress = perkManager.GetPerkInvestedProgress(current, inProgress);
-					string text2 = reputationCost.ToString();
-					UXLabel subElement4 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelPerkTitleUpCardPerks");
-					subElement4.Text = perkViewController.GetPerkNameForGroup(current.PerkGroup);
-					UXLabel subElement5 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelCostUpPerk");
-					subElement5.Text = text2;
-					UXSprite subElement6 = this.perkGrid.GetSubElement<UXSprite>(text, "CostUpPerkReputationIcon");
-					string text3 = perkInvestedProgress.ToString();
-					UXLabel subElement7 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelpBarUpInvestAmtPerks");
-					subElement7.Text = text3 + "/" + text2;
-					UXSlider subElement8 = this.perkGrid.GetSubElement<UXSlider>(text, "pBarUpInvestAmtPerks");
-					subElement8.Value = (float)perkInvestedProgress / (float)reputationCost;
-					UXLabel subElement9 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelPerkLvlUpCardPerks");
-					string text4 = string.Empty;
-					if (current.PerkTier > 1)
+					if (flag || !available.ContainsValue(uid))
 					{
-						text4 = StringUtils.GetRomanNumeral(current.PerkTier - 1);
-					}
-					else
-					{
-						text4 = lang.Get("PERK_UPGRADE_CARD_UNLOCK_TIER", new object[0]);
-					}
-					subElement9.Text = text4;
-					UXTexture subElement10 = this.perkGrid.GetSubElement<UXTexture>(text, "TexturePerkArtUpCardPerks");
-					perkViewController.SetPerkImage(subElement10, current);
-					bool visible = !flag2 && !flag;
-					subElement8.Visible = visible;
-					subElement7.Visible = visible;
-					subElement5.Visible = visible;
-					subElement6.Visible = visible;
-					subElement9.Visible = visible;
-					subElement2.Visible = flag;
-					subElement.Visible = (flag2 && !flag);
-					if (flag2)
-					{
-						UXLabel subElement11 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelSquadLvlLockedUpCardPerks");
-						subElement11.Text = current.SquadLevelUnlock.ToString();
-						UXLabel subElement12 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelSquadLvlLockedUpCardPerks");
-						subElement12.Text = lang.Get("PERK_ACTIVATE_UPGRADE_CARD_LVL_REQ", new object[]
+						string perkGroup = current.PerkGroup;
+						string text = "PerkItem_" + perkGroup;
+						UXElement uXElement = base.FetchPerkGridItem(this.perkGrid, text);
+						uXElement.Tag = current;
+						UXElement subElement = this.perkGrid.GetSubElement<UXElement>(text, "LockedGroupUpCardPerks");
+						UXElement subElement2 = this.perkGrid.GetSubElement<UXElement>(text, "MaxLvlGroupUpCardPerks");
+						UXButton subElement3 = this.perkGrid.GetSubElement<UXButton>(text, "BtnUpCardPerks");
+						subElement3.Tag = current;
+						subElement3.OnClicked = new UXButtonClickedDelegate(this.OnPerkClicked);
+						int reputationCost = current.ReputationCost;
+						int squadLevelUnlock = current.SquadLevelUnlock;
+						int perkInvestedProgress = perkManager.GetPerkInvestedProgress(current, inProgress);
+						string text2 = reputationCost.ToString();
+						UXLabel subElement4 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelPerkTitleUpCardPerks");
+						subElement4.Text = perkViewController.GetPerkNameForGroup(current.PerkGroup);
+						UXLabel subElement5 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelCostUpPerk");
+						subElement5.Text = text2;
+						UXSprite subElement6 = this.perkGrid.GetSubElement<UXSprite>(text, "CostUpPerkReputationIcon");
+						string str = perkInvestedProgress.ToString();
+						UXLabel subElement7 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelpBarUpInvestAmtPerks");
+						subElement7.Text = str + "/" + text2;
+						UXSlider subElement8 = this.perkGrid.GetSubElement<UXSlider>(text, "pBarUpInvestAmtPerks");
+						subElement8.Value = (float)perkInvestedProgress / (float)reputationCost;
+						UXLabel subElement9 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelPerkLvlUpCardPerks");
+						string text3 = string.Empty;
+						if (current.PerkTier > 1)
 						{
-							squadLevelUnlock
-						});
+							text3 = StringUtils.GetRomanNumeral(current.PerkTier - 1);
+						}
+						else
+						{
+							text3 = lang.Get("PERK_UPGRADE_CARD_UNLOCK_TIER", new object[0]);
+						}
+						subElement9.Text = text3;
+						UXTexture subElement10 = this.perkGrid.GetSubElement<UXTexture>(text, "TexturePerkArtUpCardPerks");
+						perkViewController.SetPerkImage(subElement10, current);
+						bool visible = !flag2 && !flag;
+						subElement8.Visible = visible;
+						subElement7.Visible = visible;
+						subElement5.Visible = visible;
+						subElement6.Visible = visible;
+						subElement9.Visible = visible;
+						subElement2.Visible = flag;
+						subElement.Visible = (flag2 && !flag);
+						if (flag2)
+						{
+							UXLabel subElement11 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelSquadLvlLockedUpCardPerks");
+							subElement11.Text = current.SquadLevelUnlock.ToString();
+							UXLabel subElement12 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelSquadLvlLockedUpCardPerks");
+							subElement12.Text = lang.Get("PERK_ACTIVATE_UPGRADE_CARD_LVL_REQ", new object[]
+							{
+								squadLevelUnlock
+							});
+						}
+						else if (flag)
+						{
+							UXLabel subElement13 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelMaxLvlUpCardPerks");
+							subElement13.Text = lang.Get("PERK_UPGRADE_MAX_TIER", new object[0]);
+						}
+						base.SetupPerkBadge(current, text, "UpCardPerks");
+						list.Add(uXElement);
 					}
-					else if (flag)
-					{
-						UXLabel subElement13 = this.perkGrid.GetSubElement<UXLabel>(text, "LabelMaxLvlUpCardPerks");
-						subElement13.Text = lang.Get("PERK_UPGRADE_MAX_TIER", new object[0]);
-					}
-					base.SetupPerkBadge(current, text, "UpCardPerks");
-					list.Add(uXElement);
 				}
 			}
 			list.Sort(new Comparison<UXElement>(this.SortUpgradeList));
@@ -435,109 +436,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			}
 			}
 			return base.OnEvent(id, cookie);
-		}
-
-		protected internal SquadAdvancementUpgradeTab(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).CleanUpConfirmInfoView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).FilterGridBasedOnId(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).InitPerkGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).InitUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).InitViewLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).OnConfirmClosed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).OnHide();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).OnPerkClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).OnShow();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).RefreshPerkStates();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).RegisterEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).ShouldBlockTabChanges());
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).ShowConfirmUpgradeView((PerkVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).SortUpgradeList((UXElement)GCHandledObjects.GCHandleToObject(*args), (UXElement)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadAdvancementUpgradeTab)GCHandledObjects.GCHandleToObject(instance)).UnregisterEvents();
-			return -1L;
 		}
 	}
 }

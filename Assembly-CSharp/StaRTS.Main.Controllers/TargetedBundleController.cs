@@ -16,9 +16,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
@@ -117,27 +114,11 @@ namespace StaRTS.Main.Controllers
 			{
 				return EatResponse.NotEaten;
 			}
-			if (id <= EventId.PlanetRelocate)
+			switch (id)
 			{
-				if (id <= EventId.BuildingLevelUpgraded)
-				{
-					if (id == EventId.DroidPurchaseCompleted)
-					{
-						goto IL_92;
-					}
-					if (id != EventId.BuildingLevelUpgraded)
-					{
-						return EatResponse.NotEaten;
-					}
-				}
-				else if (id != EventId.BuildingConstructed)
-				{
-					if (id != EventId.PlanetRelocate)
-					{
-						return EatResponse.NotEaten;
-					}
-					goto IL_92;
-				}
+			case EventId.BuildingLevelUpgraded:
+			case EventId.BuildingConstructed:
+			{
 				ContractEventData contractEventData = (ContractEventData)cookie;
 				if (contractEventData == null)
 				{
@@ -151,24 +132,30 @@ namespace StaRTS.Main.Controllers
 				if (!this.buildingTypeIgnoreList.Contains(buildingVO.Type))
 				{
 					this.GetNewOffer(id);
-					return EatResponse.NotEaten;
 				}
 				return EatResponse.NotEaten;
 			}
-			else if (id <= EventId.SquadJoinedByCurrentPlayer)
-			{
-				if (id != EventId.SquadLeft && id != EventId.SquadJoinedByCurrentPlayer)
+			case EventId.BuildingSwapped:
+				IL_24:
+				switch (id)
 				{
-					return EatResponse.NotEaten;
+				case EventId.SquadLeft:
+				case EventId.SquadJoinedByCurrentPlayer:
+					goto IL_AA;
+				case EventId.SquadChatFilterUpdated:
+					IL_3C:
+					if (id != EventId.DroidPurchaseCompleted && id != EventId.PlanetRelocate && id != EventId.TargetedBundleRewardRedeemed && id != EventId.InAppPurchaseMade)
+					{
+						return EatResponse.NotEaten;
+					}
+					goto IL_AA;
 				}
-			}
-			else if (id != EventId.TargetedBundleRewardRedeemed && id != EventId.InAppPurchaseMade)
-			{
+				goto IL_3C;
+				IL_AA:
+				this.GetNewOffer(id);
 				return EatResponse.NotEaten;
 			}
-			IL_92:
-			this.GetNewOffer(id);
-			return EatResponse.NotEaten;
+			goto IL_24;
 		}
 
 		public bool IsCurrencyCostOffer(TargetedBundleVO offerVO)
@@ -177,11 +164,11 @@ namespace StaRTS.Main.Controllers
 			{
 				return false;
 			}
-			if (offerVO.Cost != null && offerVO.Cost.Length != 0)
+			if (offerVO.Cost != null && offerVO.Cost.Length > 0)
 			{
 				return true;
 			}
-			Service.Get<StaRTSLogger>().Error("Targeted Bundle Offser has no linked IAP and no Cost: " + offerVO.Uid);
+			Service.Get<Logger>().Error("Targeted Bundle Offser has no linked IAP and no Cost: " + offerVO.Uid);
 			return false;
 		}
 
@@ -218,7 +205,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (this.CurrentTargetedOffer == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("No offer available to purchase.");
+				Service.Get<Logger>().Warn("No offer available to purchase.");
 				return;
 			}
 			GameUtils.SpendCurrency(this.CurrentTargetedOffer.Cost, true);
@@ -273,7 +260,7 @@ namespace StaRTS.Main.Controllers
 			uint globalCooldownExpiresAt = offerSummary.GlobalCooldownExpiresAt;
 			if (!flag && globalCooldownExpiresAt != 0u && (long)secondsFromEpoch < (long)((ulong)globalCooldownExpiresAt))
 			{
-				Service.Get<StaRTSLogger>().DebugFormat("Offer global cooldown is in effect until {0}", new object[]
+				Service.Get<Logger>().DebugFormat("Offer global cooldown is in effect until {0}", new object[]
 				{
 					LangUtils.FormatTime((long)offerSummary.GlobalCooldownExpiresAt)
 				});
@@ -284,7 +271,7 @@ namespace StaRTS.Main.Controllers
 			}
 			else if (targetedBundleVO != null)
 			{
-				Service.Get<StaRTSLogger>().DebugFormat("Available offer: {0}", new object[]
+				Service.Get<Logger>().DebugFormat("Available offer: {0}", new object[]
 				{
 					offerSummary.AvailableOffer
 				});
@@ -294,7 +281,7 @@ namespace StaRTS.Main.Controllers
 				}
 				else
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Server provided offer {0} was outside of date range {1} to {2}.", new object[]
+					Service.Get<Logger>().WarnFormat("Server provided offer {0} was outside of date range {1} to {2}.", new object[]
 					{
 						offerSummary.AvailableOffer,
 						targetedBundleVO.StartTime,
@@ -304,7 +291,7 @@ namespace StaRTS.Main.Controllers
 			}
 			else if (offerSummary.NextOfferAvailableAt > 0u)
 			{
-				Service.Get<StaRTSLogger>().DebugFormat("Next offer available at {0}.", new object[]
+				Service.Get<Logger>().DebugFormat("Next offer available at {0}.", new object[]
 				{
 					LangUtils.FormatTime((long)offerSummary.NextOfferAvailableAt)
 				});
@@ -351,7 +338,7 @@ namespace StaRTS.Main.Controllers
 			if (flag)
 			{
 				string message = "Querying GetNewOffers too frequently: " + triggerEventId.ToString();
-				Service.Get<StaRTSLogger>().Warn(message);
+				Service.Get<Logger>().Warn(message);
 				return;
 			}
 			this.lastGetOffersQueryTime = serverTime;
@@ -376,7 +363,7 @@ namespace StaRTS.Main.Controllers
 				RewardVO optional = dataController.GetOptional<RewardVO>(offerVO.RewardUIDs[i]);
 				if (optional == null)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Trying to grant {0} which cannot be found.", new object[]
+					Service.Get<Logger>().WarnFormat("Trying to grant {0} which cannot be found.", new object[]
 					{
 						offerVO.RewardUIDs[i]
 					});
@@ -425,11 +412,11 @@ namespace StaRTS.Main.Controllers
 			string context = "SPD";
 			string uid = currentOffer.Uid;
 			string text = this.currentOfferCost;
-			string text2 = (currentOffer.Groups.Count >= 1) ? currentOffer.Groups[0] : string.Empty;
+			string text2 = currentOffer.Groups[0];
 			int count = currentOffer.RewardUIDs.Count;
-			string text3 = (count > 0) ? currentOffer.RewardUIDs[0] : string.Empty;
-			string text4 = (count > 1) ? currentOffer.RewardUIDs[1] : string.Empty;
-			string text5 = (count > 2) ? currentOffer.RewardUIDs[2] : string.Empty;
+			string text3 = (count <= 0) ? string.Empty : currentOffer.RewardUIDs[0];
+			string text4 = (count <= 1) ? string.Empty : currentOffer.RewardUIDs[1];
+			string text5 = (count <= 2) ? string.Empty : currentOffer.RewardUIDs[2];
 			string text6 = currentOffer.Duration.ToString();
 			int num = (int)(this.OfferExpiresAt - Service.Get<ServerAPI>().ServerTime);
 			if (num < 0)
@@ -453,7 +440,7 @@ namespace StaRTS.Main.Controllers
 
 		private void OnFailure(uint status, object cookie)
 		{
-			Service.Get<StaRTSLogger>().Error("Failed in getting targeted bundle offers");
+			Service.Get<Logger>().Error("Failed in getting targeted bundle offers");
 			this.FetchingNewOffer = false;
 		}
 
@@ -478,11 +465,10 @@ namespace StaRTS.Main.Controllers
 			if (delay > 0L && delay <= 432000L)
 			{
 				Service.Get<ViewTimerManager>().CreateViewTimer((float)delay, false, callback, null);
-				return;
 			}
-			if (warnIfExceeds)
+			else if (warnIfExceeds)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Targeted offer tried to set a timer exceeding TimerManager.MAX_DELAY ({0}): {1} ({2})", new object[]
+				Service.Get<Logger>().WarnFormat("Targeted offer tried to set a timer exceeding TimerManager.MAX_DELAY ({0}): {1} ({2})", new object[]
 				{
 					LangUtils.FormatTime(432000L),
 					LangUtils.FormatTime(delay),
@@ -495,7 +481,7 @@ namespace StaRTS.Main.Controllers
 		{
 			if (offerVO == null)
 			{
-				Service.Get<StaRTSLogger>().Error("InitializeTriggerOffer called with null value.");
+				Service.Get<Logger>().Error("InitializeTriggerOffer called with null value.");
 				return;
 			}
 			if (this.lastKnownTargetedOffer != null && this.lastKnownTargetedOffer.Uid == offerVO.Uid)
@@ -600,17 +586,21 @@ namespace StaRTS.Main.Controllers
 			int num = 0;
 			int num2 = 0;
 			GameUtils.GetCurrencyCost(currentOffer.Cost, out credits, out materials, out contraband, out num2, out num);
-			if (GameUtils.CanAffordCosts(credits, materials, contraband, num))
+			if (!GameUtils.CanAffordCosts(credits, materials, contraband, num))
+			{
+				if (num == 0)
+				{
+					PayMeScreen.ShowIfNotEnoughCurrency(credits, materials, contraband, "SPD", new OnScreenModalResult(this.OnCurrencyPurchased));
+				}
+				else
+				{
+					GameUtils.PromptToBuyCrystals();
+				}
+			}
+			else
 			{
 				this.MakeCurrencyOfferPurchase();
-				return;
 			}
-			if (num == 0)
-			{
-				PayMeScreen.ShowIfNotEnoughCurrency(credits, materials, contraband, "SPD", new OnScreenModalResult(this.OnCurrencyPurchased));
-				return;
-			}
-			GameUtils.PromptToBuyCrystals();
 		}
 
 		private void MakeCurrencyOfferPurchase()
@@ -661,7 +651,7 @@ namespace StaRTS.Main.Controllers
 				{
 					':'
 				});
-				int num2 = Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+				int num2 = Convert.ToInt32(array[1]);
 				string uid = array[0];
 				BuildingTypeVO optional = Service.Get<IDataController>().GetOptional<BuildingTypeVO>(uid);
 				if (optional != null)
@@ -678,160 +668,6 @@ namespace StaRTS.Main.Controllers
 				i++;
 			}
 			return result;
-		}
-
-		protected internal TargetedBundleController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).BuyTargetedOfferWithCurrency();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).CanDisplaySPDButton());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).CanPlaceAllRewardBuildings((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).CanPurchaseIAPLinkedOffer((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).GetCrateVOFromTargetedOffer((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).GetNewOffer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).GetNewOffer((EventId)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).GrantTargetedBundleRewards((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).HandleCurrencyOfferPurchase((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).HandleTargetedOfferSuccess((CrateData)GCHandledObjects.GCHandleToObject(*args), (TargetedBundleVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).InitializeTriggerOffer((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).IsCurrencyCostOffer((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).KillSwitchClearOffers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).LogTargetedBundleBI(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).LogTargetedBundleBI(Marshal.PtrToStringUni(*(IntPtr*)args), (TargetedBundleVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).MakeCurrencyOfferPurchase();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).MakeTargetedBundlePurchase((TargetedBundleVO)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).OnBuySuccess((BuyTargetedOfferResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).OnCurrencyPurchased(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).OnSuccess((GetTargetedOffersResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).OnTriggeredOfferResponse((TriggerTargetedOfferResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).PrepareContent();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).ResetOffer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).SetBoundedTimer(*args, (TimerDelegate)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((TargetedBundleController)GCHandledObjects.GCHandleToObject(instance)).UpdateFromTargetedOfferSummary((TargetedOfferSummary)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

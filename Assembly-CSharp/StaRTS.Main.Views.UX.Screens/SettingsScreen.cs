@@ -1,5 +1,6 @@
 using StaRTS.Audio;
 using StaRTS.Externals.EnvironmentManager;
+using StaRTS.Externals.FileManagement;
 using StaRTS.Externals.GameServices;
 using StaRTS.Externals.Manimal;
 using StaRTS.Main.Configs;
@@ -17,7 +18,6 @@ using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -103,7 +103,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private const string OS_IOS = "iOS";
 
-		private const string OS_NAME = "iOS";
+		private const string OS_NAME = "Google";
 
 		private const float LANGUAGE_CHANGE_DELAY = 0.5f;
 
@@ -135,7 +135,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			EventManager eventManager = Service.Get<EventManager>();
 			eventManager.UnregisterObserver(this, EventId.GameServicesSignedIn);
 			eventManager.UnregisterObserver(this, EventId.GameServicesSignedOut);
-			eventManager.UnregisterObserver(this, EventId.FacebookLoggedOut);
 			base.OnDestroyElement();
 		}
 
@@ -150,14 +149,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			EventManager eventManager = Service.Get<EventManager>();
 			eventManager.RegisterObserver(this, EventId.GameServicesSignedIn, EventPriority.Default);
 			eventManager.RegisterObserver(this, EventId.GameServicesSignedOut, EventPriority.Default);
-			eventManager.RegisterObserver(this, EventId.FacebookLoggedOut, EventPriority.Default);
 		}
 
 		private void InitGroups()
 		{
+			base.GetElement<UXElement>("GoogleLogin").Visible = true;
 			base.GetElement<UXElement>("iOSLogin").Visible = false;
-			base.GetElement<UXElement>("GoogleLogin").Visible = false;
-			base.GetElement<UXElement>("iOSLogin").Visible = true;
 		}
 
 		private void InitLabels()
@@ -173,6 +170,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			element = base.GetElement<UXLabel>("LabelBtnLanguage");
 			element.Text = this.lang.GetDisplayLanguage(this.lang.Locale);
 			this.SetFacebookButtonLabel(Service.Get<ISocialDataController>().IsLoggedIn);
+			this.SetGoogleButtonLabel(GameServicesManager.IsUserAuthenticated());
 			element = base.GetElement<UXLabel>("LabelBtnAbout");
 			element.Text = this.lang.Get("SETTINGS_ABOUT", new object[0]);
 			element = base.GetElement<UXLabel>("LabelBtnHelp");
@@ -186,20 +184,21 @@ namespace StaRTS.Main.Views.UX.Screens
 				element = base.GetElement<UXLabel>("LabelBtnForums");
 				element.Text = this.lang.Get("SETTINGS_FORUMS", new object[0]);
 			}
-			element = base.GetElement<UXLabel>("LabelFBIncentiveiOS");
+			element = base.GetElement<UXLabel>("LabelFBIncentiveGoogle");
 			element.Text = this.lang.Get("CONNECT_FB_SETTINGS_DESC", new object[0]);
 			element = base.GetElement<UXLabel>("LabelBtnFactionSwap");
 			FactionType faction = Service.Get<CurrentPlayer>().Faction;
-			if (faction == FactionType.Empire)
+			if (faction != FactionType.Empire)
+			{
+				if (faction == FactionType.Rebel)
+				{
+					element.Text = this.lang.Get("FACTION_FLIP_PLAY_EMPIRE", new object[0]);
+				}
+			}
+			else
 			{
 				element.Text = this.lang.Get("FACTION_FLIP_PLAY_REBEL", new object[0]);
-				return;
 			}
-			if (faction != FactionType.Rebel)
-			{
-				return;
-			}
-			element.Text = this.lang.Get("FACTION_FLIP_PLAY_EMPIRE", new object[0]);
 		}
 
 		protected override void InitButtons()
@@ -213,7 +212,7 @@ namespace StaRTS.Main.Views.UX.Screens
 			element.Selected = (PlayerSettings.GetSfxVolume() > 0f);
 			UXButton element2 = base.GetElement<UXButton>("BtnLanguage");
 			element2.OnClicked = new UXButtonClickedDelegate(this.OnLanguageButtonClicked);
-			element2 = base.GetElement<UXButton>("BtnFacebookiOS");
+			element2 = base.GetElement<UXButton>("BtnFacebookGoogle");
 			element2.OnClicked = new UXButtonClickedDelegate(this.OnFacebookButtonClicked);
 			element2 = base.GetElement<UXButton>("BtnAbout");
 			element2.OnClicked = new UXButtonClickedDelegate(this.OnAboutButtonClicked);
@@ -236,8 +235,13 @@ namespace StaRTS.Main.Views.UX.Screens
 			this.langBackButton.OnClicked = new UXButtonClickedDelegate(this.OnBackButtonClicked);
 			this.aboutBackButton = base.GetElement<UXButton>("BtnBackAbout");
 			this.aboutBackButton.OnClicked = new UXButtonClickedDelegate(this.OnBackButtonClicked);
+			element2 = base.GetElement<UXButton>("BtnGoogle");
+			element2.OnClicked = new UXButtonClickedDelegate(this.OnGoogleButtonClicked);
+			element2 = base.GetElement<UXButton>("BtnAchievements");
+			element2.Visible = true;
+			element2.OnClicked = new UXButtonClickedDelegate(this.OnAchievementButtonClicked);
 			element2 = base.GetElement<UXButton>("BtnFactionSwap");
-			if (GameUtils.HasUserFactionFlipped(Service.Get<CurrentPlayer>()) && Service.Get<CurrentPlayer>().NumIdentities > 1)
+			if (GameUtils.HasUserFactionFlipped(Service.Get<CurrentPlayer>()))
 			{
 				element2.OnClicked = new UXButtonClickedDelegate(this.OnFactionFlipButtonClicked);
 				UXSprite element3 = base.GetElement<UXSprite>("SpriteBkgBtnFactionSwap");
@@ -266,7 +270,7 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			if (Service.Get<EnvironmentController>().IsRestrictedProfile())
 			{
-				UXButton element = base.GetElement<UXButton>("BtnFacebookiOS");
+				UXButton element = base.GetElement<UXButton>("BtnFacebookGoogle");
 				element.Visible = false;
 				element = base.GetElement<UXButton>("BtnHelp");
 				element.Visible = false;
@@ -280,9 +284,9 @@ namespace StaRTS.Main.Views.UX.Screens
 				element.Visible = false;
 				element = base.GetElement<UXButton>("BtnGoogle");
 				element.Visible = false;
-				UXLabel element2 = base.GetElement<UXLabel>("LabelFBIncentiveiOS");
+				UXLabel element2 = base.GetElement<UXLabel>("LabelFBIncentiveGoogle");
 				element2.Visible = false;
-				base.GetElement<UXElement>("FBIncentiveiOS").Visible = false;
+				base.GetElement<UXElement>("FBIncentiveGoogle").Visible = false;
 			}
 		}
 
@@ -300,16 +304,18 @@ namespace StaRTS.Main.Views.UX.Screens
 			element2 = base.GetElement<UXLabel>("LabelVersion");
 			element2.Text = this.lang.Get("SETTINGS_ABOUT_VERSION", new object[]
 			{
-				"4.7.0",
-				"2"
+				"4.8.0",
+				"9512"
 			});
+			UXLabel expr_B3 = element2;
+			expr_B3.Text = expr_B3.Text + ": " + Service.Get<FMS>().GetManifestVersion();
 			element2 = base.GetElement<UXLabel>("LabelCopyright");
 			element2.Text = this.lang.Get("SETTINGS_ABOUT_COPYRIGHT", new object[0]);
 			element2 = base.GetElement<UXLabel>("LabelTrademark");
 			element2.Text = this.lang.Get("SETTINGS_ABOUT_TRADEMARK", new object[]
 			{
 				Application.unityVersion,
-				DateTime.get_Now().get_Year()
+				DateTime.Now.Year
 			});
 		}
 
@@ -339,14 +345,6 @@ namespace StaRTS.Main.Views.UX.Screens
 						uXButton.Tag = text;
 					}
 					UXLabel subElement = this.langGrid.GetSubElement<UXLabel>(itemUid, "LabelLanguageSelect");
-					if (text.ToLower().StartsWith("ko"))
-					{
-						string text2 = SystemInfo.operatingSystem.ToLower();
-						if (text2.Contains("phone") && text2.Contains("(10."))
-						{
-							subElement.Font = Service.Get<Lang>().CustomKoreanFont;
-						}
-					}
 					subElement.Text = this.lang.GetDisplayLanguage(text);
 					this.langGrid.AddItem(uXElement, i);
 				}
@@ -358,7 +356,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void OnMusicCheckboxSelected(UXCheckbox checkbox, bool selected)
 		{
-			float num = selected ? 1f : 0f;
+			float num = (!selected) ? 0f : 1f;
 			PlayerSettings.SetMusicVolume(num);
 			Service.Get<AudioManager>().SetVolume(AudioCategory.Music, num);
 			Service.Get<AudioManager>().SetVolume(AudioCategory.Ambience, num);
@@ -367,7 +365,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void OnSfxCheckboxSelected(UXCheckbox checkbox, bool selected)
 		{
-			float num = selected ? 1f : 0f;
+			float num = (!selected) ? 0f : 1f;
 			PlayerSettings.SetSfxVolume(num);
 			Service.Get<AudioManager>().SetVolume(AudioCategory.Effect, num);
 			Service.Get<AudioManager>().SetVolume(AudioCategory.Dialogue, num);
@@ -376,7 +374,7 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void OnNotificationsCheckboxSelected(UXCheckbox checkbox, bool selected)
 		{
-			int notificationsLevel = selected ? 100 : 0;
+			int notificationsLevel = (!selected) ? 0 : 100;
 			PlayerSettings.SetNotificationsLevel(notificationsLevel);
 			Service.Get<NotificationController>().Enabled = selected;
 		}
@@ -394,10 +392,12 @@ namespace StaRTS.Main.Views.UX.Screens
 			if (GameServicesManager.IsUserAuthenticated())
 			{
 				GameServicesManager.ShowAchievements();
-				return;
 			}
-			this.achievementsClicked = true;
-			GameServicesManager.SignIn();
+			else
+			{
+				this.achievementsClicked = true;
+				GameServicesManager.SignIn();
+			}
 		}
 
 		private void OnGoogleButtonClicked(UXButton button)
@@ -406,9 +406,11 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				GameServicesManager.SignOut();
 				Service.Get<IAccountSyncController>().UnregisterGameServicesAccount();
-				return;
 			}
-			GameServicesManager.SignIn();
+			else
+			{
+				GameServicesManager.SignIn();
+			}
 		}
 
 		private void OnFacebookButtonClicked(UXButton button)
@@ -418,10 +420,12 @@ namespace StaRTS.Main.Views.UX.Screens
 				Service.Get<ISocialDataController>().Logout();
 				this.SetFacebookButtonLabel(false);
 				Service.Get<EventManager>().SendEvent(EventId.SettingsFacebookLoggedIn, false);
-				return;
 			}
-			Service.Get<ISocialDataController>().Login(new OnAllDataFetchedDelegate(this.OnFacebookLoggedIn));
-			Service.Get<EventManager>().SendEvent(EventId.SettingsFacebookLoggedIn, true);
+			else
+			{
+				Service.Get<ISocialDataController>().Login(new OnAllDataFetchedDelegate(this.OnFacebookLoggedIn));
+				Service.Get<EventManager>().SendEvent(EventId.SettingsFacebookLoggedIn, true);
+			}
 		}
 
 		private void OnFacebookLoggedIn()
@@ -431,27 +435,31 @@ namespace StaRTS.Main.Views.UX.Screens
 
 		private void SetFacebookButtonLabel(bool connected)
 		{
-			string text = this.lang.Get(connected ? "SETTINGS_CONNECTED" : "SETTINGS_NOTCONNECTED", new object[0]);
-			UXLabel element = base.GetElement<UXLabel>("LabelBtnFacebookiOS");
+			string text = this.lang.Get((!connected) ? "SETTINGS_NOTCONNECTED" : "SETTINGS_CONNECTED", new object[0]);
+			UXLabel element = base.GetElement<UXLabel>("LabelBtnFacebookGoogle");
 			element.Text = text;
 			bool flag = !connected && !Service.Get<CurrentPlayer>().IsConnectedAccount;
+			if (GameConstants.NO_FB_FACTION_CHOICE_ANDROID)
+			{
+				flag = false;
+			}
 			if (flag)
 			{
-				element = base.GetElement<UXLabel>("LabelCrystalCountiOS");
+				element = base.GetElement<UXLabel>("LabelCrystalCountGoogle");
 				element.Text = this.lang.Get("GET_AMOUNT", new object[]
 				{
 					GameConstants.FB_CONNECT_REWARD
 				});
-				element = base.GetElement<UXLabel>("LabelCrystalsiOS");
+				element = base.GetElement<UXLabel>("LabelCrystalsGoogle");
 				element.Text = this.lang.Get("CRYSTALS", new object[0]);
 			}
-			base.GetElement<UXElement>("FBIncentiveiOS").Visible = flag;
+			base.GetElement<UXElement>("FBIncentiveGoogle").Visible = flag;
 		}
 
 		private void SetGoogleButtonLabel(bool connected)
 		{
 			UXLabel element = base.GetElement<UXLabel>("LabelBtnGoogle");
-			element.Text = this.lang.Get(connected ? "SETTINGS_CONNECTED" : "SETTINGS_NOTCONNECTED", new object[0]);
+			element.Text = this.lang.Get((!connected) ? "SETTINGS_NOTCONNECTED" : "SETTINGS_CONNECTED", new object[0]);
 		}
 
 		private void OnAboutButtonClicked(UXButton button)
@@ -505,15 +513,10 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			string text = (string)button.Tag;
 			this.Close(null);
-			bool useCustomKoreanFont = false;
-			if (text.ToLower().StartsWith("ko"))
-			{
-				useCustomKoreanFont = true;
-			}
 			YesNoScreen.ShowModal(this.lang.Get("SETTINGS_CHOOSELANGUAGE", new object[0]), this.lang.Get("SETTINGS_CONFIRMLANGUAGE", new object[]
 			{
 				this.lang.GetDisplayLanguage(text)
-			}), false, new OnScreenModalResult(this.OnLanguageChangeConfirmed), text, useCustomKoreanFont);
+			}), false, new OnScreenModalResult(this.OnLanguageChangeConfirmed), text);
 		}
 
 		private void OnLanguageChangeConfirmed(object result, object cookie)
@@ -537,19 +540,15 @@ namespace StaRTS.Main.Views.UX.Screens
 		{
 			if (id != EventId.GameServicesSignedIn)
 			{
-				if (id != EventId.GameServicesSignedOut)
+				if (id == EventId.GameServicesSignedOut)
 				{
-					if (id == EventId.FacebookLoggedOut)
+					if ((int)cookie == 2)
 					{
-						this.SetFacebookButtonLabel(false);
+						this.SetGoogleButtonLabel(false);
 					}
 				}
-				else if ((AccountProvider)cookie == AccountProvider.GOOGLEPLAY)
-				{
-					this.SetGoogleButtonLabel(false);
-				}
 			}
-			else if ((AccountProvider)cookie == AccountProvider.GOOGLEPLAY)
+			else if ((int)cookie == 2)
 			{
 				this.SetGoogleButtonLabel(true);
 				if (this.achievementsClicked)
@@ -559,177 +558,6 @@ namespace StaRTS.Main.Views.UX.Screens
 				}
 			}
 			return base.OnEvent(id, cookie);
-		}
-
-		protected internal SettingsScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).CheckIfRestrictedUser();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).InitAbout();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).InitGroups();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).InitLanguages();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnAboutButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnAchievementButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnBackButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnFacebookButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnFacebookLoggedIn();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnFactionFlipButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnForumsButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnGoogleButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnHelpButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnLanguageButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnLanguageChangeConfirmed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnLanguageItemButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnMusicCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnNotificationsCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnPrivacyButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnSfxCheckboxSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).OnTermsButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).SetFacebookButtonLabel(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((SettingsScreen)GCHandledObjects.GCHandleToObject(instance)).SetGoogleButtonLabel(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

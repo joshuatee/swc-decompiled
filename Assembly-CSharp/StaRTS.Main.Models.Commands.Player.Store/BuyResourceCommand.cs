@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Player.Store
 		public BuyResourceCommand(BuyResourceRequest request) : base("player.store.buy", request, new DefaultResponse())
 		{
 		}
-
-		protected internal BuyResourceCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

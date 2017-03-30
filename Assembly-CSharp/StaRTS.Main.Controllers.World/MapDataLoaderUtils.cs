@@ -9,7 +9,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.World
 {
@@ -20,7 +19,7 @@ namespace StaRTS.Main.Controllers.World
 			List<IAssetVO> list = new List<IAssetVO>();
 			IDataController dc = Service.Get<IDataController>();
 			SkinController skinController = Service.Get<SkinController>();
-			BattleTypeVO battleTypeVO = (battleData != null) ? battleData.BattleVO : null;
+			BattleTypeVO battleTypeVO = (battleData == null) ? null : battleData.BattleVO;
 			if (battleTypeVO == null || !battleTypeVO.OverridePlayerUnits)
 			{
 				Inventory inventory = Service.Get<CurrentPlayer>().Inventory;
@@ -45,7 +44,7 @@ namespace StaRTS.Main.Controllers.World
 			List<IAssetVO> list = new List<IAssetVO>();
 			if (battleRecord == null)
 			{
-				Service.Get<StaRTSLogger>().Error("Battle Record is null in MapDataLoaderUtils.GetBattleRecordPreloads.");
+				Service.Get<Logger>().Error("Battle Record is null in MapDataLoaderUtils.GetBattleRecordPreloads.");
 				return list;
 			}
 			IDataController dc = Service.Get<IDataController>();
@@ -84,7 +83,7 @@ namespace StaRTS.Main.Controllers.World
 			Dictionary<string, InventoryEntry> internalStorage = storage.GetInternalStorage();
 			foreach (KeyValuePair<string, InventoryEntry> current in internalStorage)
 			{
-				MapDataLoaderUtils.AddDeployableToList<T>(current.get_Key(), current.get_Value().Amount, assets, equipment, dc, skinController);
+				MapDataLoaderUtils.AddDeployableToList<T>(current.Key, current.Value.Amount, assets, equipment, dc, skinController);
 			}
 		}
 
@@ -94,7 +93,7 @@ namespace StaRTS.Main.Controllers.World
 			{
 				foreach (KeyValuePair<string, int> current in deployables)
 				{
-					MapDataLoaderUtils.AddDeployableToList<T>(current.get_Key(), current.get_Value(), assets, equipment, dc, skinController);
+					MapDataLoaderUtils.AddDeployableToList<T>(current.Key, current.Value, assets, equipment, dc, skinController);
 				}
 			}
 		}
@@ -134,36 +133,6 @@ namespace StaRTS.Main.Controllers.World
 					assets.Add(item);
 				}
 			}
-		}
-
-		public MapDataLoaderUtils()
-		{
-		}
-
-		protected internal MapDataLoaderUtils(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			MapDataLoaderUtils.AddFXPreloads((List<IAssetVO>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			MapDataLoaderUtils.AddSpawnEffect((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args), (List<IAssetVO>)GCHandledObjects.GCHandleToObject(args[1]), (IDataController)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MapDataLoaderUtils.GetBattlePreloads((BattleInitializationData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MapDataLoaderUtils.GetBattleRecordPreloads((BattleRecord)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

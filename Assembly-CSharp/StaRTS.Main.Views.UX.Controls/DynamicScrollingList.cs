@@ -5,7 +5,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Controls
 {
@@ -123,9 +122,8 @@ namespace StaRTS.Main.Views.UX.Controls
 			if (this.IsLastItemVisible() && this.listItems[this.lastLoadedItem].UIItem != null)
 			{
 				this.RecycleFirst();
-				return;
 			}
-			if (this.IsFirstItemVisible() && this.listItems[this.firstLoadedItem].UIItem != null)
+			else if (this.IsFirstItemVisible() && this.listItems[this.firstLoadedItem].UIItem != null)
 			{
 				this.RecycleLast();
 			}
@@ -155,10 +153,10 @@ namespace StaRTS.Main.Views.UX.Controls
 			this.CleanupUIForItem(this.listItems[num].Cookie);
 			this.listItems[num].UIItem.Visible = false;
 			this.myGrid.RemoveItem(this.listItems[num].UIItem);
-			ListItem listItem = this.listItems[num];
-			UXElement uIItem = listItem.UIItem;
-			listItem.UIItem = null;
-			this.listItems[num] = listItem;
+			ListItem value = this.listItems[num];
+			UXElement uIItem = value.UIItem;
+			value.UIItem = null;
+			this.listItems[num] = value;
 			this.firstLoadedItem += direction;
 			this.lastLoadedItem += direction;
 			int num2;
@@ -170,9 +168,9 @@ namespace StaRTS.Main.Views.UX.Controls
 			{
 				num2 = this.firstLoadedItem;
 			}
-			listItem = this.listItems[num2];
-			listItem.UIItem = uIItem;
-			this.listItems[num2] = listItem;
+			value = this.listItems[num2];
+			value.UIItem = uIItem;
+			this.listItems[num2] = value;
 			this.RequestUIForItem(this.listItems[num2].Cookie, num2, num);
 			float num3 = y - component.CellHeight;
 			float num4 = num3 - component.NGUIScrollView.panel.finalClipRegion.w;
@@ -239,110 +237,6 @@ namespace StaRTS.Main.Views.UX.Controls
 			{
 				this.Recycle(-1);
 			}
-		}
-
-		protected internal DynamicScrollingList(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).AddItem(GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).CleanupUIForItem(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).Count);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).Grid);
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).Root);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).GetItemCookie(*(int*)args));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).GetItemUI(*(int*)args));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).IsFirstItemVisible());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).IsItemLocationLoaded(*(int*)args));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).IsLastItemVisible());
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).Recycle(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).RecycleFirst();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).RecycleLast();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).RemoveItems();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).RepositionDone();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).RequestUIForItem(GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).SetItemUI((UXElement)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((DynamicScrollingList)GCHandledObjects.GCHandleToObject(instance)).UpdateItems();
-			return -1L;
 		}
 	}
 }

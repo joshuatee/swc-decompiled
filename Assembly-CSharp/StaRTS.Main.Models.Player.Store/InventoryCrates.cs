@@ -9,8 +9,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player.Store
 {
@@ -59,7 +57,7 @@ namespace StaRTS.Main.Models.Player.Store
 		public void UpdateBadgingBasedOnAvailableCrates()
 		{
 			ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
-			int num = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCratesNotViewed), CultureInfo.InvariantCulture);
+			int num = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCratesNotViewed));
 			int availableCountAfterLastView = this.GetAvailableCountAfterLastView();
 			num = availableCountAfterLastView - num;
 			GameUtils.UpdateInventoryCrateBadgeCount(num);
@@ -81,8 +79,8 @@ namespace StaRTS.Main.Models.Player.Store
 		public string GetNextDailyCrateId()
 		{
 			string result = null;
-			DayOfWeek dayOfWeek = DateUtils.DateFromSeconds(this.NextDailyCrateTime).get_DayOfWeek();
-			int num = dayOfWeek + 6;
+			DayOfWeek dayOfWeek = DateUtils.DateFromSeconds(this.NextDailyCrateTime).DayOfWeek;
+			int num = (int)(dayOfWeek + 6);
 			if (num >= 7)
 			{
 				num %= 6;
@@ -97,7 +95,7 @@ namespace StaRTS.Main.Models.Player.Store
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error("InventoryCrates.GetNextDailyCrateId Day of the week list invalid");
+				Service.Get<Logger>().Error("InventoryCrates.GetNextDailyCrateId Day of the week list invalid");
 			}
 			return result;
 		}
@@ -126,8 +124,8 @@ namespace StaRTS.Main.Models.Player.Store
 				foreach (KeyValuePair<string, object> current in dictionary)
 				{
 					CrateData crateData = new CrateData();
-					crateData.FromObject(current.get_Value());
-					this.Available.Add(current.get_Key(), crateData);
+					crateData.FromObject(current.Value);
+					this.Available.Add(current.Key, crateData);
 				}
 			}
 		}
@@ -142,7 +140,7 @@ namespace StaRTS.Main.Models.Player.Store
 			}
 			if (dictionary.ContainsKey("nextDailyCrateTime"))
 			{
-				this.NextDailyCrateTime = Convert.ToUInt32(dictionary["nextDailyCrateTime"], CultureInfo.InvariantCulture);
+				this.NextDailyCrateTime = Convert.ToUInt32(dictionary["nextDailyCrateTime"]);
 			}
 			if (Service.Get<GameStateMachine>().CurrentState is HomeState)
 			{
@@ -150,64 +148,6 @@ namespace StaRTS.Main.Models.Player.Store
 			}
 			Service.Get<EventManager>().SendEvent(EventId.CrateInventoryUpdated, null);
 			return this;
-		}
-
-		protected internal InventoryCrates(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).Available);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).GetAvailableCountAfterLastView());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).GetDailyCrateIfAvailable());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).GetNextDailyCrateId());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).ParseDataObjectIntoAvailable(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).Available = (Dictionary<string, CrateData>)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).ToJson());
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).UpdateAndBadgeFromServerObject(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((InventoryCrates)GCHandledObjects.GCHandleToObject(instance)).UpdateBadgingBasedOnAvailableCrates();
-			return -1L;
 		}
 	}
 }

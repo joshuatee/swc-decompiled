@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public GetLeaderboardSquadsCommand(PlayerIdRequest request) : base("guild.leaderboard.getLeaders", request, new LeaderboardResponse())
 		{
 		}
-
-		protected internal GetLeaderboardSquadsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

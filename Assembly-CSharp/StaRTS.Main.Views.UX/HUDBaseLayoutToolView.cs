@@ -22,8 +22,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX
 {
@@ -226,7 +224,7 @@ namespace StaRTS.Main.Views.UX
 				this.IsBuildingPendingPurchase = true;
 				this.hud.CurrentHudConfig.Remove("BtnActivateStash");
 				this.hud.RefreshView();
-				break;
+				return EatResponse.NotEaten;
 			case EventId.BuildingPurchaseModeEnded:
 				this.IsBuildingPendingPurchase = false;
 				if (!GameConstants.DISABLE_BASE_LAYOUT_TOOL)
@@ -234,44 +232,46 @@ namespace StaRTS.Main.Views.UX
 					this.hud.CurrentHudConfig.Add("BtnActivateStash");
 					this.hud.RefreshView();
 				}
-				break;
+				return EatResponse.NotEaten;
 			case EventId.BuildingStartedUpgrading:
 			case EventId.BuildingSelectedFromStore:
 			case EventId.BuildingSelectedSound:
-				break;
-			case EventId.BuildingSelected:
-				if (flag)
+			{
+				IL_3E:
+				if (id != EventId.WarPhaseChanged)
 				{
-					this.RefreshInstructionLabel();
-					this.RefreshCurrencyTray(true);
+					return EatResponse.NotEaten;
 				}
-				break;
-			case EventId.BuildingDeselected:
-				if (flag)
+				if (!(Service.Get<GameStateMachine>().CurrentState is WarBaseEditorState))
 				{
-					this.RefreshInstructionLabel();
-					this.RefreshCurrencyTray(false);
+					Service.Get<Logger>().Warn("Not in War Base Editor when responding to Squad War phase change");
+					return EatResponse.NotEaten;
 				}
-				break;
-			default:
-				if (id == EventId.WarPhaseChanged)
+				SquadWarStatusType squadWarStatusType = (SquadWarStatusType)((int)cookie);
+				if (squadWarStatusType != SquadWarStatusType.PhasePrep)
 				{
-					if (!(Service.Get<GameStateMachine>().CurrentState is WarBaseEditorState))
-					{
-						Service.Get<StaRTSLogger>().Warn("Not in War Base Editor when responding to Squad War phase change");
-					}
-					else
-					{
-						SquadWarStatusType squadWarStatusType = (SquadWarStatusType)cookie;
-						if (squadWarStatusType != SquadWarStatusType.PhasePrep)
-						{
-							this.ShowForceExitAlert();
-						}
-					}
+					this.ShowForceExitAlert();
 				}
-				break;
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			case EventId.BuildingSelected:
+				if (!flag)
+				{
+					return EatResponse.NotEaten;
+				}
+				this.RefreshInstructionLabel();
+				this.RefreshCurrencyTray(true);
+				return EatResponse.NotEaten;
+			case EventId.BuildingDeselected:
+				if (!flag)
+				{
+					return EatResponse.NotEaten;
+				}
+				this.RefreshInstructionLabel();
+				this.RefreshCurrencyTray(false);
+				return EatResponse.NotEaten;
+			}
+			goto IL_3E;
 		}
 
 		private void ShowForceExitAlert()
@@ -379,7 +379,7 @@ namespace StaRTS.Main.Views.UX
 			this.stashInstructionsLabel = this.hud.GetElement<UXLabel>("LabelStashInstructions");
 			this.stashInstructionsLabel.Text = lang.Get("blt_tray_instructions", new object[0]);
 			this.SelectedBuildingLabel = this.hud.GetElement<UXLabel>("LabelContextDescriptionStash");
-			this.SelectedBuildingLabel.Text = "";
+			this.SelectedBuildingLabel.Text = string.Empty;
 			this.hud.GetElement<UXLabel>("LabelMessageCountBattleActivateStash").Text = lang.Get("s_New", new object[0]);
 		}
 
@@ -419,14 +419,15 @@ namespace StaRTS.Main.Views.UX
 			{
 				HomeMapDataLoader mapDataLoader = Service.Get<HomeMapDataLoader>();
 				Service.Get<WorldTransitioner>().StartTransition(new WarbaseToWarboardTransition(new WarBoardState(), mapDataLoader, null, false, false));
-				return;
 			}
-			if (afterSave)
+			else if (afterSave)
 			{
 				HomeState.GoToHomeState(null, false);
-				return;
 			}
-			Service.Get<GameStateMachine>().SetState(new EditBaseState(false));
+			else
+			{
+				Service.Get<GameStateMachine>().SetState(new EditBaseState(false));
+			}
 		}
 
 		private void LayoutCanceled()
@@ -580,7 +581,7 @@ namespace StaRTS.Main.Views.UX
 			}
 			foreach (KeyValuePair<string, List<Entity>> current in baseLayoutToolController.stashedBuildingMap)
 			{
-				List<Entity> value = current.get_Value();
+				List<Entity> value = current.Value;
 				if (value.Count >= 1)
 				{
 					Building buildingTO = value[0].Get<BuildingComponent>().BuildingTO;
@@ -635,13 +636,13 @@ namespace StaRTS.Main.Views.UX
 		private void UnstashBuilding(string buildingUID)
 		{
 			BaseLayoutToolController baseLayoutToolController = Service.Get<BaseLayoutToolController>();
-			string text = null;
+			string a = null;
 			Entity selectedBuilding = Service.Get<BuildingController>().SelectedBuilding;
 			if (selectedBuilding != null)
 			{
-				text = selectedBuilding.Get<BuildingComponent>().BuildingType.Uid;
+				a = selectedBuilding.Get<BuildingComponent>().BuildingType.Uid;
 			}
-			if (text == buildingUID && baseLayoutToolController.IsBuildingStampable(selectedBuilding))
+			if (a == buildingUID && baseLayoutToolController.IsBuildingStampable(selectedBuilding))
 			{
 				baseLayoutToolController.StampUnstashBuildingByUID(buildingUID);
 			}
@@ -755,9 +756,11 @@ namespace StaRTS.Main.Views.UX
 			if (this.stashedBuildingsGrid != null && this.stashedBuildingsGrid.Count > 0)
 			{
 				this.saveLayoutButton.VisuallyDisableButton();
-				return;
 			}
-			this.saveLayoutButton.VisuallyEnableButton();
+			else
+			{
+				this.saveLayoutButton.VisuallyEnableButton();
+			}
 		}
 
 		public void RefreshNewJewelStatus()
@@ -766,9 +769,11 @@ namespace StaRTS.Main.Views.UX
 			if (pref != "1")
 			{
 				this.newJewelContainer.Visible = true;
-				return;
 			}
-			this.newJewelContainer.Visible = false;
+			else
+			{
+				this.newJewelContainer.Visible = false;
+			}
 		}
 
 		private void RefreshInstructionLabel()
@@ -776,17 +781,21 @@ namespace StaRTS.Main.Views.UX
 			if (Service.Get<BuildingController>().SelectedBuilding != null)
 			{
 				this.stashInstructionsLabel.Visible = false;
-				return;
 			}
-			this.stashInstructionsLabel.Visible = true;
-			bool isQuickStashModeEnabled = Service.Get<BaseLayoutToolController>().IsQuickStashModeEnabled;
-			Lang lang = Service.Get<Lang>();
-			if (isQuickStashModeEnabled)
+			else
 			{
-				this.stashInstructionsLabel.Text = lang.Get("blt_tray_quickmode_on", new object[0]);
-				return;
+				this.stashInstructionsLabel.Visible = true;
+				bool isQuickStashModeEnabled = Service.Get<BaseLayoutToolController>().IsQuickStashModeEnabled;
+				Lang lang = Service.Get<Lang>();
+				if (isQuickStashModeEnabled)
+				{
+					this.stashInstructionsLabel.Text = lang.Get("blt_tray_quickmode_on", new object[0]);
+				}
+				else
+				{
+					this.stashInstructionsLabel.Text = lang.Get("blt_tray_instructions", new object[0]);
+				}
 			}
-			this.stashInstructionsLabel.Text = lang.Get("blt_tray_instructions", new object[0]);
 		}
 
 		private void RefreshCurrencyTray(bool selected)
@@ -815,280 +824,15 @@ namespace StaRTS.Main.Views.UX
 				this.hud.CurrentHudConfig.Add("Droids");
 				this.hud.CurrentHudConfig.Add("Crystals");
 				this.hud.RefreshView();
-				return;
 			}
-			this.hud.CurrentHudConfig.Remove("Currency");
-			this.hud.CurrentHudConfig.Remove("CrystalsDroids");
-			this.hud.CurrentHudConfig.Remove("Droids");
-			this.hud.CurrentHudConfig.Remove("Crystals");
-			this.hud.RefreshView();
-		}
-
-		protected internal HUDBaseLayoutToolView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).AddHUDBaseLayoutToolElements((List<UXElement>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).CancelBaseLayoutTool();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).ClearStashedBuildingTray();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).ConfigureBaseLayoutToolStateHUD();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).CreateBuildingTrayItem((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).ExitBaseLayoutTool(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).IsBuildingPendingPurchase);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).SelectedBuildingLabel);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).GetBaseEditingBILoggingContext());
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).GetGridIndexOfBuildingUID(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).GetSquadID());
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).GetStashedBuildingTrayHeight());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).InitGrid();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).Initialize();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).InitLabels();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).LayoutCanceled();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).LogCancelLayoutButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).LogSaveLayoutButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).LogStashAllButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnCancelButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnCancelConfirmationPopupClosed(GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnEnterBLTButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnForceExitScreenClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnRepositionComplete((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnSaveButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnSaveConfirmationPopupClosed(GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnStashAllButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnStashedBuildingClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).OnStashModeClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).RefreshCurrencyTray(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).RefreshInstructionLabel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).RefreshNewJewelStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).RefreshSaveLayoutButtonStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).RefreshStashedBuildingCount(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).RefreshStashModeCheckBox();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).RefreshWholeStashTray();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).RegisterObservers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).ResetScrollViewAfterFullRefresh((AbstractUXList)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).IsBuildingPendingPurchase = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).SelectedBuildingLabel = (UXLabel)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).ShowForceExitAlert();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).UnregisterObservers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((HUDBaseLayoutToolView)GCHandledObjects.GCHandleToObject(instance)).UnstashBuilding(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
+			else
+			{
+				this.hud.CurrentHudConfig.Remove("Currency");
+				this.hud.CurrentHudConfig.Remove("CrystalsDroids");
+				this.hud.CurrentHudConfig.Remove("Droids");
+				this.hud.CurrentHudConfig.Remove("Crystals");
+				this.hud.RefreshView();
+			}
 		}
 	}
 }

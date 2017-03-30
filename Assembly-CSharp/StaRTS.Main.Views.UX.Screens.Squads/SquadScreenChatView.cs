@@ -7,7 +7,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -29,6 +28,8 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		private const float DESTROY_DELAY_TIME = 0.5f;
 
+		private const float CHAT_TIMESTAP_UPDATE_INTERVAL = 60f;
+
 		private UXElement chatContainer;
 
 		private UXCheckbox tabButton;
@@ -46,8 +47,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		private HashSet<SquadMsg> existingMsgsProcessed;
 
 		private uint timestampUpdateTimerId;
-
-		private const float CHAT_TIMESTAP_UPDATE_INTERVAL = 60f;
 
 		public bool ChatDisplaySetup
 		{
@@ -95,13 +94,10 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (!this.ChatDisplaySetup)
 			{
 				this.ChatDisplaySetup = true;
-				if (Service.Get<SquadController>().MsgManager.GetExistingMessages().Count > 0)
-				{
-					ProcessingScreen.Show();
-					this.numExistingMsgsProcessed = 0;
-					this.existingMsgsProcessed = new HashSet<SquadMsg>();
-					this.SetupChatDisplayFrameDelayed();
-				}
+				ProcessingScreen.Show();
+				this.numExistingMsgsProcessed = 0;
+				this.existingMsgsProcessed = new HashSet<SquadMsg>();
+				this.SetupChatDisplayFrameDelayed();
 			}
 		}
 
@@ -206,11 +202,13 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 						}
 						i++;
 					}
-					return;
 				}
-				this.KillExistingTimers();
-				this.chatDisplay.OnExistingMessagesSetup();
-				ProcessingScreen.Hide();
+				else
+				{
+					this.KillExistingTimers();
+					this.chatDisplay.OnExistingMessagesSetup();
+					ProcessingScreen.Hide();
+				}
 			}
 		}
 
@@ -250,91 +248,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				i++;
 			}
 			squadScreenTimers.Clear();
-		}
-
-		protected internal SquadScreenChatView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).DestroyChatDisplayFrameDelayed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).ChatDisplaySetup);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).HideView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).IsVisible());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).KillExistingTimers();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).OnTabButtonSelected((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).ChatDisplaySetup = (*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).SetupChatDisplay();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).SetupChatDisplayFrameDelayed();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).ShowView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenChatView)GCHandledObjects.GCHandleToObject(instance)).UpdateBadges());
 		}
 	}
 }

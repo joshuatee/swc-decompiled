@@ -1,3 +1,4 @@
+using StaRTS.Externals.EnvironmentManager;
 using StaRTS.Main.Controllers;
 using StaRTS.Main.Controllers.GameStates;
 using StaRTS.Main.Controllers.Planets;
@@ -12,11 +13,10 @@ using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UserInput
 {
-	public class BackButtonManager : IBackButtonManager, IViewFrameTimeObserver, IEventObserver
+	public class BackButtonManager : IEventObserver, IBackButtonManager, IViewFrameTimeObserver
 	{
 		private List<IBackButtonHandler> backButtonHandlers;
 
@@ -81,10 +81,6 @@ namespace StaRTS.Main.Views.UserInput
 
 		private void HandleBackButton()
 		{
-			if (Service.Get<GameStateMachine>().CurrentState is ApplicationLoadState || Service.Get<GameStateMachine>().CurrentState is IntroCameraState)
-			{
-				return;
-			}
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
 			if (currentState is IntroCameraState)
 			{
@@ -104,6 +100,10 @@ namespace StaRTS.Main.Views.UserInput
 			}
 			UICamera.selectedObject = null;
 			UICamera.hoveredObject = null;
+			if (TouchScreenKeyboard.visible)
+			{
+				return;
+			}
 			ScreenController screenController = null;
 			if (Service.IsSet<ScreenController>())
 			{
@@ -195,50 +195,12 @@ namespace StaRTS.Main.Views.UserInput
 
 		private void TryQuit()
 		{
-		}
-
-		protected internal BackButtonManager(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BackButtonManager)GCHandledObjects.GCHandleToObject(instance)).HandleBackButton();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BackButtonManager)GCHandledObjects.GCHandleToObject(instance)).HandleScreenBack((ScreenBase)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BackButtonManager)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BackButtonManager)GCHandledObjects.GCHandleToObject(instance)).OnViewFrameTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((BackButtonManager)GCHandledObjects.GCHandleToObject(instance)).RegisterBackButtonHandler((IBackButtonHandler)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((BackButtonManager)GCHandledObjects.GCHandleToObject(instance)).TryQuit();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((BackButtonManager)GCHandledObjects.GCHandleToObject(instance)).UnregisterBackButtonHandler((IBackButtonHandler)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
+			Service.Get<EventManager>().RegisterObserver(this, EventId.NativeAlertBoxDismissed, EventPriority.Default);
+			string titleText = Service.Get<Lang>().Get("EXIT_APP_SCREEN_TITLE", new object[0]);
+			string messageText = Service.Get<Lang>().Get("EXIT_APP_SCREEN_MESSAGE", new object[0]);
+			string yesButtonText = Service.Get<Lang>().Get("EXIT_APP_SCREEN_YES_BUTTON", new object[0]);
+			string noButtonText = Service.Get<Lang>().Get("EXIT_APP_SCREEN_NO_BUTTON", new object[0]);
+			Service.Get<EnvironmentController>().ShowAlert(titleText, messageText, yesButtonText, noButtonText);
 		}
 	}
 }

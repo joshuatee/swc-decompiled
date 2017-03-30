@@ -3,7 +3,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.ServerMessages
 {
@@ -42,29 +41,6 @@ namespace StaRTS.Main.Controllers.ServerMessages
 				}
 			}
 			return this;
-		}
-
-		public ContractFinishedMessage()
-		{
-		}
-
-		protected internal ContractFinishedMessage(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ContractFinishedMessage)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ContractFinishedMessage)GCHandledObjects.GCHandleToObject(instance)).MessageCookie);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ContractFinishedMessage)GCHandledObjects.GCHandleToObject(instance)).MessageEventId);
 		}
 	}
 }

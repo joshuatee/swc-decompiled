@@ -15,8 +15,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Squads
 {
@@ -108,9 +106,9 @@ namespace StaRTS.Main.Controllers.Squads
 
 		public void Enable()
 		{
-			this.PullFrequencyChatOpen = ((GameConstants.PULL_FREQUENCY_CHAT_OPEN == 0f) ? 5f : GameConstants.PULL_FREQUENCY_CHAT_OPEN);
-			this.PullFrequencyChatClosed = ((GameConstants.PULL_FREQUENCY_CHAT_CLOSED == 0f) ? 30f : GameConstants.PULL_FREQUENCY_CHAT_CLOSED);
-			this.MessageLimit = ((GameConstants.SQUAD_MESSAGE_LIMIT == 0) ? 50 : GameConstants.SQUAD_MESSAGE_LIMIT);
+			this.PullFrequencyChatOpen = ((GameConstants.PULL_FREQUENCY_CHAT_OPEN != 0f) ? GameConstants.PULL_FREQUENCY_CHAT_OPEN : 5f);
+			this.PullFrequencyChatClosed = ((GameConstants.PULL_FREQUENCY_CHAT_CLOSED != 0f) ? GameConstants.PULL_FREQUENCY_CHAT_CLOSED : 30f);
+			this.MessageLimit = ((GameConstants.SQUAD_MESSAGE_LIMIT != 0) ? GameConstants.SQUAD_MESSAGE_LIMIT : 50);
 			this.ServerManager.Init();
 			this.StateManager.Init();
 			this.MsgManager.Enable();
@@ -138,9 +136,11 @@ namespace StaRTS.Main.Controllers.Squads
 			if (GameConstants.PULL_FREQUENCY_CHAT_CLOSED == 0f)
 			{
 				this.PullFrequencyChatClosed = 30f;
-				return;
 			}
-			this.PullFrequencyChatClosed = GameConstants.PULL_FREQUENCY_CHAT_CLOSED;
+			else
+			{
+				this.PullFrequencyChatClosed = GameConstants.PULL_FREQUENCY_CHAT_CLOSED;
+			}
 		}
 
 		public void TakeAction(SquadMsg message)
@@ -152,7 +152,7 @@ namespace StaRTS.Main.Controllers.Squads
 		{
 			SharedPlayerPrefs sharedPlayerPrefs = Service.Get<SharedPlayerPrefs>();
 			sharedPlayerPrefs.SetPref("HighestViewedSquadLvlUP", squadLevelPref.ToString());
-			sharedPlayerPrefs.SetPrefUnlimitedLength("perk_badges", "");
+			sharedPlayerPrefs.SetPrefUnlimitedLength("perk_badges", string.Empty);
 		}
 
 		public void OnPlayerActionSuccess(SquadAction actionType, SquadMsg msg)
@@ -164,12 +164,12 @@ namespace StaRTS.Main.Controllers.Squads
 				GameUtils.SpendCurrency(GameConstants.SQUAD_CREATE_COST, 0, 0, true);
 				this.StateManager.SetCurrentSquad(msg.RespondedSquad);
 				this.ClearPrefsForNewSquad(0);
-				return;
+				break;
 			case SquadAction.Join:
 				this.StateManager.SetCurrentSquad(msg.RespondedSquad);
 				this.StateManager.OnSquadJoined(msg.BISource);
 				this.SetLastViewedSquadLevelUp(msg.RespondedSquad.Level);
-				return;
+				break;
 			case SquadAction.Leave:
 			{
 				string message = Service.Get<Lang>().Get("LEAVE_A_SQUAD", new object[]
@@ -177,53 +177,49 @@ namespace StaRTS.Main.Controllers.Squads
 					currentSquad.SquadName
 				});
 				this.LeaveSquad(message);
-				return;
+				break;
 			}
 			case SquadAction.Edit:
 			{
 				SqmSquadData squadData = msg.SquadData;
 				this.StateManager.EditSquad(squadData.Open, squadData.Icon, squadData.Desc, squadData.MinTrophies);
-				return;
+				break;
 			}
 			case SquadAction.ApplyToJoin:
 				if (!this.StateManager.SquadJoinRequestsPending.Contains(msg.SquadData.Id))
 				{
 					this.StateManager.SquadJoinRequestsPending.Add(msg.SquadData.Id);
-					return;
 				}
 				break;
 			case SquadAction.AcceptApplicationToJoin:
 				SquadUtils.AddSquadMember(currentSquad, msg.SquadMemberResponse);
 				this.UpdateCurrentSquad();
 				this.StateManager.OnSquadJoinApplicationAcceptedByCurrentPlayer(msg.BISource);
-				return;
-			case SquadAction.RejectApplicationToJoin:
-			case SquadAction.ShareVideo:
 				break;
 			case SquadAction.SendInviteToJoin:
 				this.StateManager.PlayersInvitedToSquad.Add(msg.FriendInviteData.PlayerId);
-				return;
+				break;
 			case SquadAction.AcceptInviteToJoin:
 				this.StateManager.RemoveInviteToSquad(msg.SquadData.Id);
 				this.UpdateCurrentSquad();
 				this.StateManager.OnSquadJoinInviteAccepted();
-				return;
+				break;
 			case SquadAction.RejectInviteToJoin:
 				this.StateManager.RemoveInviteToSquad(msg.SquadData.Id);
-				return;
+				break;
 			case SquadAction.PromoteMember:
 				SquadUtils.SetSquadMemberRole(currentSquad, msg.MemberData.MemberId, msg.MemberData.MemberRole);
-				return;
+				break;
 			case SquadAction.DemoteMember:
 				SquadUtils.SetSquadMemberRole(currentSquad, msg.MemberData.MemberId, msg.MemberData.MemberRole);
-				return;
+				break;
 			case SquadAction.RemoveMember:
 				SquadUtils.RemoveSquadMember(currentSquad, msg.MemberData.MemberId);
-				return;
+				break;
 			case SquadAction.RequestTroops:
 				this.StateManager.TroopRequestDate = Service.Get<ServerAPI>().ServerTime;
 				this.StateManager.OnSquadTroopsRequested();
-				return;
+				break;
 			case SquadAction.DonateTroops:
 			case SquadAction.DonateWarTroops:
 			{
@@ -232,8 +228,8 @@ namespace StaRTS.Main.Controllers.Squads
 				int num = 0;
 				foreach (KeyValuePair<string, int> current in donations)
 				{
-					string key = current.get_Key();
-					int value = current.get_Value();
+					string key = current.Key;
+					int value = current.Value;
 					currentPlayer.Inventory.Troop.ModifyItemAmount(key, -value);
 					num += value;
 				}
@@ -241,30 +237,33 @@ namespace StaRTS.Main.Controllers.Squads
 				Service.Get<ISupportController>().UnfreezeAllBuildings(ServerTime.Time);
 				this.StateManager.NumTroopDonationsInSession += num;
 				this.StateManager.OnSquadTroopsDonated(donations);
-				return;
+				break;
 			}
 			case SquadAction.RequestWarTroops:
 				this.StateManager.WarTroopRequestDate = Service.Get<ServerAPI>().ServerTime;
 				this.StateManager.OnSquadWarTroopsRequested();
-				return;
+				break;
 			case SquadAction.ShareReplay:
 				this.StateManager.OnSquadReplayShared(msg.ReplayData);
 				break;
-			default:
-				return;
 			}
 		}
 
 		public void OnPlayerActionFailure(SquadMsg actionMsg, uint status)
 		{
 			SquadAction type = actionMsg.ActionData.Type;
-			if (type == SquadAction.RequestTroops || type == SquadAction.RequestWarTroops)
+			switch (type)
+			{
+			case SquadAction.RequestTroops:
+			case SquadAction.RequestWarTroops:
 			{
 				SqmRequestData requestData = actionMsg.RequestData;
 				if (requestData.PayToSkip && requestData.ResendCrystalCost > 0)
 				{
 					Service.Get<CurrentPlayer>().Inventory.ModifyCrystals(requestData.ResendCrystalCost);
 				}
+				break;
+			}
 			}
 			string messageForServerActionFailure = SquadUtils.GetMessageForServerActionFailure(type, status);
 			AlertScreen.ShowModal(false, null, Service.Get<Lang>().Get(messageForServerActionFailure, new object[0]), null, null);
@@ -310,7 +309,7 @@ namespace StaRTS.Main.Controllers.Squads
 						break;
 					case SquadMsgType.JoinRequestAccepted:
 					{
-						string text = (squadMsg.SquadData != null) ? squadMsg.SquadData.Id : null;
+						string text = (squadMsg.SquadData == null) ? null : squadMsg.SquadData.Id;
 						if (flag4 && !string.IsNullOrEmpty(text))
 						{
 							this.StateManager.OnSquadJoinApplicationAccepted(text);
@@ -322,7 +321,7 @@ namespace StaRTS.Main.Controllers.Squads
 					}
 					case SquadMsgType.JoinRequestRejected:
 					{
-						string text2 = (squadMsg.SquadData != null) ? squadMsg.SquadData.Id : null;
+						string text2 = (squadMsg.SquadData == null) ? null : squadMsg.SquadData.Id;
 						if (flag3 && !string.IsNullOrEmpty(text2))
 						{
 							this.StateManager.OnSquadJoinApplicationRejected(text2);
@@ -343,7 +342,7 @@ namespace StaRTS.Main.Controllers.Squads
 					case SquadMsgType.Promotion:
 					case SquadMsgType.Demotion:
 					{
-						SquadRole role = (squadMsg.MemberData != null) ? squadMsg.MemberData.MemberRole : SquadRole.Member;
+						SquadRole role = (squadMsg.MemberData == null) ? SquadRole.Member : squadMsg.MemberData.MemberRole;
 						if (flag4)
 						{
 							this.StateManager.Role = role;
@@ -363,12 +362,12 @@ namespace StaRTS.Main.Controllers.Squads
 									break;
 								}
 							}
-							string text3 = (squadMsg.OwnerData != null) ? squadMsg.OwnerData.PlayerId : null;
+							string text3 = (squadMsg.OwnerData == null) ? null : squadMsg.OwnerData.PlayerId;
 							Dictionary<string, int> donations = squadMsg.DonationData.Donations;
 							if (text3 != null && donations != null)
 							{
 								SquadMember squadMemberById = SquadUtils.GetSquadMemberById(currentSquad, text3);
-								string donorName = (squadMemberById != null) ? squadMemberById.MemberName : null;
+								string donorName = (squadMemberById == null) ? null : squadMemberById.MemberName;
 								this.StateManager.OnSquadTroopsReceived(donations, text3, donorName);
 							}
 						}
@@ -412,7 +411,7 @@ namespace StaRTS.Main.Controllers.Squads
 						this.OnPerkInvestment(squadMsg);
 						break;
 					case SquadMsgType.Invite:
-						if (squadMsg.FriendInviteData != null & flag3)
+						if (squadMsg.FriendInviteData != null && flag3)
 						{
 							SquadInvite invite = SquadMsgUtils.GenerateSquadInvite(squadMsg);
 							this.StateManager.AddSquadInvite(invite);
@@ -420,8 +419,8 @@ namespace StaRTS.Main.Controllers.Squads
 						break;
 					case SquadMsgType.InviteRejected:
 					{
-						string text4 = (squadMsg.FriendInviteData != null) ? squadMsg.FriendInviteData.PlayerId : null;
-						if (text4 != null & flag3)
+						string text4 = (squadMsg.FriendInviteData == null) ? null : squadMsg.FriendInviteData.PlayerId;
+						if (text4 != null && flag3)
 						{
 							this.StateManager.PlayersInvitedToSquad.Remove(text4);
 						}
@@ -555,7 +554,7 @@ namespace StaRTS.Main.Controllers.Squads
 			Squad currentSquad = Service.Get<SquadController>().StateManager.GetCurrentSquad();
 			if (currentSquad == null)
 			{
-				Service.Get<StaRTSLogger>().Error("SquadController.OnPerkUnlocked: Current Squad Null");
+				Service.Get<Logger>().Error("SquadController.OnPerkUnlocked: Current Squad Null");
 				return;
 			}
 			SquadPerks perks = currentSquad.Perks;
@@ -563,7 +562,7 @@ namespace StaRTS.Main.Controllers.Squads
 			PerkVO optional = dataController.GetOptional<PerkVO>(perkUId);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("SquadController.OnPerkUnlocked: Given Perk is Null {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("SquadController.OnPerkUnlocked: Given Perk is Null {0}", new object[]
 				{
 					perkUId
 				});
@@ -581,7 +580,7 @@ namespace StaRTS.Main.Controllers.Squads
 			Squad currentSquad = Service.Get<SquadController>().StateManager.GetCurrentSquad();
 			if (currentSquad == null)
 			{
-				Service.Get<StaRTSLogger>().Error("SquadController.OnPerkUpgraded: Current Squad Null");
+				Service.Get<Logger>().Error("SquadController.OnPerkUpgraded: Current Squad Null");
 				return;
 			}
 			SquadPerks perks = currentSquad.Perks;
@@ -589,7 +588,7 @@ namespace StaRTS.Main.Controllers.Squads
 			PerkVO optional = dataController.GetOptional<PerkVO>(perkUId);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("SquadController.OnPerkUpgraded: Given Perk is Null {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("SquadController.OnPerkUpgraded: Given Perk is Null {0}", new object[]
 				{
 					perkUId
 				});
@@ -619,11 +618,10 @@ namespace StaRTS.Main.Controllers.Squads
 			if (playerIds != null && playerIds.Count > 0)
 			{
 				this.ServerManager.UpdateSquadInvitesSentToPlayers(playerIds, callback);
-				return;
 			}
-			if (callback != null)
+			else if (callback != null)
 			{
-				callback.Invoke();
+				callback();
 			}
 		}
 
@@ -645,7 +643,7 @@ namespace StaRTS.Main.Controllers.Squads
 			}
 			if (callback != null)
 			{
-				callback.Invoke();
+				callback();
 			}
 		}
 
@@ -685,22 +683,24 @@ namespace StaRTS.Main.Controllers.Squads
 				if (currentSquad.MemberCount <= 1)
 				{
 					Service.Get<UXController>().MiscElementsManager.ShowPlayerInstructions(Service.Get<Lang>().Get("s_noSquadmatesToDonate", new object[0]));
-					return;
 				}
-				if (string.IsNullOrEmpty(requestText))
+				else
 				{
-					if (isWarRequest)
+					if (string.IsNullOrEmpty(requestText))
 					{
-						requestText = Service.Get<Lang>().Get("REQUEST_WAR_TROOPS_DEFAULT", new object[0]);
+						if (isWarRequest)
+						{
+							requestText = Service.Get<Lang>().Get("REQUEST_WAR_TROOPS_DEFAULT", new object[0]);
+						}
+						else
+						{
+							requestText = Service.Get<Lang>().Get("REQUEST_TROOPS_DEFAULT", new object[0]);
+						}
 					}
-					else
-					{
-						requestText = Service.Get<Lang>().Get("REQUEST_TROOPS_DEFAULT", new object[0]);
-					}
+					SquadTroopRequestScreen squadTroopRequestScreen = new SquadTroopRequestScreen(requestText, isWarRequest);
+					squadTroopRequestScreen.IsAlwaysOnTop = true;
+					Service.Get<ScreenController>().AddScreen(squadTroopRequestScreen);
 				}
-				SquadTroopRequestScreen squadTroopRequestScreen = new SquadTroopRequestScreen(requestText, isWarRequest);
-				squadTroopRequestScreen.IsAlwaysOnTop = true;
-				Service.Get<ScreenController>().AddScreen(squadTroopRequestScreen);
 			}
 		}
 
@@ -765,252 +765,6 @@ namespace StaRTS.Main.Controllers.Squads
 			this.ServerManager.Destroy();
 			this.MsgManager.Destroy();
 			this.StateManager.Destroy();
-		}
-
-		protected internal SquadController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).CheckSquadInvitesSentToPlayers((List<string>)GCHandledObjects.GCHandleToObject(*args), (Action)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).ClearPrefsForNewSquad(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).Enable();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).BuffManager);
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).MessageLimit);
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).MsgManager);
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).PullFrequencyChatClosed);
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).PullFrequencyChatOpen);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).ServerManager);
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).StateManager);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).WarManager);
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).GetLastViewedSquadLevelUp());
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).HandleSquadInvitesReceived((List<SquadInvite>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).HandleSquadInvitesSentToPlayers((List<string>)GCHandledObjects.GCHandleToObject(*args), (Action)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadController)GCHandledObjects.GCHandleToObject(instance)).HavePendingSquadLevelCelebration());
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).InitSquadWarState((SquadWarData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).LeaveSquad(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).OnNewSquadMsgsReceived((List<SquadMsg>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).OnPerkInvestment((SquadMsg)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).OnPerkUnlocked((SquadMsg)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).OnPerkUpgraded((SquadMsg)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).OnPlayerActionSuccess((SquadAction)(*(int*)args), (SquadMsg)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).OnSquadLeveledUp((SquadMsg)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).PublishChatMessage(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).SendTroopRequest(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).BuffManager = (SquadWarBuffManager)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).MessageLimit = *(int*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).MsgManager = (SquadMsgManager)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).PullFrequencyChatClosed = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).PullFrequencyChatOpen = *(float*)args;
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).ServerManager = (SquadServerManager)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).StateManager = (SquadStateManager)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).WarManager = (SquadWarManager)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).SetLastViewedSquadLevelUp(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).ShowTroopRequestScreen(Marshal.PtrToStringUni(*(IntPtr*)args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).SyncCurrentPlayerPlanet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).SyncCurrentPlayerRole();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).TakeAction((SquadMsg)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentSquad();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentSquadWar();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((SquadController)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadInvitesReceived();
-			return -1L;
 		}
 	}
 }

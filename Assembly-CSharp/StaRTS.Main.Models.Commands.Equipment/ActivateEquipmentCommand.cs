@@ -10,9 +10,5 @@ namespace StaRTS.Main.Models.Commands.Equipment
 		public ActivateEquipmentCommand(EquipmentIdRequest request) : base("player.equipment.activate", request, new DefaultResponse())
 		{
 		}
-
-		protected internal ActivateEquipmentCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

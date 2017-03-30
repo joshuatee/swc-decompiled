@@ -6,7 +6,6 @@ using StaRTS.Main.Utils.Events;
 using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Trigger
 {
@@ -25,7 +24,7 @@ namespace StaRTS.Main.Story.Trigger
 		public override void Activate()
 		{
 			base.Activate();
-			if (this.prepareArgs.Length != 0)
+			if (this.prepareArgs.Length > 0)
 			{
 				this.buildingType = StringUtils.ParseEnum<BuildingType>(this.prepareArgs[0]);
 				this.eventToListenFor = EventId.EntityPostBattleRepairFinished;
@@ -69,33 +68,6 @@ namespace StaRTS.Main.Story.Trigger
 		{
 			this.RemoveListeners();
 			base.Destroy();
-		}
-
-		protected internal BuildingRepairStoryTrigger(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((BuildingRepairStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Activate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((BuildingRepairStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((BuildingRepairStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((BuildingRepairStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).RemoveListeners();
-			return -1L;
 		}
 	}
 }

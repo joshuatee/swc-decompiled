@@ -6,10 +6,7 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Player.Store
 {
@@ -103,7 +100,7 @@ namespace StaRTS.Main.Models.Player.Store
 		{
 			if (this.internalStorage.ContainsKey(inventoryKey))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Key {0} already exists in storage {1}.", new object[]
+				Service.Get<Logger>().ErrorFormat("Key {0} already exists in storage {1}.", new object[]
 				{
 					inventoryKey,
 					this.Key
@@ -122,7 +119,7 @@ namespace StaRTS.Main.Models.Player.Store
 		{
 			if (!this.internalStorage.ContainsKey(inventoryKey))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Key {0} not found in storage {1}.", new object[]
+				Service.Get<Logger>().ErrorFormat("Key {0} not found in storage {1}.", new object[]
 				{
 					inventoryKey,
 					this.Key
@@ -155,7 +152,7 @@ namespace StaRTS.Main.Models.Player.Store
 			InventoryEntry inventoryEntry = this.internalStorage[inventoryKey];
 			if (inventoryEntry.Capacity != -1 && delta > 0 && inventoryEntry.Amount + delta > inventoryEntry.Capacity)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Item storage exceeded: {0} + {1} > {2}. Key {3} in storage {4}.", new object[]
+				Service.Get<Logger>().WarnFormat("Item storage exceeded: {0} + {1} > {2}. Key {3} in storage {4}.", new object[]
 				{
 					inventoryEntry.Amount,
 					delta,
@@ -176,7 +173,7 @@ namespace StaRTS.Main.Models.Player.Store
 				int num2 = delta * inventoryEntry.Scale;
 				if (num2 > 0 && totalStorageAmount + num2 > num)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Total storage exceeded: {0} + {1} > {2}. Key {3} in storage {4}.", new object[]
+					Service.Get<Logger>().WarnFormat("Total storage exceeded: {0} + {1} > {2}. Key {3} in storage {4}.", new object[]
 					{
 						totalStorageAmount,
 						num2,
@@ -194,7 +191,7 @@ namespace StaRTS.Main.Models.Player.Store
 
 		public bool CanStoreAll(int delta, CurrencyType currencyType)
 		{
-			string key;
+			string key = string.Empty;
 			switch (currencyType)
 			{
 			case CurrencyType.Credits:
@@ -317,7 +314,7 @@ namespace StaRTS.Main.Models.Player.Store
 		{
 			if (!this.subStorage.ContainsKey(key))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Substorage {0} not found in storage {1}.", new object[]
+				Service.Get<Logger>().ErrorFormat("Substorage {0} not found in storage {1}.", new object[]
 				{
 					key,
 					this.Key
@@ -339,11 +336,11 @@ namespace StaRTS.Main.Models.Player.Store
 			int num = 0;
 			foreach (KeyValuePair<string, InventoryEntry> current in this.internalStorage)
 			{
-				if (current.get_Value().Scale == -1)
+				if (current.Value.Scale == -1)
 				{
-					this.CalculateScale(current.get_Key());
+					this.CalculateScale(current.Key);
 				}
-				num += current.get_Value().Amount * current.get_Value().Scale;
+				num += current.Value.Amount * current.Value.Scale;
 			}
 			return num;
 		}
@@ -382,7 +379,7 @@ namespace StaRTS.Main.Models.Player.Store
 			Serializer serializer2 = Serializer.Start();
 			foreach (KeyValuePair<string, InventoryEntry> current in this.internalStorage)
 			{
-				serializer2.AddObject<InventoryEntry>(current.get_Key(), current.get_Value());
+				serializer2.AddObject<InventoryEntry>(current.Key, current.Value);
 			}
 			serializer2.End();
 			serializer.Add<string>("storage", serializer2.ToString());
@@ -391,7 +388,7 @@ namespace StaRTS.Main.Models.Player.Store
 				Serializer serializer3 = Serializer.Start();
 				foreach (KeyValuePair<string, InventoryStorage> current2 in this.subStorage)
 				{
-					serializer3.AddObject<InventoryStorage>(current2.get_Key(), current2.get_Value());
+					serializer3.AddObject<InventoryStorage>(current2.Key, current2.Value);
 				}
 				serializer3.End();
 				serializer.Add<string>("subStorage", serializer3.ToString());
@@ -402,7 +399,7 @@ namespace StaRTS.Main.Models.Player.Store
 		public ISerializable FromObject(object obj)
 		{
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
-			this.totalStorageCapacity = Convert.ToInt32(dictionary["capacity"], CultureInfo.InvariantCulture);
+			this.totalStorageCapacity = Convert.ToInt32(dictionary["capacity"]);
 			if (dictionary.ContainsKey("storage"))
 			{
 				Dictionary<string, object> dictionary2 = dictionary["storage"] as Dictionary<string, object>;
@@ -410,7 +407,7 @@ namespace StaRTS.Main.Models.Player.Store
 				{
 					foreach (KeyValuePair<string, object> current in dictionary2)
 					{
-						this.CreateStorageItem(current.get_Key(), current.get_Value());
+						this.CreateStorageItem(current.Key, current.Value);
 					}
 				}
 			}
@@ -421,9 +418,9 @@ namespace StaRTS.Main.Models.Player.Store
 			dictionary = (dictionary["subStorage"] as Dictionary<string, object>);
 			foreach (KeyValuePair<string, InventoryStorage> current2 in this.subStorage)
 			{
-				if (dictionary.ContainsKey(current2.get_Key()))
+				if (dictionary.ContainsKey(current2.Key))
 				{
-					current2.get_Value().FromObject(dictionary[current2.get_Key()]);
+					current2.Value.FromObject(dictionary[current2.Key]);
 				}
 			}
 			return this;
@@ -468,178 +465,6 @@ namespace StaRTS.Main.Models.Player.Store
 		public void AddString(StringBuilder sb)
 		{
 			this.AddString(sb, false);
-		}
-
-		protected internal InventoryStorage(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).AddString((StringBuilder)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).AddString((StringBuilder)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).CalculateScale(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).CanStoreAll(*(int*)args, (CurrencyType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ClearItemAmount(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).CreateInventoryItem(Marshal.PtrToStringUni(*(IntPtr*)args), (InventoryEntry)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).CreateInventoryItem(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).CreateStorageItem(Marshal.PtrToStringUni(*(IntPtr*)args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).CreateSubstorage(Marshal.PtrToStringUni(*(IntPtr*)args), (EventId)(*(int*)(args + 1)), (Type)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).Key);
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).GetInternalStorage());
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).GetItemAmount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).GetItemCapacity(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).GetTotalStorageAmount());
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).GetTotalStorageCapacity());
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).HasItem(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).IsInventorySubstorageFull());
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ModifyContraband(*(int*)args));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ModifyCredits(*(int*)args));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ModifyCrystals(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ModifyDroids(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ModifyItemAmount(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ModifyMaterials(*(int*)args));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ModifyReputation(*(int*)args));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ModifyXP(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).Key = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).SetItemCapacity(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).SetTotalStorageCapacity(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).Sub(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((InventoryStorage)GCHandledObjects.GCHandleToObject(instance)).ToJson());
 		}
 	}
 }

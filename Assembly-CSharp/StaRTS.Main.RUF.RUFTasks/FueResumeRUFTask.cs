@@ -2,7 +2,6 @@ using StaRTS.Main.Controllers;
 using StaRTS.Main.Models.Player;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.RUF.RUFTasks
 {
@@ -32,21 +31,6 @@ namespace StaRTS.Main.RUF.RUFTasks
 		{
 			QuestController questController = Service.Get<QuestController>();
 			return !questController.HasPendingTriggers() || !questController.DoesPendingTriggersContainPrefix("tut_con_");
-		}
-
-		protected internal FueResumeRUFTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((FueResumeRUFTask)GCHandledObjects.GCHandleToObject(instance)).CheckPendingTriggersShouldPurge());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((FueResumeRUFTask)GCHandledObjects.GCHandleToObject(instance)).Process(*(sbyte*)args != 0);
-			return -1L;
 		}
 	}
 }

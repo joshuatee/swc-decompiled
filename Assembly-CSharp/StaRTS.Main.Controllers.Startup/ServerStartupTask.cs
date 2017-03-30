@@ -1,3 +1,4 @@
+using Facebook.Unity;
 using Source.StaRTS.Main.Models.Commands.Player;
 using StaRTS.Externals.Manimal;
 using StaRTS.Externals.Manimal.TransferObjects.Request;
@@ -18,11 +19,8 @@ using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Startup
 {
@@ -34,25 +32,26 @@ namespace StaRTS.Main.Controllers.Startup
 
 		private bool isHandlingMismatch;
 
-		private bool isAttemptingAuth;
+		private bool isAttemptingAuth = true;
 
 		private GetAuthTokenCommand getAuthTokenCommand;
 
 		private GeneratePlayerCommand generatePlayerCommand;
 
+		private GeneratePlayerWithFacebookCommand generatePlayerWithFacebookCommand;
+
 		private ProtocolResult protocolResult;
 
-		public ServerStartupTask(float startPercentage)
+		public ServerStartupTask(float startPercentage) : base(startPercentage)
 		{
-			this.isAttemptingAuth = true;
-			base..ctor(startPercentage);
 		}
 
 		public override void Start()
 		{
+			this.useRealAuthentication = !AppServerEnvironmentController.IsLocalServer();
 			this.hasSecondary = true;
 			new QuietCorrectionController();
-			new ServerAPI(Service.Get<AppServerEnvironmentController>().Server, Convert.ToUInt32("60", CultureInfo.InvariantCulture), Service.Get<ViewTimerManager>(), Service.Get<Engine>(), new ServerAPI.DesynHandler(this.OnDesync), new ServerAPI.MessageHandler(this.MessageHandler));
+			new ServerAPI(Service.Get<AppServerEnvironmentController>().Server, Convert.ToUInt32("62"), Service.Get<ViewTimerManager>(), Service.Get<Engine>(), new ServerAPI.DesynHandler(this.OnDesync), new ServerAPI.MessageHandler(this.MessageHandler));
 			new ServerController();
 			new GameIdleController();
 			this.FigureOutAuth();
@@ -66,7 +65,7 @@ namespace StaRTS.Main.Controllers.Startup
 
 		private void OnFigureOutAuthFailure(uint errorCode, object cookie)
 		{
-			Service.Get<StaRTSLogger>().Error("Recieved failure response on test.authtoken.isPlayerId command. Cannot continue.");
+			Service.Get<Logger>().Error("Recieved failure response on test.authtoken.isPlayerId command. Cannot continue.");
 		}
 
 		private void OnFigureOutAuthReponse(AuthTokenIsPlayerIdResponse response, object cookie)
@@ -83,9 +82,11 @@ namespace StaRTS.Main.Controllers.Startup
 			if (PlayerPrefs.HasKey("prefPlayerId"))
 			{
 				this.GetAuthToken();
-				return;
 			}
-			this.CreatePlayer();
+			else
+			{
+				this.CreatePlayer();
+			}
 		}
 
 		private void InitializeCurrentPlayer()
@@ -112,12 +113,14 @@ namespace StaRTS.Main.Controllers.Startup
 				this.getAuthTokenCommand.AddSuccessCallback(new AbstractCommand<GetAuthTokenRequest, GetAuthTokenResponse>.OnSuccessCallback(this.OnGetAuthTokenComplete));
 				this.getAuthTokenCommand.AddFailureCallback(new AbstractCommand<GetAuthTokenRequest, GetAuthTokenResponse>.OnFailureCallback(this.OnGetAuthTokenFailure));
 				serverAPI.Async(this.getAuthTokenCommand);
-				return;
 			}
-			this.InitializeCurrentPlayer();
-			string playerId = Service.Get<CurrentPlayer>().PlayerId;
-			serverAPI.SetAuth(playerId);
-			this.CompleteTask();
+			else
+			{
+				this.InitializeCurrentPlayer();
+				string playerId = Service.Get<CurrentPlayer>().PlayerId;
+				serverAPI.SetAuth(playerId);
+				this.CompleteTask();
+			}
 		}
 
 		private void OnGetAuthTokenComplete(GetAuthTokenResponse response, object cookie)
@@ -131,12 +134,17 @@ namespace StaRTS.Main.Controllers.Startup
 		{
 			if (status == 801u || status == 800u)
 			{
-				Service.Get<StaRTSLogger>().Error("Locally stored authentication is invalid");
+				Service.Get<Logger>().Error("Locally stored authentication is invalid");
 				this.CreatePlayer();
 			}
 		}
 
 		private void CreatePlayer()
+		{
+			this.CreateNewPlayer();
+		}
+
+		private void CreateNewPlayer()
 		{
 			this.generatePlayerCommand = new GeneratePlayerCommand(new GeneratePlayerRequest
 			{
@@ -147,6 +155,21 @@ namespace StaRTS.Main.Controllers.Startup
 			Service.Get<ServerAPI>().Async(this.generatePlayerCommand);
 		}
 
+		private void CreatePlayerWithFacebook()
+		{
+			GeneratePlayerWithFacebookRequest generatePlayerWithFacebookRequest = new GeneratePlayerWithFacebookRequest();
+			generatePlayerWithFacebookRequest.LocalePreference = Service.Get<Lang>().Locale;
+			if (FB.IsLoggedIn && AccessToken.CurrentAccessToken.UserId != null)
+			{
+				generatePlayerWithFacebookRequest.FacebookID = AccessToken.CurrentAccessToken.UserId;
+				generatePlayerWithFacebookRequest.FacebookAuthToken = AccessToken.CurrentAccessToken.TokenString;
+			}
+			this.generatePlayerWithFacebookCommand = new GeneratePlayerWithFacebookCommand(generatePlayerWithFacebookRequest);
+			this.generatePlayerWithFacebookCommand.AddSuccessCallback(new AbstractCommand<GeneratePlayerWithFacebookRequest, GeneratePlayerResponse>.OnSuccessCallback(this.OnGeneratePlayerComplete));
+			this.generatePlayerWithFacebookCommand.AddFailureCallback(new AbstractCommand<GeneratePlayerWithFacebookRequest, GeneratePlayerResponse>.OnFailureCallback(this.OnGeneratePlayerWithFacebookFailure));
+			Service.Get<ServerAPI>().Async(this.generatePlayerWithFacebookCommand);
+		}
+
 		private static string GenerateRequestToken(string playerId, string secret)
 		{
 			Serializer serializer = new Serializer();
@@ -154,21 +177,25 @@ namespace StaRTS.Main.Controllers.Startup
 			serializer.Add<long>("expires", GameUtils.GetNowJavaEpochTime());
 			string text = serializer.End().ToString();
 			byte[] value = CryptographyUtils.ComputeHmacHash("HmacSHA256", secret, text);
-			string text2 = BitConverter.ToString(value).Replace("-", string.Empty);
-			return Convert.ToBase64String(Encoding.UTF8.GetBytes(text2 + "." + text));
+			string str = BitConverter.ToString(value).Replace("-", string.Empty);
+			return Convert.ToBase64String(Encoding.UTF8.GetBytes(str + "." + text));
 		}
 
 		private void OnGeneratePlayerComplete(GeneratePlayerResponse response, object cookie)
 		{
 			PlayerPrefs.SetString("prefPlayerId", response.PlayerId);
 			PlayerPrefs.SetString("prefPlayerSecret", response.Secret);
-			PlayerPrefs.Save();
 			this.GetAuthToken();
 		}
 
 		private void OnGeneratePlayerFailure(uint status, object cookie)
 		{
-			Service.Get<StaRTSLogger>().Error("Error generating new player after auth fail.");
+			Service.Get<Logger>().Error("Error generating new player after auth fail.");
+		}
+
+		private void OnGeneratePlayerWithFacebookFailure(uint status, object cookie)
+		{
+			Service.Get<Logger>().Error("Error generating player with facebook ID");
 		}
 
 		private void MessageHandler(Dictionary<string, object> messages)
@@ -176,16 +203,16 @@ namespace StaRTS.Main.Controllers.Startup
 			foreach (KeyValuePair<string, object> current in messages)
 			{
 				bool flag;
-				IMessage message = MessageFactory.CreateMessage(current.get_Key(), current.get_Value(), out flag);
+				IMessage message = MessageFactory.CreateMessage(current.Key, current.Value, out flag);
 				if (message != null)
 				{
 					Service.Get<EventManager>().SendEvent(message.MessageEventId, message.MessageCookie);
 				}
 				else if (!flag)
 				{
-					Service.Get<StaRTSLogger>().WarnFormat("Got unrecognized message from server of type {0}", new object[]
+					Service.Get<Logger>().WarnFormat("Got unrecognized message from server of type {0}", new object[]
 					{
-						current.get_Key()
+						current.Key
 					});
 				}
 			}
@@ -198,11 +225,11 @@ namespace StaRTS.Main.Controllers.Startup
 			{
 				string title = null;
 				Lang lang = Service.Get<Lang>();
-				if (this.hasSecondary && serverAPI.GetDispatcher().Url.StartsWith("https://n7-startswin-integration-app-active.playdom.com:443/app") && message.StartsWith(lang.Get(LangUtils.DESYNC_BATCH_MAX_RETRY, new object[0])))
+				if (this.hasSecondary && serverAPI.GetDispatcher().Url.StartsWith("https://n7-starts-integration-app-active.playdom.com/j") && message.StartsWith(lang.Get(LangUtils.DESYNC_BATCH_MAX_RETRY, new object[0])))
 				{
 					title = lang.Get("UPDATE_COMING_TITLE", new object[0]);
 					message = lang.Get("UPDATE_COMING_MESSAGE", new object[0]);
-					Service.Get<StaRTSLogger>().Warn("Maintenance message shown due to client update before server deploy");
+					Service.Get<Logger>().Warn("Maintenance message shown due to client update before server deploy");
 				}
 				if (status != 1999u)
 				{
@@ -217,9 +244,9 @@ namespace StaRTS.Main.Controllers.Startup
 			}
 			this.isHandlingMismatch = true;
 			this.protocolResult = result;
-			if (result == ProtocolResult.Higher && !serverAPI.GetDispatcher().Url.StartsWith("https://n7-startswin-integration-app-active.playdom.com:443/app") && this.hasSecondary && this.isAttemptingAuth)
+			if (result == ProtocolResult.Higher && !serverAPI.GetDispatcher().Url.StartsWith("https://n7-starts-integration-app-active.playdom.com/j") && this.hasSecondary && this.isAttemptingAuth)
 			{
-				Service.Get<StaRTSLogger>().WarnFormat("Trying secondary API due to higher protocol", new object[0]);
+				Service.Get<Logger>().WarnFormat("Trying secondary API due to higher protocol", new object[0]);
 				if (this.getAuthTokenCommand != null)
 				{
 					this.getAuthTokenCommand.RemoveAllCallbacks();
@@ -228,7 +255,7 @@ namespace StaRTS.Main.Controllers.Startup
 				{
 					this.generatePlayerCommand.RemoveAllCallbacks();
 				}
-				serverAPI.SetDispatcher("https://n7-startswin-integration-app-active.playdom.com:443/app", Service.Get<Engine>());
+				serverAPI.SetDispatcher("https://n7-starts-integration-app-active.playdom.com/j", Service.Get<Engine>());
 				this.GetOrCreatePlayer();
 				return;
 			}
@@ -242,12 +269,12 @@ namespace StaRTS.Main.Controllers.Startup
 			{
 				if (result == ProtocolResult.Lower)
 				{
-					Service.Get<StaRTSLogger>().Warn(message);
+					Service.Get<Logger>().Warn(message);
 				}
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Error(message);
+				Service.Get<Logger>().Error(message);
 			}
 			this.DisplayUpdateWindow();
 		}
@@ -263,21 +290,23 @@ namespace StaRTS.Main.Controllers.Startup
 
 		private void DisplayUpdateWindow()
 		{
+			string title = string.Empty;
+			string message = string.Empty;
 			Lang lang = Service.Get<Lang>();
 			ProtocolResult protocolResult = this.protocolResult;
 			if (protocolResult != ProtocolResult.Higher)
 			{
 				if (protocolResult == ProtocolResult.Lower)
 				{
-					string title = lang.Get("FORCED_UPDATE_TITLE", new object[0]);
-					string message = lang.Get("FORCED_UPDATE_MESSAGE", new object[0]);
+					title = lang.Get("FORCED_UPDATE_TITLE", new object[0]);
+					message = lang.Get("FORCED_UPDATE_MESSAGE", new object[0]);
 					UpdateClientScreen.ShowModal(title, message, new OnScreenModalResult(this.OnUpdateWindowClosed), null);
 				}
 			}
 			else
 			{
-				string title = lang.Get("UPDATE_COMING_TITLE", new object[0]);
-				string message = lang.Get("UPDATE_COMING_MESSAGE", new object[0]);
+				title = lang.Get("UPDATE_COMING_TITLE", new object[0]);
+				message = lang.Get("UPDATE_COMING_MESSAGE", new object[0]);
 				AlertScreen.ShowModal(true, title, message, null, null);
 			}
 			this.KillStartup();
@@ -285,106 +314,13 @@ namespace StaRTS.Main.Controllers.Startup
 
 		private void OnUpdateWindowClosed(object result, object cookie)
 		{
-			Application.OpenURL("ms-windows-store:PDP?PFN=Disney.StarWarsCommander_6rarf9sa4v8jt");
+			GameUtils.TryAndOpenAppropriateStorePage();
 		}
 
 		private void CompleteTask()
 		{
 			this.isAttemptingAuth = false;
 			base.Complete();
-		}
-
-		protected internal ServerStartupTask(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).CompleteTask();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).CreatePlayer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).DisplayUpdateWindow();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).FigureOutAuth();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(ServerStartupTask.GenerateRequestToken(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).GetAuthToken();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).GetOrCreatePlayer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).InitializeCurrentPlayer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).KillStartup();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).MessageHandler((Dictionary<string, object>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnFigureOutAuthReponse((AuthTokenIsPlayerIdResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnGeneratePlayerComplete((GeneratePlayerResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnGetAuthTokenComplete((GetAuthTokenResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).OnUpdateWindowClosed(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ServerStartupTask)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
 		}
 	}
 }

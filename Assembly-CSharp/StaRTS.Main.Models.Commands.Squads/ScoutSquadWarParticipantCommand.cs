@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Squads
 		public ScoutSquadWarParticipantCommand(SquadWarParticipantIdRequest request) : base("guild.war.scoutPlayer", request, new SquadMemberWarDataResponse())
 		{
 		}
-
-		protected internal ScoutSquadWarParticipantCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

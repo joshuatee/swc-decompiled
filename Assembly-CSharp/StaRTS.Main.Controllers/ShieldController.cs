@@ -18,36 +18,12 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
 	public class ShieldController : IEventObserver
 	{
-		[CompilerGenerated]
-		[System.Serializable]
-		private sealed class <>c
-		{
-			public static readonly ShieldController.<>c <>9 = new ShieldController.<>c();
-
-			public static Func<string, int> <>9__11_0;
-
-			public static Func<string, int> <>9__11_1;
-
-			internal int ctor>b__11_0(string s)
-			{
-				return int.Parse(s);
-			}
-
-			internal int ctor>b__11_1(string s)
-			{
-				return int.Parse(s);
-			}
-		}
-
 		private const int RAY_Y_POSITION = 100;
 
 		private List<Entity> replacedEntities;
@@ -82,24 +58,12 @@ namespace StaRTS.Main.Controllers
 			{
 				' '
 			});
-			IEnumerable<string> arg_BD_0 = array;
-			Func<string, int> arg_BD_1;
-			if ((arg_BD_1 = ShieldController.<>c.<>9__11_0) == null)
-			{
-				arg_BD_1 = (ShieldController.<>c.<>9__11_0 = new Func<string, int>(ShieldController.<>c.<>9.<.ctor>b__11_0));
-			}
-			this.PointsToRange = arg_BD_0.Select(arg_BD_1).ToArray<int>();
+			this.PointsToRange = Array.ConvertAll<string, int>(array, new Converter<string, int>(int.Parse));
 			string[] array2 = GameConstants.SHIELD_HEALTH_PER_POINT.Split(new char[]
 			{
 				' '
 			});
-			IEnumerable<string> arg_103_0 = array2;
-			Func<string, int> arg_103_1;
-			if ((arg_103_1 = ShieldController.<>c.<>9__11_1) == null)
-			{
-				arg_103_1 = (ShieldController.<>c.<>9__11_1 = new Func<string, int>(ShieldController.<>c.<>9.<.ctor>b__11_1));
-			}
-			this.PointsToHealth = arg_103_0.Select(arg_103_1).ToArray<int>();
+			this.PointsToHealth = Array.ConvertAll<string, int>(array2, new Converter<string, int>(int.Parse));
 		}
 
 		public void PrepareShieldsForBattle()
@@ -169,8 +133,7 @@ namespace StaRTS.Main.Controllers
 			Vector3 targetWorldLocation = bullet.TargetWorldLocation;
 			if (bullet.GunLocator != null && bullet.Owner != null)
 			{
-				Vector3 position = bullet.GunLocator.transform.position;
-				targetWorldLocation.y = position.y;
+				targetWorldLocation.y = bullet.GunLocator.transform.position.y;
 			}
 			this.effects.ApplyHitEffect(shieldGeneratorEntity, targetWorldLocation);
 		}
@@ -220,82 +183,85 @@ namespace StaRTS.Main.Controllers
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
-			if (id <= EventId.BuildingDeselected)
+			switch (id)
 			{
+			case EventId.BuildingSelected:
+			{
+				Entity entity = cookie as Entity;
+				if (entity.Has<ShieldGeneratorComponent>() && !GameUtils.IsVisitingBase())
+				{
+					this.effects.PlayAllEffects(true);
+					Service.Get<AudioManager>().PlayAudio("sfx_shields_power_up");
+				}
+				return EatResponse.NotEaten;
+			}
+			case EventId.BuildingSelectedSound:
+				IL_24:
 				if (id != EventId.BuildingViewReady)
 				{
-					if (id != EventId.BuildingSelected)
+					if (id == EventId.EntityHit)
 					{
-						if (id == EventId.BuildingDeselected)
+						Bullet bullet = cookie as Bullet;
+						ShieldBorderComponent shieldBorderComp = bullet.Target.ShieldBorderComp;
+						if (shieldBorderComp != null)
 						{
-							Entity entity = cookie as Entity;
-							if (entity.Has<ShieldGeneratorComponent>() && !GameUtils.IsVisitingBase())
-							{
-								this.StopAllEffects();
-							}
+							this.OnDamageShieldBorder(shieldBorderComp.ShieldGeneratorEntity, bullet);
 						}
+						return EatResponse.NotEaten;
 					}
-					else
+					if (id == EventId.BuildingReplaced)
 					{
 						Entity entity2 = cookie as Entity;
-						if (entity2.Has<ShieldGeneratorComponent>() && !GameUtils.IsVisitingBase())
+						if (entity2.Has<ShieldGeneratorComponent>())
+						{
+							this.replacedEntities.Add(cookie as Entity);
+						}
+						return EatResponse.NotEaten;
+					}
+					if (id == EventId.WorldLoadComplete)
+					{
+						this.effects.Cleanup();
+						this.replacedEntities.Clear();
+						if (GameUtils.IsVisitingBase())
 						{
 							this.effects.PlayAllEffects(true);
-							Service.Get<AudioManager>().PlayAudio("sfx_shields_power_up");
 						}
+						return EatResponse.NotEaten;
 					}
+					if (id != EventId.ShieldBorderDestroyed)
+					{
+						return EatResponse.NotEaten;
+					}
+					ShieldBorderComponent sbc = cookie as ShieldBorderComponent;
+					this.OnDestroyShieldBorder(sbc);
+					return EatResponse.NotEaten;
 				}
-				else if (currentState is HomeState || currentState is EditBaseState)
+				else
 				{
+					if (!(currentState is HomeState) && !(currentState is EditBaseState))
+					{
+						return EatResponse.NotEaten;
+					}
 					EntityViewParams entityViewParams = cookie as EntityViewParams;
 					if (this.replacedEntities.Contains(entityViewParams.Entity))
 					{
 						this.InitializeEffects(entityViewParams.Entity);
 						this.replacedEntities.Remove(entityViewParams.Entity);
 					}
+					return EatResponse.NotEaten;
 				}
-			}
-			else if (id <= EventId.BuildingReplaced)
+				break;
+			case EventId.BuildingDeselected:
 			{
-				if (id != EventId.EntityHit)
+				Entity entity3 = cookie as Entity;
+				if (entity3.Has<ShieldGeneratorComponent>() && !GameUtils.IsVisitingBase())
 				{
-					if (id == EventId.BuildingReplaced)
-					{
-						Entity entity3 = cookie as Entity;
-						if (entity3.Has<ShieldGeneratorComponent>())
-						{
-							this.replacedEntities.Add(cookie as Entity);
-						}
-					}
+					this.StopAllEffects();
 				}
-				else
-				{
-					Bullet bullet = cookie as Bullet;
-					ShieldBorderComponent shieldBorderComp = bullet.Target.ShieldBorderComp;
-					if (shieldBorderComp != null)
-					{
-						this.OnDamageShieldBorder(shieldBorderComp.ShieldGeneratorEntity, bullet);
-					}
-				}
+				return EatResponse.NotEaten;
 			}
-			else if (id != EventId.WorldLoadComplete)
-			{
-				if (id == EventId.ShieldBorderDestroyed)
-				{
-					ShieldBorderComponent sbc = cookie as ShieldBorderComponent;
-					this.OnDestroyShieldBorder(sbc);
-				}
 			}
-			else
-			{
-				this.effects.Cleanup();
-				this.replacedEntities.Clear();
-				if (GameUtils.IsVisitingBase())
-				{
-					this.effects.PlayAllEffects(true);
-				}
-			}
-			return EatResponse.NotEaten;
+			goto IL_24;
 		}
 
 		public void InitializeEffects(Entity entity)
@@ -333,11 +299,14 @@ namespace StaRTS.Main.Controllers
 					if (shieldGenComp != null)
 					{
 						Entity shieldBorderEntity = shieldGenComp.ShieldBorderEntity;
-						float num2;
-						if (shieldBorderEntity != null && shieldBorderEntity.Has<HealthComponent>() && !shieldBorderEntity.Get<HealthComponent>().IsDead() && this.IsPositionUnderShield(targetBoardX, targetBoardZ, (SmartEntity)entity, out num2) && num2 < num)
+						if (shieldBorderEntity != null && shieldBorderEntity.Has<HealthComponent>() && !shieldBorderEntity.Get<HealthComponent>().IsDead())
 						{
-							num = num2;
-							result = shieldGenComp;
+							float num2;
+							if (this.IsPositionUnderShield(targetBoardX, targetBoardZ, (SmartEntity)entity, out num2) && num2 < num)
+							{
+								num = num2;
+								result = shieldGenComp;
+							}
 						}
 					}
 				}
@@ -366,9 +335,12 @@ namespace StaRTS.Main.Controllers
 			for (ShieldGeneratorNode shieldGeneratorNode = shieldGeneratorNodeList.Head; shieldGeneratorNode != null; shieldGeneratorNode = shieldGeneratorNode.Next)
 			{
 				SmartEntity smartEntity = (SmartEntity)shieldGeneratorNode.Entity;
-				if (smartEntity.HealthComp != null && !smartEntity.HealthComp.IsDead() && this.GetRayShieldIntersection(rayPos, targetPos, smartEntity.ShieldGeneratorComp, out zero))
+				if (smartEntity.HealthComp != null && !smartEntity.HealthComp.IsDead())
 				{
-					return true;
+					if (this.GetRayShieldIntersection(rayPos, targetPos, smartEntity.ShieldGeneratorComp, out zero))
+					{
+						return true;
+					}
 				}
 			}
 			return false;
@@ -402,111 +374,6 @@ namespace StaRTS.Main.Controllers
 					Service.Get<EventManager>().SendEvent(EventId.ShieldBorderDestroyed, shieldBorderComp);
 				}
 			}
-		}
-
-		protected internal ShieldController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldController)GCHandledObjects.GCHandleToObject(instance)).CreateFlagStampForShield((ShieldGeneratorComponent)GCHandledObjects.GCHandleToObject(*args), (SizeComponent)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldController)GCHandledObjects.GCHandleToObject(instance)).PointsToHealth);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldController)GCHandledObjects.GCHandleToObject(instance)).PointsToRange);
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldController)GCHandledObjects.GCHandleToObject(instance)).GetActiveShieldAffectingBoardPos(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).InitializeEffects((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldController)GCHandledObjects.GCHandleToObject(instance)).IsPositionUnderShield(*(int*)args, *(int*)(args + 1), (SmartEntity)GCHandledObjects.GCHandleToObject(args[2])));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldController)GCHandledObjects.GCHandleToObject(instance)).IsTargetCellUnderShield(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).OnDamageShieldBorder((Entity)GCHandledObjects.GCHandleToObject(*args), (Bullet)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).OnDestroyShieldBorder((ShieldBorderComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((ShieldController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).PrepareShieldsForBattle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).RecalculateFlagStampsForShieldBorder((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).RemoveShieldEffect((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).PointsToHealth = (int[])GCHandledObjects.GCHandleToPinnedArrayObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).PointsToRange = (int[])GCHandledObjects.GCHandleToPinnedArrayObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).SetShieldBorderEntities((ShieldGeneratorNode)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).ShieldBorderKilled((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((ShieldController)GCHandledObjects.GCHandleToObject(instance)).StopAllEffects();
-			return -1L;
 		}
 	}
 }

@@ -19,17 +19,14 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.State;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers
 {
-	public class CurrencyController : IEventObserver, ICurrencyController
+	public class CurrencyController : ICurrencyController, IEventObserver
 	{
 		private const int MIN_FOR_COLLECTION = 1;
 
 		private const int INITIAL_CONTRABAND_SEED = 1;
-
-		private EntityController entityController;
 
 		public const string BUILD_MORE_CREDIT_STORAGE = "BUILD_MORE_CREDIT_STORAGE";
 
@@ -48,6 +45,8 @@ namespace StaRTS.Main.Controllers
 		public const string FULL_CONTRABAND_STORAGE = "FULL_CONTRABAND_STORAGE";
 
 		public const string UPGRADE_CONTRABAND_STORAGE = "UPGRADE_CONTRABAND_STORAGE";
+
+		private EntityController entityController;
 
 		public CurrencyController()
 		{
@@ -104,7 +103,7 @@ namespace StaRTS.Main.Controllers
 			}
 			Building buildingTO = buildingComponent.BuildingTO;
 			int num = this.CollectCurrencyFromGenerator(buildingEntity, true);
-			string contextId = "";
+			string contextId = string.Empty;
 			CurrencyType currency = buildingComponent.BuildingType.Currency;
 			switch (currency)
 			{
@@ -262,7 +261,7 @@ namespace StaRTS.Main.Controllers
 				deltaTime = 0u;
 				if (logErrors)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Cannot collect from {0}, cur time {1} is less than last collect time {2}", new object[]
+					Service.Get<Logger>().ErrorFormat("Cannot collect from {0}, cur time {1} is less than last collect time {2}", new object[]
 					{
 						buildingTO.Key,
 						time,
@@ -276,7 +275,7 @@ namespace StaRTS.Main.Controllers
 			{
 				if (logErrors)
 				{
-					Service.Get<StaRTSLogger>().ErrorFormat("Cannot collect from {0}, delta time {1} is too large", new object[]
+					Service.Get<Logger>().ErrorFormat("Cannot collect from {0}, delta time {1} is too large", new object[]
 					{
 						buildingTO.Key,
 						deltaTime
@@ -447,11 +446,7 @@ namespace StaRTS.Main.Controllers
 		public int CalculateAccruedCurrency(Building buildingTO, BuildingTypeVO type)
 		{
 			uint secondsPassed;
-			if (!this.GetTimePassed(buildingTO, out secondsPassed, false))
-			{
-				return buildingTO.AccruedCurrency;
-			}
-			return this.CalculateAccruedCurrency(buildingTO.CurrentStorage, type, secondsPassed);
+			return (!this.GetTimePassed(buildingTO, out secondsPassed, false)) ? buildingTO.AccruedCurrency : this.CalculateAccruedCurrency(buildingTO.CurrentStorage, type, secondsPassed);
 		}
 
 		private int CalculateAccruedCurrency(int currentStorage, BuildingTypeVO type, uint secondsPassed)
@@ -527,9 +522,8 @@ namespace StaRTS.Main.Controllers
 			if (buildingVO.Type == BuildingType.Storage)
 			{
 				this.UpdateStorageEffectsOnStorages(buildingVO.Currency);
-				return;
 			}
-			if (buildingVO.Type == BuildingType.Resource)
+			else if (buildingVO.Type == BuildingType.Resource)
 			{
 				Service.Get<StorageEffects>().UpdateFillState(entity, buildingVO);
 			}
@@ -552,195 +546,80 @@ namespace StaRTS.Main.Controllers
 		{
 			IState currentState = Service.Get<GameStateMachine>().CurrentState;
 			Type previousStateType = Service.Get<GameStateMachine>().PreviousStateType;
-			if (id <= EventId.WorldLoadComplete)
+			if (id != EventId.BuildingConstructed)
 			{
-				if (id != EventId.BuildingConstructed)
+				if (id != EventId.WorldLoadComplete)
 				{
-					if (id == EventId.WorldLoadComplete)
+					if (id != EventId.GameStateChanged)
 					{
-						Service.Get<CurrencyEffects>().Cleanup();
-						if (currentState is ApplicationLoadState || currentState is HomeState)
+						if (id != EventId.InventoryResourceUpdated)
 						{
-							if (!this.entityController.IsViewSystemSet<GeneratorSystem>())
+							if (id == EventId.PlanetRelocateStarted)
 							{
-								this.entityController.AddViewSystem(new GeneratorSystem(), 2070, 65535);
-								Service.Get<CurrencyEffects>().InitializeEffects("setupTypeCollection");
+								if (this.entityController.IsViewSystemSet<GeneratorSystem>())
+								{
+									this.entityController.RemoveViewSystem<GeneratorSystem>();
+								}
 							}
 						}
-						else if (currentState is BattleStartState)
+						else if (currentState is HomeState || currentState is EditBaseState || currentState is ApplicationLoadState)
 						{
-							Service.Get<CurrencyEffects>().InitializeEffects("setupTypeLooting");
+							string a = cookie as string;
+							if (a == "credits")
+							{
+								this.UpdateStorageEffectsOnStorages(CurrencyType.Credits);
+							}
+							else if (a == "materials")
+							{
+								this.UpdateStorageEffectsOnStorages(CurrencyType.Materials);
+							}
+							else if (a == "contraband")
+							{
+								this.UpdateStorageEffectsOnStorages(CurrencyType.Contraband);
+							}
 						}
+					}
+					else if (!(currentState is HomeState) && !(currentState is IntroCameraState) && !(currentState is GalaxyState))
+					{
+						if (this.entityController.IsViewSystemSet<GeneratorSystem>())
+						{
+							this.entityController.RemoveViewSystem<GeneratorSystem>();
+						}
+					}
+					else if (previousStateType == typeof(EditBaseState))
+					{
+						this.entityController.AddViewSystem(new GeneratorSystem(), 2070, 65535);
+						Service.Get<CurrencyEffects>().PlaceEffects();
+					}
+					else if ((previousStateType == typeof(BattleStartState) || previousStateType == typeof(WarBoardState)) && currentState is HomeState)
+					{
+						this.entityController.AddViewSystem(new GeneratorSystem(), 2070, 65535);
+						Service.Get<CurrencyEffects>().PlaceEffects();
 					}
 				}
 				else
 				{
-					ContractEventData contractEventData = (ContractEventData)cookie;
-					this.UpdateStorageEffectsOnBuildingChange(contractEventData.Entity, contractEventData.BuildingVO);
-				}
-			}
-			else if (id != EventId.GameStateChanged)
-			{
-				if (id != EventId.InventoryResourceUpdated)
-				{
-					if (id == EventId.PlanetRelocateStarted && this.entityController.IsViewSystemSet<GeneratorSystem>())
+					Service.Get<CurrencyEffects>().Cleanup();
+					if (currentState is ApplicationLoadState || currentState is HomeState)
 					{
-						this.entityController.RemoveViewSystem<GeneratorSystem>();
+						if (!this.entityController.IsViewSystemSet<GeneratorSystem>())
+						{
+							this.entityController.AddViewSystem(new GeneratorSystem(), 2070, 65535);
+							Service.Get<CurrencyEffects>().InitializeEffects("setupTypeCollection");
+						}
 					}
-				}
-				else if (currentState is HomeState || currentState is EditBaseState || currentState is ApplicationLoadState)
-				{
-					string text = cookie as string;
-					if (text == "credits")
+					else if (currentState is BattleStartState)
 					{
-						this.UpdateStorageEffectsOnStorages(CurrencyType.Credits);
-					}
-					else if (text == "materials")
-					{
-						this.UpdateStorageEffectsOnStorages(CurrencyType.Materials);
-					}
-					else if (text == "contraband")
-					{
-						this.UpdateStorageEffectsOnStorages(CurrencyType.Contraband);
+						Service.Get<CurrencyEffects>().InitializeEffects("setupTypeLooting");
 					}
 				}
 			}
-			else if (!(currentState is HomeState) && !(currentState is IntroCameraState) && !(currentState is GalaxyState))
+			else
 			{
-				if (this.entityController.IsViewSystemSet<GeneratorSystem>())
-				{
-					this.entityController.RemoveViewSystem<GeneratorSystem>();
-				}
-			}
-			else if (previousStateType == typeof(EditBaseState))
-			{
-				this.entityController.AddViewSystem(new GeneratorSystem(), 2070, 65535);
-				Service.Get<CurrencyEffects>().PlaceEffects();
-			}
-			else if ((previousStateType == typeof(BattleStartState) || previousStateType == typeof(WarBoardState)) && currentState is HomeState)
-			{
-				this.entityController.AddViewSystem(new GeneratorSystem(), 2070, 65535);
-				Service.Get<CurrencyEffects>().PlaceEffects();
+				ContractEventData contractEventData = (ContractEventData)cookie;
+				this.UpdateStorageEffectsOnBuildingChange(contractEventData.Entity, contractEventData.BuildingVO);
 			}
 			return EatResponse.NotEaten;
-		}
-
-		protected internal CurrencyController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).CalculateAccruedCurrency((Building)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).CalculateGeneratorFillTimeRemaining((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).CalculateTimeUntilAllGeneratorsFull());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).CanStoreCollectionAmountFromGenerator((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).CollectCurrency((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).CollectCurrencyFromGenerator((Entity)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).CurrencyPerHour((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).CurrencyPerSecond((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).ForceCollectAccruedCurrencyForUpgrade((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).HandleUnableToCollect((CurrencyType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).IsGeneratorCollectable((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).IsGeneratorThresholdMet((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).OnCollectCurrency((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingComponent)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).TryCollectCurrencyOnSelection((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).UpdateAccruedCurrencyForView((Building)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).UpdateAllStorageEffects();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).UpdateGeneratorAccruedCurrency((SmartEntity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).UpdateStorageEffectsAfterCollection((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).UpdateStorageEffectsOnBuildingChange((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((CurrencyController)GCHandledObjects.GCHandleToObject(instance)).UpdateStorageEffectsOnStorages((CurrencyType)(*(int*)args));
-			return -1L;
 		}
 	}
 }

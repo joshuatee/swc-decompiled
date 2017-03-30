@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UserInput
 {
@@ -47,7 +46,7 @@ namespace StaRTS.Main.Views.UserInput
 							}
 							else if (base.Raycast(UserInputLayer.World, position, ref gameObject, ref zero))
 							{
-								userInputLayer = ((gameObject == null) ? UserInputLayer.InternalLowest : UserInputLayer.World);
+								userInputLayer = ((!(gameObject == null)) ? UserInputLayer.World : UserInputLayer.InternalLowest);
 							}
 							this.fingerIds[num2] = fingerId;
 							this.lastIsPressed[num2] = true;
@@ -97,27 +96,6 @@ namespace StaRTS.Main.Views.UserInput
 				}
 			}
 			return -1;
-		}
-
-		protected internal TouchManager(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TouchManager)GCHandledObjects.GCHandleToObject(instance)).FindTouch(*(int*)args));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((TouchManager)GCHandledObjects.GCHandleToObject(instance)).HandleTouchChanges();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TouchManager)GCHandledObjects.GCHandleToObject(instance)).OnUpdate();
-			return -1L;
 		}
 	}
 }

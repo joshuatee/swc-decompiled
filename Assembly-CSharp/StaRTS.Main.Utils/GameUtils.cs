@@ -35,13 +35,9 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Scheduling;
 using StaRTS.Utils.State;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Utils
 {
@@ -136,7 +132,7 @@ namespace StaRTS.Main.Utils
 			amount = -1;
 			if (string.IsNullOrEmpty(costString))
 			{
-				Service.Get<StaRTSLogger>().Error("ParseCurrencyCostString failed becuase cost string was null or empty");
+				Service.Get<Logger>().Error("ParseCurrencyCostString failed becuase cost string was null or empty");
 				return false;
 			}
 			string[] array = costString.Split(new char[]
@@ -145,11 +141,11 @@ namespace StaRTS.Main.Utils
 			});
 			if (array.Length <= 1)
 			{
-				Service.Get<StaRTSLogger>().Error("ParseCurrencyCostString failed becuase cost string was invalid: " + costString);
+				Service.Get<Logger>().Error("ParseCurrencyCostString failed becuase cost string was invalid: " + costString);
 				return false;
 			}
 			type = StringUtils.ParseEnum<CurrencyType>(array[0]);
-			amount = Convert.ToInt32(array[1], CultureInfo.InvariantCulture);
+			amount = Convert.ToInt32(array[1]);
 			return true;
 		}
 
@@ -162,7 +158,7 @@ namespace StaRTS.Main.Utils
 				int num = item.IndexOf(':');
 				if (num >= 0)
 				{
-					int.TryParse(StringUtils.Substring(item, num + 1), ref val);
+					int.TryParse(StringUtils.Substring(item, num + 1), out val);
 					key = StringUtils.Substring(item, 0, num);
 					return true;
 				}
@@ -205,7 +201,7 @@ namespace StaRTS.Main.Utils
 					return current.CharacterId;
 				}
 			}
-			string result = "";
+			string result = string.Empty;
 			switch (faction)
 			{
 			case FactionType.Empire:
@@ -215,16 +211,16 @@ namespace StaRTS.Main.Utils
 				result = "jennica_1";
 				return result;
 			case FactionType.Smuggler:
-				result = "";
+				result = string.Empty;
 				return result;
 			}
-			Service.Get<StaRTSLogger>().Error("Unknown Faction: " + faction.ToString() + " GameUtils::GetBattleLogHoloId");
+			Service.Get<Logger>().Error("Unknown Faction: " + faction.ToString() + " GameUtils::GetBattleLogHoloId");
 			return result;
 		}
 
 		public static string GetServerTransmissionMessageImage(FactionType faction, string planetUId)
 		{
-			string result = "";
+			string result = string.Empty;
 			IDataController dataController = Service.Get<IDataController>();
 			foreach (TransmissionCharacterVO current in dataController.GetAll<TransmissionCharacterVO>())
 			{
@@ -351,7 +347,7 @@ namespace StaRTS.Main.Utils
 					return buildingTypeVO.Uid;
 				}
 			}
-			Service.Get<StaRTSLogger>().WarnFormat("No equivalent building for {0} in faction {1}", new object[]
+			Service.Get<Logger>().WarnFormat("No equivalent building for {0} in faction {1}", new object[]
 			{
 				currentType.Uid,
 				faction
@@ -455,9 +451,9 @@ namespace StaRTS.Main.Utils
 			{
 				ComponentBase componentBase = all[i];
 				bool flag2 = componentBase is AssetComponent;
-				if (!(flag2 & flag))
+				if (!flag2 || !flag)
 				{
-					stringBuilder.Append(componentBase.GetType().get_Name());
+					stringBuilder.Append(componentBase.GetType().Name);
 					if (flag2)
 					{
 						flag = true;
@@ -471,7 +467,7 @@ namespace StaRTS.Main.Utils
 				}
 				i++;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("{0} ({1}): {2}", new object[]
+			Service.Get<Logger>().ErrorFormat("{0} ({1}): {2}", new object[]
 			{
 				message,
 				entity.ID,
@@ -704,37 +700,24 @@ namespace StaRTS.Main.Utils
 			Dictionary<string, int> dictionary = GameUtils.ListToMap(cost);
 			foreach (string current in dictionary.Keys)
 			{
-				if (!(current == "credits"))
+				string text = current;
+				switch (text)
 				{
-					if (!(current == "materials"))
-					{
-						if (!(current == "contraband"))
-						{
-							if (!(current == "reputation"))
-							{
-								if (current == "crystals")
-								{
-									crystals = dictionary[current];
-								}
-							}
-							else
-							{
-								reputation = dictionary[current];
-							}
-						}
-						else
-						{
-							contraband = dictionary[current];
-						}
-					}
-					else
-					{
-						materials = dictionary[current];
-					}
-				}
-				else
-				{
+				case "credits":
 					credits = dictionary[current];
+					break;
+				case "materials":
+					materials = dictionary[current];
+					break;
+				case "contraband":
+					contraband = dictionary[current];
+					break;
+				case "reputation":
+					reputation = dictionary[current];
+					break;
+				case "crystals":
+					crystals = dictionary[current];
+					break;
 				}
 			}
 		}
@@ -784,9 +767,11 @@ namespace StaRTS.Main.Utils
 				}
 				storeScreen.SetTab(StoreTab.Treasure);
 				Service.Get<EventManager>().SendEvent(EventId.UINotEnoughHardCurrencyBuy, null);
-				return;
 			}
-			Service.Get<EventManager>().SendEvent(EventId.UINotEnoughHardCurrencyClose, null);
+			else
+			{
+				Service.Get<EventManager>().SendEvent(EventId.UINotEnoughHardCurrencyClose, null);
+			}
 		}
 
 		public static void OpenStoreTreasureTab()
@@ -816,7 +801,7 @@ namespace StaRTS.Main.Utils
 				' '
 			});
 			int result;
-			if (droidIndex < array.Length && int.TryParse(array[droidIndex], ref result))
+			if (droidIndex < array.Length && int.TryParse(array[droidIndex], out result))
 			{
 				return result;
 			}
@@ -928,7 +913,7 @@ namespace StaRTS.Main.Utils
 			{
 				int num2;
 				int num3;
-				if (!int.TryParse(array[i], ref num2) || !int.TryParse(array2[i], ref num3))
+				if (!int.TryParse(array[i], out num2) || !int.TryParse(array2[i], out num3))
 				{
 					amounts = new int[0];
 					prices = new int[0];
@@ -962,7 +947,7 @@ namespace StaRTS.Main.Utils
 			{
 				int num2;
 				int num3;
-				if (!int.TryParse(array[i], ref num2) || !int.TryParse(array2[i], ref num3))
+				if (!int.TryParse(array[i], out num2) || !int.TryParse(array2[i], out num3))
 				{
 					durations = new int[0];
 					crystals = new int[0];
@@ -1049,13 +1034,13 @@ namespace StaRTS.Main.Utils
 		{
 			if (!crateVO.Purchasable)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Crate '{0}' is not purchasable", new object[]
+				Service.Get<Logger>().ErrorFormat("Crate '{0}' is not purchasable", new object[]
 				{
 					crateVO.Uid
 				});
 				return false;
 			}
-			int num = player.ArmoryInfo.FirstCratePurchased ? crateVO.Crystals : 0;
+			int num = (!player.ArmoryInfo.FirstCratePurchased) ? 0 : crateVO.Crystals;
 			if (num > 0 && !GameUtils.SpendCrystals(num))
 			{
 				Service.Get<EventManager>().SendEvent(EventId.CrateStoreNotEnoughCurrency, crateVO.Uid);
@@ -1110,7 +1095,7 @@ namespace StaRTS.Main.Utils
 		public static void CrateOpenFailureCallback(uint status, object cookie)
 		{
 			ProcessingScreen.Hide();
-			Service.Get<StaRTSLogger>().Error("Failed to inventory open crate");
+			Service.Get<Logger>().Error("Failed to inventory open crate");
 		}
 
 		public static List<string> GetResolvedSupplyIdList(CrateData crateData)
@@ -1135,7 +1120,7 @@ namespace StaRTS.Main.Utils
 			Dictionary<string, CrateData> available = currentPlayer.Prizes.Crates.Available;
 			if (string.IsNullOrEmpty(awardedCrateUid) || !available.ContainsKey(awardedCrateUid))
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Cannot show crate reward modal, crate Id: {0} doesn't exist in inventory", new object[]
+				Service.Get<Logger>().ErrorFormat("Cannot show crate reward modal, crate Id: {0} doesn't exist in inventory", new object[]
 				{
 					awardedCrateUid
 				});
@@ -1145,7 +1130,7 @@ namespace StaRTS.Main.Utils
 			CrateVO optional = dataController.GetOptional<CrateVO>(crateData.CrateId);
 			if (optional == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Cannot show crate reward modal, static data not found for crate Id: {0}", new object[]
+				Service.Get<Logger>().ErrorFormat("Cannot show crate reward modal, static data not found for crate Id: {0}", new object[]
 				{
 					awardedCrateUid
 				});
@@ -1234,7 +1219,7 @@ namespace StaRTS.Main.Utils
 			}
 			Service.Get<ServerAPI>().Enqueue(new BuyResourceCommand(buyResourceRequest));
 			int currencyAmount = -crystals;
-			string itemType = "";
+			string itemType = string.Empty;
 			string itemId = purchaseContext;
 			if (softCurrencyFlow)
 			{
@@ -1280,11 +1265,11 @@ namespace StaRTS.Main.Utils
 			BuyMultiResourceRequest request = new BuyMultiResourceRequest(credits, materials, contraband, purchaseContext);
 			Service.Get<ServerAPI>().Enqueue(new BuyMultiResourceCommand(request));
 			int currencyAmount = -crystals;
-			string itemType = "";
+			string empty = string.Empty;
 			int itemCount = 1;
 			string type = "currency_purchase";
 			string subType = "durable";
-			Service.Get<DMOAnalyticsController>().LogInAppCurrencyAction(currencyAmount, itemType, itemId, itemCount, type, subType);
+			Service.Get<DMOAnalyticsController>().LogInAppCurrencyAction(currencyAmount, empty, itemId, itemCount, type, subType);
 			return true;
 		}
 
@@ -1302,14 +1287,14 @@ namespace StaRTS.Main.Utils
 			}
 			currentPlayer.Inventory.ModifyDroids(1);
 			BuyResourceRequest buyResourceRequest = BuyResourceRequest.MakeBuyDroidRequest(1);
-			buyResourceRequest.setPurchaseContext(allDroidsWereBusy ? "allDroidsBusy" : "droidHutUpgrade");
+			buyResourceRequest.setPurchaseContext((!allDroidsWereBusy) ? "droidHutUpgrade" : "allDroidsBusy");
 			BuyResourceCommand command = new BuyResourceCommand(buyResourceRequest);
 			Service.Get<ServerAPI>().Enqueue(command);
 			int currencyAmount = -num;
 			string itemType = "droid_hut";
 			string analyticsDroidHutType = GameUtils.GetAnalyticsDroidHutType();
 			int itemCount = 1;
-			string type = currentPlayer.CampaignProgress.FueInProgress ? "FUE_droid_upgrade" : "droid_upgrade";
+			string type = (!currentPlayer.CampaignProgress.FueInProgress) ? "droid_upgrade" : "FUE_droid_upgrade";
 			string subType = "durable";
 			Service.Get<DMOAnalyticsController>().LogInAppCurrencyAction(currencyAmount, itemType, analyticsDroidHutType, itemCount, type, subType);
 			Service.Get<EventManager>().SendEvent(EventId.DroidPurchaseCompleted, null);
@@ -1319,7 +1304,8 @@ namespace StaRTS.Main.Utils
 		private static string GetAnalyticsDroidHutType()
 		{
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
-			return currentPlayer.Faction.ToString().ToLower() + "DroidHut";
+			FactionType faction = currentPlayer.Faction;
+			return faction.ToString().ToLower() + "DroidHut";
 		}
 
 		public static string GetBuildingPurchaseContext(BuildingTypeVO nextBuildingVO, BuildingTypeVO currentBuildingVO, bool isUpgrade, bool isSwap)
@@ -1329,9 +1315,9 @@ namespace StaRTS.Main.Utils
 
 		public static string GetBuildingPurchaseContext(BuildingTypeVO nextBuildingVO, BuildingTypeVO currentBuildingVO, bool isUpgrade, bool isSwap, PlanetVO selectedPlanet)
 		{
-			string text = StringUtils.ToLowerCaseUnderscoreSeperated(nextBuildingVO.Type.ToString());
+			string value = StringUtils.ToLowerCaseUnderscoreSeperated(nextBuildingVO.Type.ToString());
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.Append(text);
+			stringBuilder.Append(value);
 			if (selectedPlanet != null)
 			{
 				stringBuilder.Append("|");
@@ -1365,10 +1351,12 @@ namespace StaRTS.Main.Utils
 			{
 				string message = Service.Get<Lang>().Get("RESTRICTED_WEB_ACCESS_WARNING", new object[0]);
 				AlertScreen.ShowModal(false, null, message, null, null);
-				return;
 			}
-			string message2 = Service.Get<Lang>().Get("EXIT_WARNING", new object[0]);
-			AlertScreen.ShowModal(false, null, message2, new OnScreenModalResult(GameUtils.OnOpenURLModalResult), url);
+			else
+			{
+				string message2 = Service.Get<Lang>().Get("EXIT_WARNING", new object[0]);
+				AlertScreen.ShowModal(false, null, message2, new OnScreenModalResult(GameUtils.OnOpenURLModalResult), url);
+			}
 		}
 
 		private static void OnOpenURLModalResult(object result, object cookie)
@@ -1384,13 +1372,9 @@ namespace StaRTS.Main.Utils
 			if (viewComp != null && viewComp.MainTransform != null)
 			{
 				Transform mainTransform = viewComp.MainTransform;
-				using (IEnumerator enumerator = mainTransform.GetEnumerator())
+				foreach (Transform transform in mainTransform)
 				{
-					while (enumerator.MoveNext())
-					{
-						Transform transform = (Transform)enumerator.get_Current();
-						transform.gameObject.SetActive(visible);
-					}
+					transform.gameObject.SetActive(visible);
 				}
 			}
 		}
@@ -1413,12 +1397,12 @@ namespace StaRTS.Main.Utils
 
 		public static long GetJavaEpochTime(DateTime time)
 		{
-			return Convert.ToInt64((time - new DateTime(1970, 1, 1, 0, 0, 0, 1)).get_TotalMilliseconds(), CultureInfo.InvariantCulture);
+			return Convert.ToInt64((time - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds);
 		}
 
 		public static long GetNowJavaEpochTime()
 		{
-			return Convert.ToInt64((DateTime.get_UtcNow() - new DateTime(1970, 1, 1, 0, 0, 0, 1)).get_TotalMilliseconds(), CultureInfo.InvariantCulture);
+			return Convert.ToInt64((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds);
 		}
 
 		public static int CalculateDamagePercentage(HealthComponent healthComp)
@@ -1443,7 +1427,7 @@ namespace StaRTS.Main.Utils
 			List<Contract> list = null;
 			List<Contract> list2 = null;
 			supportController.GetEstimatedUpdatedContractListsForChecksum(simulateTroopContractUpdate, out list, out list2);
-			int num = (list2 == null) ? 0 : list2.Count;
+			int num = (list2 != null) ? list2.Count : 0;
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			Map map = currentPlayer.Map;
 			IDataController dataController = Service.Get<IDataController>();
@@ -1468,8 +1452,7 @@ namespace StaRTS.Main.Utils
 				string uidOverride = null;
 				uint timeOverride = 0u;
 				bool flag2 = false;
-				int j = 0;
-				while (j < num)
+				for (int j = 0; j < num; j++)
 				{
 					Contract contract = list2[j];
 					if (contract.ContractTO.BuildingKey == building.Key && ContractUtils.IsBuildingType(contract.ContractTO.ContractType))
@@ -1490,13 +1473,8 @@ namespace StaRTS.Main.Utils
 						{
 							flag2 = true;
 							crystals += building.CurrentStorage;
-							break;
 						}
 						break;
-					}
-					else
-					{
-						j++;
 					}
 				}
 				if (!flag2)
@@ -1554,9 +1532,9 @@ namespace StaRTS.Main.Utils
 		public static long StringHash(string str)
 		{
 			int num = 7;
-			for (int i = 0; i < str.get_Length(); i++)
+			for (int i = 0; i < str.Length; i++)
 			{
-				num = num * 31 + (int)str.get_Chars(i);
+				num = num * 31 + (int)str[i];
 			}
 			return (long)num;
 		}
@@ -1599,7 +1577,7 @@ namespace StaRTS.Main.Utils
 			}
 			if (num > 2147483647u)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Attempted to get time difference but delta time {1} is too large.", new object[]
+				Service.Get<Logger>().ErrorFormat("Attempted to get time difference but delta time {1} is too large.", new object[]
 				{
 					num
 				});
@@ -1691,10 +1669,13 @@ namespace StaRTS.Main.Utils
 			CampaignVO campaignVO = null;
 			foreach (CampaignVO current in dataController.GetAll<CampaignVO>())
 			{
-				if (!current.Timed && current.Faction == currentPlayer.Faction && currentPlayer.CampaignProgress.HasCampaign(current) && current.UnlockOrder > num)
+				if (!current.Timed && current.Faction == currentPlayer.Faction)
 				{
-					campaignVO = current;
-					num = campaignVO.UnlockOrder;
+					if (currentPlayer.CampaignProgress.HasCampaign(current) && current.UnlockOrder > num)
+					{
+						campaignVO = current;
+						num = campaignVO.UnlockOrder;
+					}
 				}
 			}
 			return campaignVO;
@@ -1730,7 +1711,7 @@ namespace StaRTS.Main.Utils
 			{
 				return false;
 			}
-			countryList = countryList.Replace(" ", "");
+			countryList = countryList.Replace(" ", string.Empty);
 			countryList = countryList.ToLower();
 			string[] array = countryList.Split(new char[]
 			{
@@ -1750,7 +1731,7 @@ namespace StaRTS.Main.Utils
 
 		public static bool IsBattleVersionSupported(string cmsVersion, string battleVersion)
 		{
-			return cmsVersion == Service.Get<FMS>().GetFileVersion("patches/base.json").ToString() && battleVersion == "21.0";
+			return cmsVersion == Service.Get<FMS>().GetFileVersion("patches/base.json").ToString() && battleVersion == "22.0";
 		}
 
 		public static bool IsVideoShareSupported(string videoId)
@@ -1827,6 +1808,7 @@ namespace StaRTS.Main.Utils
 
 		public static void TryAndOpenAppropriateStorePage()
 		{
+			Application.OpenURL("market://details?id=com.lucasarts.starts_goo");
 		}
 
 		public static string GetTournamentPointIconName(string planetId)
@@ -1836,11 +1818,7 @@ namespace StaRTS.Main.Utils
 				return null;
 			}
 			PlanetVO optional = Service.Get<IDataController>().GetOptional<PlanetVO>(planetId);
-			if (optional != null)
-			{
-				return optional.MedalIconName;
-			}
-			return null;
+			return (optional != null) ? optional.MedalIconName : null;
 		}
 
 		public static bool ConflictStartsInBadgePeriod(TournamentVO tournamentVO)
@@ -1876,8 +1854,8 @@ namespace StaRTS.Main.Utils
 
 		public static string GetClearableAssetName(BuildingTypeVO buildingVO, PlanetVO planetVO)
 		{
-			string text = buildingVO.AssetName.Substring(0, buildingVO.AssetName.LastIndexOf("-") + 1);
-			return text + planetVO.Abbreviation;
+			string str = buildingVO.AssetName.Substring(0, buildingVO.AssetName.LastIndexOf("-") + 1);
+			return str + planetVO.Abbreviation;
 		}
 
 		public static bool IsPvpTargetSearchFailureRequiresReload(uint commandStatus)
@@ -1920,7 +1898,7 @@ namespace StaRTS.Main.Utils
 			if (delta != 0)
 			{
 				ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
-				int val = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCratesNotViewed), CultureInfo.InvariantCulture) + delta;
+				int val = Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCratesNotViewed)) + delta;
 				serverPlayerPrefs.SetPref(ServerPref.NumInventoryCratesNotViewed, Math.Max(0, val).ToString());
 				Service.Get<ServerAPI>().Enqueue(new SetPrefsCommand(false));
 			}
@@ -1944,7 +1922,7 @@ namespace StaRTS.Main.Utils
 					{
 						':'
 					});
-					prizes.ModifyResourceAmount(array[0], Convert.ToInt32(array[1], CultureInfo.InvariantCulture));
+					prizes.ModifyResourceAmount(array[0], Convert.ToInt32(array[1]));
 					i++;
 				}
 			}
@@ -1959,7 +1937,7 @@ namespace StaRTS.Main.Utils
 						':'
 					});
 					IUpgradeableVO upgradeableVO = dataController.Get<TroopTypeVO>(array[0]);
-					prizes.ModifyTroopAmount(upgradeableVO.UpgradeGroup, Convert.ToInt32(array[1], CultureInfo.InvariantCulture));
+					prizes.ModifyTroopAmount(upgradeableVO.UpgradeGroup, Convert.ToInt32(array[1]));
 					j++;
 				}
 			}
@@ -1974,7 +1952,7 @@ namespace StaRTS.Main.Utils
 						':'
 					});
 					IUpgradeableVO upgradeableVO = dataController.Get<SpecialAttackTypeVO>(array[0]);
-					prizes.ModifySpecialAttackAmount(upgradeableVO.UpgradeGroup, Convert.ToInt32(array[1], CultureInfo.InvariantCulture));
+					prizes.ModifySpecialAttackAmount(upgradeableVO.UpgradeGroup, Convert.ToInt32(array[1]));
 					k++;
 				}
 			}
@@ -1989,7 +1967,7 @@ namespace StaRTS.Main.Utils
 						':'
 					});
 					IUpgradeableVO upgradeableVO = dataController.Get<TroopTypeVO>(array[0]);
-					prizes.ModifyTroopAmount(upgradeableVO.UpgradeGroup, Convert.ToInt32(array[1], CultureInfo.InvariantCulture));
+					prizes.ModifyTroopAmount(upgradeableVO.UpgradeGroup, Convert.ToInt32(array[1]));
 					l++;
 				}
 			}
@@ -2000,10 +1978,10 @@ namespace StaRTS.Main.Utils
 		{
 			ServerPlayerPrefs serverPlayerPrefs = Service.Get<ServerPlayerPrefs>();
 			int num = 0;
-			num += Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryItemsNotViewed), CultureInfo.InvariantCulture);
-			num += Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCratesNotViewed), CultureInfo.InvariantCulture);
-			num += Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryTroopsNotViewed), CultureInfo.InvariantCulture);
-			return num + Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCurrencyNotViewed), CultureInfo.InvariantCulture);
+			num += Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryItemsNotViewed));
+			num += Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCratesNotViewed));
+			num += Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryTroopsNotViewed));
+			return num + Convert.ToInt32(serverPlayerPrefs.GetPref(ServerPref.NumInventoryCurrencyNotViewed));
 		}
 
 		public static Transform FindAssetMetaDataTransform(GameObject gameObj, string searchName)
@@ -2086,7 +2064,7 @@ namespace StaRTS.Main.Utils
 				return null;
 			}
 			string rewardUid = crateSupply.RewardUid;
-			if (rewardUid == null || rewardUid.get_Length() <= 0)
+			if (rewardUid == null || rewardUid.Length <= 0)
 			{
 				return null;
 			}
@@ -2157,7 +2135,7 @@ namespace StaRTS.Main.Utils
 			}
 			if (geometryVO == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Could not find icon for objective {0}, type {1}, objIcon {2}, lvl {3}", new object[]
+				Service.Get<Logger>().ErrorFormat("Could not find icon for objective {0}, type {1}, objIcon {2}, lvl {3}", new object[]
 				{
 					obj.Uid,
 					obj.ObjectiveType,
@@ -2171,16 +2149,19 @@ namespace StaRTS.Main.Utils
 		public static int GetShardQualityNumeric(CrateSupplyVO supplyVO)
 		{
 			IDataController dataController = Service.Get<IDataController>();
-			SupplyType type = supplyVO.Type;
-			if (type == SupplyType.Shard)
+			switch (supplyVO.Type)
+			{
+			case SupplyType.Shard:
 			{
 				EquipmentVO currentEquipmentDataByID = ArmoryUtils.GetCurrentEquipmentDataByID(supplyVO.RewardUid);
 				return (int)currentEquipmentDataByID.Quality;
 			}
-			if (type == SupplyType.ShardTroop || type == SupplyType.ShardSpecialAttack)
+			case SupplyType.ShardTroop:
+			case SupplyType.ShardSpecialAttack:
 			{
 				ShardVO shardVO = dataController.Get<ShardVO>(supplyVO.RewardUid);
 				return (int)shardVO.Quality;
+			}
 			}
 			return -1;
 		}
@@ -2237,13 +2218,9 @@ namespace StaRTS.Main.Utils
 			{
 				return text;
 			}
-			string text2 = lang.Get("SupplyRewardFormat", new object[0]);
+			string format = lang.Get("SupplyRewardFormat", new object[0]);
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.AppendFormat(text2, new object[]
-			{
-				text,
-				lang.ThousandsSeparated(Convert.ToInt32(amount, CultureInfo.InvariantCulture))
-			});
+			stringBuilder.AppendFormat(format, text, lang.ThousandsSeparated(Convert.ToInt32(amount)));
 			return stringBuilder.ToString();
 		}
 
@@ -2263,21 +2240,24 @@ namespace StaRTS.Main.Utils
 
 		public static void SwapShaderIfNeeded(string[] swapList, Shader swapSrc, Material sharedMaterial)
 		{
+			string b = string.Empty;
 			if (sharedMaterial.shader != null)
 			{
-				string name = sharedMaterial.shader.name;
+				b = sharedMaterial.shader.name;
 				int num = swapList.Length;
 				for (int i = 0; i < num; i++)
 				{
-					if (swapList[i] == name)
+					if (swapList[i] == b)
 					{
 						sharedMaterial.shader = swapSrc;
-						return;
+						break;
 					}
 				}
-				return;
 			}
-			Service.Get<StaRTSLogger>().Warn("Material Shader NULL: " + sharedMaterial.name);
+			else
+			{
+				Service.Get<Logger>().Warn("Material Shader NULL: " + sharedMaterial.name);
+			}
 		}
 
 		public static bool SafeVOEqualityValidation(IValueObject lhs, IValueObject rhs)
@@ -2335,8 +2315,8 @@ namespace StaRTS.Main.Utils
 
 		public static string GetSquadLevelUIDFromLevel(int level)
 		{
-			string text = "SquadLevel";
-			return text + level.ToString();
+			string str = "SquadLevel";
+			return str + level.ToString();
 		}
 
 		public static string GetSquadLevelUIDFromSquad(Squad squad)
@@ -2348,7 +2328,7 @@ namespace StaRTS.Main.Utils
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().Warn("GameUtils.GetSquadLevelUIDFromSquad called with null Squad");
+				Service.Get<Logger>().Warn("GameUtils.GetSquadLevelUIDFromSquad called with null Squad");
 			}
 			return GameUtils.GetSquadLevelUIDFromLevel(level);
 		}
@@ -2364,7 +2344,7 @@ namespace StaRTS.Main.Utils
 				});
 				if (array.Length > squadCenterLevel - 1)
 				{
-					return Convert.ToInt32(array[squadCenterLevel - 1], CultureInfo.InvariantCulture);
+					return Convert.ToInt32(array[squadCenterLevel - 1]);
 				}
 			}
 			return 0;
@@ -2456,744 +2436,6 @@ namespace StaRTS.Main.Utils
 			{
 				highestLevelScreen2.Close(null);
 			}
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			GameUtils.AddRewardToInventory((RewardVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.ApplyRelativeRotation(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.BuyCrate((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (CrateVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.BuyLEI((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args), (LimitedEditionItemVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.BuyNextDroid(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.BuyProtectionPackWithCrystals(*(int*)args));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.BuySoftCurrenciesWithCrystals(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), Marshal.PtrToStringUni(*(IntPtr*)(args + 4)), Marshal.PtrToStringUni(*(IntPtr*)(args + 5))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.BuySoftCurrencyWithCrystals((CurrencyType)(*(int*)args), *(int*)(args + 1), *(int*)(args + 2), Marshal.PtrToStringUni(*(IntPtr*)(args + 3)), *(sbyte*)(args + 4) != 0));
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CalcuateMedals(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CalculateBattleHistoryVictoryRating((LeaderboardBattleHistory)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CalculateDamagePercentage((HealthComponent)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CalculateDamagePercentage(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CalculatePlayerVictoryRating((GamePlayer)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CalculatePvpTargetVictoryRating((PvpTarget)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CalculateResourceChecksum(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CalculateVictoryRating(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CanAffordContraband(*(int*)args));
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CanAffordCosts(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CanAffordCredits(*(int*)args));
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CanAffordCrystals(*(int*)args));
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CanAffordMaterials(*(int*)args));
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CanAffordReputation(*(int*)args));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			GameUtils.CloseStoreOrInventoryScreen();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CompareBuildingsByPosition((Building)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CompareLastSavedBuildingLocation((Building)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.ConflictStartsInBadgePeriod((TournamentVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.ContrabandCrystalCost(*(int*)args));
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			GameUtils.CrateOpenSuccessCallback((OpenCrateResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CreditsCrystalCost(*(int*)args));
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CrystalCostToInstantUpgrade((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CrystalCostToUpgradeAllWalls(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.CurrencyPow(*(float*)args, *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.DroidCrystalCost(*(int*)args));
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			GameUtils.ExitEditState();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.FindAssetMetaDataTransform((GameObject)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.FindRelativeRotation(*(*(IntPtr*)args), *(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetAnalyticsDroidHutType());
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetBuildingEffectiveLevel((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetBuildingPurchaseContext((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0));
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetBuildingPurchaseContext((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0, *(sbyte*)(args + 3) != 0, (PlanetVO)GCHandledObjects.GCHandleToObject(args[4])));
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetClearableAssetName((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (PlanetVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetCurrencyIconName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetCurrencyType(*(int*)args, *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetDeployableCount(Marshal.PtrToStringUni(*(IntPtr*)args), (InventoryStorage)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetDeployableCountForUpgradeGroupSpecialAttack((SpecialAttackTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetDeployableCountForUpgradeGroupTroop((TroopTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke46(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetDeviceInfo());
-		}
-
-		public unsafe static long $Invoke47(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetEquivalentFromPreSortedList((List<BuildingTypeVO>)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), (FactionType)(*(int*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke48(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetEquivalentSlow((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (FactionType)(*(int*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke49(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetHighestUnlockedCampaign());
-		}
-
-		public unsafe static long $Invoke50(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetHQScaledCost((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke51(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetHQScaledCostForPlayer((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args)));
-		}
-
-		public unsafe static long $Invoke52(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetHQScaledValue((IDataController)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke53(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetIconVOFromCrateSupply((CrateSupplyVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke54(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetIconVOFromObjective((ObjectiveVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke55(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetJavaEpochTime(*(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke56(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetNowJavaEpochTime());
-		}
-
-		public unsafe static long $Invoke57(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetNumInventoryItemsNotViewed());
-		}
-
-		public unsafe static long $Invoke58(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetOppositeFaction((FactionType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke59(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetPerkByGroupAndTier(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke60(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetProtectionTimeRemaining());
-		}
-
-		public unsafe static long $Invoke61(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetReputationCapacityForLevel(*(int*)args));
-		}
-
-		public unsafe static long $Invoke62(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetResolvedSupplyIdList((CrateData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke63(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetRewardSupplyName((CrateSupplyVO)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke64(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetServerTransmissionMessageImage((FactionType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke65(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetShardQualityNumeric((CrateSupplyVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke66(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetShardUnlockSupplyName((IDeployableVO)GCHandledObjects.GCHandleToObject(*args), (ShardVO)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke67(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetSingleCurrencyIconAssetName((CurrencyType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke68(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetSingleCurrencyIconAssetName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke69(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetSingleCurrencyItemAssetName((CurrencyType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke70(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetSingleCurrencyItemAssetName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke71(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetSquadLevelFromInvestedRep(*(int*)args));
-		}
-
-		public unsafe static long $Invoke72(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetSquadLevelUIDFromLevel(*(int*)args));
-		}
-
-		public unsafe static long $Invoke73(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetSquadLevelUIDFromSquad((Squad)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke74(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetSquaredDistanceToTarget((ShooterComponent)GCHandledObjects.GCHandleToObject(*args), (SmartEntity)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke75(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetTimeLabelFromSeconds(*(int*)args));
-		}
-
-		public unsafe static long $Invoke76(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetTournamentPointIconName(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke77(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetTransmissionHoloId((FactionType)(*(int*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke78(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetWorldOwner());
-		}
-
-		public unsafe static long $Invoke79(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetWorldOwnerChampionCount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke80(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetWorldOwnerHeroCount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke81(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetWorldOwnerSpecialAttackCount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke82(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.GetWorldOwnerTroopCount(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke83(long instance, long* args)
-		{
-			GameUtils.HandleCratePurchaseResponse((CrateDataResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke84(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.HandleSoftCurrencyFlow(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke85(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.HasAvailableTroops(*(sbyte*)args != 0, (BattleTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke86(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.HasEnoughCurrencyStorage((CurrencyType)(*(int*)args), *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke87(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.HasUserFactionFlipped((CurrentPlayer)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke88(long instance, long* args)
-		{
-			GameUtils.IndicateNewInventoryItems((RewardVO)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke89(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsAppLoading());
-		}
-
-		public unsafe static long $Invoke90(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsBattleVersionSupported(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke91(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsBuildingMovable((Entity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke92(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsBuildingTypeValidForBattleConditions((BuildingType)(*(int*)args)));
-		}
-
-		public unsafe static long $Invoke93(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsBuildingUpgradable((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke94(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsDeviceCountryInList(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke95(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsEligibleToFindTarget((ShooterComponent)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke96(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsEntityDead((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke97(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsEntityShieldGenerator((SmartEntity)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke98(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsMissionDefense(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke99(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsMissionRaidDefense(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke100(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsMissionSpecOps(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke101(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsPlanetCurrentOne(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke102(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsUnlockBlockingScreenOpen());
-		}
-
-		public unsafe static long $Invoke103(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsVideoShareSupported(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke104(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsVisitingBase());
-		}
-
-		public unsafe static long $Invoke105(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.IsVisitingNeighbor());
-		}
-
-		public unsafe static long $Invoke106(long instance, long* args)
-		{
-			GameUtils.ListToAdditiveMap((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), (Dictionary<string, int>)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke107(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.ListToMap((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args)));
-		}
-
-		public unsafe static long $Invoke108(long instance, long* args)
-		{
-			GameUtils.LogComponentsAsError(Marshal.PtrToStringUni(*(IntPtr*)args), (Entity)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke109(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.MaterialsCrystalCost(*(int*)args));
-		}
-
-		public unsafe static long $Invoke110(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.MultiCurrencyCrystalCost((Dictionary<CurrencyType, int>)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke111(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.NearestPointOnRect(*(int*)args, *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke112(long instance, long* args)
-		{
-			GameUtils.OnBuyMoreCrystals(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke113(long instance, long* args)
-		{
-			GameUtils.OnOpenURLModalResult(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke114(long instance, long* args)
-		{
-			GameUtils.OpenCrate((CrateData)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke115(long instance, long* args)
-		{
-			GameUtils.OpenInventoryCrateModal((CrateData)GCHandledObjects.GCHandleToObject(*args), (OnScreenModalResult)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke116(long instance, long* args)
-		{
-			GameUtils.OpenStoreTreasureTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke117(long instance, long* args)
-		{
-			GameUtils.OpenURL(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke118(long instance, long* args)
-		{
-			GameUtils.PromptToBuyCrystals();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke119(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.RectContainsRect(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(int*)(args + 7)));
-		}
-
-		public unsafe static long $Invoke120(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.RectsIntersect(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), *(int*)(args + 5), *(int*)(args + 6), *(int*)(args + 7)));
-		}
-
-		public unsafe static long $Invoke121(long instance, long* args)
-		{
-			GameUtils.ReturnToHomeCompleteNowBuyMoreCrystals(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke122(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.SafeVOEqualityValidation((IValueObject)GCHandledObjects.GCHandleToObject(*args), (IValueObject)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke123(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.SecondsToCrystals(*(int*)args));
-		}
-
-		public unsafe static long $Invoke124(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.SecondsToCrystalsForPerk(*(int*)args));
-		}
-
-		public unsafe static long $Invoke125(long instance, long* args)
-		{
-			GameUtils.ShowCrateAwardModal(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke126(long instance, long* args)
-		{
-			GameUtils.ShowNotEnoughStorageMessage((CurrencyType)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke127(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.SortBuildingByUID((BuildingTypeVO)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke128(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.SpendCrystals(*(int*)args));
-		}
-
-		public unsafe static long $Invoke129(long instance, long* args)
-		{
-			GameUtils.SpendCurrency((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke130(long instance, long* args)
-		{
-			GameUtils.SpendCurrency(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke131(long instance, long* args)
-		{
-			GameUtils.SpendCurrency(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), *(sbyte*)(args + 5) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke132(long instance, long* args)
-		{
-			GameUtils.SpendCurrencyWithMultiplier(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(float*)(args + 3), *(sbyte*)(args + 4) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke133(long instance, long* args)
-		{
-			GameUtils.SpendHQScaledCurrency((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke134(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.SquaredDistance(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke135(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.StringHash(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke136(long instance, long* args)
-		{
-			GameUtils.SwapShaderIfNeeded((string[])GCHandledObjects.GCHandleToPinnedArrayObject(*args), (Shader)GCHandledObjects.GCHandleToObject(args[1]), (Material)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke137(long instance, long* args)
-		{
-			GameUtils.ToggleGameObjectViewVisibility((GameObjectViewComponent)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke138(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(GameUtils.TraverseSpiral(*(int*)args, *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke139(long instance, long* args)
-		{
-			GameUtils.TryAndOpenAppropriateStorePage();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke140(long instance, long* args)
-		{
-			GameUtils.UpdateInventoryCrateBadgeCount(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke141(long instance, long* args)
-		{
-			GameUtils.UpdateMinimumFrameCountForNextTargeting((ShooterComponent)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

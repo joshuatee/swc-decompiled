@@ -6,7 +6,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Story.Trigger
 {
@@ -28,7 +27,7 @@ namespace StaRTS.Main.Story.Trigger
 			this.eventManager = Service.Get<EventManager>();
 			if (string.IsNullOrEmpty(this.vo.PrepareString))
 			{
-				Service.Get<StaRTSLogger>().Error("HQLevelStoryTrigger: Missing HQ Level REQ for : " + this.vo.Uid);
+				Service.Get<Logger>().Error("HQLevelStoryTrigger: Missing HQ Level REQ for : " + this.vo.Uid);
 			}
 			this.hqLevelReq = int.Parse(this.prepareArgs[0]);
 			Service.Get<RUFManager>().OmitRateAppLevels.Add(this.hqLevelReq);
@@ -68,14 +67,15 @@ namespace StaRTS.Main.Story.Trigger
 				if (highestLevelHQ < this.hqLevelReq)
 				{
 					this.AddAppropriateHQUpgradeObserver();
-					return;
 				}
-				if (this.IsCelebrationScreenPending())
+				else if (this.IsCelebrationScreenPending())
 				{
 					this.AddAppropriateHQUpgradeObserver();
-					return;
 				}
-				this.eventManager.RegisterObserver(this, EventId.StartupTasksCompleted, EventPriority.Default);
+				else
+				{
+					this.eventManager.RegisterObserver(this, EventId.StartupTasksCompleted, EventPriority.Default);
+				}
 			}
 		}
 
@@ -92,49 +92,6 @@ namespace StaRTS.Main.Story.Trigger
 		public override void Destroy()
 		{
 			base.Destroy();
-		}
-
-		protected internal HQLevelStoryTrigger(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((HQLevelStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Activate();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((HQLevelStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).AddAppropriateHQUpgradeObserver();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((HQLevelStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).AddHQLevelEventObserver();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HQLevelStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).CheckHQLevelAndSatisfy());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((HQLevelStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HQLevelStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).IsCelebrationScreenPending());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((HQLevelStoryTrigger)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

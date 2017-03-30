@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Player
 		public SquadWarClaimRewardCommand(SquadWarClaimRewardRequest request) : base("guild.war.claim", request, new CrateDataResponse())
 		{
 		}
-
-		protected internal SquadWarClaimRewardCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

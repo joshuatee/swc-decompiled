@@ -20,8 +20,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -252,24 +250,20 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			IEnumerable<KeyValuePair<string, InventoryEntry>> allTroops = Service.Get<CurrentPlayer>().GetAllTroops();
 			if (allTroops != null)
 			{
-				using (IEnumerator<KeyValuePair<string, InventoryEntry>> enumerator = allTroops.GetEnumerator())
+				foreach (KeyValuePair<string, InventoryEntry> current in allTroops)
 				{
-					while (enumerator.MoveNext())
+					if (current.Value.Amount > 0)
 					{
-						KeyValuePair<string, InventoryEntry> current = enumerator.get_Current();
-						if (current.get_Value().Amount > 0)
+						string key = current.Key;
+						IDataController dataController = Service.Get<IDataController>();
+						TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(key);
+						if (!troopTypeVO.PreventDonation)
 						{
-							string key = current.get_Key();
-							IDataController dataController = Service.Get<IDataController>();
-							TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(key);
-							if (!troopTypeVO.PreventDonation)
+							bool flag = this.AddTroopItem(current, troopTypeVO);
+							this.hasTroops = true;
+							if (flag && !this.hasEligibleTroop)
 							{
-								bool flag = this.AddTroopItem(current, troopTypeVO);
-								this.hasTroops = true;
-								if (flag && !this.hasEligibleTroop)
-								{
-									this.hasEligibleTroop = true;
-								}
+								this.hasEligibleTroop = true;
 							}
 						}
 					}
@@ -363,7 +357,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			{
 				UXElement uXElement = elementList[i];
 				KeyValuePair<string, InventoryEntry> keyValuePair = (KeyValuePair<string, InventoryEntry>)uXElement.Tag;
-				string key = keyValuePair.get_Key();
+				string key = keyValuePair.Key;
 				TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(key);
 				bool flag2 = troopTypeVO.Size <= num3;
 				int num4 = 0;
@@ -371,8 +365,8 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				{
 					num4 = this.troopsToDonate[key];
 				}
-				bool flag3 = keyValuePair.get_Value().Amount > num4;
-				bool enabled = flag2 & flag & flag3;
+				bool flag3 = keyValuePair.Value.Amount > num4;
+				bool enabled = flag2 && flag && flag3;
 				this.SetVisuallyDisabledState(uXElement as UXButton, key, enabled);
 				i++;
 			}
@@ -399,10 +393,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			uXButton.Tag = unit;
 			uXButton.OnClicked = new UXButtonClickedDelegate(this.OnTroopToDonateClicked);
 			UXLabel subElement = this.troopDonateGrid.GetSubElement<UXLabel>(itemUid, "LabelDonateTroops");
-			subElement.Text = string.Format("x{0}", new object[]
-			{
-				unit.get_Value().Amount
-			});
+			subElement.Text = string.Format("x{0}", unit.Value.Amount);
 			UXLabel subElement2 = this.troopDonateGrid.GetSubElement<UXLabel>(itemUid, "LabelTroopLevel");
 			subElement2.Text = LangUtils.GetLevelText(troop.Lvl);
 			UXSprite subElement3 = this.troopDonateGrid.GetSubElement<UXSprite>(itemUid, "SpriteDonateTroopsItem");
@@ -421,9 +412,8 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (!enabled)
 			{
 				item.VisuallyDisableButton();
-				return;
 			}
-			if (item.VisuallyDisabled)
+			else if (item.VisuallyDisabled)
 			{
 				item.VisuallyEnableButton();
 			}
@@ -449,9 +439,11 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				this.buildVehiclesButton.Tag = highestAvailableFactory;
 				this.buildVehiclesButton.OnClicked = new UXButtonClickedDelegate(this.OnTrainTroopsClicked);
 				this.buildVehiclesButton.Enabled = true;
-				return;
 			}
-			this.buildVehiclesButton.Enabled = false;
+			else
+			{
+				this.buildVehiclesButton.Enabled = false;
+			}
 		}
 
 		private void OnTrainTroopsClicked(UXButton button)
@@ -507,8 +499,8 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		{
 			Service.Get<EventManager>().SendEvent(EventId.SquadSelect, null);
 			KeyValuePair<string, InventoryEntry> keyValuePair = (KeyValuePair<string, InventoryEntry>)button.Tag;
-			string key = keyValuePair.get_Key();
-			InventoryEntry value = keyValuePair.get_Value();
+			string key = keyValuePair.Key;
+			InventoryEntry value = keyValuePair.Value;
 			IDataController dataController = Service.Get<IDataController>();
 			TroopTypeVO troopTypeVO = dataController.Get<TroopTypeVO>(key);
 			int amount = value.Amount;
@@ -537,10 +529,12 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				string itemUid = "troop_" + troopTypeVO.Uid;
 				if (this.troopsToDonate.ContainsKey(key))
 				{
-					Dictionary<string, int> arg_123_0 = this.troopsToDonate;
-					string key2 = key;
-					int num3 = arg_123_0[key2];
-					arg_123_0[key2] = num3 + 1;
+					Dictionary<string, int> dictionary;
+					Dictionary<string, int> expr_132 = dictionary = this.troopsToDonate;
+					string key2;
+					string expr_136 = key2 = key;
+					int num3 = dictionary[key2];
+					expr_132[expr_136] = num3 + 1;
 				}
 				else
 				{
@@ -548,10 +542,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				}
 				int num4 = value.Amount - this.troopsToDonate[key];
 				UXLabel subElement = this.troopDonateGrid.GetSubElement<UXLabel>(itemUid, "LabelDonateTroops");
-				subElement.Text = string.Format("x{0}", new object[]
-				{
-					num4
-				});
+				subElement.Text = string.Format("x{0}", num4);
 			}
 			this.donateTroopsConfirm.Enabled = true;
 			this.RefreshView();
@@ -562,9 +553,9 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			int num = 0;
 			foreach (KeyValuePair<string, int> current in this.troopsToDonate)
 			{
-				string key = current.get_Key();
+				string key = current.Key;
 				TroopTypeVO troopTypeVO = sdc.Get<TroopTypeVO>(key);
-				num += troopTypeVO.Size * current.get_Value();
+				num += troopTypeVO.Size * current.Value;
 			}
 			return num;
 		}
@@ -574,7 +565,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			int num = 0;
 			foreach (KeyValuePair<string, int> current in this.troopsToDonate)
 			{
-				num += current.get_Value();
+				num += current.Value;
 			}
 			return num;
 		}
@@ -601,9 +592,11 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			if (donationCooldownEndTime <= 0u)
 			{
 				this.ShowRepProgressDonationState();
-				return;
 			}
-			this.UpdateLabelTimeRemaining(this.earnReputationTimer);
+			else
+			{
+				this.UpdateLabelTimeRemaining(this.earnReputationTimer);
+			}
 		}
 
 		public void ShowRepProgressDonationState()
@@ -625,138 +618,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			{
 				text
 			});
-		}
-
-		protected internal SquadScreenTroopDonationView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).AddTroopItem((KeyValuePair<string, InventoryEntry>)GCHandledObjects.GCHandleToObject(*args), (TroopTypeVO)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).CloseView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).GetNumberOfTroopsDonated());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).GetTotalSizeOfTroopsToDonate((IDataController)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).HideView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).InitView(Marshal.PtrToStringUni(*(IntPtr*)args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(int*)(args + 2), *(int*)(args + 3), *(int*)(args + 4), Marshal.PtrToStringUni(*(IntPtr*)(args + 5)), *(sbyte*)(args + 6) != 0, *(int*)(args + 7), (TroopDonationProgress)GCHandledObjects.GCHandleToObject(args[8]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).IsVisible());
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).OnDonateClose((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).OnDonateConfirm((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).OnDonationComplete(*(sbyte*)args != 0, GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).OnTrainTroopsClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).OnTroopToDonateClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).OpenTroopTrainingScreen(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).RefreshView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).SetupTrainTroopsButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).SetVisuallyDisabledState((UXButton)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)), *(sbyte*)(args + 2) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).ShowRepProgressDonationState();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).ShowView();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadScreenTroopDonationView)GCHandledObjects.GCHandleToObject(instance)).UpdateLabelTimeRemaining((UXLabel)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

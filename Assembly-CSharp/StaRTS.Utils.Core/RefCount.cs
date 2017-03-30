@@ -1,5 +1,4 @@
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Utils.Core
 {
@@ -27,39 +26,12 @@ namespace StaRTS.Utils.Core
 
 		public int AddRef()
 		{
-			int result = this.count + 1;
-			this.count = result;
-			return result;
+			return ++this.count;
 		}
 
 		public int Release()
 		{
-			if (this.count <= 0)
-			{
-				return 0;
-			}
-			int result = this.count - 1;
-			this.count = result;
-			return result;
-		}
-
-		protected internal RefCount(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RefCount)GCHandledObjects.GCHandleToObject(instance)).AddRef());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RefCount)GCHandledObjects.GCHandleToObject(instance)).Count);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((RefCount)GCHandledObjects.GCHandleToObject(instance)).Release());
+			return (this.count <= 0) ? 0 : (--this.count);
 		}
 	}
 }

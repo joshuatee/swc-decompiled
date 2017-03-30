@@ -1,35 +1,31 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using UnityEngine.Internal;
-using UnityEngine.Serialization;
-using WinRTBridge;
 
-[System.Serializable]
-public class EventDelegate : IUnitySerializable
+[Serializable]
+public class EventDelegate
 {
-	[System.Serializable]
-	public class Parameter : IUnitySerializable
+	[Serializable]
+	public class Parameter
 	{
 		public UnityEngine.Object obj;
 
 		public string field;
 
-		[System.NonSerialized]
+		[NonSerialized]
 		private object mValue;
 
-		[System.NonSerialized]
-		public Type expectedType;
+		[NonSerialized]
+		public Type expectedType = typeof(void);
 
-		[System.NonSerialized]
+		[NonSerialized]
 		public bool cached;
 
-		[System.NonSerialized]
+		[NonSerialized]
 		public PropertyInfo propInfo;
 
-		[System.NonSerialized]
+		[NonSerialized]
 		public FieldInfo fieldInfo;
 
 		public object value
@@ -48,10 +44,10 @@ public class EventDelegate : IUnitySerializable
 					if (this.obj != null && !string.IsNullOrEmpty(this.field))
 					{
 						Type type = this.obj.GetType();
-						this.propInfo = type.GetRuntimeProperty(this.field);
+						this.propInfo = type.GetProperty(this.field);
 						if (this.propInfo == null)
 						{
-							this.fieldInfo = type.GetRuntimeField(this.field);
+							this.fieldInfo = type.GetField(this.field);
 						}
 					}
 				}
@@ -66,6 +62,10 @@ public class EventDelegate : IUnitySerializable
 				if (this.obj != null)
 				{
 					return this.obj;
+				}
+				if (this.expectedType != null && this.expectedType.IsValueType)
+				{
+					return null;
 				}
 				return Convert.ChangeType(null, this.expectedType);
 			}
@@ -93,160 +93,49 @@ public class EventDelegate : IUnitySerializable
 
 		public Parameter()
 		{
-			this.expectedType = typeof(void);
-			base..ctor();
 		}
 
 		public Parameter(UnityEngine.Object obj, string field)
 		{
-			this.expectedType = typeof(void);
-			base..ctor();
 			this.obj = obj;
 			this.field = field;
 		}
 
 		public Parameter(object val)
 		{
-			this.expectedType = typeof(void);
-			base..ctor();
 			this.mValue = val;
-		}
-
-		public override void Unity_Serialize(int depth)
-		{
-			if (depth <= 7)
-			{
-				SerializedStateWriter.Instance.WriteUnityEngineObject(this.obj);
-			}
-			SerializedStateWriter.Instance.WriteString(this.field);
-		}
-
-		public override void Unity_Deserialize(int depth)
-		{
-			if (depth <= 7)
-			{
-				this.obj = (SerializedStateReader.Instance.ReadUnityEngineObject() as UnityEngine.Object);
-			}
-			this.field = (SerializedStateReader.Instance.ReadString() as string);
-		}
-
-		public override void Unity_RemapPPtrs(int depth)
-		{
-			if (this.obj != null)
-			{
-				this.obj = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.obj) as UnityEngine.Object);
-			}
-		}
-
-		public unsafe override void Unity_NamedSerialize(int depth)
-		{
-			byte[] var_0_cp_0;
-			int var_0_cp_1;
-			if (depth <= 7)
-			{
-				ISerializedNamedStateWriter arg_23_0 = SerializedNamedStateWriter.Instance;
-				UnityEngine.Object arg_23_1 = this.obj;
-				var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-				var_0_cp_1 = 0;
-				arg_23_0.WriteUnityEngineObject(arg_23_1, &var_0_cp_0[var_0_cp_1] + 2215);
-			}
-			SerializedNamedStateWriter.Instance.WriteString(this.field, &var_0_cp_0[var_0_cp_1] + 2219);
-		}
-
-		public unsafe override void Unity_NamedDeserialize(int depth)
-		{
-			byte[] var_0_cp_0;
-			int var_0_cp_1;
-			if (depth <= 7)
-			{
-				ISerializedNamedStateReader arg_1E_0 = SerializedNamedStateReader.Instance;
-				var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-				var_0_cp_1 = 0;
-				this.obj = (arg_1E_0.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 2215) as UnityEngine.Object);
-			}
-			this.field = (SerializedNamedStateReader.Instance.ReadString(&var_0_cp_0[var_0_cp_1] + 2219) as string);
-		}
-
-		protected internal Parameter(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventDelegate.Parameter)GCHandledObjects.GCHandleToObject(instance)).type);
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((EventDelegate.Parameter)GCHandledObjects.GCHandleToObject(instance)).value);
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((EventDelegate.Parameter)GCHandledObjects.GCHandleToObject(instance)).value = GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((EventDelegate.Parameter)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((EventDelegate.Parameter)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((EventDelegate.Parameter)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((EventDelegate.Parameter)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((EventDelegate.Parameter)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-			return -1L;
 		}
 	}
 
 	public delegate void Callback();
 
 	[SerializeField]
-	protected internal MonoBehaviour mTarget;
+	private MonoBehaviour mTarget;
 
 	[SerializeField]
-	protected internal string mMethodName;
+	private string mMethodName;
 
 	[SerializeField]
-	protected internal EventDelegate.Parameter[] mParameters;
+	private EventDelegate.Parameter[] mParameters;
 
 	public bool oneShot;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private EventDelegate.Callback mCachedCallback;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mRawDelegate;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private bool mCached;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private MethodInfo mMethod;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private ParameterInfo[] mParameterInfos;
 
-	[System.NonSerialized]
+	[NonSerialized]
 	private object[] mArgs;
 
 	private static int s_Hash = "EventDelegate".GetHashCode();
@@ -348,12 +237,12 @@ public class EventDelegate : IUnitySerializable
 
 	private static string GetMethodName(EventDelegate.Callback callback)
 	{
-		return callback.GetMethodInfo().Name;
+		return callback.Method.Name;
 	}
 
 	private static bool IsValid(EventDelegate.Callback callback)
 	{
-		return callback != null && callback.GetMethodInfo() != null;
+		return callback != null && callback.Method != null;
 	}
 
 	public override bool Equals(object obj)
@@ -369,7 +258,7 @@ public class EventDelegate : IUnitySerializable
 			{
 				return true;
 			}
-			MonoBehaviour y = callback.get_Target() as MonoBehaviour;
+			MonoBehaviour y = callback.Target as MonoBehaviour;
 			return this.mTarget == y && string.Equals(this.mMethodName, EventDelegate.GetMethodName(callback));
 		}
 		else
@@ -393,16 +282,18 @@ public class EventDelegate : IUnitySerializable
 		this.Clear();
 		if (call != null && EventDelegate.IsValid(call))
 		{
-			this.mTarget = (call.get_Target() as MonoBehaviour);
+			this.mTarget = (call.Target as MonoBehaviour);
 			if (this.mTarget == null)
 			{
 				this.mRawDelegate = true;
 				this.mCachedCallback = call;
 				this.mMethodName = null;
-				return;
 			}
-			this.mMethodName = EventDelegate.GetMethodName(call);
-			this.mRawDelegate = false;
+			else
+			{
+				this.mMethodName = EventDelegate.GetMethodName(call);
+				this.mRawDelegate = false;
+			}
 		}
 	}
 
@@ -420,37 +311,24 @@ public class EventDelegate : IUnitySerializable
 		{
 			return;
 		}
-		if ((this.mCachedCallback == null || this.mCachedCallback.get_Target() as MonoBehaviour != this.mTarget || EventDelegate.GetMethodName(this.mCachedCallback) != this.mMethodName) && this.mTarget != null && !string.IsNullOrEmpty(this.mMethodName))
+		if ((this.mCachedCallback == null || this.mCachedCallback.Target as MonoBehaviour != this.mTarget || EventDelegate.GetMethodName(this.mCachedCallback) != this.mMethodName) && this.mTarget != null && !string.IsNullOrEmpty(this.mMethodName))
 		{
 			Type type = this.mTarget.GetType();
-			try
+			this.mMethod = null;
+			while (type != null)
 			{
-				IEnumerable<MethodInfo> runtimeMethods = type.GetRuntimeMethods();
-				using (IEnumerator<MethodInfo> enumerator = runtimeMethods.GetEnumerator())
+				try
 				{
-					while (enumerator.MoveNext())
+					this.mMethod = type.GetMethod(this.mMethodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+					if (this.mMethod != null)
 					{
-						MethodInfo current = enumerator.get_Current();
-						if (current.Name == this.mMethodName)
-						{
-							this.mMethod = current;
-							break;
-						}
+						break;
 					}
 				}
-			}
-			catch (Exception ex)
-			{
-				Debug.LogError(string.Concat(new object[]
+				catch (Exception)
 				{
-					"Failed to bind ",
-					type,
-					".",
-					this.mMethodName,
-					"\n",
-					ex.get_Message()
-				}));
-				return;
+				}
+				type = type.BaseType;
 			}
 			if (this.mMethod == null)
 			{
@@ -477,7 +355,7 @@ public class EventDelegate : IUnitySerializable
 			this.mParameterInfos = this.mMethod.GetParameters();
 			if (this.mParameterInfos.Length == 0)
 			{
-				this.mCachedCallback = (EventDelegate.Callback)this.mMethod.CreateDelegate(typeof(EventDelegate.Callback), this.mTarget);
+				this.mCachedCallback = (EventDelegate.Callback)Delegate.CreateDelegate(typeof(EventDelegate.Callback), this.mTarget, this.mMethodName);
 				this.mArgs = null;
 				this.mParameters = null;
 				return;
@@ -547,15 +425,16 @@ public class EventDelegate : IUnitySerializable
 					}
 					else
 					{
+						string text2 = text;
 						text = string.Concat(new object[]
 						{
-							text,
+							text2,
 							this.mTarget.GetType(),
 							".",
 							this.mMethod.Name
 						});
 					}
-					text = text + ": " + ex.get_Message();
+					text = text + ": " + ex.Message;
 					text += "\n  Expected: ";
 					if (this.mParameterInfos.Length == 0)
 					{
@@ -617,28 +496,21 @@ public class EventDelegate : IUnitySerializable
 
 	public override string ToString()
 	{
-		if (this.mTarget != null)
+		if (!(this.mTarget != null))
 		{
-			string text = this.mTarget.GetType().ToString();
-			int num = text.LastIndexOf('.');
-			if (num > 0)
-			{
-				text = text.Substring(num + 1);
-			}
-			if (!string.IsNullOrEmpty(this.methodName))
-			{
-				return text + "/" + this.methodName;
-			}
-			return text + "/[delegate]";
+			return (!this.mRawDelegate) ? null : "[delegate]";
 		}
-		else
+		string text = this.mTarget.GetType().ToString();
+		int num = text.LastIndexOf('.');
+		if (num > 0)
 		{
-			if (!this.mRawDelegate)
-			{
-				return null;
-			}
-			return "[delegate]";
+			text = text.Substring(num + 1);
 		}
+		if (!string.IsNullOrEmpty(this.methodName))
+		{
+			return text + "/" + this.methodName;
+		}
+		return text + "/[delegate]";
 	}
 
 	public static void Execute(List<EventDelegate> list)
@@ -656,13 +528,13 @@ public class EventDelegate : IUnitySerializable
 					}
 					catch (Exception ex)
 					{
-						if (ex.get_InnerException() != null)
+						if (ex.InnerException != null)
 						{
-							Debug.LogError(ex.get_InnerException().get_Message());
+							Debug.LogError(ex.InnerException.Message);
 						}
 						else
 						{
-							Debug.LogError(ex.get_Message());
+							Debug.LogError(ex.Message);
 						}
 					}
 					if (i >= list.Count)
@@ -762,9 +634,8 @@ public class EventDelegate : IUnitySerializable
 		if (ev.mRawDelegate || ev.target == null || string.IsNullOrEmpty(ev.methodName))
 		{
 			EventDelegate.Add(list, ev.mCachedCallback, oneShot);
-			return;
 		}
-		if (list != null)
+		else if (list != null)
 		{
 			int i = 0;
 			int count = list.Count;
@@ -779,7 +650,7 @@ public class EventDelegate : IUnitySerializable
 			}
 			EventDelegate eventDelegate2 = new EventDelegate(ev.target, ev.methodName);
 			eventDelegate2.oneShot = oneShot;
-			if (ev.mParameters != null && ev.mParameters.Length != 0)
+			if (ev.mParameters != null && ev.mParameters.Length > 0)
 			{
 				eventDelegate2.mParameters = new EventDelegate.Parameter[ev.mParameters.Length];
 				for (int j = 0; j < ev.mParameters.Length; j++)
@@ -788,9 +659,11 @@ public class EventDelegate : IUnitySerializable
 				}
 			}
 			list.Add(eventDelegate2);
-			return;
 		}
-		Debug.LogWarning("Attempting to add a callback to a list that's null");
+		else
+		{
+			Debug.LogWarning("Attempting to add a callback to a list that's null");
+		}
 	}
 
 	public static bool Remove(List<EventDelegate> list, EventDelegate.Callback callback)
@@ -831,317 +704,5 @@ public class EventDelegate : IUnitySerializable
 			}
 		}
 		return false;
-	}
-
-	public override void Unity_Serialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			SerializedStateWriter.Instance.WriteUnityEngineObject(this.mTarget);
-		}
-		SerializedStateWriter.Instance.WriteString(this.mMethodName);
-		if (depth <= 7)
-		{
-			if (this.mParameters == null)
-			{
-				SerializedStateWriter.Instance.WriteInt32(0);
-			}
-			else
-			{
-				SerializedStateWriter.Instance.WriteInt32(this.mParameters.Length);
-				for (int i = 0; i < this.mParameters.Length; i++)
-				{
-					((this.mParameters[i] != null) ? this.mParameters[i] : new EventDelegate.Parameter()).Unity_Serialize(depth + 1);
-				}
-			}
-		}
-		SerializedStateWriter.Instance.WriteBoolean(this.oneShot);
-		SerializedStateWriter.Instance.Align();
-	}
-
-	public override void Unity_Deserialize(int depth)
-	{
-		if (depth <= 7)
-		{
-			this.mTarget = (SerializedStateReader.Instance.ReadUnityEngineObject() as MonoBehaviour);
-		}
-		this.mMethodName = (SerializedStateReader.Instance.ReadString() as string);
-		if (depth <= 7)
-		{
-			this.mParameters = new EventDelegate.Parameter[SerializedStateReader.Instance.ReadInt32()];
-			for (int i = 0; i < this.mParameters.Length; i++)
-			{
-				this.mParameters[i] = new EventDelegate.Parameter();
-				this.mParameters[i].Unity_Deserialize(depth + 1);
-			}
-		}
-		this.oneShot = SerializedStateReader.Instance.ReadBoolean();
-		SerializedStateReader.Instance.Align();
-	}
-
-	public override void Unity_RemapPPtrs(int depth)
-	{
-		if (this.mTarget != null)
-		{
-			this.mTarget = (PPtrRemapper.Instance.GetNewInstanceToReplaceOldInstance(this.mTarget) as MonoBehaviour);
-		}
-		if (depth <= 7)
-		{
-			if (this.mParameters != null)
-			{
-				for (int i = 0; i < this.mParameters.Length; i++)
-				{
-					if (this.mParameters[i] != null)
-					{
-						this.mParameters[i].Unity_RemapPPtrs(depth + 1);
-					}
-				}
-			}
-		}
-	}
-
-	public unsafe override void Unity_NamedSerialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateWriter arg_23_0 = SerializedNamedStateWriter.Instance;
-			UnityEngine.Object arg_23_1 = this.mTarget;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			arg_23_0.WriteUnityEngineObject(arg_23_1, &var_0_cp_0[var_0_cp_1] + 2225);
-		}
-		SerializedNamedStateWriter.Instance.WriteString(this.mMethodName, &var_0_cp_0[var_0_cp_1] + 2233);
-		if (depth <= 7)
-		{
-			if (this.mParameters == null)
-			{
-				SerializedNamedStateWriter.Instance.BeginSequenceGroup(&var_0_cp_0[var_0_cp_1] + 2245, 0);
-				SerializedNamedStateWriter.Instance.EndMetaGroup();
-			}
-			else
-			{
-				SerializedNamedStateWriter.Instance.BeginSequenceGroup(&var_0_cp_0[var_0_cp_1] + 2245, this.mParameters.Length);
-				for (int i = 0; i < this.mParameters.Length; i++)
-				{
-					EventDelegate.Parameter arg_C0_0 = (this.mParameters[i] != null) ? this.mParameters[i] : new EventDelegate.Parameter();
-					SerializedNamedStateWriter.Instance.BeginMetaGroup((IntPtr)0);
-					arg_C0_0.Unity_NamedSerialize(depth + 1);
-					SerializedNamedStateWriter.Instance.EndMetaGroup();
-				}
-				SerializedNamedStateWriter.Instance.EndMetaGroup();
-			}
-		}
-		SerializedNamedStateWriter.Instance.WriteBoolean(this.oneShot, &var_0_cp_0[var_0_cp_1] + 2257);
-		SerializedNamedStateWriter.Instance.Align();
-	}
-
-	public unsafe override void Unity_NamedDeserialize(int depth)
-	{
-		byte[] var_0_cp_0;
-		int var_0_cp_1;
-		if (depth <= 7)
-		{
-			ISerializedNamedStateReader arg_1E_0 = SerializedNamedStateReader.Instance;
-			var_0_cp_0 = $FieldNamesStorage.$RuntimeNames;
-			var_0_cp_1 = 0;
-			this.mTarget = (arg_1E_0.ReadUnityEngineObject(&var_0_cp_0[var_0_cp_1] + 2225) as MonoBehaviour);
-		}
-		this.mMethodName = (SerializedNamedStateReader.Instance.ReadString(&var_0_cp_0[var_0_cp_1] + 2233) as string);
-		if (depth <= 7)
-		{
-			this.mParameters = new EventDelegate.Parameter[SerializedNamedStateReader.Instance.BeginSequenceGroup(&var_0_cp_0[var_0_cp_1] + 2245)];
-			for (int i = 0; i < this.mParameters.Length; i++)
-			{
-				this.mParameters[i] = new EventDelegate.Parameter();
-				EventDelegate.Parameter arg_99_0 = this.mParameters[i];
-				SerializedNamedStateReader.Instance.BeginMetaGroup((IntPtr)0);
-				arg_99_0.Unity_NamedDeserialize(depth + 1);
-				SerializedNamedStateReader.Instance.EndMetaGroup();
-			}
-			SerializedNamedStateReader.Instance.EndMetaGroup();
-		}
-		this.oneShot = SerializedNamedStateReader.Instance.ReadBoolean(&var_0_cp_0[var_0_cp_1] + 2257);
-		SerializedNamedStateReader.Instance.Align();
-	}
-
-	protected internal EventDelegate(UIntPtr dummy)
-	{
-	}
-
-	public unsafe static long $Invoke0(long instance, long* args)
-	{
-		EventDelegate.Add((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args), (EventDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke1(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(EventDelegate.Add((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args), (EventDelegate.Callback)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke2(long instance, long* args)
-	{
-		EventDelegate.Add((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args), (EventDelegate)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke3(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(EventDelegate.Add((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args), (EventDelegate.Callback)GCHandledObjects.GCHandleToObject(args[1]), *(sbyte*)(args + 2) != 0));
-	}
-
-	public unsafe static long $Invoke4(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Cache();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke5(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Clear();
-		return -1L;
-	}
-
-	public unsafe static long $Invoke6(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Equals(GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke7(long instance, long* args)
-	{
-		EventDelegate.Execute((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke8(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Execute());
-	}
-
-	public unsafe static long $Invoke9(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).isEnabled);
-	}
-
-	public unsafe static long $Invoke10(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).isValid);
-	}
-
-	public unsafe static long $Invoke11(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).methodName);
-	}
-
-	public unsafe static long $Invoke12(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).parameters);
-	}
-
-	public unsafe static long $Invoke13(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).target);
-	}
-
-	public unsafe static long $Invoke14(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).GetHashCode());
-	}
-
-	public unsafe static long $Invoke15(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(EventDelegate.GetMethodName((EventDelegate.Callback)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke16(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(EventDelegate.IsValid((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke17(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(EventDelegate.IsValid((EventDelegate.Callback)GCHandledObjects.GCHandleToObject(*args)));
-	}
-
-	public unsafe static long $Invoke18(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(EventDelegate.Remove((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args), (EventDelegate)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke19(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(EventDelegate.Remove((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args), (EventDelegate.Callback)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke20(long instance, long* args)
-	{
-		EventDelegate.Set((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args), (EventDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke21(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(EventDelegate.Set((List<EventDelegate>)GCHandledObjects.GCHandleToObject(*args), (EventDelegate.Callback)GCHandledObjects.GCHandleToObject(args[1])));
-	}
-
-	public unsafe static long $Invoke22(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Set((MonoBehaviour)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1)));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke23(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Set((EventDelegate.Callback)GCHandledObjects.GCHandleToObject(*args));
-		return -1L;
-	}
-
-	public unsafe static long $Invoke24(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).methodName = Marshal.PtrToStringUni(*(IntPtr*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke25(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).target = (MonoBehaviour)GCHandledObjects.GCHandleToObject(*args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke26(long instance, long* args)
-	{
-		return GCHandledObjects.ObjectToGCHandle(((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).ToString());
-	}
-
-	public unsafe static long $Invoke27(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Unity_Deserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke28(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedDeserialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke29(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Unity_NamedSerialize(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke30(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Unity_RemapPPtrs(*(int*)args);
-		return -1L;
-	}
-
-	public unsafe static long $Invoke31(long instance, long* args)
-	{
-		((EventDelegate)GCHandledObjects.GCHandleToObject(instance)).Unity_Serialize(*(int*)args);
-		return -1L;
 	}
 }

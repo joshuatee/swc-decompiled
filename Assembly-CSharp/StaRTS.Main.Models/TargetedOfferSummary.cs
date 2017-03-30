@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models
 {
@@ -13,10 +11,6 @@ namespace StaRTS.Main.Models
 
 		public uint GlobalCooldownExpiresAt;
 
-		public TargetedOfferSummary()
-		{
-		}
-
 		public void FromObject(object obj)
 		{
 			Dictionary<string, object> dictionary = obj as Dictionary<string, object>;
@@ -26,22 +20,12 @@ namespace StaRTS.Main.Models
 			}
 			if (dictionary.ContainsKey("nextOfferAvailableAt"))
 			{
-				this.NextOfferAvailableAt = Convert.ToUInt32(dictionary["nextOfferAvailableAt"] as string, CultureInfo.InvariantCulture);
+				this.NextOfferAvailableAt = Convert.ToUInt32(dictionary["nextOfferAvailableAt"] as string);
 			}
 			if (dictionary.ContainsKey("globalCooldownExpiresAt"))
 			{
-				this.GlobalCooldownExpiresAt = Convert.ToUInt32(dictionary["globalCooldownExpiresAt"] as string, CultureInfo.InvariantCulture);
+				this.GlobalCooldownExpiresAt = Convert.ToUInt32(dictionary["globalCooldownExpiresAt"] as string);
 			}
-		}
-
-		protected internal TargetedOfferSummary(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TargetedOfferSummary)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

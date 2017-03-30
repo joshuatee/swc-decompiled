@@ -1,7 +1,6 @@
 using StaRTS.Main.Models;
 using StaRTS.Main.Models.ValueObjects;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Missions
 {
@@ -24,19 +23,6 @@ namespace StaRTS.Main.Controllers.Missions
 				return new PvpStarsMissionProcessor(mission);
 			}
 			return new AbstractMissionProcessor(mission);
-		}
-
-		public MissionProcessorFactory()
-		{
-		}
-
-		protected internal MissionProcessorFactory(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(MissionProcessorFactory.CreateProcessor((MissionConductor)GCHandledObjects.GCHandleToObject(*args), (CampaignMissionVO)GCHandledObjects.GCHandleToObject(args[1])));
 		}
 	}
 }

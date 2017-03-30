@@ -11,9 +11,5 @@ namespace StaRTS.Main.Models.Commands.Player.Building.Upgrade
 		public BuildingUpgradeAllWallsCommand(BuildingUpgradeAllWallsRequest request) : base("player.building.upgradeAll", request, new DefaultResponse())
 		{
 		}
-
-		protected internal BuildingUpgradeAllWallsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

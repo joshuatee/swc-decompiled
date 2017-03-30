@@ -17,7 +17,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.World
 {
@@ -85,7 +84,7 @@ namespace StaRTS.Main.Controllers.World
 			BuildingTypeVO buildingType = buildingComponent.BuildingType;
 			bool flag = buildingType.Type == BuildingType.Clearable || buildingType.Type == BuildingType.Trap || buildingType.Type == BuildingType.ChampionPlatform;
 			bool flag2 = buildingType.Type == BuildingType.Blocker;
-			int walkableGap = flag2 ? 0 : this.CalculateWalkableGap(size);
+			int walkableGap = (!flag2) ? this.CalculateWalkableGap(size) : 0;
 			FlagStamp flagStamp = this.CreateFlagStamp(building, buildingType, size, walkableGap);
 			if (!flag)
 			{
@@ -96,7 +95,7 @@ namespace StaRTS.Main.Controllers.World
 			BoardCell<Entity> boardCell = boardController.Board.AddChild(boardItem, boardX, boardZ, building.Get<HealthComponent>(), !flag2);
 			if (boardCell == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Failed to add building {0}:{1} at ({2},{3})", new object[]
+				Service.Get<Logger>().ErrorFormat("Failed to add building {0}:{1} at ({2},{3})", new object[]
 				{
 					buildingComponent.BuildingTO.Key,
 					buildingComponent.BuildingTO.Uid,
@@ -175,7 +174,7 @@ namespace StaRTS.Main.Controllers.World
 
 		public void AddUnWalkableUnDestructibleFlags(FlagStamp flagStamp, SizeComponent size, int walkableGap, bool blocker)
 		{
-			flagStamp.SetFlagsInRectCenter(size.Width - walkableGap, size.Depth - walkableGap, ((walkableGap > 0) ? 1u : 2u) | (blocker ? 64u : 0u));
+			flagStamp.SetFlagsInRectCenter(size.Width - walkableGap, size.Depth - walkableGap, ((walkableGap <= 0) ? 2u : 1u) | ((!blocker) ? 0u : 64u));
 		}
 
 		public BoardCell<Entity> MoveBuildingWithinBoard(Entity building, int boardX, int boardZ)
@@ -202,7 +201,7 @@ namespace StaRTS.Main.Controllers.World
 			}
 			else
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Failed to move building {0}:{1} to ({2},{3})", new object[]
+				Service.Get<Logger>().ErrorFormat("Failed to move building {0}:{1} to ({2},{3})", new object[]
 				{
 					buildingComponent.BuildingTO.Key,
 					buildingComponent.BuildingTO.Uid,
@@ -245,7 +244,7 @@ namespace StaRTS.Main.Controllers.World
 			Service.Get<BuildingController>().FindStartingLocation(entity, out num, out num2, x, z, false);
 			if (this.AddBuildingHelper(entity, num, num2, false) == null)
 			{
-				Service.Get<StaRTSLogger>().ErrorFormat("Attempted to fix position for building {0} at ({1},{2}) and no valid location available", new object[]
+				Service.Get<Logger>().ErrorFormat("Attempted to fix position for building {0} at ({1},{2}) and no valid location available", new object[]
 				{
 					building.Key,
 					x,
@@ -253,7 +252,7 @@ namespace StaRTS.Main.Controllers.World
 				});
 				return false;
 			}
-			Service.Get<StaRTSLogger>().ErrorFormat("Fixed invalid position for building {0} at ({1},{2}) to ({3},{4})", new object[]
+			Service.Get<Logger>().ErrorFormat("Fixed invalid position for building {0} at ({1},{2}) to ({3},{4})", new object[]
 			{
 				building.Key,
 				x,
@@ -283,75 +282,6 @@ namespace StaRTS.Main.Controllers.World
 				Service.Get<TerrainBlendController>().ResetTerrain();
 			}
 			Service.Get<EventManager>().SendEvent(EventId.WorldReset, null);
-		}
-
-		protected internal WorldController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldController)GCHandledObjects.GCHandleToObject(instance)).AddBuildingHelper((Entity)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2), *(sbyte*)(args + 3) != 0));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldController)GCHandledObjects.GCHandleToObject(instance)).AddBuildingToBoard((Entity)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2), *(sbyte*)(args + 3) != 0));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((WorldController)GCHandledObjects.GCHandleToObject(instance)).AddEntityToWorld((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((WorldController)GCHandledObjects.GCHandleToObject(instance)).AddUnWalkableUnDestructibleFlags((FlagStamp)GCHandledObjects.GCHandleToObject(*args), (SizeComponent)GCHandledObjects.GCHandleToObject(args[1]), *(int*)(args + 2), *(sbyte*)(args + 3) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldController)GCHandledObjects.GCHandleToObject(instance)).CalculateWalkableGap((SizeComponent)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldController)GCHandledObjects.GCHandleToObject(instance)).CreateFlagStamp((Entity)GCHandledObjects.GCHandleToObject(*args), (BuildingTypeVO)GCHandledObjects.GCHandleToObject(args[1]), (SizeComponent)GCHandledObjects.GCHandleToObject(args[2]), *(int*)(args + 3)));
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldController)GCHandledObjects.GCHandleToObject(instance)).FindValidPositionAndUpdate((Entity)GCHandledObjects.GCHandleToObject(*args), (Building)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((WorldController)GCHandledObjects.GCHandleToObject(instance)).FindValidPositionsAndAddBuildings((List<Entity>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldController)GCHandledObjects.GCHandleToObject(instance)).DroidHut);
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((WorldController)GCHandledObjects.GCHandleToObject(instance)).MoveBuildingWithinBoard((Entity)GCHandledObjects.GCHandleToObject(*args), *(int*)(args + 1), *(int*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((WorldController)GCHandledObjects.GCHandleToObject(instance)).ResetWorld();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((WorldController)GCHandledObjects.GCHandleToObject(instance)).DroidHut = (Entity)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
 		}
 	}
 }

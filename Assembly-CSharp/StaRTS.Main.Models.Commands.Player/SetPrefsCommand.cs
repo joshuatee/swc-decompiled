@@ -2,7 +2,6 @@ using StaRTS.Externals.Manimal.TransferObjects.Response;
 using StaRTS.Main.Controllers;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player
 {
@@ -23,16 +22,6 @@ namespace StaRTS.Main.Models.Commands.Player
 			{
 				Service.Get<Engine>().Reload();
 			}
-		}
-
-		protected internal SetPrefsCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SetPrefsCommand)GCHandledObjects.GCHandleToObject(instance)).OnSuccess();
-			return -1L;
 		}
 	}
 }

@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Crates
 		public BuyCrateCommand(BuyCrateRequest request) : base("player.store.crate.buy", request, new CrateDataResponse())
 		{
 		}
-
-		protected internal BuyCrateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

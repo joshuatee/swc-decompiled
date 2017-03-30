@@ -11,7 +11,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Missions
 {
@@ -37,10 +36,12 @@ namespace StaRTS.Main.Controllers.Missions
 				GetMissionMapCommand getMissionMapCommand = new GetMissionMapCommand(request);
 				getMissionMapCommand.AddSuccessCallback(new AbstractCommand<MissionIdRequest, GetMissionMapResponse>.OnSuccessCallback(this.OnServerGrindSelectionCompleteOnSuccess));
 				Service.Get<ServerAPI>().Sync(getMissionMapCommand);
-				return;
 			}
-			this.data = BattleInitializationData.CreateFromCampaignMissionVO(this.parent.MissionVO.Uid);
-			this.LoadBattle();
+			else
+			{
+				this.data = BattleInitializationData.CreateFromCampaignMissionVO(this.parent.MissionVO.Uid);
+				this.LoadBattle();
+			}
 		}
 
 		public override void Resume()
@@ -67,9 +68,11 @@ namespace StaRTS.Main.Controllers.Missions
 			if (this.parent.OnIntroHook())
 			{
 				base.PauseBattle();
-				return;
 			}
-			this.StartMission();
+			else
+			{
+				this.StartMission();
+			}
 		}
 
 		public override void OnIntroHookComplete()
@@ -152,87 +155,6 @@ namespace StaRTS.Main.Controllers.Missions
 		{
 			this.RemoveListeners();
 			Service.Get<BattleController>().CancelBattle();
-		}
-
-		protected internal OffensiveCombatMissionProcessor(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).LoadBattle();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).OnCancel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).OnFailureHookComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).OnGoalFailureHookComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).OnIntroHookComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).OnServerGrindSelectionCompleteOnSuccess((GetMissionMapResponse)GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).OnSuccessHookComplete();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).OnWorldLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).RemoveListeners();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).Resume();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).Start();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((OffensiveCombatMissionProcessor)GCHandledObjects.GCHandleToObject(instance)).StartMission();
-			return -1L;
 		}
 	}
 }

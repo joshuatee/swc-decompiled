@@ -7,17 +7,16 @@ using StaRTS.Main.Views.UX;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.World
 {
 	public class PvpMapDataLoader : IMapDataLoader
 	{
+		private const WorldType worldType = WorldType.Opponent;
+
 		private BattleInitializationData battleData;
 
 		private PvpTarget pvpTarget;
-
-		private const WorldType worldType = WorldType.Opponent;
 
 		public PvpMapDataLoader()
 		{
@@ -58,7 +57,7 @@ namespace StaRTS.Main.Controllers.World
 				return this.pvpTarget.PlayerName;
 			}
 			string playerId = this.pvpTarget.PlayerId;
-			int num = playerId.get_Length();
+			int num = playerId.Length;
 			if (num > 10)
 			{
 				num = 10;
@@ -74,51 +73,6 @@ namespace StaRTS.Main.Controllers.World
 		public PlanetVO GetPlanetData()
 		{
 			return this.pvpTarget.BaseMap.Planet;
-		}
-
-		protected internal PvpMapDataLoader(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetFactionAssetName());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetPlanetData());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetPreloads());
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetProjectilePreloads((Map)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetWorldName());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).GetWorldType());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((PvpMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).Initialize((BattleInitializationData)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((PvpMapDataLoader)GCHandledObjects.GCHandleToObject(instance)).LoadMapData((MapLoadedDelegate)GCHandledObjects.GCHandleToObject(*args), (MapLoadFailDelegate)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
 		}
 	}
 }

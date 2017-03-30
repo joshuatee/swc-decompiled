@@ -7,13 +7,5 @@ namespace StaRTS.Main.Models.Squads
 		public string MemberId;
 
 		public SquadRole MemberRole;
-
-		public SqmMemberData()
-		{
-		}
-
-		protected internal SqmMemberData(UIntPtr dummy)
-		{
-		}
 	}
 }

@@ -11,8 +11,6 @@ using StaRTS.Utils.Diagnostics;
 using StaRTS.Utils.Json;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player
 {
@@ -38,7 +36,7 @@ namespace StaRTS.Main.Models.Commands.Player
 
 		public FactionType Faction;
 
-		public List<SquadDonatedTroop> SquadTroops;
+		public List<SquadDonatedTroop> SquadTroops = new List<SquadDonatedTroop>();
 
 		public override ISerializable FromObject(object obj)
 		{
@@ -52,19 +50,19 @@ namespace StaRTS.Main.Models.Commands.Player
 					Dictionary<string, object> dictionary3 = dictionary2["scalars"] as Dictionary<string, object>;
 					if (dictionary3.ContainsKey("attackRating"))
 					{
-						this.AttackRating = Convert.ToInt32(dictionary3["attackRating"], CultureInfo.InvariantCulture);
+						this.AttackRating = Convert.ToInt32(dictionary3["attackRating"]);
 					}
 					if (dictionary3.ContainsKey("defenseRating"))
 					{
-						this.DefenseRating = Convert.ToInt32(dictionary3["defenseRating"], CultureInfo.InvariantCulture);
+						this.DefenseRating = Convert.ToInt32(dictionary3["defenseRating"]);
 					}
 					if (dictionary3.ContainsKey("attacksWon"))
 					{
-						this.AttacksWon = Convert.ToInt32(dictionary3["attacksWon"], CultureInfo.InvariantCulture);
+						this.AttacksWon = Convert.ToInt32(dictionary3["attacksWon"]);
 					}
 					if (dictionary3.ContainsKey("defensesWon"))
 					{
-						this.DefensesWon = Convert.ToInt32(dictionary3["defensesWon"], CultureInfo.InvariantCulture);
+						this.DefensesWon = Convert.ToInt32(dictionary3["defensesWon"]);
 					}
 				}
 				if (dictionary2.ContainsKey("playerModel"))
@@ -105,23 +103,8 @@ namespace StaRTS.Main.Models.Commands.Player
 				}
 				return this;
 			}
-			Service.Get<StaRTSLogger>().Error("Unable to parse response for neighbor.visit");
+			Service.Get<Logger>().Error("Unable to parse response for neighbor.visit");
 			return null;
-		}
-
-		public VisitNeighborResponse()
-		{
-			this.SquadTroops = new List<SquadDonatedTroop>();
-			base..ctor();
-		}
-
-		protected internal VisitNeighborResponse(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((VisitNeighborResponse)GCHandledObjects.GCHandleToObject(instance)).FromObject(GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }

@@ -3,12 +3,15 @@ using StaRTS.Main.Models.Entities;
 using StaRTS.Main.Models.Entities.Nodes;
 using StaRTS.Utils.Core;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Entities.Systems
 {
 	public class GeneratorSystem : ViewSystemBase
 	{
+		private const float VIEW_UPDATE_TIME = 1f;
+
+		private const float FULLNESS_UPDATE_TIME = 5f;
+
 		private EntityController entityController;
 
 		private ICurrencyController currencyController;
@@ -19,11 +22,7 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 
 		private StorageEffects storageEffects;
 
-		private const float VIEW_UPDATE_TIME = 1f;
-
 		private float timeSinceViewUpdate;
-
-		private const float FULLNESS_UPDATE_TIME = 5f;
 
 		private float timeSinceFullnessUpdate;
 
@@ -86,32 +85,6 @@ namespace StaRTS.Main.Controllers.Entities.Systems
 				}
 				this.timeSinceViewUpdate = 0f;
 			}
-		}
-
-		public GeneratorSystem()
-		{
-		}
-
-		protected internal GeneratorSystem(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GeneratorSystem)GCHandledObjects.GCHandleToObject(instance)).AddToGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GeneratorSystem)GCHandledObjects.GCHandleToObject(instance)).RemoveFromGame((IGame)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((GeneratorSystem)GCHandledObjects.GCHandleToObject(instance)).Update(*(float*)args);
-			return -1L;
 		}
 	}
 }

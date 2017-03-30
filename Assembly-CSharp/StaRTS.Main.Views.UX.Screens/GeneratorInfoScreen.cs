@@ -5,7 +5,6 @@ using StaRTS.Main.Views.UX.Elements;
 using StaRTS.Utils.Core;
 using StaRTS.Utils.Scheduling;
 using System;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens
 {
@@ -59,7 +58,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				num = ResourceGenerationPerkUtils.GetCurrentCurrencyGenerationRate(this.buildingInfo, Service.Get<PerkManager>().GetPlayerActivePerks());
 			}
 			int num2 = this.currencyController.CurrencyPerHour(this.maxBuildingInfo);
-			this.sliders[sliderIndex].CurrentSlider.Value = ((num2 == 0) ? 0f : ((float)num / (float)num2));
+			this.sliders[sliderIndex].CurrentSlider.Value = ((num2 != 0) ? ((float)num / (float)num2) : 0f);
 			if (this.useUpgradeGroup)
 			{
 				int num3 = this.currencyController.CurrencyPerHour(this.nextBuildingInfo);
@@ -68,14 +67,16 @@ namespace StaRTS.Main.Views.UX.Screens
 				{
 					this.lang.ThousandsSeparated(num3 - num)
 				});
-				this.sliders[sliderIndex].NextSlider.Value = ((num2 == 0) ? 0f : ((float)num3 / (float)num2));
-				return;
+				this.sliders[sliderIndex].NextSlider.Value = ((num2 != 0) ? ((float)num3 / (float)num2) : 0f);
 			}
-			this.sliders[sliderIndex].CurrentLabel.Text = this.lang.Get("FRACTION", new object[]
+			else
 			{
-				this.lang.ThousandsSeparated(num),
-				this.lang.ThousandsSeparated(num2)
-			});
+				this.sliders[sliderIndex].CurrentLabel.Text = this.lang.Get("FRACTION", new object[]
+				{
+					this.lang.ThousandsSeparated(num),
+					this.lang.ThousandsSeparated(num2)
+				});
+			}
 		}
 
 		private void UpdateCurrentAmount(int sliderIndex)
@@ -90,7 +91,7 @@ namespace StaRTS.Main.Views.UX.Screens
 				this.lang.ThousandsSeparated(storage)
 			});
 			UXSlider currentSlider = this.sliders[sliderIndex].CurrentSlider;
-			float num = (storage == 0) ? 0f : ((float)accruedCurrency / (float)storage);
+			float num = (storage != 0) ? ((float)accruedCurrency / (float)storage) : 0f;
 			currentSlider.Value = num;
 			this.projector.Config.MeterValue = num;
 		}
@@ -102,34 +103,6 @@ namespace StaRTS.Main.Views.UX.Screens
 			{
 				this.UpdateHitpoints();
 			}
-		}
-
-		protected internal GeneratorInfoScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GeneratorInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GeneratorInfoScreen)GCHandledObjects.GCHandleToObject(instance)).OnViewClockTime(*(float*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((GeneratorInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateCurrentAmount(*(int*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((GeneratorInfoScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateProductionRate(*(int*)args);
-			return -1L;
 		}
 	}
 }

@@ -3,7 +3,6 @@ using StaRTS.Externals.Manimal.TransferObjects.Request;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Models.Commands.Player
 {
@@ -33,16 +32,6 @@ namespace StaRTS.Main.Models.Commands.Player
 					i++;
 				}
 			}
-		}
-
-		protected internal RegisterDeviceCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((RegisterDeviceCommand)GCHandledObjects.GCHandleToObject(instance)).OnSuccess();
-			return -1L;
 		}
 	}
 }

@@ -10,7 +10,6 @@ using StaRTS.Utils;
 using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Squads
 {
@@ -43,8 +42,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		private const string PERK_UPGRADE_INVEST_NOT_ENOUGH_REPUTATION = "PERK_UPGRADE_INVEST_NOT_ENOUGH_REPUTATION";
 
 		private const string LANG_PERK_UPGRADE_LVL_REQ = "PERK_UPGRADE_LVL_REQ";
-
-		public static readonly string PERK_INVEST_CONFIRM_VIEW = "UpgradeSelectedGroupPerks";
 
 		private const string PERK_UPGRADE_CONFIRM_BACK_BTN = "BtnBack";
 
@@ -97,6 +94,8 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		private const string PERK_TITLE_GROUP = "TitleGroupPerks";
 
 		private const string PERK_TABS_GROUP = "TabGroupPerks";
+
+		public static readonly string PERK_INVEST_CONFIRM_VIEW = "UpgradeSelectedGroupPerks";
 
 		private UXButton backBtn;
 
@@ -240,24 +239,28 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 				this.progressValueLabel.Visible = true;
 				this.investGroup.Visible = true;
 				this.RefreshProgress();
-				return;
 			}
-			this.maxTierLabel.Visible = false;
-			this.investGroup.Visible = false;
-			this.lockedGroup.Visible = true;
-			this.progressSlider.Visible = false;
-			this.progressValueLabel.Visible = false;
-			if (this.viewState == PerkUpgradeConfirmState.Locked)
+			else
 			{
-				this.lockedSquadLabel.Text = lang.Get("PERK_UPGRADE_POPUP_LVL_REQ", new object[0]);
-				this.lockedReqLabel.Text = lang.Get("PERK_UPGRADE_LVL_REQ", new object[0]);
-				this.lockedLevelLabel.Text = squadLevelUnlock.ToString();
-				return;
+				this.maxTierLabel.Visible = false;
+				this.investGroup.Visible = false;
+				this.lockedGroup.Visible = true;
+				this.progressSlider.Visible = false;
+				this.progressValueLabel.Visible = false;
+				if (this.viewState == PerkUpgradeConfirmState.Locked)
+				{
+					this.lockedSquadLabel.Text = lang.Get("PERK_UPGRADE_POPUP_LVL_REQ", new object[0]);
+					this.lockedReqLabel.Text = lang.Get("PERK_UPGRADE_LVL_REQ", new object[0]);
+					this.lockedLevelLabel.Text = squadLevelUnlock.ToString();
+				}
+				else
+				{
+					this.lockedGroup.Visible = false;
+					this.maxTierLabel.Visible = true;
+					this.subTitleLabel.Visible = false;
+					this.maxTierLabel.Text = lang.Get("PERK_UPGRADE_MAX_TIER", new object[0]);
+				}
 			}
-			this.lockedGroup.Visible = false;
-			this.maxTierLabel.Visible = true;
-			this.subTitleLabel.Visible = false;
-			this.maxTierLabel.Text = lang.Get("PERK_UPGRADE_MAX_TIER", new object[0]);
 		}
 
 		private void SetupDefaultInvestAmt()
@@ -353,7 +356,7 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 			this.HideAndCleanUp();
 			if (this.onCloseCB != null)
 			{
-				this.onCloseCB.Invoke();
+				this.onCloseCB();
 			}
 			Service.Get<EventManager>().SendEvent(EventId.BackButtonClicked, null);
 		}
@@ -382,9 +385,9 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 
 		public void RefreshProgress()
 		{
-			string text = this.perkTotalCost.ToString();
-			string text2 = this.internalInvestCount.ToString();
-			this.progressValueLabel.Text = text2 + "/" + text;
+			string str = this.perkTotalCost.ToString();
+			string str2 = this.internalInvestCount.ToString();
+			this.progressValueLabel.Text = str2 + "/" + str;
 			this.progressSlider.Value = (float)this.internalInvestCount / (float)this.perkTotalCost;
 		}
 
@@ -417,103 +420,6 @@ namespace StaRTS.Main.Views.UX.Screens.Squads
 		public PerkVO GetPerkDataShown()
 		{
 			return this.perkToInvestIn;
-		}
-
-		protected internal SquadScreenConfirmPerkUpgradeView(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).GetCurrentReputation());
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).GetPerkDataShown());
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).HideAndCleanUp();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).InitUI();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).IsVisible());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).OnBackButtonClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).OnIncInvestAmtClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).OnInvestClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).OnReduceInvestAmtClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).RefreshProgress();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).RefreshProgressFromServer();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).SetupDefaultInvestAmt();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).Show();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).UpdateInternalInvestCountFromServerData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).UpdateInvestUIBasedOnNewAmt();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			((SquadScreenConfirmPerkUpgradeView)GCHandledObjects.GCHandleToObject(instance)).UpdateRemainingPerkCost();
-			return -1L;
 		}
 	}
 }

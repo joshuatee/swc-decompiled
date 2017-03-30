@@ -10,7 +10,6 @@ using StaRTS.Utils.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -32,9 +31,9 @@ namespace StaRTS.FX
 
 		private const int WORLD_SCALE = 3;
 
-		public static readonly Color TERRAIN_PLACEMENT_COLOR = Color.red;
-
 		private const int INITIAL_LIST_CAPACITY = 16384;
+
+		public static readonly Color TERRAIN_PLACEMENT_COLOR = Color.red;
 
 		private Mesh currentTerrainMesh;
 
@@ -67,40 +66,41 @@ namespace StaRTS.FX
 
 		public EatResponse OnEvent(EventId id, object cookie)
 		{
-			if (id <= EventId.WorldLoadComplete)
+			switch (id)
 			{
-				if (id != EventId.BuildingPlacedOnBoard)
+			case EventId.BuildingPlacedOnBoard:
+				this.PaintTerrainPlacedArea((Entity)cookie);
+				return EatResponse.NotEaten;
+			case EventId.BuildingMovedOnBoard:
+				IL_16:
+				switch (id)
 				{
-					if (id != EventId.BuildingRemovedFromBoard)
-					{
-						if (id == EventId.WorldLoadComplete)
-						{
-							this.RefreshTerrainBlendingNewMap();
-						}
-					}
-				}
-				else
-				{
+				case EventId.UserLoweredBuilding:
 					this.PaintTerrainPlacedArea((Entity)cookie);
-				}
-			}
-			else
-			{
-				if (id != EventId.UserLiftedBuilding)
-				{
-					if (id == EventId.UserLoweredBuilding)
+					return EatResponse.NotEaten;
+				case EventId.UserLoweredBuildingAudio:
+					IL_2E:
+					if (id == EventId.WorldLoadComplete)
 					{
-						this.PaintTerrainPlacedArea((Entity)cookie);
+						this.RefreshTerrainBlendingNewMap();
 						return EatResponse.NotEaten;
 					}
-					if (id != EventId.UserStashedBuilding)
+					if (id != EventId.UserLiftedBuilding)
 					{
 						return EatResponse.NotEaten;
 					}
+					goto IL_56;
+				case EventId.UserStashedBuilding:
+					goto IL_56;
 				}
+				goto IL_2E;
+				IL_56:
 				this.ResetTerrainArea((Entity)cookie);
+				return EatResponse.NotEaten;
+			case EventId.BuildingRemovedFromBoard:
+				return EatResponse.NotEaten;
 			}
-			return EatResponse.NotEaten;
+			goto IL_16;
 		}
 
 		public void IndexTerrainMesh(GameObject targetGameObject)
@@ -303,77 +303,6 @@ namespace StaRTS.FX
 			{
 				this.currentTerrainMesh.colors32 = this.targetColors;
 			}
-		}
-
-		protected internal TerrainBlendController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).GetVertexIndexOffset(*(int*)args, *(int*)(args + 1)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).GetVerticesForPosition(*(int*)args, *(int*)(args + 1), (GameObject)GCHandledObjects.GCHandleToObject(args[2]), (Vector3[])GCHandledObjects.GCHandleToPinnedArrayObject(args[3])));
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).IndexTerrainMesh((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).PaintRangeOfGridPositions(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3), *(*(IntPtr*)(args + 4)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).PaintTerrainPlacedArea((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).PaintVerticesAtLocation(*(int*)args, *(int*)(args + 1), *(*(IntPtr*)(args + 2))));
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).RefreshTerrainBlendingNewMap();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).ResetRangeOfGridPositions(*(int*)args, *(int*)(args + 1), *(int*)(args + 2), *(int*)(args + 3));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).ResetTerrain();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).ResetTerrainArea((Entity)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TerrainBlendController)GCHandledObjects.GCHandleToObject(instance)).ResetVertexColorsAtLocation(*(int*)args, *(int*)(args + 1)));
 		}
 	}
 }

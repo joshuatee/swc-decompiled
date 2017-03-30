@@ -16,9 +16,7 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Controllers.Planets
 {
@@ -27,10 +25,6 @@ namespace StaRTS.Main.Controllers.Planets
 		public delegate bool PlanetBooleanDelegate(Planet planet);
 
 		private const string PLANETARY_LIGHTING_DIRECTION = "_LightDir";
-
-		private static readonly Vector3 Global_LightDir = new Vector3(-119f, 57.4f, -144.3f);
-
-		private static readonly Vector3 PLANET_GLOW_OFFSET = new Vector3(0f, 0f, -9f);
 
 		private const float PLANET_GLOW_SCALE = 1.15f;
 
@@ -53,6 +47,10 @@ namespace StaRTS.Main.Controllers.Planets
 		private const string EXPLOSION_PARTICLE_NAME = "planetExplosions";
 
 		public const string PLANET_GLOW_NAME = "fx_planetGlow";
+
+		private static readonly Vector3 Global_LightDir = new Vector3(-119f, 57.4f, -144.3f);
+
+		private static readonly Vector3 PLANET_GLOW_OFFSET = new Vector3(0f, 0f, -9f);
 
 		private List<Planet> planetsWithActiveEvents;
 
@@ -144,7 +142,7 @@ namespace StaRTS.Main.Controllers.Planets
 			{
 				return this.planetLookupDict[planetUID];
 			}
-			Service.Get<StaRTSLogger>().Error("No Planet found with UID: " + planetUID);
+			Service.Get<Logger>().Error("No Planet found with UID: " + planetUID);
 			return null;
 		}
 
@@ -187,7 +185,7 @@ namespace StaRTS.Main.Controllers.Planets
 				{
 					planet.ThrashingPopulation = population;
 					planet.VO.Population = population;
-					return;
+					break;
 				}
 			}
 		}
@@ -312,30 +310,29 @@ namespace StaRTS.Main.Controllers.Planets
 			{
 				return 0;
 			}
-			if (a.VO.Order >= b.VO.Order)
-			{
-				return -1;
-			}
-			return 1;
+			return (a.VO.Order >= b.VO.Order) ? -1 : 1;
 		}
 
 		private void UpdatePlanetIndex()
 		{
 			int count = this.planets.Count;
-			int num = 0;
-			while (num < count && this.currentlyForegroundedPlanet != this.planets[num])
+			int i;
+			for (i = 0; i < count; i++)
 			{
-				num++;
+				if (this.currentlyForegroundedPlanet == this.planets[i])
+				{
+					break;
+				}
 			}
-			if (num < count)
+			if (i < count)
 			{
-				this.planetIndex = num;
+				this.planetIndex = i;
 			}
 		}
 
 		public Planet TransitionToPlanet(bool next)
 		{
-			this.planetIndex += (next ? -1 : 1);
+			this.planetIndex += ((!next) ? 1 : -1);
 			if (this.planetIndex < 0)
 			{
 				this.planetIndex = this.planets.Count - 1;
@@ -363,7 +360,7 @@ namespace StaRTS.Main.Controllers.Planets
 					if (friends[i].PlayerData != null)
 					{
 						string text = friends[i].PlayerData.Planet;
-						if (text.Equals(""))
+						if (text.Equals(string.Empty))
 						{
 							text = "planet1";
 						}
@@ -381,7 +378,7 @@ namespace StaRTS.Main.Controllers.Planets
 		{
 			foreach (KeyValuePair<string, Planet> current in this.planetLookupDict)
 			{
-				current.get_Value().NumSquadmatesOnPlanet = 0;
+				current.Value.NumSquadmatesOnPlanet = 0;
 			}
 			CurrentPlayer currentPlayer = Service.Get<CurrentPlayer>();
 			Squad currentSquad = Service.Get<SquadController>().StateManager.GetCurrentSquad();
@@ -393,15 +390,13 @@ namespace StaRTS.Main.Controllers.Planets
 					if (memberList[i].MemberID != currentPlayer.PlayerId)
 					{
 						string text = memberList[i].Planet;
-						if (text.Equals(""))
+						if (text.Equals(string.Empty))
 						{
 							text = "planet1";
 						}
 						if (this.planetLookupDict.ContainsKey(text))
 						{
-							Planet expr_C1 = this.planetLookupDict[text];
-							int numSquadmatesOnPlanet = expr_C1.NumSquadmatesOnPlanet;
-							expr_C1.NumSquadmatesOnPlanet = numSquadmatesOnPlanet + 1;
+							this.planetLookupDict[text].NumSquadmatesOnPlanet++;
 						}
 					}
 				}
@@ -437,10 +432,7 @@ namespace StaRTS.Main.Controllers.Planets
 				planet.ParticleFXHandle = AssetHandle.Invalid;
 			}
 			planet.DestroyParticles();
-			int arg_52_0 = 0;
-			int b = this.planetParticleCount - 1;
-			this.planetParticleCount = b;
-			this.planetParticleCount = Mathf.Max(arg_52_0, b);
+			this.planetParticleCount = Mathf.Max(0, --this.planetParticleCount);
 			if (planet.Tournament == null)
 			{
 				if (this.planetsWithActiveEvents.Contains(planet))
@@ -457,9 +449,21 @@ namespace StaRTS.Main.Controllers.Planets
 			{
 				AssetHandle particleFXHandle = AssetHandle.Invalid;
 				TimedEventState tournamentState = planet.TournamentState;
-				if (tournamentState != TimedEventState.Upcoming)
+				TimedEventState timedEventState = tournamentState;
+				if (timedEventState != TimedEventState.Upcoming)
 				{
-					if (tournamentState == TimedEventState.Live)
+					if (timedEventState != TimedEventState.Live)
+					{
+						if (this.planetsWithEvent.Contains(planet))
+						{
+							this.planetsWithEvent.Remove(planet);
+						}
+						if (this.planetsWithActiveEvents.Contains(planet))
+						{
+							this.planetsWithActiveEvents.Remove(planet);
+						}
+					}
+					else
 					{
 						if (!this.planetsWithEvent.Contains(planet))
 						{
@@ -470,17 +474,6 @@ namespace StaRTS.Main.Controllers.Planets
 							this.planetsWithActiveEvents.Add(planet);
 						}
 						assetManager.Load(ref particleFXHandle, "fx_planet_Conflict", new AssetSuccessDelegate(this.OnEventParticleFXLoaded), null, planet);
-					}
-					else
-					{
-						if (this.planetsWithEvent.Contains(planet))
-						{
-							this.planetsWithEvent.Remove(planet);
-						}
-						if (this.planetsWithActiveEvents.Contains(planet))
-						{
-							this.planetsWithActiveEvents.Remove(planet);
-						}
 					}
 				}
 				else
@@ -583,9 +576,11 @@ namespace StaRTS.Main.Controllers.Planets
 					eventEffect.SetActive(true);
 					Animation component = planet.EventEffect.GetComponent<Animation>();
 					component.Play("Idle");
-					return;
 				}
-				eventEffect.SetActive(false);
+				else
+				{
+					eventEffect.SetActive(false);
+				}
 			}
 		}
 
@@ -713,8 +708,8 @@ namespace StaRTS.Main.Controllers.Planets
 			MainCamera mainCamera = Service.Get<CameraManager>().MainCamera;
 			Planet planet = (Planet)cookie;
 			GameObject gameObject = (GameObject)asset;
-			GameObject expr_27 = gameObject;
-			expr_27.name += planet.VO.Uid;
+			GameObject expr_2A = gameObject;
+			expr_2A.name += planet.VO.Uid;
 			gameObject.transform.parent = planet.PlanetGameObject.transform;
 			gameObject.transform.localPosition = Vector3.zero;
 			planet.EventEffect = gameObject;
@@ -733,8 +728,8 @@ namespace StaRTS.Main.Controllers.Planets
 			Planet planet = (Planet)cookie;
 			GameObject gameObject = (GameObject)asset;
 			gameObject = UnityEngine.Object.Instantiate<GameObject>(gameObject);
-			GameObject expr_2E = gameObject;
-			expr_2E.name += planet.VO.Uid;
+			GameObject expr_31 = gameObject;
+			expr_31.name += planet.VO.Uid;
 			gameObject.transform.parent = planet.PlanetGameObject.transform;
 			gameObject.transform.localPosition = Vector3.zero;
 			gameObject.SetActive(false);
@@ -764,8 +759,8 @@ namespace StaRTS.Main.Controllers.Planets
 			GameObject original = (GameObject)asset;
 			GameObject gameObject = UnityEngine.Object.Instantiate<GameObject>(original);
 			gameObject.SetActive(true);
-			GameObject expr_35 = gameObject;
-			expr_35.name += planet.VO.Uid;
+			GameObject expr_38 = gameObject;
+			expr_38.name += planet.VO.Uid;
 			gameObject.transform.parent = planet.PlanetGameObject.transform;
 			gameObject.transform.localPosition = Vector3.zero;
 			gameObject.transform.localScale = Vector3.one * 1.15f;
@@ -780,13 +775,13 @@ namespace StaRTS.Main.Controllers.Planets
 
 		private void OnParticleFXLoadFailed(object cookie)
 		{
-			Service.Get<StaRTSLogger>().Error("Failed to Load Particle FX For Planet");
+			Service.Get<Logger>().Error("Failed to Load Particle FX For Planet");
 			this.planetParticleCount++;
 		}
 
 		private void OnEffectLoadFailed(object cookie)
 		{
-			Service.Get<StaRTSLogger>().Error("Failed to Load Effect For Planet");
+			Service.Get<Logger>().Error("Failed to Load Effect For Planet");
 			this.planetEffectsCount++;
 		}
 
@@ -823,7 +818,7 @@ namespace StaRTS.Main.Controllers.Planets
 			}
 			assetManager.Load(ref planetGlowHandle, "fx_planetGlow", new AssetSuccessDelegate(this.OnPlanetGlowEffectLoaded), null, planet);
 			planet.PlanetGlowHandle = planetGlowHandle;
-			string text = "";
+			string text = string.Empty;
 			if (currentPlayer.Faction == FactionType.Empire)
 			{
 				text = "tiefighterplanet_emp-ani";
@@ -839,9 +834,10 @@ namespace StaRTS.Main.Controllers.Planets
 			if (this.DoesPlanetHaveEvent(planet))
 			{
 				TimedEventState tournamentState = planet.TournamentState;
-				if (tournamentState != TimedEventState.Upcoming)
+				TimedEventState timedEventState = tournamentState;
+				if (timedEventState != TimedEventState.Upcoming)
 				{
-					if (tournamentState == TimedEventState.Live)
+					if (timedEventState == TimedEventState.Live)
 					{
 						assetManager.Load(ref particleFXHandle, "fx_planet_Conflict", new AssetSuccessDelegate(this.OnEventParticleFXLoaded), new AssetFailureDelegate(this.OnParticleFXLoadFailed), planet);
 					}
@@ -860,7 +856,7 @@ namespace StaRTS.Main.Controllers.Planets
 		{
 			if (material == null || planet == null || camera == null)
 			{
-				Service.Get<StaRTSLogger>().Warn("SetPlanetLighting invalid");
+				Service.Get<Logger>().Warn("SetPlanetLighting invalid");
 				return;
 			}
 			Vector3 position = camera.transform.position;
@@ -870,274 +866,6 @@ namespace StaRTS.Main.Controllers.Planets
 			material.SetVector("_LightDir", v);
 			camera.transform.position = position;
 			camera.transform.rotation = rotation;
-		}
-
-		protected internal GalaxyPlanetController(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ActivateAllPlanetParticleFX();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ActivateAllPlanetRings();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ActivatePlanetParticleFX((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ActivatePlanetRings((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).AreAllEffectsAndParticlesLoaded());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).AreAllPlanetsLoaded());
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).BillboardPlanetObject((GameObject)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).CheckForEffectAndFXDoneLoading();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ClearForegroundedPlanet();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ClearForegroundPlanetStatus();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ClearPlanetsWithEvents();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ComparePlanetOrder((Planet)GCHandledObjects.GCHandleToObject(*args), (Planet)GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).DeactivatePlanetParticleFX((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).DeactivatePlanetRings((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).DestroyAllPlanets();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).DoesPlanetHaveEvent((Planet)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ForegroundedPlanet);
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).InitialPlanetPosition);
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).PlanetsWithActiveEvents);
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).GetCurrentPlanetPosition());
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).GetListOfUnlockedPlanets());
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).GetPlanet(Marshal.PtrToStringUni(*(IntPtr*)args)));
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).GetPlanetVect3Position(*(float*)args, *(float*)(args + 1), *(float*)(args + 2)));
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).InitPlanets();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).InitPlanets(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).OffsetPlanetObject((GameObject)GCHandledObjects.GCHandleToObject(*args), *(*(IntPtr*)(args + 1)));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).OnEffectLoadFailed(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).OnEventEffectsLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).OnEventParticleFXLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).OnParticleFXLoadFailed(GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke30(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).OnPlanetGlowEffectLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke31(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).OnPlanetLoaded(GCHandledObjects.GCHandleToObject(*args), GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke32(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).RebuildPlanetEvent((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke33(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).ForegroundedPlanet = (Planet)GCHandledObjects.GCHandleToObject(*args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke34(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).InitialPlanetPosition = *(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke35(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).SetForegroundedPlanet(Marshal.PtrToStringUni(*(IntPtr*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke36(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).SetPlanetLighting((GameObject)GCHandledObjects.GCHandleToObject(*args), (Material)GCHandledObjects.GCHandleToObject(args[1]), (Camera)GCHandledObjects.GCHandleToObject(args[2]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke37(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).TransitionToPlanet(*(sbyte*)args != 0));
-		}
-
-		public unsafe static long $Invoke38(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).UpdateAllPlanetEffects();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke39(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).UpdateEventEffectStatus((Planet)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke40(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetConstants();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke41(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetIndex();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke42(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetPopulation(Marshal.PtrToStringUni(*(IntPtr*)args), *(int*)(args + 1));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke43(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanets();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke44(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetsFriendData();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke45(long instance, long* args)
-		{
-			((GalaxyPlanetController)GCHandledObjects.GCHandleToObject(instance)).UpdatePlanetsSquadData();
-			return -1L;
 		}
 	}
 }

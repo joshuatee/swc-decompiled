@@ -14,15 +14,11 @@ namespace StaRTS.Main.Models.Commands.Player.Account.External
 		public override OnCompleteAction OnFailure(uint status, object data)
 		{
 			base.OnFailure(status, data);
-			if (status == 1318u || status == 2200u || status == 2201u)
+			if (status != 2200u && status != 2201u && status != 1318u)
 			{
-				return OnCompleteAction.Ok;
+				return OnCompleteAction.Desync;
 			}
-			return OnCompleteAction.Desync;
-		}
-
-		protected internal RegisterExternalAccountCommand(UIntPtr dummy) : base(dummy)
-		{
+			return OnCompleteAction.Ok;
 		}
 	}
 }

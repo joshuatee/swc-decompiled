@@ -9,13 +9,5 @@ namespace StaRTS.Main.Models.Squads
 		public string Tag;
 
 		public string Time;
-
-		public SqmChatData()
-		{
-		}
-
-		protected internal SqmChatData(UIntPtr dummy)
-		{
-		}
 	}
 }

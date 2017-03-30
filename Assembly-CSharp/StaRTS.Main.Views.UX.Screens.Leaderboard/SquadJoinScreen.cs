@@ -14,7 +14,6 @@ using StaRTS.Utils.Core;
 using StaRTS.Utils.State;
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 {
@@ -102,10 +101,12 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				{
 					this.UpdateSquadDataForInvites(squadInvites);
 					this.UpdateInvitesJewel();
-					return;
 				}
-				eventManager.RegisterObserver(this, EventId.SquadJoinInvitesReceived);
-				this.invitesJewel.Value = 0;
+				else
+				{
+					eventManager.RegisterObserver(this, EventId.SquadJoinInvitesReceived);
+					this.invitesJewel.Value = 0;
+				}
 			}
 		}
 
@@ -183,7 +184,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 		private void UpdateInvitesJewel()
 		{
 			List<SquadInvite> squadInvites = Service.Get<SquadController>().StateManager.SquadInvites;
-			this.invitesJewel.Value = ((squadInvites != null) ? squadInvites.Count : 0);
+			this.invitesJewel.Value = ((squadInvites == null) ? 0 : squadInvites.Count);
 		}
 
 		private void InitSearch()
@@ -197,7 +198,7 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 			this.searchInstructionsLabel = base.GetElement<UXLabel>("LabelSearchInstructions");
 			this.searchInstructionsLabel.Text = this.lang.Get("SEARCH_INSTRUCTIONS", new object[0]);
 			this.searchInstructionsLabel.Visible = true;
-			this.searchInput.Text = "";
+			this.searchInput.Text = string.Empty;
 			this.searchInput.InitText(this.lang.Get("s_Search", new object[0]));
 			UIInput uIInputComponent = this.searchInput.GetUIInputComponent();
 			uIInputComponent.onValidate = new UIInput.OnValidate(LangUtils.OnValidateWSpaces);
@@ -207,25 +208,20 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 
 		private void RefreshCurrentTab()
 		{
-			SocialTabs curTab = this.curTab;
-			switch (curTab)
+			switch (this.curTab)
 			{
 			case SocialTabs.Featured:
 				this.LoadFeatureSquads();
-				return;
+				break;
 			case SocialTabs.Friends:
 				base.LoadFriends();
-				return;
+				break;
 			case SocialTabs.Search:
 				this.LoadSearchTab();
-				return;
-			default:
-				if (curTab != SocialTabs.Invites)
-				{
-					return;
-				}
+				break;
+			case SocialTabs.Invites:
 				this.LoadSquadInvites();
-				return;
+				break;
 			}
 		}
 
@@ -288,16 +284,18 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 		private void OnChange()
 		{
 			string text = this.searchInput.Text;
-			if (!string.IsNullOrEmpty(text) && text.get_Length() >= 3)
+			if (!string.IsNullOrEmpty(text) && text.Length >= 3)
 			{
 				this.searchInstructionsLabel.Visible = false;
 				this.searchBtnOverlay.Enabled = true;
-				return;
 			}
-			this.searchInstructionsLabel.Visible = true;
-			string id = string.IsNullOrEmpty(text) ? "SEARCH_INSTRUCTIONS" : "SEARCH_LENGTH_ISSUE";
-			this.searchInstructionsLabel.Text = this.lang.Get(id, new object[0]);
-			this.searchBtnOverlay.Enabled = false;
+			else
+			{
+				this.searchInstructionsLabel.Visible = true;
+				string id = (!string.IsNullOrEmpty(text)) ? "SEARCH_LENGTH_ISSUE" : "SEARCH_INSTRUCTIONS";
+				this.searchInstructionsLabel.Text = this.lang.Get(id, new object[0]);
+				this.searchBtnOverlay.Enabled = false;
+			}
 		}
 
 		private void SearchResultsEmpty()
@@ -359,9 +357,11 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				if (success)
 				{
 					base.AddItemsToGrid<Squad>(list, true, false);
-					return;
 				}
-				AlertScreen.ShowModal(false, null, this.lang.Get("GENERIC_SEARCH_ISSUE", new object[0]), null, null);
+				else
+				{
+					AlertScreen.ShowModal(false, null, this.lang.Get("GENERIC_SEARCH_ISSUE", new object[0]), null, null);
+				}
 			}
 		}
 
@@ -450,187 +450,6 @@ namespace StaRTS.Main.Views.UX.Screens.Leaderboard
 				break;
 			}
 			return base.OnEvent(id, cookie);
-		}
-
-		protected internal SquadJoinScreen(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).AddCreateSquadItem((SocialTabs)(*(int*)args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).AddEmptySpacingItem();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).FeaturedTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke3(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).GetSelectedFaction());
-		}
-
-		public unsafe static long $Invoke4(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).GetSelectedPlanetId());
-		}
-
-		public unsafe static long $Invoke5(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).InitButtons();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke6(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).InitIndividualGrids((UXGrid)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke7(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).InitSearch();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke8(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).InitTabInfo();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke9(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).InvitesTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke10(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).LoadFeatureSquads();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke11(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).LoadSearchTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke12(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).LoadSquadInvites();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke13(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).OnChange();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke14(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).OnDestroyElement();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke15(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).OnEvent((EventId)(*(int*)args), GCHandledObjects.GCHandleToObject(args[1])));
-		}
-
-		public unsafe static long $Invoke16(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).OnGetFeaturedSquads(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke17(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).OnScreenLoaded();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke18(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).OnSquadDataUpdated((Squad)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke19(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).OnSquadsSearched(*(sbyte*)args != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke20(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).OnVisitClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke21(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).PrepareForNextSearch();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke22(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).RefreshCurrentTab();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke23(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).SearchClicked((UXButton)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke24(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).SearchResultsEmpty();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke25(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).SearchTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke26(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).SquadFriendsTabClicked((UXCheckbox)GCHandledObjects.GCHandleToObject(*args), *(sbyte*)(args + 1) != 0);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke27(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateInvitesJewel();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke28(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadDataForInvite((SquadInvite)GCHandledObjects.GCHandleToObject(*args), (LeaderboardController)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke29(long instance, long* args)
-		{
-			((SquadJoinScreen)GCHandledObjects.GCHandleToObject(instance)).UpdateSquadDataForInvites((List<SquadInvite>)GCHandledObjects.GCHandleToObject(*args));
-			return -1L;
 		}
 	}
 }

@@ -1,7 +1,5 @@
 using StaRTS.Main.Views.UX.Elements;
 using System;
-using System.Runtime.InteropServices;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.UX.Controls
 {
@@ -102,6 +100,14 @@ namespace StaRTS.Main.Views.UX.Controls
 			}
 		}
 
+		private JewelControl(UXElement c, UXLabel l, bool useMaxJewelAmount)
+		{
+			this.container = c;
+			this.label = l;
+			this.useMaxJewelAmount = useMaxJewelAmount;
+			this.Value = 0;
+		}
+
 		public static JewelControl Create(UXFactory uxFactory, string name)
 		{
 			bool flag = name == "Clans";
@@ -111,40 +117,7 @@ namespace StaRTS.Main.Views.UX.Controls
 			{
 				optionalElement2 = uxFactory.GetOptionalElement<UXLabel>("LabelMesageCount" + name);
 			}
-			if (optionalElement != null && optionalElement2 != null)
-			{
-				return new JewelControl(optionalElement, optionalElement2, flag);
-			}
-			return null;
-		}
-
-		private JewelControl(UXElement c, UXLabel l, bool useMaxJewelAmount)
-		{
-			this.container = c;
-			this.label = l;
-			this.useMaxJewelAmount = useMaxJewelAmount;
-			this.Value = 0;
-		}
-
-		protected internal JewelControl(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(JewelControl.Create((UXFactory)GCHandledObjects.GCHandleToObject(*args), Marshal.PtrToStringUni(*(IntPtr*)(args + 1))));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((JewelControl)GCHandledObjects.GCHandleToObject(instance)).Text = Marshal.PtrToStringUni(*(IntPtr*)args);
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			((JewelControl)GCHandledObjects.GCHandleToObject(instance)).Value = *(int*)args;
-			return -1L;
+			return (optionalElement != null && optionalElement2 != null) ? new JewelControl(optionalElement, optionalElement2, flag) : null;
 		}
 	}
 }

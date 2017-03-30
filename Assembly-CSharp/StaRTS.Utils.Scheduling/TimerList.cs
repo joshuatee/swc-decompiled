@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using WinRTBridge;
 
 namespace StaRTS.Utils.Scheduling
 {
@@ -60,20 +59,6 @@ namespace StaRTS.Utils.Scheduling
 				this.Timers[i].DecTimeFire(amount);
 				i++;
 			}
-		}
-
-		protected internal TimerList(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TimerList)GCHandledObjects.GCHandleToObject(instance)).Add((Timer)GCHandledObjects.GCHandleToObject(*args)));
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TimerList)GCHandledObjects.GCHandleToObject(instance)).ReprioritizeFirst());
 		}
 	}
 }

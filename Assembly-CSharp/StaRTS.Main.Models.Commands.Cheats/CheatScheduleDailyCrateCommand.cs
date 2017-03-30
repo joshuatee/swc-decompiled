@@ -9,9 +9,5 @@ namespace StaRTS.Main.Models.Commands.Cheats
 		public CheatScheduleDailyCrateCommand(CheatScheduleDailyCrateRequest request) : base("cheats.crate.daily.schedule", request, new CheatScheduleDailyCrateResponse())
 		{
 		}
-
-		protected internal CheatScheduleDailyCrateCommand(UIntPtr dummy) : base(dummy)
-		{
-		}
 	}
 }

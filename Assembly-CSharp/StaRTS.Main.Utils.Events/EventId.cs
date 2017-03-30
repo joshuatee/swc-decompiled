@@ -515,12 +515,11 @@ namespace StaRTS.Main.Utils.Events
 		CrateRewardAnimDone,
 		CrateRewardIdleHop,
 		TroopUpgradeScreenOpened,
-		ForceGeometryReload,
-		ScreenSizeChanged,
-		FacebookLoggedOut,
 		InventoryCrateAnimationStateChange,
 		InventoryCrateAnimVFXTriggered,
 		InventoryCrateCollectionClosed,
+		ScreenSizeChanged,
+		ForceGeometryReload,
 		IAPReceiptServerMessage,
 		Count
 	}

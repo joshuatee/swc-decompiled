@@ -2,7 +2,6 @@ using StaRTS.Main.Models;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.FX
 {
@@ -58,27 +57,6 @@ namespace StaRTS.FX
 				i++;
 			}
 			this.effects = null;
-		}
-
-		protected internal CurrencyEffectData(UIntPtr dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((CurrencyEffectData)GCHandledObjects.GCHandleToObject(instance)).Add((CurrencyType)(*(int*)args), (ParticleSystem)GCHandledObjects.GCHandleToObject(args[1]));
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			((CurrencyEffectData)GCHandledObjects.GCHandleToObject(instance)).Destroy();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke2(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((CurrencyEffectData)GCHandledObjects.GCHandleToObject(instance)).Get((CurrencyType)(*(int*)args)));
 		}
 	}
 }

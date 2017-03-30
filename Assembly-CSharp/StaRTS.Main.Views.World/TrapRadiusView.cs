@@ -7,7 +7,6 @@ using StaRTS.Main.Utils;
 using StaRTS.Utils.Core;
 using System;
 using UnityEngine;
-using WinRTBridge;
 
 namespace StaRTS.Main.Views.World
 {
@@ -46,21 +45,6 @@ namespace StaRTS.Main.Views.World
 				return true;
 			}
 			return false;
-		}
-
-		protected internal TrapRadiusView(UIntPtr dummy) : base(dummy)
-		{
-		}
-
-		public unsafe static long $Invoke0(long instance, long* args)
-		{
-			((TrapRadiusView)GCHandledObjects.GCHandleToObject(instance)).SetupAssetOnLoad();
-			return -1L;
-		}
-
-		public unsafe static long $Invoke1(long instance, long* args)
-		{
-			return GCHandledObjects.ObjectToGCHandle(((TrapRadiusView)GCHandledObjects.GCHandleToObject(instance)).SetupParticlesOnShow((Entity)GCHandledObjects.GCHandleToObject(*args)));
 		}
 	}
 }
